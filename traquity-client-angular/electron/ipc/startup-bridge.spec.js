@@ -1,6 +1,7 @@
 const {beforeEach, describe, expect, it, jest} = require('@jest/globals');
 const {createStartupBridge} = require('./startup-bridge.js');
 
+/** @import {AiRegistry, AiState} from '../ai/ai-registry.js' */
 /** @import {AuthRegistry, KnownDatabase} from '../config/auth-registry.js' */
 /** @import {AuthState} from '../config/auth.js' */
 /** @import {BackendProcess, BackendStartOutcome} from '../backend/backend-process.js' */
@@ -48,6 +49,8 @@ describe('startupBridge', () => {
     (() => Promise.resolve(javaVerification)));
   const downloadJava = jest.fn(/** @type {(onProgress: (progress: JavaDownloadProgress) => void) => Promise<JavaDownloadResult>} */
     (() => Promise.resolve({status: 'completed', javaPath, signature: 'c2ln'})));
+  const getAiState = jest.fn(/** @type {() => Promise<AiState>} */ (() => Promise.resolve(aiState)));
+  const confirmAi = jest.fn(/** @type {() => void} */ (() => undefined));
   const quit = jest.fn();
   const isTrustedSender = jest.fn(/** @type {(event: unknown) => boolean} */ (() => true));
   const reresolveJava = jest.fn();
@@ -57,8 +60,14 @@ describe('startupBridge', () => {
   /** @type {JavaVerification} */
   let javaVerification;
 
+  /** @type {AiState} */
+  let aiState;
+
   /** @type {IpcMainLike} */
   let ipcMain;
+
+  /** @type {Pick<AiRegistry, 'getState' | 'confirm'>} */
+  let aiRegistry;
 
   /** @type {Pick<BackendProcess, 'start'>} */
   let backendProcess;
@@ -119,6 +128,7 @@ describe('startupBridge', () => {
       ipcMain,
       startupState: Promise.resolve(startupState),
       configFileState: 'read',
+      aiRegistry,
       backendProcess,
       authRegistry,
       configurationWriter,
@@ -146,6 +156,7 @@ describe('startupBridge', () => {
         authState: 'scrypt'
       }
     ];
+    aiState = {isConfirmed: false, catalogue: [], models: {}};
 
     jest.clearAllMocks();
     javaVerification = {status: 'ok', javaPath, versionOutput: 'openjdk 25'};
@@ -158,11 +169,13 @@ describe('startupBridge', () => {
     pickJavaBinary.mockResolvedValue(javaPath);
     verifySetting.mockResolvedValue(javaVerification);
     downloadJava.mockResolvedValue({status: 'completed', javaPath, signature: 'c2ln'});
+    getAiState.mockResolvedValue(aiState);
     getMainWindow.mockReturnValue({webContents: {send}});
     isTrustedSender.mockReturnValue(true);
     tlsOverridden = false;
 
     ipcMain = {handle, on};
+    aiRegistry = {getState: getAiState, confirm: confirmAi};
     backendProcess = {start};
     authRegistry = {verify, knownDatabases, forget};
     configurationWriter = {apply};
@@ -179,7 +192,7 @@ describe('startupBridge', () => {
     createBridge();
   });
 
-  it('registers exactly the eleven request/response channels via handle', () => {
+  it('registers exactly the thirteen request/response channels via handle', () => {
     expect(handle.mock.calls.map(([channel]) => channel)).toEqual([
       'startup:getState',
       'backend:start',
@@ -191,7 +204,9 @@ describe('startupBridge', () => {
       'config:apply',
       'java:verify',
       'java:pick',
-      'java:download'
+      'java:download',
+      'ai:getState',
+      'ai:confirm'
     ]);
   });
 
@@ -519,6 +534,17 @@ describe('startupBridge', () => {
     });
   });
 
+  it('resolves ai:getState with the registry\'s own state', async () => {
+    await expect(handleListenerFor('ai:getState')(undefined)).resolves.toBe(aiState);
+  });
+
+  it('delegates ai:confirm to the registry, taking no argument off the renderer', () => {
+    handleListenerFor('ai:confirm')(undefined);
+
+    expect(confirmAi).toHaveBeenCalledTimes(1);
+    expect(confirmAi).toHaveBeenCalledWith();
+  });
+
   it('writes nothing when a dialog is opened or a setting is merely verified', async () => {
     await handleListenerFor('database:pickExisting')(undefined, databasePath);
     await handleListenerFor('database:pickNew')(undefined, databasePath);
@@ -575,6 +601,12 @@ describe('startupBridge', () => {
         .toThrow('Refused config:apply from an untrusted sender');
       expect(apply).not.toHaveBeenCalled();
       expect(reresolveJava).not.toHaveBeenCalled();
+    });
+
+    it('refuses ai:confirm without writing anything', () => {
+      expect(() => handleListenerFor('ai:confirm')(event))
+        .toThrow('Refused ai:confirm from an untrusted sender');
+      expect(confirmAi).not.toHaveBeenCalled();
     });
 
     it('drops app:quit rather than reporting a refusal it has no answer for', () => {
