@@ -23,6 +23,12 @@ See the parent `LLM.md` for the Angular renderer, and the root `LLM.md` for how 
 electron/
   main.js                      entry point; wiring only, no logic worth testing
   preload.js                   contextBridge surface shared with the renderer
+  ai/
+    catalogue.js                the curated models, pinned to a Hugging Face revision each; projects the
+                                public `CatalogueEntry` shape out of the full internal one
+    ai-registry.js              the `ai` key of a loaded config: notice confirmation (re-hashed against the packaged
+                                notice resource) and which catalogued models are actually installed, verified
+                                against the filesystem and the catalogue's own pinned digest
   app/
     restart-into-configuration.js sets `configureOnNextStart`, kills the backend, relaunches and exits, in that order
   config/
@@ -54,6 +60,7 @@ electron/
     signature-bounds.js        how long a detached signature may be, for every schema that validates one
     tls-override.js            whether `NODE_TLS_REJECT_UNAUTHORIZED` overrides the default, verifying behavior
     verify-hash.js             verifies a detached signature over a file streamed into the hash, format-agnostic
+    file-digest.js             digests a file streamed into the hash, no signature involved
   window/
     startup-mode.js            computes the startup mode (`boot` | `configure` | `insecure` | `unlock`) and consumes
                                `configureOnNextStart`
@@ -65,7 +72,7 @@ electron/
   testing/                     shared spec-only helpers (custom matchers, ...) used by more than one *.spec.js
 ```
 
-The channels `ipc/startup-bridge.js` registers — eleven request/response via `ipcMain.handle`, two one-way via `ipcMain.on`, one push from
+The channels `ipc/startup-bridge.js` registers — thirteen request/response via `ipcMain.handle`, two one-way via `ipcMain.on`, one push from
 the main process into the renderer:
 
 - `startup:getState`
@@ -79,6 +86,8 @@ the main process into the renderer:
 - `java:verify`
 - `java:pick`
 - `java:download`
+- `ai:getState`
+- `ai:confirm`
 - `app:restartAndConfigure` (one-way)
 - `app:quit` (one-way)
 - `java:downloadProgress` (push, main → renderer)
@@ -161,13 +170,14 @@ screen asks for one instead of inheriting the backend's own built-in default sil
 Every write of that file lands as mode `0600`, and a `chmod` to the same mode follows each one, since a `mode` passed to a write only
 applies to a file being created and an install predating this rule still carries whatever umask it was written under.
 
-Exactly three channels write `traquity.config.json`: `auth:forget` removes one `auth` entry immediately, while the screen is still up,
-`config:apply` persists the configuration screen on finish, touching `env.TQ_DB_FILE_PATH` and nothing else, and `app:restartAndConfigure`
-sets `configureOnNextStart` on the way out. All three reach the disk through a collaborator of their own
-(`config/auth-registry.js`'s `forget`, `config/configuration-writer.js`'s `apply`, `config/configure-on-next-start.js`'s `request`); no
-`ConfigFile` is injected into the bridge, so no other channel can write at all. Nothing in the main process ever *writes* an `auth` entry
-outside `recordProvenStart`, which is what keeps epic ADR-003's "a failed start never discards a record" structural rather than
-conventional.
+Exactly four channels write `traquity.config.json`: `auth:forget` removes one `auth` entry immediately, while the screen is still up,
+`config:apply` persists the configuration screen on finish, touching `env.TQ_DB_FILE_PATH` and nothing else, `app:restartAndConfigure`
+sets `configureOnNextStart` on the way out, and `ai:confirm` hashes the packaged AI notice resource and writes that digest as
+`ai.confirmedNotice`, initializing `ai.models` to `{}` the first time. All four reach the disk through a collaborator of their own
+(`config/auth-registry.js`'s `forget`, `config/configuration-writer.js`'s `apply`, `config/configure-on-next-start.js`'s `request`,
+`ai/ai-registry.js`'s `confirm`); no `ConfigFile` is injected into the bridge directly, so no other channel can write at all. Nothing in the
+main process ever *writes* an `auth` entry outside `recordProvenStart`, which is what keeps "a failed start never discards a record"
+intact.
 
 A database is identified everywhere by its **base path without extension** — `env.TQ_DB_FILE_PATH`, the `auth` map's keys and
 `StartupState.databasePath` are all that shape. The `.mv.db` suffix H2 materializes exists only at the dialog boundary, where

@@ -6,6 +6,7 @@ const fs = require('fs');
 const os = require('os');
 const {createConfigFile} = require('./config/config-file.js');
 const {createAuthRegistry} = require('./config/auth-registry.js');
+const {createAiRegistry} = require('./ai/ai-registry.js');
 const {createConfigurationWriter} = require('./config/configuration-writer.js');
 const {createConfigureOnNextStart} = require('./config/configure-on-next-start.js');
 const {createRestartIntoConfiguration} = require('./app/restart-into-configuration.js');
@@ -31,6 +32,7 @@ if (process.platform === 'darwin') {
 
 const resourcesDir = app.isPackaged ? process.resourcesPath : path.join(__dirname, '..', 'resources');
 const backendPath = path.join(resourcesDir, 'backend.jar');
+const aiNoticePath = path.join(resourcesDir, 'ai-notice.component.html');
 
 // the app's own technical input/output goes here, e.g. `traquity.config.json` and `traquity.log`
 const appDataDir = path.join(os.homedir(), 'traquity');
@@ -44,6 +46,12 @@ const configFile = createConfigFile({
 });
 const {config, state: configFileState} = configFile.load();
 const authRegistry = createAuthRegistry({configFile, config});
+const aiRegistry = createAiRegistry({
+  configFile,
+  config,
+  noticePath: aiNoticePath,
+  fileSystem: {existsSync: fs.existsSync, readFileSync: fs.readFileSync, createReadStream: fs.createReadStream}
+});
 const configurationWriter = createConfigurationWriter({configFile, config, authRegistry});
 const configureOnNextStart = createConfigureOnNextStart({configFile, config});
 const backendReachability = createBackendReachability({
@@ -212,6 +220,7 @@ app.on('ready', () => {
     ipcMain,
     startupState: startupStatePromise,
     configFileState,
+    aiRegistry,
     backendProcess,
     authRegistry,
     configurationWriter,
