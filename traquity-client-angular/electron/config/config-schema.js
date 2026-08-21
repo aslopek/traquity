@@ -33,6 +33,24 @@ const javaSchema = z.looseObject({
   signature: z.base64().max(MAXIMUM_SIGNATURE_LENGTH).nullable().catch(null).optional()
 }).catch({path: null}).optional();
 
+// `{path, active}`, always both fields together - the same shape in the persisted config's
+// `ai.models[key]` and in `ai:getState`'s response. Kept out of `aiSchema.models` itself (validated there as a
+// record of `unknown`) so `ai/ai-registry.js` can classify one entry at a time. This ensures one broken record
+// does not break the entire config.
+const modelEntrySchema = z.strictObject({
+  path: z.string(),
+  active: z.boolean()
+});
+
+// tolerant: a mangled `ai` block, a mangled `confirmedNotice`, or a mangled model entry must
+// each make only the smallest possible thing read as its default - unconfirmed, not installed - rather than break
+// the whole config. `confirmedNotice` catching to `undefined` is what makes a hand-edited digest read as
+// unconfirmed instead of a schema failure, and `models` stays a record of `unknown` for the same reason `auth` does.
+const aiSchema = z.looseObject({
+  confirmedNotice: z.base64().optional().catch(undefined),
+  models: z.record(z.string(), z.unknown()).optional()
+}).catch({}).optional();
+
 const traquityConfigSchema = z.looseObject({
   // `catchall` keeps arbitrary user-added environment entries valid while TQ_DB_FILE_PATH stays a declared key, which
   // is what makes `config.env.TQ_DB_FILE_PATH` legal under `noPropertyAccessFromIndexSignature`
@@ -42,17 +60,22 @@ const traquityConfigSchema = z.looseObject({
   auth: z.record(z.string(), z.unknown()).default({}),
   // one-shot: read at start to force `configure` mode and deleted in the same step, so it cannot outlive the run it was written for
   configureOnNextStart: z.boolean().optional(),
-  java: javaSchema
+  java: javaSchema,
+  ai: aiSchema
 });
 
 /** @typedef {import('zod').infer<typeof scryptRecordSchema>} ScryptRecord */
 /** @typedef {import('zod').infer<typeof authEntrySchema>} AuthEntry */
 /** @typedef {import('zod').infer<typeof javaSchema>} JavaConfig */
+/** @typedef {import('zod').infer<typeof modelEntrySchema>} ModelEntry */
+/** @typedef {import('zod').infer<typeof aiSchema>} AiConfig */
 /** @typedef {import('zod').infer<typeof traquityConfigSchema>} TraQuityConfig */
 
 module.exports = {
   scryptRecordSchema,
   authEntrySchema,
   javaSchema,
+  modelEntrySchema,
+  aiSchema,
   traquityConfigSchema
 };

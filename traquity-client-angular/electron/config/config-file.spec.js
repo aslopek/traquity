@@ -141,6 +141,56 @@ describe('configFile', () => {
     expect(config.java).toEqual({path: null});
   });
 
+  it('defaults a missing ai key to undefined - unconfirmed, nothing installed', () => {
+    storedContents = JSON.stringify({env: {TQ_DB_FILE_PATH: databasePath}, auth: {}});
+
+    expect(configFile.load().config).toEqual({env: {TQ_DB_FILE_PATH: databasePath}, auth: {}});
+    expect(configFile.load().config).not.toHaveProperty('ai');
+  });
+
+  it('reads a stored ai confirmedNotice and models map', () => {
+    const confirmedNotice = Buffer.alloc(32, 1).toString('base64');
+    storedContents = JSON.stringify({
+      env: {TQ_DB_FILE_PATH: databasePath},
+      auth: {},
+      ai: {confirmedNotice, models: {'qwen-4b': {path: 'C:\\models\\qwen-4b.gguf', active: true}}}
+    });
+
+    expect(configFile.load().config.ai).toEqual({
+      confirmedNotice,
+      models: {'qwen-4b': {path: 'C:\\models\\qwen-4b.gguf', active: true}}
+    });
+  });
+
+  it('drops a confirmedNotice that is not valid base64, keeping the rest of the ai key', () => {
+    storedContents = JSON.stringify({
+      env: {TQ_DB_FILE_PATH: databasePath},
+      auth: {},
+      ai: {confirmedNotice: 'not base64 at all', models: {'qwen-4b': {path: 'C:\\models\\qwen-4b.gguf', active: true}}}
+    });
+
+    const {config, state} = configFile.load();
+
+    expect(state).toBe('read');
+    expect(config.ai).toEqual({
+      confirmedNotice: undefined,
+      models: {'qwen-4b': {path: 'C:\\models\\qwen-4b.gguf', active: true}}
+    });
+  });
+
+  it('falls back an ai value that does not parse to unconfirmed with nothing installed, without discarding the rest of the config', () => {
+    storedContents = JSON.stringify({
+      env: {TQ_DB_FILE_PATH: databasePath},
+      auth: {},
+      ai: 'not an object'
+    });
+
+    const {config, state} = configFile.load();
+
+    expect(state).toBe('read');
+    expect(config).toEqual({env: {TQ_DB_FILE_PATH: databasePath}, auth: {}, ai: {}});
+  });
+
   it('keeps arbitrary environment entries', () => {
     storedContents = JSON.stringify({
       env: {
