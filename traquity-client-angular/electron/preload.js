@@ -1,5 +1,6 @@
 const {contextBridge, ipcRenderer} = require('electron');
 
+/** @import {AiState} from './ai/ai-registry.js' */
 /** @import {BackendStartOutcome} from './backend/backend-process.js' */
 /** @import {ConfigurationChanges} from './config/configuration-writer.js' */
 /** @import {JavaDownloadProgress} from './java/corretto-download.js' */
@@ -10,7 +11,7 @@ const {contextBridge, ipcRenderer} = require('electron');
 
 // Channel names are literals here on purpose: a sandboxed preload's `require` is a limited polyfill that resolves
 // `electron` and a handful of Node built-ins only - it cannot require a module of this app, so `ipc/` cannot be
-// shared with it. All eleven request/response literals plus the two one-way channels and the one push channel are
+// shared with it. All thirteen request/response literals plus the two one-way channels and the one push channel are
 // duplicated in `ipc/startup-bridge.js`:
 //   - `startup:getState`
 //   - `backend:start`
@@ -23,6 +24,8 @@ const {contextBridge, ipcRenderer} = require('electron');
 //   - `java:verify`
 //   - `java:pick`
 //   - `java:download`
+//   - `ai:getState`
+//   - `ai:confirm`
 //   - `java:downloadProgress` (push, main -> renderer)
 //   - `app:restartAndConfigure` (one-way)
 //   - `app:quit` (one-way)
@@ -84,6 +87,12 @@ contextBridge.exposeInMainWorld('traquity', {
 
   /** @returns {Promise<JavaDownloadOutcome>} */
   downloadJava: () => ipcRenderer.invoke('java:download'),
+
+  /** @returns {Promise<AiState>} */
+  getAiState: () => ipcRenderer.invoke('ai:getState'),
+
+  /** @returns {Promise<void>} */
+  confirmAiNotice: () => ipcRenderer.invoke('ai:confirm'),
 
   /**
    * @param {(progress: JavaDownloadProgress) => void} listener

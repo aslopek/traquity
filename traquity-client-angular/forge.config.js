@@ -57,20 +57,24 @@ module.exports = {
     hooks: {
         generateAssets: async (_config, _buildPath, _electronVersion, _platform, _arch) => {
             const fileName = `traquity-server-spring-${require('./package.json').version}.jar`;
-            const src = path.join(__dirname, '..', 'traquity-server-spring', 'target', fileName);
+            const backendSrc = path.join(__dirname, '..', 'traquity-server-spring', 'target', fileName);
             const resources = path.join(__dirname, 'resources');
-            const dst = path.join(resources, 'backend.jar');
+
+          // the ai:confirm/ai:getState handlers hash this exact resource, so it has to be the same bytes as the
+            // template AiNoticeComponent compiles from - copying the original html to rule out any drifting
+          const aiNoticeSrc = path.join(__dirname, 'src', 'settings', 'ai', 'ai-notice', 'ai-notice.component.html');
 
             rimrafSync(resources);
             fs.mkdirSync(resources);
-            fs.cpSync(src, dst);
+          fs.cpSync(backendSrc, path.join(resources, 'backend.jar'));
+          fs.cpSync(aiNoticeSrc, path.join(resources, 'ai-notice.component.html'));
         }
     },
     packagerConfig: {
         asar: true,
         icon: 'src/assets/icon',
         ...(process.platform === 'linux' ? {executableName: 'traquity'} : {}),
-        extraResource: 'resources/backend.jar',
+      extraResource: ['resources/backend.jar', 'resources/ai-notice.component.html'],
         ignore: filePath => !isPackaged(filePath)
     },
     rebuildConfig: {},

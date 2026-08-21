@@ -7,6 +7,7 @@ const {
   javaSettingSchema
 } = require('./ipc-schema.js');
 
+/** @import {AiRegistry, AiState} from '../ai/ai-registry.js' */
 /** @import {AuthRegistry, KnownDatabase} from '../config/auth-registry.js' */
 /** @import {AuthState} from '../config/auth.js' */
 /** @import {BackendProcess, BackendStartOutcome} from '../backend/backend-process.js' */
@@ -28,10 +29,11 @@ const {
  * one-way (`ipcMain.on`) because neither has an answer to give. `java:downloadProgress` is the one push the main
  * process makes into the renderer, sent straight to the window that invoked `java:download` rather than broadcast.
  *
- * Exactly three channels write `traquity.config.json`: `auth:forget` removes one `auth` entry through
+ * Exactly four channels write `traquity.config.json`: `auth:forget` removes one `auth` entry through
  * `authRegistry.forget`, `config:apply` sets `env.TQ_DB_FILE_PATH` and `java` through `configurationWriter.apply`,
- * and `app:restartAndConfigure` sets `configureOnNextStart` through `restartIntoConfiguration.restart`. Nothing
- * here ever *writes* an `auth` entry: recording one is a proven start's job.
+ * `app:restartAndConfigure` sets `configureOnNextStart` through `restartIntoConfiguration.restart`, and `ai:confirm`
+ * sets `ai.confirmedNotice` (and `ai.models`, the first time) through `aiRegistry.confirm`. Nothing here ever
+ * *writes* an `auth` entry: recording one is a proven start's job.
  *
  * A TLS-overridden environment collapses the registration to two channels - `startup:getState` and `app:quit` -
  * before anything else is registered: with no `java:download`, no `backend:start` and no `config:apply` registered,
@@ -99,6 +101,7 @@ const {
  * @property {IpcMainLike} ipcMain
  * @property {Promise<StartupState>} startupState
  * @property {ConfigFileState} configFileState
+ * @property {Pick<AiRegistry, 'getState' | 'confirm'>} aiRegistry
  * @property {Pick<BackendProcess, 'start'>} backendProcess
  * @property {Pick<AuthRegistry, 'verify' | 'knownDatabases' | 'forget'>} authRegistry
  * @property {Pick<ConfigurationWriter, 'apply'>} configurationWriter
@@ -128,6 +131,7 @@ function createStartupBridge(options) {
     ipcMain,
     startupState,
     configFileState,
+    aiRegistry,
     backendProcess,
     authRegistry,
     configurationWriter,
@@ -314,6 +318,10 @@ function createStartupBridge(options) {
       }
       return {...result, verification};
     });
+
+    handle('ai:getState', () => aiRegistry.getState());
+
+    handle('ai:confirm', () => aiRegistry.confirm());
 
     on('app:restartAndConfigure', () => restartIntoConfiguration.restart());
     on('app:quit', () => quit());
