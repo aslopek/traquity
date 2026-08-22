@@ -16,8 +16,10 @@ import {
 } from "./startup-bridge.type";
 
 /**
- * The only place in the renderer that touches the `contextBridge` surface exposed by `preload.js`. A further bridge
- * method is added here as another wrapper, never by reaching into `window.traquity` from somewhere else.
+ * Wraps the startup/configuration channels of the `contextBridge` surface exposed by `preload.js` as observables. A
+ * further channel used by this same flow is added here as another wrapper, never by reaching into `window.traquity`
+ * from somewhere else; a channel scoped to an unrelated settings section gets its own bridge service instead
+ * (`AiBridgeService` is the reference), shaped the same way.
  */
 @Injectable({providedIn: "root"})
 export class StartupBridgeService {

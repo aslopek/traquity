@@ -1,0 +1,22 @@
+@if (isConfirmed()) {
+    <mat-list>
+        @for (entry of catalogue(); track entry.key) {
+            <mat-list-item>
+                <mat-icon matListItemIcon
+                          [fontIcon]="entry.installed ? 'check_circle' : 'radio_button_unchecked'">
+                </mat-icon>
+                <span matListItemTitle>{{ entry.description }}</span>
+                <span matListItemLine>Size: {{ entry.sizeBytes | tqByteSize:'GiB' }} · License: {{ entry.license }}</span>
+                <span matListItemMeta>{{ entry.installed ? 'On disk' : 'Not installed' }}</span>
+            </mat-list-item>
+        }
+    </mat-list>
+} @else {
+    <app-ai-notice></app-ai-notice>
+
+    <button (click)="confirm()"
+            mat-stroked-button
+            color="primary">
+        Confirm
+    </button>
+}

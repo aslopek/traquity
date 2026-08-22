@@ -7,6 +7,7 @@ import {
   BackendStartOutcome,
   ConfigurationChanges,
   ConfigureState,
+  ElectronAiState,
   JavaDownloadOutcome,
   JavaDownloadProgress,
   JavaPickResult,
@@ -17,6 +18,8 @@ import {
 } from './startup-bridge.type';
 
 type GetStartupState = () => Promise<StartupState>;
+type GetAiState = () => Promise<ElectronAiState>;
+type ConfirmAiNotice = () => Promise<void>;
 type StartBackend = (password: string) => Promise<BackendStartOutcome>;
 type VerifyPassword = (password: string) => Promise<boolean>;
 type GetConfigureState = () => Promise<ConfigureState>;
@@ -53,6 +56,8 @@ describe('StartupBridgeService', (): void => {
   let verifyJava: jest.Mock<VerifyJava>;
   let pickJava: jest.Mock<PickJava>;
   let downloadJava: jest.Mock<DownloadJava>;
+  let getAiState: jest.Mock<GetAiState>;
+  let confirmAiNotice: jest.Mock<ConfirmAiNotice>;
   let onJavaDownloadProgress: jest.Mock<OnJavaDownloadProgress>;
   let unsubscribeJavaDownloadProgress: jest.Mock<() => void>;
   let restartAndConfigure: jest.Mock<() => void>;
@@ -90,6 +95,8 @@ describe('StartupBridgeService', (): void => {
     verifyJava = jest.fn<VerifyJava>(() => Promise.resolve(javaVerification));
     pickJava = jest.fn<PickJava>(() => Promise.resolve(javaPickResult));
     downloadJava = jest.fn<DownloadJava>(() => Promise.resolve(javaDownloadOutcome));
+    getAiState = jest.fn<GetAiState>(() => Promise.resolve({isConfirmed: false, catalogue: [], models: {}}));
+    confirmAiNotice = jest.fn<ConfirmAiNotice>(() => Promise.resolve());
     unsubscribeJavaDownloadProgress = jest.fn<() => void>();
     onJavaDownloadProgress = jest.fn<OnJavaDownloadProgress>(() => unsubscribeJavaDownloadProgress);
     restartAndConfigure = jest.fn<() => void>();
@@ -107,6 +114,8 @@ describe('StartupBridgeService', (): void => {
       verifyJava,
       pickJava,
       downloadJava,
+      getAiState,
+      confirmAiNotice,
       onJavaDownloadProgress,
       restartAndConfigure,
       quit

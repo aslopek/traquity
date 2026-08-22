@@ -10,7 +10,9 @@ import {getDividendAnnouncementDataSources} from "../../store/dividend-announcem
 import {DataSourcePageComponent} from "../data-source/data-source-page/data-source-page.component";
 import {SecurityGroupPageComponent} from "../security-group/security-group-page/security-group-page.component";
 import {RestartConfigureComponent} from "../restart-configure/restart-configure.component";
+import {AiPageComponent} from "../ai/ai-page/ai-page.component";
 import {StartupBridgeService} from "../../app/startup/startup-bridge.service";
+import {AiIconComponent} from "../../common/components/ai-icon/ai-icon.component";
 
 @Component({
   selector: "app-settings-page",
@@ -24,6 +26,8 @@ import {StartupBridgeService} from "../../app/startup/startup-bridge.service";
     DataSourcePageComponent,
     SecurityGroupPageComponent,
     RestartConfigureComponent,
+    AiPageComponent,
+    AiIconComponent,
   ],
   templateUrl: "settings-page.component.html",
   styleUrls: ["settings-page.component.scss"],
