@@ -1,3 +1,14 @@
+@use '../../../styles' as styles;
+
 button {
   margin-top: 2rem;
+}
+
+.download-error {
+  color: styles.$color-error;
+}
+
+.download-progress-row {
+  // Aligns with matListItemTitle text: the leading mat-icon's own slot width plus its gap to the title.
+  padding: 0 1rem 0.75rem 3.5rem;
 }
