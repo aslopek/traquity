@@ -9,6 +9,8 @@ import {provideRouter} from "@angular/router";
 import {TqDateAdapter, TqDatePipe} from "../common";
 import {provideEffects} from "@ngrx/effects";
 import {provideStore} from "@ngrx/store";
+import {AiEffects} from "../store/ai/ai.effects";
+import {aiReducer} from "../store/ai/ai.reducer";
 import {AppConfigEffects} from "../store/app-config/app-config.effects";
 import {appConfigReducer} from "../store/app-config/app-config.reducer";
 import {DividendAnnouncementEffects} from "../store/dividend-announcement/dividend-announcement.effects";
@@ -20,7 +22,7 @@ import * as echarts from "echarts/core";
 import {provideEchartsCore} from "ngx-echarts";
 import {SVGRenderer} from "echarts/renderers";
 import {GridComponent, LegendComponent, TooltipComponent,} from "echarts/components";
-import {appConfigSlice, depotSlice, dividendAnnouncementSlice, securitySlice,} from "../store/app.state";
+import {aiSlice, appConfigSlice, depotSlice, dividendAnnouncementSlice, securitySlice,} from "../store/app.state";
 import {securityReducer} from "../store/security/security.reducer";
 import {SecurityEffects} from "../store/security/security.effects";
 import {depotReducer} from "../store/depot/depot.reducer";
@@ -51,12 +53,14 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withXhr()),
     provideEchartsCore({echarts}),
     provideStore({
+      [aiSlice]: aiReducer,
       [appConfigSlice]: appConfigReducer,
       [depotSlice]: depotReducer,
       [dividendAnnouncementSlice]: dividendAnnouncementReducer,
       [securitySlice]: securityReducer,
     }),
     provideEffects(
+      AiEffects,
       AppConfigEffects,
       DepotEffects,
       DividendAnnouncementEffects,

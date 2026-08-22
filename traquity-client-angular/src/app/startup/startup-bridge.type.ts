@@ -79,6 +79,25 @@ export type AppliedConfiguration = {
   authState: AuthState
 };
 
+export type CatalogueEntry = {
+  key: string
+  description: string
+  sizeBytes: number
+  license: string
+};
+
+export type ModelEntry = {
+  path: string
+  active: boolean
+};
+
+/** Mirrors the main process's `AiState`. */
+export type ElectronAiState = {
+  isConfirmed: boolean
+  catalogue: CatalogueEntry[]
+  models: Record<string, ModelEntry>
+};
+
 export type TraQuityBridge = {
   getStartupState: () => Promise<StartupState>
   startBackend: (password: string) => Promise<BackendStartOutcome>
@@ -91,6 +110,8 @@ export type TraQuityBridge = {
   verifyJava: (setting: string | null) => Promise<JavaVerification>
   pickJava: (currentSetting: string | null) => Promise<JavaPickResult | null>
   downloadJava: () => Promise<JavaDownloadOutcome>
+  getAiState: () => Promise<ElectronAiState>
+  confirmAiNotice: () => Promise<void>
   onJavaDownloadProgress: (listener: (progress: JavaDownloadProgress) => void) => () => void
   restartAndConfigure: () => void
   quit: () => void
