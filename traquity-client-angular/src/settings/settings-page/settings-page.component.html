@@ -56,10 +56,20 @@
                     <mat-icon fontIcon="database"
                               class="icon">
                     </mat-icon>
-                    Database Configuration
+                    Database
                 </mat-panel-title>
             </mat-expansion-panel-header>
             <app-restart-configure></app-restart-configure>
+        </mat-expansion-panel>
+
+        <mat-expansion-panel>
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    <app-ai-icon class="icon"></app-ai-icon>
+                    AI
+                </mat-panel-title>
+            </mat-expansion-panel-header>
+            <app-ai-page></app-ai-page>
         </mat-expansion-panel>
     }
 </mat-accordion>

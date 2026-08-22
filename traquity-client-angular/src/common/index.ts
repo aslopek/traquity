@@ -1,6 +1,7 @@
 export * from './components/download-progress/download-progress.component';
 export * from './components/title-toolbar/title-toolbar.component';
 export * from './date/tq-date-adapter';
+export * from './pipe/tq-byte-size.pipe';
 export * from './pipe/tq-currency.pipe';
 export * from './pipe/tq-date.pipe';
 export * from './pipe/tq-decimal.pipe';

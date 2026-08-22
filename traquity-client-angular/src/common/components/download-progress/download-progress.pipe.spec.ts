@@ -1,5 +1,5 @@
 import {beforeEach, describe, expect, it, jest} from '@jest/globals';
-import {TqDecimalPipe} from '../../pipe/tq-decimal.pipe';
+import {TqByteSizePipe} from '../../pipe/tq-byte-size.pipe';
 import {TqPercentPipe} from '../../pipe/tq-percent.pipe';
 import {DownloadProgressPipe} from './download-progress.pipe';
 import {downloadPercentage} from './download-progress.util';
@@ -11,13 +11,13 @@ jest.mock('./download-progress.util', () => ({
 const MIB: number = 1024 * 1024;
 
 type DownloadPercentage = (receivedBytes: number | undefined, totalBytes: number | undefined) => number;
-type TqDecimalTransform = (value: number, digitsInfo: string) => string;
+type TqByteSizeTransform = (sizeBytes: number, unit?: 'MiB' | 'GiB', digitsInfo?: string) => string;
 type TqPercentTransform = (value: number, digitsInfo: string) => string;
 
 describe('DownloadProgressPipe', (): void => {
   let pipe: DownloadProgressPipe;
   let downloadPercentageMock: jest.Mock<DownloadPercentage>;
-  let tqDecimalTransformMock: jest.Mock<TqDecimalTransform>;
+  let tqByteSizeTransformMock: jest.Mock<TqByteSizeTransform>;
   let tqPercentTransformMock: jest.Mock<TqPercentTransform>;
 
   beforeEach((): void => {
@@ -27,13 +27,15 @@ describe('DownloadProgressPipe', (): void => {
     // instead of from the collaborator fails these assertions
     downloadPercentageMock.mockReturnValue(0.42);
 
-    // each mock renders its arguments back verbatim, so an assertion on the composed string still pins down what
-    // the pipe handed to its collaborators, without duplicating TqDecimalPipe/TqPercentPipe's own formatting logic
-    tqDecimalTransformMock = jest.fn((value: number, digitsInfo: string): string => `${value}(${digitsInfo})`);
+    // each mock renders its arguments back verbatim (sizes as a MiB count, for readable expected strings), so an
+    // assertion on the composed string still pins down what the pipe handed to its collaborators, without
+    // duplicating TqByteSizePipe/TqPercentPipe's own formatting logic
+    tqByteSizeTransformMock = jest.fn((sizeBytes: number, unit: 'MiB' | 'GiB' = 'MiB', digitsInfo: string = '1.1-1'): string =>
+      `${sizeBytes / MIB}${unit}(${digitsInfo})`);
     tqPercentTransformMock = jest.fn((value: number, digitsInfo: string): string => `${value}(${digitsInfo})%`);
 
     pipe = new DownloadProgressPipe(
-      {transform: tqDecimalTransformMock} as unknown as TqDecimalPipe,
+      {transform: tqByteSizeTransformMock} as unknown as TqByteSizePipe,
       {transform: tqPercentTransformMock} as unknown as TqPercentPipe
     );
   });
@@ -44,7 +46,25 @@ describe('DownloadProgressPipe', (): void => {
     const bytesPerSecond: number = 4 * MIB;
 
     expect(pipe.transform(receivedBytes, totalBytes, bytesPerSecond, 17))
-      .toBe('118(1.0-0) MiB of 188(1.0-0) MiB · 0.42(1.0-0)% · 4(1.1-1) MiB/s · 00:17 left');
+      .toBe('118MiB(1.0-0) of 188MiB(1.0-0) · 0.42(1.0-0)% · 4MiB(1.1-1)/s · 00:17 left');
+  });
+
+  it('passes received and total size to the byte-size pipe as whole MiB with no decimal places', (): void => {
+    const receivedBytes: number = 118 * MIB;
+    const totalBytes: number = 188 * MIB;
+
+    pipe.transform(receivedBytes, totalBytes, undefined, undefined);
+
+    expect(tqByteSizeTransformMock.mock.calls).toEqual([[receivedBytes, 'MiB', '1.0-0'], [totalBytes, 'MiB', '1.0-0']]);
+  });
+
+  it('passes the rate to the byte-size pipe using its own default unit and digitsInfo', (): void => {
+    const receivedBytes: number = 10 * MIB;
+    const bytesPerSecond: number = 1.25 * MIB;
+
+    pipe.transform(receivedBytes, undefined, bytesPerSecond, undefined);
+
+    expect(tqByteSizeTransformMock).toHaveBeenLastCalledWith(bytesPerSecond);
   });
 
   it('renders the percentage of the figures it was given', (): void => {
@@ -70,7 +90,7 @@ describe('DownloadProgressPipe', (): void => {
     const receivedBytes: number = 10 * MIB;
     const bytesPerSecond: number = MIB;
 
-    expect(pipe.transform(receivedBytes, undefined, bytesPerSecond, 5)).toBe('10(1.0-0) MiB · 1(1.1-1) MiB/s · 00:05 left');
+    expect(pipe.transform(receivedBytes, undefined, bytesPerSecond, 5)).toBe('10MiB(1.0-0) · 1MiB(1.1-1)/s · 00:05 left');
     expect(downloadPercentageMock).not.toHaveBeenCalled();
     expect(tqPercentTransformMock).not.toHaveBeenCalled();
   });
@@ -79,7 +99,7 @@ describe('DownloadProgressPipe', (): void => {
     const receivedBytes: number = 10 * MIB;
     const bytesPerSecond: number = MIB;
 
-    expect(pipe.transform(receivedBytes, 0, bytesPerSecond, 5)).toBe('10(1.0-0) MiB of 0(1.0-0) MiB · 1(1.1-1) MiB/s · 00:05 left');
+    expect(pipe.transform(receivedBytes, 0, bytesPerSecond, 5)).toBe('10MiB(1.0-0) of 0MiB(1.0-0) · 1MiB(1.1-1)/s · 00:05 left');
     expect(downloadPercentageMock).not.toHaveBeenCalled();
     expect(tqPercentTransformMock).not.toHaveBeenCalled();
   });
@@ -90,38 +110,29 @@ describe('DownloadProgressPipe', (): void => {
     const bytesPerSecond: number = 1 * MIB;
 
     expect(pipe.transform(receivedBytes, totalBytes, bytesPerSecond, undefined))
-      .toBe('10(1.0-0) MiB of 20(1.0-0) MiB · 0.42(1.0-0)% · 1(1.1-1) MiB/s');
+      .toBe('10MiB(1.0-0) of 20MiB(1.0-0) · 0.42(1.0-0)% · 1MiB(1.1-1)/s');
   });
 
   it('drops the rate when it is unknown', (): void => {
     const receivedBytes: number = 10 * MIB;
     const totalBytes: number = 20 * MIB;
 
-    expect(pipe.transform(receivedBytes, totalBytes, undefined, undefined)).toBe('10(1.0-0) MiB of 20(1.0-0) MiB · 0.42(1.0-0)%');
-  });
-
-  it('rounds sizes to whole MiB before formatting, and passes the rate through undivided beyond MiB/s', (): void => {
-    const receivedBytes: number = 1.6 * MIB;
-    const bytesPerSecond: number = 1.25 * MIB;
-
-    pipe.transform(receivedBytes, undefined, bytesPerSecond, undefined);
-
-    expect(tqDecimalTransformMock.mock.calls).toEqual([[2, '1.0-0'], [1.25, '1.1-1']]);
+    expect(pipe.transform(receivedBytes, totalBytes, undefined, undefined)).toBe('10MiB(1.0-0) of 20MiB(1.0-0) · 0.42(1.0-0)%');
   });
 
   it('zero-pads minutes and seconds under ten', (): void => {
     const receivedBytes: number = 0;
 
-    expect(pipe.transform(receivedBytes, undefined, undefined, 65)).toBe('0(1.0-0) MiB · 01:05 left');
+    expect(pipe.transform(receivedBytes, undefined, undefined, 65)).toBe('0MiB(1.0-0) · 01:05 left');
   });
 
   it('formats a remaining time over an hour as minutes:seconds, not hours', (): void => {
     const receivedBytes: number = 0;
 
-    expect(pipe.transform(receivedBytes, undefined, undefined, 7200)).toBe('0(1.0-0) MiB · 120:00 left');
+    expect(pipe.transform(receivedBytes, undefined, undefined, 7200)).toBe('0MiB(1.0-0) · 120:00 left');
   });
 
   it('treats a missing received byte count as zero', (): void => {
-    expect(pipe.transform(undefined, undefined, undefined, undefined)).toBe('0(1.0-0) MiB');
+    expect(pipe.transform(undefined, undefined, undefined, undefined)).toBe('0MiB(1.0-0)');
   });
 });
