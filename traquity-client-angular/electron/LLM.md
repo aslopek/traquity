@@ -27,8 +27,25 @@ electron/
     catalogue.js                the curated models, pinned to a Hugging Face revision each; projects the
                                 public `CatalogueEntry` shape out of the full internal one
     ai-registry.js              the `ai` key of a loaded config: notice confirmation (re-hashed against the packaged
-                                notice resource) and which catalogued models are actually installed, verified
-                                against the filesystem and the catalogue's own pinned digest
+                                notice resource), which catalogued models are actually installed (verified against
+                                the filesystem and the catalogue's own pinned digest), and `install`, which persists
+                                a completed download's path
+    model-download.js           downloads one catalogue entry from its pinned `resolve/<revision>/<file>` URL into a
+                                picked directory, staged then renamed - the AI counterpart of
+                                `java/corretto-download.js`, sharing that module's `download/` mechanics but verified
+                                by the catalogue's pinned sha256 rather than by a signature
+    free-space.js               whether a directory's disk has a required number of free bytes, checked before a
+                                model download starts
+  download/                    mechanics shared by every streamed download in this app, agnostic of what is being
+                               downloaded and of how a completed one is verified (a detached signature vs. a pinned hash) -
+                               neither concern lives here
+    byte-cap-transform.js      a stream `Transform` that ends the pipeline once a byte cap is passed, enforced
+                               on the stream itself rather than on a `content-length` header
+    progress-reporter.js       throttled, rolling-window-averaged `downloading`-phase progress, shared by
+                               `java/corretto-download.js` and `ai/model-download.js`
+    error-message.js           an error's message followed by its `cause` chain, down to a bounded depth - what makes a
+                               rejected `fetch` diagnostic at all, since it rejects with the constant message `fetch failed`
+                               and names the actual reason only in `cause`
   app/
     restart-into-configuration.js sets `configureOnNextStart`, kills the backend, relaunches and exits, in that order
   config/
@@ -69,11 +86,12 @@ electron/
     navigation-policy.js       whether a URL may be opened by the OS, and whether the window may navigate to it
     database-dialogs.js        native open/save dialogs for the database file, normalizing to base paths
     java-dialogs.js            native picker for a java binary or its containing directory
+    ai-dialogs.js              native directory picker for choosing where a model download lands
   testing/                     shared spec-only helpers (custom matchers, ...) used by more than one *.spec.js
 ```
 
-The channels `ipc/startup-bridge.js` registers — thirteen request/response via `ipcMain.handle`, two one-way via `ipcMain.on`, one push from
-the main process into the renderer:
+The channels `ipc/startup-bridge.js` registers — fourteen request/response via `ipcMain.handle`, two one-way via `ipcMain.on`, two pushes
+from the main process into the renderer:
 
 - `startup:getState`
 - `backend:start`
@@ -88,9 +106,11 @@ the main process into the renderer:
 - `java:download`
 - `ai:getState`
 - `ai:confirm`
+- `ai:download`
 - `app:restartAndConfigure` (one-way)
 - `app:quit` (one-way)
 - `java:downloadProgress` (push, main → renderer)
+- `ai:downloadProgress` (push, main → renderer)
 
 Keep this map current as new channels land — it is what a reader starts from.
 
@@ -170,14 +190,14 @@ screen asks for one instead of inheriting the backend's own built-in default sil
 Every write of that file lands as mode `0600`, and a `chmod` to the same mode follows each one, since a `mode` passed to a write only
 applies to a file being created and an install predating this rule still carries whatever umask it was written under.
 
-Exactly four channels write `traquity.config.json`: `auth:forget` removes one `auth` entry immediately, while the screen is still up,
+Five channels write `traquity.config.json`: `auth:forget` removes one `auth` entry immediately, while the screen is still up,
 `config:apply` persists the configuration screen on finish, touching `env.TQ_DB_FILE_PATH` and nothing else, `app:restartAndConfigure`
-sets `configureOnNextStart` on the way out, and `ai:confirm` hashes the packaged AI notice resource and writes that digest as
-`ai.confirmedNotice`, initializing `ai.models` to `{}` the first time. All four reach the disk through a collaborator of their own
-(`config/auth-registry.js`'s `forget`, `config/configuration-writer.js`'s `apply`, `config/configure-on-next-start.js`'s `request`,
-`ai/ai-registry.js`'s `confirm`); no `ConfigFile` is injected into the bridge directly, so no other channel can write at all. Nothing in the
-main process ever *writes* an `auth` entry outside `recordProvenStart`, which is what keeps "a failed start never discards a record"
-intact.
+sets `configureOnNextStart` on the way out, `ai:confirm` hashes the packaged AI notice resource and writes that digest as
+`ai.confirmedNotice`, initializing `ai.models` to `{}` the first time, and `ai:download` sets one `ai.models[key]` entry on a completed
+download. All five reach the disk through a collaborator of their own (`config/auth-registry.js`'s `forget`,
+`config/configuration-writer.js`'s `apply`, `config/configure-on-next-start.js`'s `request`, `ai/ai-registry.js`'s `confirm` and `install`);
+no `ConfigFile` is injected into the bridge directly, so no other channel can write at all. Nothing in the main process ever *writes* an
+`auth` entry outside `recordProvenStart`, which is what keeps "a failed start never discards a record" intact.
 
 A database is identified everywhere by its **base path without extension** — `env.TQ_DB_FILE_PATH`, the `auth` map's keys and
 `StartupState.databasePath` are all that shape. The `.mv.db` suffix H2 materializes exists only at the dialog boundary, where

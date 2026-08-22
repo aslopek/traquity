@@ -1,6 +1,9 @@
 const path = require('node:path');
-const {Readable, Transform, Writable} = require('node:stream');
+const {Readable, Writable} = require('node:stream');
 const {pipeline} = require('node:stream/promises');
+const {createByteCapTransform} = require('../download/byte-cap-transform.js');
+const {messageOf} = require('../download/error-message.js');
+const {createProgressReporter} = require('../download/progress-reporter.js');
 
 /**
  * Downloads and verifies the Amazon Corretto JDK for the running platform, replacing whatever is at
@@ -89,11 +92,6 @@ const {pipeline} = require('node:stream/promises');
  * @property {number} [maxArchiveBytes] defaults to `MAX_ARCHIVE_BYTES`
  */
 
-/** @type {number} how often a downloading-phase progress event is pushed, at most */
-const EMIT_INTERVAL_MILLIS = 200;
-/** @type {number} the rolling window the download speed is averaged over */
-const SPEED_WINDOW_MILLIS = 5_000;
-
 /**
  * The most a response body may write to the staging directory. A JDK archive is a few hundred megabytes, so this
  * bounds nothing genuine; what it bounds is a response that never ends, which the signature check cannot catch
@@ -136,9 +134,6 @@ const RETRY_DELAY_MILLIS = 200;
  */
 const REMOVAL_OPTIONS = {recursive: true, force: true, maxRetries: RETRY_ATTEMPTS, retryDelay: RETRY_DELAY_MILLIS};
 
-/** @type {number} how far a `cause` chain is followed - it is built by whoever threw, and may well be cyclic */
-const MAX_CAUSE_DEPTH = 4;
-
 /** @typedef {{file: string}} CorrettoArchive */
 
 /** @type {number} */
@@ -170,131 +165,6 @@ function parseContentLength(headerValue) {
   }
   const parsed = Number.parseInt(headerValue, 10);
   return Number.isFinite(parsed) ? parsed : null;
-}
-
-/**
- * An error's message, followed by the message of each `cause` it carries, down to `MAX_CAUSE_DEPTH`. The chain is
- * what makes the message diagnostic at all where a `fetch` rejects: it rejects with a `TypeError` whose message is
- * the constant `fetch failed` for a refused connection, an unresolvable host and a rejected certificate alike, and
- * names which of them it was in `cause` only.
- *
- * @param {unknown} error
- * @returns {string}
- */
-function messageOf(error) {
-  /** @type {string[]} */
-  const messages = [];
-  /** @type {unknown} */
-  let current = error;
-
-  for (let depth = 0; depth <= MAX_CAUSE_DEPTH; depth++) {
-    messages.push(current instanceof Error ? current.message : String(current));
-    if (!(current instanceof Error) || current.cause == null) {
-      break;
-    }
-    current = current.cause;
-  }
-
-  return messages.join(': ');
-}
-
-/**
- * Reports downloading-phase progress as bytes accumulate, throttled to roughly `EMIT_INTERVAL_MILLIS` apart, with the
- * download speed averaged over a rolling window rather than cumulatively.
- *
- * @param {{now: () => number, totalBytes: number | null, onProgress: (progress: JavaDownloadProgress) => void}} options
- * @returns {{addBytes: (chunkLength: number) => void, flush: () => void}}
- */
-function createProgressReporter(options) {
-  const {now, totalBytes, onProgress} = options;
-
-  /** @type {number} */
-  let receivedBytes = 0;
-  /** @type {{time: number, receivedBytes: number}[]} */
-  const samples = [];
-  let lastEmitTime = -Infinity;
-
-  /**
-   * @param {number} currentTime
-   * @returns {number}
-   */
-  function currentSpeed(currentTime) {
-    const oldest = samples[0];
-    if (oldest == null || currentTime <= oldest.time) {
-      return 0;
-    }
-    return (receivedBytes - oldest.receivedBytes) / ((currentTime - oldest.time) / 1000);
-  }
-
-  /**
-   * @param {number} currentTime
-   * @param {boolean} force
-   * @returns {void}
-   */
-  function emit(currentTime, force) {
-    if (!force && currentTime - lastEmitTime < EMIT_INTERVAL_MILLIS) {
-      return;
-    }
-    lastEmitTime = currentTime;
-    const bytesPerSecond = currentSpeed(currentTime);
-    onProgress({
-      phase: 'downloading',
-      receivedBytes,
-      totalBytes,
-      bytesPerSecond,
-      secondsRemaining: totalBytes == null || bytesPerSecond <= 0 ? null : (totalBytes - receivedBytes) / bytesPerSecond
-    });
-  }
-
-  /**
-   * @param {number} chunkLength
-   * @returns {void}
-   */
-  function addBytes(chunkLength) {
-    receivedBytes += chunkLength;
-    const currentTime = now();
-    samples.push({time: currentTime, receivedBytes});
-
-    /**
-     * @returns {boolean}
-     */
-    function oldestSampleAgedOut() {
-      const oldestSampleTime = samples[0]?.time ?? currentTime;
-      const oldestSampleAge = currentTime - oldestSampleTime;
-      return oldestSampleAge > SPEED_WINDOW_MILLIS;
-    }
-
-    while (samples.length > 1 && oldestSampleAgedOut()) {
-      samples.shift();
-    }
-    emit(currentTime, false);
-  }
-
-  return {addBytes, flush: () => emit(now(), true)};
-}
-
-/**
- * Counts the bytes passing through and ends the stream with an error once `maxBytes` is passed, which fails the
- * pipeline it sits in rather than letting the write side run on.
- *
- * @param {(chunkLength: number) => void} onChunk
- * @param {number} maxBytes
- * @returns {Transform}
- */
-function createByteCounter(onChunk, maxBytes) {
-  let totalBytes = 0;
-
-  return new Transform({
-    transform(chunk, _encoding, callback) {
-      totalBytes += chunk.length;
-      if (totalBytes > maxBytes) {
-        callback(new Error(`Download exceeded ${maxBytes} bytes`));
-        return;
-      }
-      onChunk(chunk.length);
-      callback(null, chunk);
-    }
-  });
 }
 
 /**
@@ -425,7 +295,7 @@ async function downloadCorretto(options) {
     }
 
     const reporter = createProgressReporter({now, totalBytes: parseContentLength(response.headers.get('content-length')), onProgress});
-    const byteCounter = createByteCounter(chunkLength => reporter.addBytes(chunkLength), maxArchiveBytes);
+    const byteCounter = createByteCapTransform({maxBytes: maxArchiveBytes, onChunk: chunk => reporter.addBytes(chunk.length)});
     await pipeline(Readable.fromWeb(/** @type {import('node:stream/web').ReadableStream} */ (response.body)), byteCounter,
       fileSystem.createWriteStream(archivePath));
     reporter.flush();

@@ -7,6 +7,9 @@ const os = require('os');
 const {createConfigFile} = require('./config/config-file.js');
 const {createAuthRegistry} = require('./config/auth-registry.js');
 const {createAiRegistry} = require('./ai/ai-registry.js');
+const {CATALOGUE} = require('./ai/catalogue.js');
+const {downloadModel} = require('./ai/model-download.js');
+const {hasEnoughFreeSpace} = require('./ai/free-space.js');
 const {createConfigurationWriter} = require('./config/configuration-writer.js');
 const {createConfigureOnNextStart} = require('./config/configure-on-next-start.js');
 const {createRestartIntoConfiguration} = require('./app/restart-into-configuration.js');
@@ -14,6 +17,7 @@ const {BACKEND_PID_URL, createBackendReachability} = require('./backend/backend-
 const {createBackendProcess} = require('./backend/backend-process.js');
 const {createDatabaseDialogs} = require('./window/database-dialogs.js');
 const {createJavaDialogs} = require('./window/java-dialogs.js');
+const {createAiDialogs} = require('./window/ai-dialogs.js');
 const {createStartupMode} = require('./window/startup-mode.js');
 const {createStartupBridge} = require('./ipc/startup-bridge.js');
 const {isTrustedSender} = require('./ipc/trusted-sender.js');
@@ -67,6 +71,10 @@ const javaDialogs = createJavaDialogs({
   dialog,
   getParentWindow: getMainWindow,
   fileSystem: fs
+});
+const aiDialogs = createAiDialogs({
+  dialog,
+  getParentWindow: getMainWindow
 });
 // `NodeJS.ProcessEnv` is a pure index signature (`interface ProcessEnv extends Dict<string> {}`), so it is never
 // structurally assignable to named keys a boundary declares as required, as a `Pick<>` of them does - the assertion
@@ -162,6 +170,32 @@ function downloadJava(onProgress) {
 }
 
 /**
+ * @param {import('./ai/catalogue.js').CatalogueRecord} entry
+ * @param {string} targetDirectory
+ * @param {(progress: import('./ai/model-download.js').AiDownloadProgress) => void} onProgress
+ * @returns {Promise<import('./ai/model-download.js').ModelDownloadResult>}
+ */
+function downloadAiModel(entry, targetDirectory, onProgress) {
+  return downloadModel({
+    entry,
+    targetDirectory,
+    fetch,
+    fileSystem: fs,
+    now: () => Date.now(),
+    onProgress
+  });
+}
+
+/**
+ * @param {string} directory
+ * @param {number} requiredBytes
+ * @returns {boolean}
+ */
+function checkFreeSpace(directory, requiredBytes) {
+  return hasEnoughFreeSpace(directory, requiredBytes, {statfsSync: fs.statfsSync});
+}
+
+/**
  * Creates `appDataDir` if it does not exist yet, so that both `configFile.save()` and the backend's log writes have
  * somewhere to land - neither creates its own parent directory. A failure is logged rather than thrown: the write it
  * would have enabled fails on its own terms right after, through its own existing error handling.
@@ -221,6 +255,10 @@ app.on('ready', () => {
     startupState: startupStatePromise,
     configFileState,
     aiRegistry,
+    catalogue: CATALOGUE,
+    aiDialogs,
+    downloadModel: downloadAiModel,
+    hasEnoughFreeSpace: checkFreeSpace,
     backendProcess,
     authRegistry,
     configurationWriter,

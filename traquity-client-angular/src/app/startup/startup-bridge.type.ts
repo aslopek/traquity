@@ -98,6 +98,26 @@ export type ElectronAiState = {
   models: Record<string, ModelEntry>
 };
 
+export type AiDownloadPhase = 'downloading' | 'verifying' | 'installing';
+
+export type AiDownloadProgress = {
+  phase: AiDownloadPhase
+  receivedBytes: number
+  totalBytes: number | null
+  bytesPerSecond: number
+  secondsRemaining: number | null
+};
+
+/**
+ * `cancelled` is its own status rather than a `failed` one: dismissing the directory picker without choosing
+ * anything is not an error. A `completed` outcome carries no path - the model this installed is read back through
+ * `getAiState`, the same way a confirmed notice is.
+ */
+export type AiDownloadOutcome =
+  | { status: 'completed' }
+  | { status: 'cancelled' }
+  | { status: 'failed', message: string };
+
 export type TraQuityBridge = {
   getStartupState: () => Promise<StartupState>
   startBackend: (password: string) => Promise<BackendStartOutcome>
@@ -112,7 +132,9 @@ export type TraQuityBridge = {
   downloadJava: () => Promise<JavaDownloadOutcome>
   getAiState: () => Promise<ElectronAiState>
   confirmAiNotice: () => Promise<void>
+  downloadModel: (key: string) => Promise<AiDownloadOutcome>
   onJavaDownloadProgress: (listener: (progress: JavaDownloadProgress) => void) => () => void
+  onAiDownloadProgress: (listener: (progress: AiDownloadProgress) => void) => () => void
   restartAndConfigure: () => void
   quit: () => void
 };

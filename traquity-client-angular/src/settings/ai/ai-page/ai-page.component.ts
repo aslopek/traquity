@@ -3,17 +3,21 @@ import {MatButton} from "@angular/material/button";
 import {MatIcon} from "@angular/material/icon";
 import {MatList, MatListItem, MatListItemIcon, MatListItemLine, MatListItemMeta, MatListItemTitle} from "@angular/material/list";
 import {Store} from "@ngrx/store";
+import {DownloadProgressComponent} from "../../../common/components/download-progress/download-progress.component";
 import {AiActions} from "../../../store/ai/ai.actions";
 import {getCatalogue, getIsNoticeConfirmed} from "../../../store/ai/ai.selector";
 import {CatalogueEntryViewModel} from "../../../store/ai/selectors/get-catalogue.selector";
 import {AppState} from "../../../store/app.state";
 import {TqByteSizePipe, TqDecimalPipe} from "../../../common";
 import {AiNoticeComponent} from "../ai-notice/ai-notice.component";
+import {AiDownloadPhaseLabelPipe} from "./ai-download-phase-label.pipe";
 
 @Component({
   selector: "app-ai-page",
   imports: [
+    AiDownloadPhaseLabelPipe,
     AiNoticeComponent,
+    DownloadProgressComponent,
     MatButton,
     MatIcon,
     MatList,
@@ -37,5 +41,9 @@ export class AiPageComponent {
 
   protected confirm(): void {
     this.store.dispatch(AiActions.confirmAiNotice());
+  }
+
+  protected download(key: string): void {
+    this.store.dispatch(AiActions.downloadModel({key}));
   }
 }

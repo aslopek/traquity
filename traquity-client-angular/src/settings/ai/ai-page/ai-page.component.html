@@ -6,9 +6,33 @@
                           [fontIcon]="entry.installed ? 'check_circle' : 'radio_button_unchecked'">
                 </mat-icon>
                 <span matListItemTitle>{{ entry.description }}</span>
-                <span matListItemLine>Size: {{ entry.sizeBytes | tqByteSize:'GiB' }} · License: {{ entry.license }}</span>
-                <span matListItemMeta>{{ entry.installed ? 'On disk' : 'Not installed' }}</span>
+                @if (!entry.downloading) {
+                    <span matListItemLine>Size: {{ entry.sizeBytes | tqByteSize:'GiB' }} · License: {{ entry.license }}</span>
+                }
+                @if (entry.error; as error) {
+                    <span matListItemLine class="download-error">{{ error }}</span>
+                }
+                <span matListItemMeta>
+                    @if (entry.showDownloadButton) {
+                        <button mat-stroked-button
+                                color="primary"
+                                (click)="download(entry.key)">
+                            Download
+                        </button>
+                    } @else if (!entry.downloading) {
+                        {{ entry.installed ? 'On disk' : 'Not installed' }}
+                    }
+                </span>
             </mat-list-item>
+            @if (entry.downloading && entry.progress; as progress) {
+                <div class="download-progress-row">
+                    <app-download-progress [receivedBytes]="progress.receivedBytes"
+                                           [totalBytes]="progress.totalBytes ?? undefined"
+                                           [bytesPerSecond]="progress.bytesPerSecond"
+                                           [secondsRemaining]="progress.secondsRemaining ?? undefined"
+                                           [label]="progress.phase | aiDownloadPhaseLabel"/>
+                </div>
+            }
         }
     </mat-list>
 } @else {
