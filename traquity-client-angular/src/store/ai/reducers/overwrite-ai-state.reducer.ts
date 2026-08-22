@@ -1,8 +1,10 @@
 import {AiState} from '../ai.state';
 import {ElectronAiState} from "../../../app/startup/startup-bridge.type";
 
-export function overwriteAiState(_state: AiState, electronAiState: ElectronAiState): AiState {
+/** Keeps `download` and `downloadErrors` as they were: `ElectronAiState` carries neither, both are this slice's own. */
+export function overwriteAiState(state: AiState, electronAiState: ElectronAiState): AiState {
   return {
+    ...state,
     ...electronAiState
   };
 }
