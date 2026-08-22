@@ -34,6 +34,8 @@ const {CATALOGUE, catalogueEntries} = require('./catalogue.js');
  * @property {() => Promise<AiState>} getState
  * @property {() => void} confirm takes no argument; hashes the packaged notice resource itself and persists that
  *   digest as the confirmation
+ * @property {(key: string, modelPath: string) => void} install persists a completed download's path for `key`,
+ *   replacing whatever was there; preserves the entry's existing `active` flag
  */
 
 /**
@@ -105,7 +107,43 @@ function createAiRegistry(options) {
     configFile.save(config);
   }
 
-  return {getState, confirm};
+  /**
+   * @param {unknown} rawEntry
+   * @returns {boolean}
+   */
+  function wasActive(rawEntry) {
+    const parsedEntry = modelEntrySchema.safeParse(rawEntry);
+    return parsedEntry.success && parsedEntry.data.active;
+  }
+
+  /**
+   * @param {string} key
+   * @param {string} modelPath
+   * @returns {void}
+   */
+  function install(key, modelPath) {
+    /** @type {unknown} */
+    const previousEntry = config.ai?.models?.[key];
+    /** @type {Record<string, unknown>} */
+    const models = {
+      ...(config.ai?.models ?? {}),
+      [key]: {
+        path: modelPath,
+        active: wasActive(previousEntry)
+      }
+    };
+
+    /** @type {AiConfig} */
+    const nextAiConfig = {models};
+    if (config.ai?.confirmedNotice != null) {
+      nextAiConfig.confirmedNotice = config.ai.confirmedNotice;
+    }
+
+    config.ai = nextAiConfig;
+    configFile.save(config);
+  }
+
+  return {getState, confirm, install};
 }
 
 module.exports = {createAiRegistry};
