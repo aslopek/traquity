@@ -1,4 +1,5 @@
 const {
+  aiDownloadKeySchema,
   authVerifyPasswordSchema,
   backendStartPasswordSchema,
   configurationChangesSchema,
@@ -8,6 +9,9 @@ const {
 } = require('./ipc-schema.js');
 
 /** @import {AiRegistry, AiState} from '../ai/ai-registry.js' */
+/** @import {AiDialogs} from '../window/ai-dialogs.js' */
+/** @import {AiDownloadProgress, ModelDownloadResult} from '../ai/model-download.js' */
+/** @import {CatalogueRecord} from '../ai/catalogue.js' */
 /** @import {AuthRegistry, KnownDatabase} from '../config/auth-registry.js' */
 /** @import {AuthState} from '../config/auth.js' */
 /** @import {BackendProcess, BackendStartOutcome} from '../backend/backend-process.js' */
@@ -26,14 +30,16 @@ const {
  * Registers the IPC channels the preload's `contextBridge` surface calls into. No generic `invoke(channel, ...)`
  * passthrough, ever - a wider surface would let the renderer reach into the main process in uncontrolled manner. All
  * but two are request/response (registered via `ipcMain.handle`); `app:restartAndConfigure` and `app:quit` are
- * one-way (`ipcMain.on`) because neither has an answer to give. `java:downloadProgress` is the one push the main
- * process makes into the renderer, sent straight to the window that invoked `java:download` rather than broadcast.
+ * one-way (`ipcMain.on`) because neither has an answer to give. `java:downloadProgress` and `ai:downloadProgress` are
+ * the two pushes the main process makes into the renderer, each sent straight to the window that invoked the
+ * matching download channel.
  *
- * Exactly four channels write `traquity.config.json`: `auth:forget` removes one `auth` entry through
- * `authRegistry.forget`, `config:apply` sets `env.TQ_DB_FILE_PATH` and `java` through `configurationWriter.apply`,
- * `app:restartAndConfigure` sets `configureOnNextStart` through `restartIntoConfiguration.restart`, and `ai:confirm`
- * sets `ai.confirmedNotice` (and `ai.models`, the first time) through `aiRegistry.confirm`. Nothing here ever
- * *writes* an `auth` entry: recording one is a proven start's job.
+ * Five channels write `traquity.config.json`: `auth:forget` removes one `auth` entry through `authRegistry.forget`,
+ * `config:apply` sets `env.TQ_DB_FILE_PATH` and `java` through `configurationWriter.apply`, `app:restartAndConfigure`
+ * sets `configureOnNextStart` through `restartIntoConfiguration.restart`, `ai:confirm` sets `ai.confirmedNotice`
+ * (and `ai.models`, the first time) through `aiRegistry.confirm`, and `ai:download` sets one `ai.models` entry on a
+ * completed download through `aiRegistry.install`. Nothing here ever *writes* an `auth` entry: recording one is a
+ * proven start's job.
  *
  * A TLS-overridden environment collapses the registration to two channels - `startup:getState` and `app:quit` -
  * before anything else is registered: with no `java:download`, no `backend:start` and no `config:apply` registered,
@@ -54,11 +60,11 @@ const {
  */
 
 /**
- * The one member `java:download` needs off the main window, to push progress to exactly the renderer that asked for
- * it rather than broadcasting.
+ * The one member `java:download` and `ai:download` need off the main window, to push progress to exactly the
+ * renderer that asked for it.
  *
  * @typedef {Object} ProgressWindowLike
- * @property {{send: (channel: string, progress: JavaDownloadProgress) => void}} webContents
+ * @property {{send: (channel: string, progress: JavaDownloadProgress | AiDownloadProgress) => void}} webContents
  */
 
 /**
@@ -97,11 +103,26 @@ const {
  */
 
 /**
+ * What `ai:download` answers with. `cancelled` is its own status and differs from `failed`: dismissing the
+ * directory picker without choosing anything is not an error and the renderer shows no message for it, while every
+ * other way the flow can end - not enough free space, a byte cap or hash mismatch, a transfer failure - is a
+ * `failed` with a message to display. A `completed` outcome carries no path: the model this installed is read back
+ * through `ai:getState`.
+ *
+ * @typedef {{status: 'completed'} | {status: 'cancelled'} | {status: 'failed', message: string}} AiDownloadOutcome
+ */
+
+/**
  * @typedef {Object} StartupBridgeOptions
  * @property {IpcMainLike} ipcMain
  * @property {Promise<StartupState>} startupState
  * @property {ConfigFileState} configFileState
- * @property {Pick<AiRegistry, 'getState' | 'confirm'>} aiRegistry
+ * @property {Pick<AiRegistry, 'getState' | 'confirm' | 'install'>} aiRegistry
+ * @property {Record<string, CatalogueRecord>} catalogue the models, for resolving `ai:download`'s key argument
+ * @property {Pick<AiDialogs, 'pickDownloadDirectory'>} aiDialogs
+ * @property {(entry: CatalogueRecord, targetDirectory: string, onProgress: (progress: AiDownloadProgress) => void) =>
+ *   Promise<ModelDownloadResult>} downloadModel
+ * @property {(directory: string, requiredBytes: number) => boolean} hasEnoughFreeSpace
  * @property {Pick<BackendProcess, 'start'>} backendProcess
  * @property {Pick<AuthRegistry, 'verify' | 'knownDatabases' | 'forget'>} authRegistry
  * @property {Pick<ConfigurationWriter, 'apply'>} configurationWriter
@@ -112,6 +133,8 @@ const {
  * @property {(onProgress: (progress: JavaDownloadProgress) => void) => Promise<JavaDownloadResult>} downloadJava
  * @property {string} javaDownloadTarget where a download puts a runtime, offered as the picker's starting point when
  *   nothing is configured yet
+ * @property {string} javaDownloadDirectory the directory a download's free-space check is measured against - the
+ *   parent of `javaDownloadTarget`, since a download also stages into a sibling directory there
  * @property {TraQuityConfig} config
  * @property {string} logPath
  * @property {() => void} quit
@@ -121,6 +144,12 @@ const {
  * @property {() => void} reresolveJava called once `config:apply` has saved, so a later boot-time resolution reuse
  *   sees whatever the save just wrote
  */
+
+/** @type {number} the free space a Java download requires - the most its own archive download could ever write to disk */
+const JAVA_DOWNLOAD_REQUIRED_BYTES = 2 ** 30;
+
+/** @type {number} the margin added on top of a model's exact catalogued size before its download starts */
+const MARGIN = 2 ** 30;
 
 /**
  * @param {StartupBridgeOptions} options
@@ -132,6 +161,10 @@ function createStartupBridge(options) {
     startupState,
     configFileState,
     aiRegistry,
+    catalogue,
+    aiDialogs,
+    downloadModel,
+    hasEnoughFreeSpace,
     backendProcess,
     authRegistry,
     configurationWriter,
@@ -141,6 +174,7 @@ function createStartupBridge(options) {
     javaRuntime,
     downloadJava,
     javaDownloadTarget,
+    javaDownloadDirectory,
     config,
     logPath,
     quit,
@@ -152,6 +186,10 @@ function createStartupBridge(options) {
 
   // set for as long as a download runs, so `java:download` stays single-flight whatever the renderer does
   let downloading = false;
+
+  // the same single-flight guard, kept separate from `downloading` above since a Java download and a model download
+  // are independent flows that must each stay single-flight on their own
+  let aiDownloading = false;
 
   /**
    * Registers a request/response channel that refuses an untrusted sender by throwing, which is what `ipcMain.handle`
@@ -297,31 +335,78 @@ function createStartupBridge(options) {
       }
       downloading = true;
 
-      /** @type {JavaDownloadResult} */
-      let result;
       try {
-        result = await downloadJava(progress => {
+        if (!hasEnoughFreeSpace(javaDownloadDirectory, JAVA_DOWNLOAD_REQUIRED_BYTES)) {
+          return {status: 'failed', message: 'Not enough free disk space to download the Java runtime'};
+        }
+
+        const result = await downloadJava(progress => {
           const window = getMainWindow();
           if (window != null) {
             window.webContents.send('java:downloadProgress', progress);
           }
         });
+        if (result.status !== 'completed') {
+          return result;
+        }
+        const verification = await javaRuntime.verifySetting(result.javaPath);
+        if (verification.status !== 'ok') {
+          return {status: 'failed', message: verification.message};
+        }
+        return {...result, verification};
       } finally {
         downloading = false;
       }
-      if (result.status !== 'completed') {
-        return result;
-      }
-      const verification = await javaRuntime.verifySetting(result.javaPath);
-      if (verification.status !== 'ok') {
-        return {status: 'failed', message: verification.message};
-      }
-      return {...result, verification};
     });
 
     handle('ai:getState', () => aiRegistry.getState());
 
     handle('ai:confirm', () => aiRegistry.confirm());
+
+    handle('ai:download', async (_event, key) => {
+      const parsedKey = aiDownloadKeySchema.safeParse(key);
+      if (!parsedKey.success) {
+        throw new Error('Invalid key argument for ai:download');
+      }
+      const entry = catalogue[parsedKey.data];
+      if (entry == null) {
+        throw new Error(`Unknown catalogue key ${parsedKey.data}`);
+      }
+
+      // checked and set synchronously, before any `await` - a second call arriving while the first is still waiting
+      // on the directory dialog must see this already set, not just a second call arriving once a transfer is
+      // already streaming
+      if (aiDownloading) {
+        return {status: 'failed', message: 'A model download is already running'};
+      }
+      aiDownloading = true;
+
+      try {
+        const targetDirectory = await aiDialogs.pickDownloadDirectory();
+        if (targetDirectory == null) {
+          return {status: 'cancelled'};
+        }
+
+        if (!hasEnoughFreeSpace(targetDirectory, entry.sizeBytes + MARGIN)) {
+          return {status: 'failed', message: 'Not enough free disk space in the selected folder'};
+        }
+
+        const result = await downloadModel(entry, targetDirectory, progress => {
+          const window = getMainWindow();
+          if (window != null) {
+            window.webContents.send('ai:downloadProgress', progress);
+          }
+        });
+
+        if (result.status !== 'completed') {
+          return result;
+        }
+        aiRegistry.install(entry.key, result.path);
+        return {status: 'completed'};
+      } finally {
+        aiDownloading = false;
+      }
+    });
 
     on('app:restartAndConfigure', () => restartIntoConfiguration.restart());
     on('app:quit', () => quit());
