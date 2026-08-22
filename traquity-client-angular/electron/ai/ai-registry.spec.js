@@ -230,6 +230,89 @@ describe('aiRegistry', () => {
     });
   });
 
+  describe('install', () => {
+    const newModelPath = 'D:\\downloads\\models\\model-a.gguf';
+
+    beforeEach(() => {
+      config.ai = {
+        confirmedNotice: noticeDigest,
+        models: {}
+      };
+    });
+
+    it('persists the path for the given key, defaulting active to false', () => {
+      subjectUnderTest.install('model-a', newModelPath);
+
+      expect(config.ai).toEqual({
+        confirmedNotice: noticeDigest,
+        models: {
+          'model-a': {
+            path: newModelPath,
+            active: false
+          }
+        }
+      });
+
+      expect(save).toHaveBeenCalledTimes(1);
+      expect(save).toHaveBeenCalledWith(config);
+    });
+
+    it('keeps other installed models untouched', () => {
+      config.ai = {
+        confirmedNotice: noticeDigest,
+        models: {
+          'model-b': {path: modelPath, active: true}
+        }
+      };
+
+      subjectUnderTest.install('model-a', newModelPath);
+
+      expect(config.ai).toEqual({
+        confirmedNotice: noticeDigest,
+        models: {
+          'model-b': {path: modelPath, active: true},
+          'model-a': {path: newModelPath, active: false}
+        }
+      });
+    });
+
+    it('preserves the active flag of a repeated download for the same key', () => {
+      config.ai = {
+        confirmedNotice: noticeDigest,
+        models: {
+          'model-a': {path: modelPath, active: true}
+        }
+      };
+
+      subjectUnderTest.install('model-a', newModelPath);
+
+      expect(config.ai).toEqual({
+        confirmedNotice: noticeDigest,
+        models: {
+          'model-a': {path: newModelPath, active: true}
+        }
+      });
+    });
+
+    it('treats a mangled prior entry for the same key as not active', () => {
+      config.ai = {
+        confirmedNotice: noticeDigest,
+        models: {
+          'model-a': {path: modelPath}
+        }
+      };
+
+      subjectUnderTest.install('model-a', newModelPath);
+
+      expect(config.ai).toEqual({
+        confirmedNotice: noticeDigest,
+        models: {
+          'model-a': {path: newModelPath, active: false}
+        }
+      });
+    });
+  });
+
   describe('with a mangled entry for one model alongside a valid entry for another', () => {
     beforeEach(() => {
       config.ai = {

@@ -1,7 +1,13 @@
 const {beforeEach, describe, expect, it, jest} = require('@jest/globals');
 const path = require('node:path');
 const {Writable} = require('node:stream');
+
+jest.mock('../download/cancel-body.js', () => ({cancelBody: jest.fn()}));
+
 const {downloadCorretto} = require('./corretto-download.js');
+const {cancelBody} = require('../download/cancel-body.js');
+
+const cancelBodyMock = /** @type {jest.Mock<(body: ReadableStream<Uint8Array> | null) => Promise<void>>} */ (/** @type {unknown} */ (cancelBody));
 
 /** @import {DownloadCorrettoOptions, DownloadFetchResponse, JavaDownloadFileSystem, JavaDownloadProgress, SpawnSyncResult}
  *   from './corretto-download.js' */
@@ -280,14 +286,34 @@ describe('downloadCorretto', () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  it('fails on a non-ok archive response, extracting nothing', async () => {
-    fetch.mockImplementation(() => Promise.resolve(archiveResponse({url: archiveUrl, ok: false, status: 503})));
+  it('fails on a non-ok archive response, extracting nothing and cancelling any body it carries', async () => {
+    const body = streamOf([Buffer.from('error page')]);
+    fetch.mockImplementation(() => Promise.resolve({ok: false, status: 503, url: archiveUrl, headers: {get: () => null}, body}));
 
     await expect(downloadCorretto(options)).resolves.toEqual({
       status: 'failed',
       message: expect.stringContaining('503')
     });
     expect(spawnSync).not.toHaveBeenCalled();
+    expect(cancelBodyMock).toHaveBeenCalledTimes(1);
+    expect(cancelBodyMock).toHaveBeenCalledWith(body);
+  });
+
+  it('fails on a non-ok signature response, verifying nothing and cancelling any body it carries', async () => {
+    const body = streamOf([Buffer.from('error page')]);
+    fetch.mockImplementation((url) => Promise.resolve(
+      url.endsWith('.sig')
+        ? {ok: false, status: 503, url, headers: {get: () => null}, body}
+        : archiveResponse({url: archiveUrl})
+    ));
+
+    await expect(downloadCorretto(options)).resolves.toEqual({
+      status: 'failed',
+      message: expect.stringContaining('503')
+    });
+    expect(verifySignature).not.toHaveBeenCalled();
+    expect(cancelBodyMock).toHaveBeenCalledTimes(1);
+    expect(cancelBodyMock).toHaveBeenCalledWith(body);
   });
 
   it('fetches the signature from the redirect-resolved URL of the archive response, not the request URL', async () => {
@@ -328,7 +354,7 @@ describe('downloadCorretto', () => {
 
     await expect(downloadCorretto(options)).resolves.toEqual({
       status: 'failed',
-      message: 'Download exceeded 16 bytes'
+      message: 'Stream exceeded 16 bytes'
     });
     expect(verifySignature).not.toHaveBeenCalled();
     expect(spawnSync).not.toHaveBeenCalled();

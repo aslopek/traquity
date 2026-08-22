@@ -3,6 +3,8 @@ import {firstValueFrom, Subscription} from 'rxjs';
 import {BridgeHost} from './bridge-host.token';
 import {StartupBridgeService} from './startup-bridge.service';
 import {
+  AiDownloadOutcome,
+  AiDownloadProgress,
   AppliedConfiguration,
   BackendStartOutcome,
   ConfigurationChanges,
@@ -20,6 +22,8 @@ import {
 type GetStartupState = () => Promise<StartupState>;
 type GetAiState = () => Promise<ElectronAiState>;
 type ConfirmAiNotice = () => Promise<void>;
+type DownloadModel = (key: string) => Promise<AiDownloadOutcome>;
+type OnAiDownloadProgress = (listener: (progress: AiDownloadProgress) => void) => () => void;
 type StartBackend = (password: string) => Promise<BackendStartOutcome>;
 type VerifyPassword = (password: string) => Promise<boolean>;
 type GetConfigureState = () => Promise<ConfigureState>;
@@ -58,7 +62,9 @@ describe('StartupBridgeService', (): void => {
   let downloadJava: jest.Mock<DownloadJava>;
   let getAiState: jest.Mock<GetAiState>;
   let confirmAiNotice: jest.Mock<ConfirmAiNotice>;
+  let downloadModel: jest.Mock<DownloadModel>;
   let onJavaDownloadProgress: jest.Mock<OnJavaDownloadProgress>;
+  let onAiDownloadProgress: jest.Mock<OnAiDownloadProgress>;
   let unsubscribeJavaDownloadProgress: jest.Mock<() => void>;
   let restartAndConfigure: jest.Mock<() => void>;
   let quit: jest.Mock<() => void>;
@@ -97,8 +103,10 @@ describe('StartupBridgeService', (): void => {
     downloadJava = jest.fn<DownloadJava>(() => Promise.resolve(javaDownloadOutcome));
     getAiState = jest.fn<GetAiState>(() => Promise.resolve({isConfirmed: false, catalogue: [], models: {}}));
     confirmAiNotice = jest.fn<ConfirmAiNotice>(() => Promise.resolve());
+    downloadModel = jest.fn<DownloadModel>(() => Promise.resolve({status: 'completed'}));
     unsubscribeJavaDownloadProgress = jest.fn<() => void>();
     onJavaDownloadProgress = jest.fn<OnJavaDownloadProgress>(() => unsubscribeJavaDownloadProgress);
+    onAiDownloadProgress = jest.fn<OnAiDownloadProgress>(() => jest.fn<() => void>());
     restartAndConfigure = jest.fn<() => void>();
     quit = jest.fn<() => void>();
 
@@ -116,7 +124,9 @@ describe('StartupBridgeService', (): void => {
       downloadJava,
       getAiState,
       confirmAiNotice,
+      downloadModel,
       onJavaDownloadProgress,
+      onAiDownloadProgress,
       restartAndConfigure,
       quit
     };
