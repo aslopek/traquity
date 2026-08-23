@@ -20,6 +20,7 @@ const {createJavaDialogs} = require('./window/java-dialogs.js');
 const {createAiDialogs} = require('./window/ai-dialogs.js');
 const {createStartupMode} = require('./window/startup-mode.js');
 const {createStartupBridge} = require('./ipc/startup-bridge.js');
+const {createAiBridge} = require('./ipc/ai-bridge.js');
 const {isTrustedSender} = require('./ipc/trusted-sender.js');
 const {createMainWindow, getMainWindow} = require('./window/main-window.js');
 const {findJavaOnPath, normalizeToJavaBinary} = require('./java/java-path.js');
@@ -254,10 +255,6 @@ app.on('ready', () => {
     ipcMain,
     startupState: startupStatePromise,
     configFileState,
-    aiRegistry,
-    catalogue: CATALOGUE,
-    aiDialogs,
-    downloadModel: downloadAiModel,
     hasEnoughFreeSpace: checkFreeSpace,
     backendProcess,
     authRegistry,
@@ -278,6 +275,17 @@ app.on('ready', () => {
     reresolveJava: () => {
       javaPromise = javaRuntime.resolve();
     }
+  }).register();
+  createAiBridge({
+    ipcMain,
+    aiRegistry,
+    catalogue: CATALOGUE,
+    aiDialogs,
+    downloadModel: downloadAiModel,
+    hasEnoughFreeSpace: checkFreeSpace,
+    getMainWindow,
+    tlsOverridden,
+    isTrustedSender: (event) => isTrustedSender(event, getMainWindow())
   }).register();
   createMainWindow();
 });

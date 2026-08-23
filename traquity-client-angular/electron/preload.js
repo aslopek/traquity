@@ -6,14 +6,16 @@ const {contextBridge, ipcRenderer} = require('electron');
 /** @import {ConfigurationChanges} from './config/configuration-writer.js' */
 /** @import {JavaDownloadProgress} from './java/corretto-download.js' */
 /** @import {JavaVerification} from './java/java-version.js' */
-/** @import {AiDownloadOutcome, AppliedConfiguration, ConfigureState, JavaDownloadOutcome, JavaPickResult} from './ipc/startup-bridge.js' */
+/** @import {AppliedConfiguration, ConfigureState, JavaDownloadOutcome, JavaPickResult} from './ipc/startup-bridge.js' */
+/** @import {AiDownloadOutcome} from './ipc/ai-bridge.js' */
 /** @import {PickedDatabase} from './window/database-dialogs.js' */
 /** @import {StartupState} from './window/startup-mode.js' */
 
 // Channel names are literals here on purpose: a sandboxed preload's `require` is a limited polyfill that resolves
 // `electron` and a handful of Node built-ins only - it cannot require a module of this app, so `ipc/` cannot be
 // shared with it. All fourteen request/response literals plus the two one-way channels and the two push channels are
-// duplicated in `ipc/startup-bridge.js`:
+// duplicated across `ipc/startup-bridge.js` (eleven request/response, both one-way and `java:downloadProgress`) and
+// `ipc/ai-bridge.js` (the three `ai:*` request/response channels and `ai:downloadProgress`):
 //   - `startup:getState`
 //   - `backend:start`
 //   - `auth:verify`

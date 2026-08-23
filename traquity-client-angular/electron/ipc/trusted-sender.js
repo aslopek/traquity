@@ -3,12 +3,8 @@
  *
  * `ipcMain.handle`/`ipcMain.on` register per channel, not per frame: every frame that has the preload's bridge reaches
  * every channel registered on that channel name, and an `event` is the only thing that says which frame that was. The
- * answer here is therefore an identity comparison rather than a URL check - a URL is a string the sender influences,
+ * answer here is therefore an identity comparison - a URL is a string the sender influences,
  * while the main frame of the app's own window is an object this process created itself.
- *
- * Anything unrecognizable is refused, which is what makes this a total function over `unknown`: the event arrives
- * typed as `unknown` because `ipc/startup-bridge.js` declares Electron's `ipcMain` structurally rather than importing
- * a module jest cannot load.
  */
 
 /**
