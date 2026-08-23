@@ -4,32 +4,32 @@ import {Actions} from '@ngrx/effects';
 import {Observable} from 'rxjs';
 import {RunHelpers, TestScheduler} from 'rxjs/testing';
 import {AiBridgeService} from '../../../bridge/ai-bridge.service';
-import {AiRemoveOutcome, ElectronAiState} from '../../../bridge/ai-bridge.type';
+import {AiActivateOutcome, ElectronAiState} from '../../../bridge/ai-bridge.type';
 import {AiActions} from '../ai.actions';
-import {removeModel, RemoveModelEffectArgs} from './remove-model.effect';
+import {activateModel, ActivateModelEffectArgs} from './activate-model.effect';
 
-type MockedAiBridgeService = Pick<AiBridgeService, 'removeModel' | 'getState'>;
+type MockedAiBridgeService = Pick<AiBridgeService, 'activateModel' | 'getState'>;
 
-describe('removeModel', (): void => {
+describe('activateModel', (): void => {
   let scheduler: TestScheduler;
   let actionValues: Record<string, Action>;
   let actionMarbles: string;
-  let removeResponseMarbles: string;
+  let activateResponseMarbles: string;
   let stateResponseMarbles: string;
-  let removeOutcome: AiRemoveOutcome;
+  let activateOutcome: AiActivateOutcome;
   let electronAiState: ElectronAiState;
-  let removeModelMock: jest.Mock<(key: string) => Observable<AiRemoveOutcome>>;
+  let activateModelMock: jest.Mock<(key: string) => Observable<AiActivateOutcome>>;
   let getState: jest.Mock<() => Observable<ElectronAiState>>;
   let aiBridgeService: MockedAiBridgeService;
-  let effectArgs: Omit<RemoveModelEffectArgs, 'actions$'>;
+  let effectArgs: Omit<ActivateModelEffectArgs, 'actions$'>;
 
-  function expectEffect(expectedMarbles: string, expectedValues?: Record<string, Action>, removeError?: unknown,
+  function expectEffect(expectedMarbles: string, expectedValues?: Record<string, Action>, activateError?: unknown,
                         stateError?: unknown): void {
     scheduler.run(({cold, hot, expectObservable}: RunHelpers): void => {
-      removeModelMock.mockReturnValue(cold(removeResponseMarbles, {o: removeOutcome}, removeError));
+      activateModelMock.mockReturnValue(cold(activateResponseMarbles, {o: activateOutcome}, activateError));
       getState.mockReturnValue(cold(stateResponseMarbles, {v: electronAiState}, stateError));
       const actions$: Actions = new Actions(hot<Action>(actionMarbles, actionValues));
-      expectObservable(removeModel({actions$, ...effectArgs})).toBe(expectedMarbles, expectedValues);
+      expectObservable(activateModel({actions$, ...effectArgs})).toBe(expectedMarbles, expectedValues);
     });
   }
 
@@ -39,60 +39,60 @@ describe('removeModel', (): void => {
     });
 
     actionMarbles = '-a';
-    removeResponseMarbles = '--(o|)';
+    activateResponseMarbles = '--(o|)';
     stateResponseMarbles = '--(v|)';
-    removeOutcome = {status: 'removed'};
+    activateOutcome = {status: 'activated'};
     electronAiState = {isConfirmed: true, catalogue: [], models: {}};
 
     actionValues = {
-      a: AiActions.removeModel({key: 'model-a'})
+      a: AiActions.activateModel({key: 'model-a'})
     };
 
-    removeModelMock = jest.fn<(key: string) => Observable<AiRemoveOutcome>>();
+    activateModelMock = jest.fn<(key: string) => Observable<AiActivateOutcome>>();
     getState = jest.fn<() => Observable<ElectronAiState>>();
-    aiBridgeService = {removeModel: removeModelMock, getState};
+    aiBridgeService = {activateModel: activateModelMock, getState};
 
     effectArgs = {aiBridgeService};
   });
 
-  it('removes the requested model with its key', (): void => {
+  it('activates the requested model with its key', (): void => {
     expectEffect('-----(ed)', {
       e: AiActions.loadAiStateDone({electronAiState}),
-      d: AiActions.aiRemovalFinished({key: 'model-a', outcome: removeOutcome})
+      d: AiActions.aiActivationFinished({key: 'model-a', outcome: activateOutcome})
     });
-    expect(removeModelMock).toHaveBeenCalledTimes(1);
-    expect(removeModelMock).toHaveBeenCalledWith('model-a');
+    expect(activateModelMock).toHaveBeenCalledTimes(1);
+    expect(activateModelMock).toHaveBeenCalledWith('model-a');
   });
 
-  it('re-reads the ai state through the bridge on a removed outcome', (): void => {
+  it('re-reads the ai state through the bridge on an activated outcome', (): void => {
     expectEffect('-----(ed)', {
       e: AiActions.loadAiStateDone({electronAiState}),
-      d: AiActions.aiRemovalFinished({key: 'model-a', outcome: removeOutcome})
+      d: AiActions.aiActivationFinished({key: 'model-a', outcome: activateOutcome})
     });
     expect(getState).toHaveBeenCalledTimes(1);
     expect(getState).toHaveBeenCalledWith();
   });
 
   it('finishes on a failed outcome without re-reading the state', (): void => {
-    removeOutcome = {status: 'failed', message: 'No installed model for model-a'};
+    activateOutcome = {status: 'failed', message: 'No installed model for model-a'};
 
-    expectEffect('---d', {d: AiActions.aiRemovalFinished({key: 'model-a', outcome: removeOutcome})});
+    expectEffect('---d', {d: AiActions.aiActivationFinished({key: 'model-a', outcome: activateOutcome})});
     expect(getState).not.toHaveBeenCalled();
   });
 
   it('finishes with a failed outcome carrying the error message when the bridge call rejects', (): void => {
-    removeResponseMarbles = '--#';
+    activateResponseMarbles = '--#';
 
     expectEffect('---d', {
-      d: AiActions.aiRemovalFinished({key: 'model-a', outcome: {status: 'failed', message: 'unreachable'}})
+      d: AiActions.aiActivationFinished({key: 'model-a', outcome: {status: 'failed', message: 'unreachable'}})
     }, new Error('unreachable'));
     expect(getState).not.toHaveBeenCalled();
   });
 
-  it('finishes with the removal outcome alone when re-reading the state fails', (): void => {
+  it('finishes with the activation outcome alone when re-reading the state fails', (): void => {
     stateResponseMarbles = '--#';
 
-    expectEffect('-----d', {d: AiActions.aiRemovalFinished({key: 'model-a', outcome: removeOutcome})}, undefined,
+    expectEffect('-----d', {d: AiActions.aiActivationFinished({key: 'model-a', outcome: activateOutcome})}, undefined,
       new Error('unreachable'));
     expect(getState).toHaveBeenCalledTimes(1);
     expect(getState).toHaveBeenCalledWith();

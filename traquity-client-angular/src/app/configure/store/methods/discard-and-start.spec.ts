@@ -1,7 +1,7 @@
 import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 import {signal, WritableSignal} from '@angular/core';
 import {signalState, SignalState} from '@ngrx/signals';
-import {AuthState, KnownDatabase} from '../../../startup/startup-bridge.type';
+import {AuthState, KnownDatabase} from '../../../../bridge/startup-bridge.type';
 import {DatabaseSelection} from '../../../startup/store/methods/select-database';
 import {ConfigureStoreState, initialState} from '../configure.store';
 import {authStateIn} from '../known-databases';

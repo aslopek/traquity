@@ -1,4 +1,4 @@
-import {AuthState} from "../../startup-bridge.type";
+import {AuthState} from "../../../../bridge/startup-bridge.type";
 import {StartupPhase} from "../startup.store";
 
 /**

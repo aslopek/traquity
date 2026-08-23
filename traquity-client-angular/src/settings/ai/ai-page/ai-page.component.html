@@ -1,53 +1,69 @@
 @if (isConfirmed()) {
-    <mat-list>
+    <div class="model-list">
         @for (entry of catalogue(); track entry.key) {
-            <mat-list-item>
-                <mat-icon matListItemIcon
-                          [fontIcon]="entry.installed ? 'check_circle' : 'radio_button_unchecked'">
-                </mat-icon>
-                <span matListItemTitle>{{ entry.description }}</span>
-                @if (!entry.downloading) {
-                    <span matListItemLine>Size: {{ entry.sizeBytes | tqByteSize:'GiB' }} · License: {{ entry.license }}</span>
-                }
-                @if (entry.error; as error) {
-                    <span matListItemLine class="error-text">{{ error }}</span>
-                }
-                @if (entry.removalFailed) {
-                    <span matListItemLine class="error-text">Delete failed</span>
-                }
-                <span matListItemMeta>
-                    @if (entry.showDownloadButton) {
-                        <button mat-stroked-button
-                                color="primary"
-                                (click)="download(entry.key)">
-                            Download
-                        </button>
-                    } @else if (entry.installed) {
-                        <button mat-stroked-button
-                                color="warn"
-                                (click)="openRemoveDialog(entry)">
-                            Remove
-                        </button>
-                    } @else if (!entry.downloading) {
-                        Not installed
+            <mat-card appearance="outlined">
+                <mat-card-content class="model-card-content">
+                    <span class="model-key">{{ entry.key }}</span>
+                    <span class="model-description">{{ entry.description }}</span>
+                    <span class="model-meta">{{ entry.sizeBytes | tqByteSize:'GiB' }} · {{ entry.license }}</span>
+                    @if (entry.error; as error) {
+                        <span class="error-text">{{ error }}</span>
                     }
-                </span>
-            </mat-list-item>
-            @if (entry.downloading && entry.progress; as progress) {
-                <div class="download-progress-row">
-                    <app-download-progress [receivedBytes]="progress.receivedBytes"
-                                           [totalBytes]="progress.totalBytes ?? undefined"
-                                           [bytesPerSecond]="progress.bytesPerSecond"
-                                           [secondsRemaining]="progress.secondsRemaining ?? undefined"
-                                           [label]="progress.phase | aiDownloadPhaseLabel"/>
-                </div>
-            }
+                    @if (entry.removalFailed) {
+                        <span class="error-text">Delete failed</span>
+                    }
+                    @if (entry.activationFailed) {
+                        <span class="error-text">Activation failed</span>
+                    }
+                    <div class="model-actions">
+                        @if (!entry.downloading) {
+                            @if (entry.active) {
+                                <span class="status-chip status-chip-active">Active</span>
+                            } @else if (entry.installed) {
+                                <span class="status-chip status-chip-on-disk">On disk</span>
+                            } @else {
+                                <span class="status-chip status-chip-not-on-disk">Not on disk</span>
+                            }
+                        }
+                        @if (entry.showDownloadButton) {
+                            <button mat-stroked-button
+                                    color="primary"
+                                    class="primary-outline"
+                                    (click)="download(entry.key)">
+                                Download
+                            </button>
+                        } @else if (entry.installed) {
+                            <button mat-stroked-button
+                                    color="warn"
+                                    (click)="openRemoveDialog(entry)">
+                                Remove
+                            </button>
+                        }
+                        @if (entry.installed && !entry.active) {
+                            <button mat-stroked-button
+                                    color="primary"
+                                    class="primary-outline"
+                                    (click)="activate(entry.key)">
+                                Activate
+                            </button>
+                        }
+                    </div>
+                    @if (entry.downloading && entry.progress; as progress) {
+                        <app-download-progress [receivedBytes]="progress.receivedBytes"
+                                               [totalBytes]="progress.totalBytes ?? undefined"
+                                               [bytesPerSecond]="progress.bytesPerSecond"
+                                               [secondsRemaining]="progress.secondsRemaining ?? undefined"
+                                               [label]="progress.phase | aiDownloadPhaseLabel"/>
+                    }
+                </mat-card-content>
+            </mat-card>
         }
-    </mat-list>
+    </div>
 } @else {
     <app-ai-notice></app-ai-notice>
 
     <button (click)="confirm()"
+            class="confirm-button"
             mat-stroked-button
             color="primary">
         Confirm

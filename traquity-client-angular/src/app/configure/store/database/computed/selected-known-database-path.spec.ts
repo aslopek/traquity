@@ -1,6 +1,6 @@
 import {beforeEach, describe, expect, it} from '@jest/globals';
 import {signal, Signal, WritableSignal} from '@angular/core';
-import {AuthState} from '../../../../startup/startup-bridge.type';
+import {AuthState} from '../../../../../bridge/startup-bridge.type';
 import {selectedKnownDatabasePath} from './selected-known-database-path';
 
 describe('selectedKnownDatabasePath', (): void => {

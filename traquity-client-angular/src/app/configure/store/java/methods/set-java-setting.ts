@@ -1,6 +1,6 @@
 import {patchState} from "@ngrx/signals";
 import {WritableSignalStore} from "../../../../../common/types/signal-store.type";
-import {JavaVerification} from "../../../../startup/startup-bridge.type";
+import {JavaVerification} from "../../../../../bridge/startup-bridge.type";
 import {ConfigureStoreState} from "../../configure.store";
 
 /**

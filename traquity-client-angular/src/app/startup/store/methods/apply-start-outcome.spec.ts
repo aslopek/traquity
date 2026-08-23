@@ -1,7 +1,7 @@
 import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 import {Router} from '@angular/router';
 import {getState, signalState, SignalState} from '@ngrx/signals';
-import {AuthState, BackendStartOutcome} from '../../startup-bridge.type';
+import {AuthState, BackendStartOutcome} from '../../../../bridge/startup-bridge.type';
 import {phaseAfterFailedStart, startupRouteFor} from '../routing/startup-route';
 import {initialState, StartupPhase, StartupStoreState} from '../startup.store';
 import {applyStartOutcome} from './apply-start-outcome';

@@ -1,8 +1,8 @@
 import {Actions, ofType} from '@ngrx/effects';
 import {Action} from '@ngrx/store';
 import {catchError, EMPTY, map, Observable, switchMap} from 'rxjs';
-import {AiBridgeService} from '../../../app/startup/ai-bridge.service';
-import {ElectronAiState} from '../../../app/startup/ai-bridge.type';
+import {AiBridgeService} from '../../../bridge/ai-bridge.service';
+import {ElectronAiState} from '../../../bridge/ai-bridge.type';
 import {AiActions} from '../ai.actions';
 
 export type ConfirmAiNoticeEffectArgs = {

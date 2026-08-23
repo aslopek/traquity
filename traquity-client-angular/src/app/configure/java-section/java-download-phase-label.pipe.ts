@@ -1,5 +1,5 @@
 import {Pipe, PipeTransform} from "@angular/core";
-import {JavaDownloadPhase} from "../../startup/startup-bridge.type";
+import {JavaDownloadPhase} from "../../../bridge/startup-bridge.type";
 
 /**
  * The caption `app-download-progress` shows instead of its byte-derived line for a phase that carries no byte count.

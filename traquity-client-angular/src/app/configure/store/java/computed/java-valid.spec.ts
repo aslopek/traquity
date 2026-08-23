@@ -1,7 +1,7 @@
 import {describe, expect, it} from '@jest/globals';
 import {signal, Signal} from '@angular/core';
 import {ReadableSignalStore} from '../../../../../common/types/signal-store.type';
-import {JavaDownloadProgress, JavaVerification} from '../../../../startup/startup-bridge.type';
+import {JavaDownloadProgress, JavaVerification} from '../../../../../bridge/startup-bridge.type';
 import {javaValid, JavaValidSlice} from './java-valid';
 
 describe('javaValid', (): void => {

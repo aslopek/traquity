@@ -1,6 +1,6 @@
 import {beforeEach, describe, expect, it} from '@jest/globals';
 import {signal, Signal, WritableSignal} from '@angular/core';
-import {KnownDatabase} from '../../../../startup/startup-bridge.type';
+import {KnownDatabase} from '../../../../../bridge/startup-bridge.type';
 import {knownDatabasesDisabled} from './known-databases-disabled';
 
 describe('knownDatabasesDisabled', (): void => {

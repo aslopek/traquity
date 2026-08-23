@@ -1,17 +1,16 @@
 import {Component, inject, Signal} from "@angular/core";
 import {MatButton} from "@angular/material/button";
+import {MatCard, MatCardContent} from "@angular/material/card";
 import {MatDialog} from "@angular/material/dialog";
-import {MatIcon} from "@angular/material/icon";
-import {MatList, MatListItem, MatListItemIcon, MatListItemLine, MatListItemMeta, MatListItemTitle} from "@angular/material/list";
 import {Store} from "@ngrx/store";
 import {DownloadProgressComponent, TqByteSizePipe, TqDecimalPipe} from "../../../common";
 import {AiActions} from "../../../store/ai/ai.actions";
 import {getCatalogue, getIsNoticeConfirmed} from "../../../store/ai/ai.selector";
 import {CatalogueEntryViewModel} from "../../../store/ai/selectors/get-catalogue.selector";
 import {AppState} from "../../../store/app.state";
-import {AiNoticeComponent} from "../ai-notice/ai-notice.component";
 import {RemoveModelDialog, RemoveModelDialogData} from "../remove-model-dialog/remove-model-dialog.component";
 import {AiDownloadPhaseLabelPipe} from "./ai-download-phase-label.pipe";
+import {AiNoticeComponent} from "../ai-notice/ai-notice.component";
 
 @Component({
   selector: "app-ai-page",
@@ -20,13 +19,8 @@ import {AiDownloadPhaseLabelPipe} from "./ai-download-phase-label.pipe";
     AiNoticeComponent,
     DownloadProgressComponent,
     MatButton,
-    MatIcon,
-    MatList,
-    MatListItem,
-    MatListItemIcon,
-    MatListItemLine,
-    MatListItemMeta,
-    MatListItemTitle,
+    MatCard,
+    MatCardContent,
     TqByteSizePipe,
   ],
   providers: [TqDecimalPipe],
@@ -47,6 +41,10 @@ export class AiPageComponent {
 
   protected download(key: string): void {
     this.store.dispatch(AiActions.downloadModel({key}));
+  }
+
+  protected activate(key: string): void {
+    this.store.dispatch(AiActions.activateModel({key}));
   }
 
   protected openRemoveDialog(entry: CatalogueEntryViewModel): void {
