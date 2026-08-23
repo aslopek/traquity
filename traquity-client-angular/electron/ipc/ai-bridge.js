@@ -12,9 +12,10 @@ const {createTrustedChannels} = require('./trusted-channels.js');
  * straight to the window that invoked `ai:download`.
  *
  * `ai:confirm` sets `ai.confirmedNotice` (and `ai.models`, the first time) through `aiRegistry.confirm`,
- * `ai:download` sets one `ai.models` entry on a completed download through `aiRegistry.install`, and `ai:remove`
- * drops one `ai.models` entry and deletes its file through `aiRegistry.remove` - the three writes this module makes
- * to `traquity.config.json`.
+ * `ai:download` sets one `ai.models` entry on a completed download through `aiRegistry.install`, `ai:remove`
+ * drops one `ai.models` entry and deletes its file through `aiRegistry.remove`, and `ai:activate` marks one
+ * `ai.models` entry active and clears the flag on every other through `aiRegistry.activate` - the four writes this
+ * module makes to `traquity.config.json`.
  *
  * A TLS-overridden environment registers none of these channels: "nothing can be done" is then enforced by
  * architecture instead of left to each handler to refuse.
@@ -42,7 +43,7 @@ const {createTrustedChannels} = require('./trusted-channels.js');
 /**
  * @typedef {Object} AiBridgeOptions
  * @property {IpcMainLike} ipcMain
- * @property {Pick<AiRegistry, 'getState' | 'confirm' | 'install' | 'remove'>} aiRegistry
+ * @property {Pick<AiRegistry, 'getState' | 'confirm' | 'install' | 'remove' | 'activate'>} aiRegistry
  * @property {Record<string, CatalogueRecord>} catalogue the models, for resolving `ai:download`'s key argument
  * @property {Pick<AiDialogs, 'pickDownloadDirectory'>} aiDialogs
  * @property {(entry: CatalogueRecord, targetDirectory: string, onProgress: (progress: AiDownloadProgress) => void) =>
@@ -141,6 +142,14 @@ function createAiBridge(options) {
         throw new Error('Invalid key argument for ai:remove');
       }
       return aiRegistry.remove(parsedKey.data);
+    });
+
+    handle('ai:activate', async (_event, key) => {
+      const parsedKey = aiModelKeySchema.safeParse(key);
+      if (!parsedKey.success) {
+        throw new Error('Invalid key argument for ai:activate');
+      }
+      return aiRegistry.activate(parsedKey.data);
     });
   }
 

@@ -88,18 +88,18 @@ describe('aiRegistry', () => {
   });
 
   describe('with no ai key', () => {
-    it('reports the notice as unconfirmed', async () => {
-      await expect(subjectUnderTest.getState()).resolves.toMatchObject({isConfirmed: false});
+    it('reports the notice as unconfirmed', () => {
+      expect(subjectUnderTest.getState()).toMatchObject({isConfirmed: false});
     });
 
-    it('returns the full catalogue', async () => {
-      const {catalogue} = await subjectUnderTest.getState();
+    it('returns the full catalogue', () => {
+      const {catalogue} = subjectUnderTest.getState();
 
       expect(catalogue).toEqual(STUB_CATALOGUE_ENTRIES);
     });
 
-    it('reports no installed models', async () => {
-      const {models} = await subjectUnderTest.getState();
+    it('reports no installed models', () => {
+      const {models} = subjectUnderTest.getState();
 
       expect(models).toEqual({});
     });
@@ -131,8 +131,8 @@ describe('aiRegistry', () => {
       config.ai = {confirmedNotice: noticeDigest, models: {'model-a': {path: modelPath, active: true}}};
     });
 
-    it('returns the full catalogue', async () => {
-      const {catalogue} = await subjectUnderTest.getState();
+    it('returns the full catalogue', () => {
+      const {catalogue} = subjectUnderTest.getState();
 
       expect(catalogue).toEqual(STUB_CATALOGUE_ENTRIES);
     });
@@ -143,8 +143,8 @@ describe('aiRegistry', () => {
       config.ai = {confirmedNotice: noticeDigest};
     });
 
-    it('reports the notice as confirmed', async () => {
-      await expect(subjectUnderTest.getState()).resolves.toMatchObject({isConfirmed: true});
+    it('reports the notice as confirmed', () => {
+      expect(subjectUnderTest.getState()).toMatchObject({isConfirmed: true});
     });
   });
 
@@ -153,8 +153,8 @@ describe('aiRegistry', () => {
       config.ai = {confirmedNotice: 'this is not even base64 encoded'};
     });
 
-    it('reports the notice as unconfirmed', async () => {
-      await expect(subjectUnderTest.getState()).resolves.toMatchObject({isConfirmed: false});
+    it('reports the notice as unconfirmed', () => {
+      expect(subjectUnderTest.getState()).toMatchObject({isConfirmed: false});
     });
   });
 
@@ -173,22 +173,21 @@ describe('aiRegistry', () => {
     });
   });
 
-  describe('with a model whose file matches the catalogue digest', () => {
+  describe('with a model whose file exists at the recorded path', () => {
     beforeEach(() => {
       config.ai = {models: {'model-a': {path: modelPath, active: true}}};
     });
 
-    it('reports that model with its path and active flag', async () => {
-      const {models} = await subjectUnderTest.getState();
+    it('reports that model with its path and active flag', () => {
+      const {models} = subjectUnderTest.getState();
 
       expect(models).toEqual({'model-a': {path: modelPath, active: true}});
     });
 
-    it('digests the file at the entry\'s own path', async () => {
-      await subjectUnderTest.getState();
+    it('reads no model file', () => {
+      subjectUnderTest.getState();
 
-      expect(createReadStream).toHaveBeenCalledTimes(1);
-      expect(createReadStream).toHaveBeenCalledWith(modelPath);
+      expect(createReadStream).not.toHaveBeenCalled();
     });
   });
 
@@ -198,24 +197,24 @@ describe('aiRegistry', () => {
       existsSync.mockReturnValue(false);
     });
 
-    it('reports no entry for that model', async () => {
-      const {models} = await subjectUnderTest.getState();
+    it('reports no entry for that model', () => {
+      const {models} = subjectUnderTest.getState();
 
       expect(models).toEqual({});
       expect(createReadStream).not.toHaveBeenCalled();
     });
   });
 
-  describe('with a model whose file digest does not match the catalogue', () => {
+  describe('with a model whose file no longer hashes to the catalogue digest', () => {
     beforeEach(() => {
       config.ai = {models: {'model-a': {path: modelPath, active: true}}};
       createReadStream.mockReturnValue(Readable.from([Buffer.from('tampered weights')]));
     });
 
-    it('reports no entry for that model', async () => {
-      const {models} = await subjectUnderTest.getState();
+    it('reports that model as installed, since reading state does not validate hashes', () => {
+      const {models} = subjectUnderTest.getState();
 
-      expect(models).toEqual({});
+      expect(models).toEqual({'model-a': {path: modelPath, active: true}});
     });
   });
 
@@ -224,8 +223,8 @@ describe('aiRegistry', () => {
       config.ai = {models: {'unknown-model': {path: modelPath, active: true}}};
     });
 
-    it('reports no entry for that key', async () => {
-      const {models} = await subjectUnderTest.getState();
+    it('reports no entry for that key', () => {
+      const {models} = subjectUnderTest.getState();
 
       expect(models).toEqual({});
       expect(existsSync).not.toHaveBeenCalled();
@@ -412,6 +411,111 @@ describe('aiRegistry', () => {
     });
   });
 
+  describe('activate', () => {
+    beforeEach(() => {
+      config.ai = {
+        confirmedNotice: noticeDigest,
+        models: {
+          'model-a': {path: modelPath, active: false},
+          'model-b': {path: 'C:\\Users\\x\\traquity\\ai\\models\\model-b.gguf', active: true}
+        }
+      };
+    });
+
+    it('marks the given key active and clears every other entry\'s flag', () => {
+      expect(subjectUnderTest.activate('model-a')).toEqual({status: 'activated'});
+
+      expect(config.ai).toEqual({
+        confirmedNotice: noticeDigest,
+        models: {
+          'model-a': {path: modelPath, active: true},
+          'model-b': {path: 'C:\\Users\\x\\traquity\\ai\\models\\model-b.gguf', active: false}
+        }
+      });
+      expect(save).toHaveBeenCalledTimes(1);
+      expect(save).toHaveBeenCalledWith(config);
+    });
+
+    it('leaves an already active key active on repeat activation', () => {
+      subjectUnderTest.activate('model-b');
+
+      expect(config.ai).toEqual({
+        confirmedNotice: noticeDigest,
+        models: {
+          'model-a': {path: modelPath, active: false},
+          'model-b': {path: 'C:\\Users\\x\\traquity\\ai\\models\\model-b.gguf', active: true}
+        }
+      });
+    });
+
+    it('refuses an unknown catalogue key without touching disk or config', () => {
+      expect(subjectUnderTest.activate('unknown-model')).toEqual({
+        status: 'failed',
+        message: 'No installed model for unknown-model'
+      });
+
+      expect(save).not.toHaveBeenCalled();
+    });
+
+    it('refuses a key with no ai.models entry without touching the config', () => {
+      config.ai = {confirmedNotice: noticeDigest, models: {}};
+
+      expect(subjectUnderTest.activate('model-a')).toEqual({
+        status: 'failed',
+        message: 'No installed model for model-a'
+      });
+
+      expect(save).not.toHaveBeenCalled();
+    });
+
+    it('refuses a hand-added entry for a key outside the catalogue without touching the config', () => {
+      config.ai = {confirmedNotice: noticeDigest, models: {'rogue-model': {path: modelPath, active: false}}};
+
+      expect(subjectUnderTest.activate('rogue-model')).toEqual({
+        status: 'failed',
+        message: 'No installed model for rogue-model'
+      });
+
+      expect(save).not.toHaveBeenCalled();
+    });
+
+    it('refuses a mangled entry for the given key without touching the config', () => {
+      config.ai = {confirmedNotice: noticeDigest, models: {'model-a': {path: modelPath}}};
+
+      expect(subjectUnderTest.activate('model-a')).toEqual({
+        status: 'failed',
+        message: 'No installed model for model-a'
+      });
+
+      expect(save).not.toHaveBeenCalled();
+    });
+
+    it('passes through a mangled entry for another key unchanged', () => {
+      config.ai = {
+        confirmedNotice: noticeDigest,
+        models: {
+          'model-a': {path: modelPath, active: false},
+          'model-b': {path: 'C:\\Users\\x\\traquity\\ai\\models\\model-b.gguf'}
+        }
+      };
+
+      subjectUnderTest.activate('model-a');
+
+      expect(config.ai?.models).toEqual({
+        'model-a': {path: modelPath, active: true},
+        'model-b': {path: 'C:\\Users\\x\\traquity\\ai\\models\\model-b.gguf'}
+      });
+    });
+
+    it('does not require a confirmed notice to activate a key', () => {
+      config.ai = {models: {'model-a': {path: modelPath, active: false}}};
+
+      expect(subjectUnderTest.activate('model-a')).toEqual({status: 'activated'});
+
+      expect(config.ai).toEqual({models: {'model-a': {path: modelPath, active: true}}});
+    });
+  });
+
   describe('with a mangled entry for one model alongside a valid entry for another', () => {
     beforeEach(() => {
       config.ai = {
@@ -423,14 +527,12 @@ describe('aiRegistry', () => {
       };
     });
 
-    it('reports no entry for the mangled key and the valid entry for the other', async () => {
-      const {models} = await subjectUnderTest.getState();
+    it('reports no entry for the mangled key and the valid entry for the other', () => {
+      const {models} = subjectUnderTest.getState();
 
       expect(models).toEqual({'model-a': {path: modelPath, active: true}});
       expect(existsSync).toHaveBeenCalledTimes(1);
       expect(existsSync).toHaveBeenCalledWith(modelPath);
-      expect(createReadStream).toHaveBeenCalledTimes(1);
-      expect(createReadStream).toHaveBeenCalledWith(modelPath);
     });
   });
 });

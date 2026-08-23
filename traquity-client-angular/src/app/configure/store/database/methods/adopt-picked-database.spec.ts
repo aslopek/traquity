@@ -1,7 +1,7 @@
 import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 import {signalState, SignalState} from '@ngrx/signals';
 import {WritableSignalStore} from '../../../../../common/types/signal-store.type';
-import {PickedDatabase} from '../../../../startup/startup-bridge.type';
+import {PickedDatabase} from '../../../../../bridge/startup-bridge.type';
 import {ConfigureStoreState, initialState} from '../../configure.store';
 import {adoptPickedDatabase} from './adopt-picked-database';
 import {selectExistingDatabase} from './select-existing-database';

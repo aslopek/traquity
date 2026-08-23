@@ -42,10 +42,16 @@ export type AiRemoveOutcome =
   | { status: 'removed' }
   | { status: 'failed', message: string };
 
+/** There is no cancellation step for an activation, unlike a download, so only these two outcomes exist. */
+export type AiActivateOutcome =
+  | { status: 'activated' }
+  | { status: 'failed', message: string };
+
 export type TraQuityAiBridge = {
   getAiState: () => Promise<ElectronAiState>
   confirmAiNotice: () => Promise<void>
   downloadModel: (key: string) => Promise<AiDownloadOutcome>
   removeModel: (key: string) => Promise<AiRemoveOutcome>
+  activateModel: (key: string) => Promise<AiActivateOutcome>
   onAiDownloadProgress: (listener: (progress: AiDownloadProgress) => void) => () => void
 };

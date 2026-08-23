@@ -1,8 +1,8 @@
 import {RxMethod, rxMethod} from "@ngrx/signals/rxjs-interop";
 import {catchError, exhaustMap, Observable, of, pipe, tap} from "rxjs";
 import {WritableSignalStore} from "../../../../../common/types/signal-store.type";
-import {StartupBridgeService} from "../../../../startup/startup-bridge.service";
-import {JavaDownloadOutcome} from "../../../../startup/startup-bridge.type";
+import {StartupBridgeService} from "../../../../../bridge/startup-bridge.service";
+import {JavaDownloadOutcome} from "../../../../../bridge/startup-bridge.type";
 import {ConfigureStoreState} from "../../configure.store";
 import {failDownload} from "../methods/fail-download";
 import {setDownloadProgress} from "../methods/set-download-progress";

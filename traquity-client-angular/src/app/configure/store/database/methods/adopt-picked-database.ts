@@ -1,5 +1,5 @@
 import {WritableSignalStore} from "../../../../../common/types/signal-store.type";
-import {PickedDatabase} from "../../../../startup/startup-bridge.type";
+import {PickedDatabase} from "../../../../../bridge/startup-bridge.type";
 import {ConfigureStoreState} from "../../configure.store";
 import {selectExistingDatabase} from "./select-existing-database";
 import {selectNewDatabase} from "./select-new-database";
