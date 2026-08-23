@@ -1,4 +1,4 @@
-import {ModelEntry} from '../../../app/startup/startup-bridge.type';
+import {ModelEntry} from '../../../app/startup/ai-bridge.type';
 import {AiState} from '../ai.state';
 
 /**

@@ -1,5 +1,5 @@
 import {AiState} from '../ai.state';
-import {ElectronAiState} from "../../../app/startup/startup-bridge.type";
+import {ElectronAiState} from "../../../app/startup/ai-bridge.type";
 
 export function overwriteAiState(state: AiState, electronAiState: ElectronAiState): AiState {
   return {

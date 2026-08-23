@@ -3,7 +3,7 @@ import {Action} from '@ngrx/store';
 import {Actions} from '@ngrx/effects';
 import {EMPTY, Observable} from 'rxjs';
 import {RunHelpers, TestScheduler} from 'rxjs/testing';
-import {AiDownloadProgress} from '../../../app/startup/startup-bridge.type';
+import {AiDownloadProgress} from '../../../app/startup/ai-bridge.type';
 import {AppActions} from '../../app.actions';
 import {AiActions} from '../ai.actions';
 import {trackAiDownloadProgress, TrackAiDownloadProgressEffectArgs} from './track-ai-download-progress.effect';

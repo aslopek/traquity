@@ -1,21 +1,17 @@
 const {contextBridge, ipcRenderer} = require('electron');
 
-/** @import {AiState} from './ai/ai-registry.js' */
-/** @import {AiDownloadProgress} from './ai/model-download.js' */
 /** @import {BackendStartOutcome} from './backend/backend-process.js' */
 /** @import {ConfigurationChanges} from './config/configuration-writer.js' */
 /** @import {JavaDownloadProgress} from './java/corretto-download.js' */
 /** @import {JavaVerification} from './java/java-version.js' */
 /** @import {AppliedConfiguration, ConfigureState, JavaDownloadOutcome, JavaPickResult} from './ipc/startup-bridge.js' */
-/** @import {AiDownloadOutcome} from './ipc/ai-bridge.js' */
 /** @import {PickedDatabase} from './window/database-dialogs.js' */
 /** @import {StartupState} from './window/startup-mode.js' */
 
 // Channel names are literals here on purpose: a sandboxed preload's `require` is a limited polyfill that resolves
 // `electron` and a handful of Node built-ins only - it cannot require a module of this app, so `ipc/` cannot be
-// shared with it. All fourteen request/response literals plus the two one-way channels and the two push channels are
-// duplicated across `ipc/startup-bridge.js` (eleven request/response, both one-way and `java:downloadProgress`) and
-// `ipc/ai-bridge.js` (the three `ai:*` request/response channels and `ai:downloadProgress`):
+// shared with it. The eleven request/response channels below plus the two one-way channels and
+// `java:downloadProgress` are duplicated against `ipc/startup-bridge.js`:
 //   - `startup:getState`
 //   - `backend:start`
 //   - `auth:verify`
@@ -27,11 +23,7 @@ const {contextBridge, ipcRenderer} = require('electron');
 //   - `java:verify`
 //   - `java:pick`
 //   - `java:download`
-//   - `ai:getState`
-//   - `ai:confirm`
-//   - `ai:download`
 //   - `java:downloadProgress` (push, main -> renderer)
-//   - `ai:downloadProgress` (push, main -> renderer)
 //   - `app:restartAndConfigure` (one-way)
 //   - `app:quit` (one-way)
 // The manual checklist (`electron/LLM.md`) is what keeps the two copies in step.
@@ -93,6 +85,36 @@ contextBridge.exposeInMainWorld('traquity', {
   /** @returns {Promise<JavaDownloadOutcome>} */
   downloadJava: () => ipcRenderer.invoke('java:download'),
 
+  /**
+   * @param {(progress: JavaDownloadProgress) => void} listener
+   * @returns {() => void} unsubscribes the listener
+   */
+  onJavaDownloadProgress: (listener) => {
+    /** @param {unknown} _event @param {JavaDownloadProgress} progress */
+    const wrapped = (_event, progress) => listener(progress);
+    ipcRenderer.on('java:downloadProgress', wrapped);
+    return () => ipcRenderer.removeListener('java:downloadProgress', wrapped);
+  },
+
+  /** @returns {void} */
+  restartAndConfigure: () => ipcRenderer.send('app:restartAndConfigure'),
+
+  /** @returns {void} */
+  quit: () => ipcRenderer.send('app:quit')
+});
+
+/** @import {AiRemoveOutcome, AiState} from './ai/ai-registry.js' */
+/** @import {AiDownloadProgress} from './ai/model-download.js' */
+/** @import {AiDownloadOutcome} from './ipc/ai-bridge.js' */
+
+// The four request/response channels below plus `ai:downloadProgress` are duplicated against `ipc/ai-bridge.js`:
+//   - `ai:getState`
+//   - `ai:confirm`
+//   - `ai:download`
+//   - `ai:remove`
+//   - `ai:downloadProgress` (push, main -> renderer)
+// The manual checklist (`electron/LLM.md`) is what keeps the two copies in step.
+contextBridge.exposeInMainWorld('traquityAi', {
   /** @returns {Promise<AiState>} */
   getAiState: () => ipcRenderer.invoke('ai:getState'),
 
@@ -106,15 +128,10 @@ contextBridge.exposeInMainWorld('traquity', {
   downloadModel: (key) => ipcRenderer.invoke('ai:download', key),
 
   /**
-   * @param {(progress: JavaDownloadProgress) => void} listener
-   * @returns {() => void} unsubscribes the listener
+   * @param {string} key
+   * @returns {Promise<AiRemoveOutcome>}
    */
-  onJavaDownloadProgress: (listener) => {
-    /** @param {unknown} _event @param {JavaDownloadProgress} progress */
-    const wrapped = (_event, progress) => listener(progress);
-    ipcRenderer.on('java:downloadProgress', wrapped);
-    return () => ipcRenderer.removeListener('java:downloadProgress', wrapped);
-  },
+  removeModel: (key) => ipcRenderer.invoke('ai:remove', key),
 
   /**
    * @param {(progress: AiDownloadProgress) => void} listener
@@ -125,11 +142,5 @@ contextBridge.exposeInMainWorld('traquity', {
     const wrapped = (_event, progress) => listener(progress);
     ipcRenderer.on('ai:downloadProgress', wrapped);
     return () => ipcRenderer.removeListener('ai:downloadProgress', wrapped);
-  },
-
-  /** @returns {void} */
-  restartAndConfigure: () => ipcRenderer.send('app:restartAndConfigure'),
-
-  /** @returns {void} */
-  quit: () => ipcRenderer.send('app:quit')
+  }
 });

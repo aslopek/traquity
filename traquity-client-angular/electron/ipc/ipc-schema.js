@@ -35,7 +35,7 @@ const javaSettingSchema = z.string().min(1).max(MAXIMUM_PATH_LENGTH).nullable();
 /** @type {number} far above any real catalogue key, far below anything a lookup miss could turn into real work */
 const MAXIMUM_AI_KEY_LENGTH = 64;
 
-const aiDownloadKeySchema = z.string().min(1).max(MAXIMUM_AI_KEY_LENGTH);
+const aiModelKeySchema = z.string().min(1).max(MAXIMUM_AI_KEY_LENGTH);
 
 module.exports = {
   backendStartPasswordSchema,
@@ -44,7 +44,7 @@ module.exports = {
   databaseSelectionSchema,
   configurationChangesSchema,
   javaSettingSchema,
-  aiDownloadKeySchema,
+  aiModelKeySchema,
   MAXIMUM_PASSWORD_LENGTH,
   MAXIMUM_PATH_LENGTH
 };

@@ -2,29 +2,29 @@ import {Actions, ofType} from '@ngrx/effects';
 import {Action} from '@ngrx/store';
 import {catchError, concat, EMPTY, exhaustMap, map, Observable, of, switchMap} from 'rxjs';
 import {AiBridgeService} from '../../../app/startup/ai-bridge.service';
-import {AiDownloadOutcome, ElectronAiState} from '../../../app/startup/ai-bridge.type';
+import {AiRemoveOutcome, ElectronAiState} from '../../../app/startup/ai-bridge.type';
 import {AiActions} from '../ai.actions';
 
-export type DownloadModelEffectArgs = {
+export type RemoveModelEffectArgs = {
   actions$: Actions
-  aiBridgeService: Pick<AiBridgeService, 'downloadModel' | 'getState'>
+  aiBridgeService: Pick<AiBridgeService, 'removeModel' | 'getState'>
 };
 
-export function downloadModel(effectArgs: DownloadModelEffectArgs): Observable<Action> {
+export function removeModel(effectArgs: RemoveModelEffectArgs): Observable<Action> {
   const {actions$, aiBridgeService} = effectArgs;
   return actions$.pipe(
-    ofType(AiActions.downloadModel),
-    exhaustMap(({key}): Observable<Action> => aiBridgeService.downloadModel(key).pipe(
-      switchMap((outcome: AiDownloadOutcome): Observable<Action> => outcome.status === 'completed'
+    ofType(AiActions.removeModel),
+    exhaustMap(({key}): Observable<Action> => aiBridgeService.removeModel(key).pipe(
+      switchMap((outcome: AiRemoveOutcome): Observable<Action> => outcome.status === 'removed'
         ? concat(
           aiBridgeService.getState().pipe(
             map((electronAiState: ElectronAiState): Action => AiActions.loadAiStateDone({electronAiState})),
             catchError(() => EMPTY)
           ),
-          of(AiActions.aiDownloadFinished({key, outcome}))
+          of(AiActions.aiRemovalFinished({key, outcome}))
         )
-        : of(AiActions.aiDownloadFinished({key, outcome}))),
-      catchError((error: unknown): Observable<Action> => of(AiActions.aiDownloadFinished({
+        : of(AiActions.aiRemovalFinished({key, outcome}))),
+      catchError((error: unknown): Observable<Action> => of(AiActions.aiRemovalFinished({
         key,
         outcome: {status: 'failed', message: error instanceof Error ? error.message : String(error)}
       })))

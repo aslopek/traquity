@@ -87,6 +87,7 @@ describe('getCatalogueSelector', (): void => {
           key: "model-c",
           license: "MIT",
           progress: null,
+          removalFailed: false,
           showDownloadButton: false,
           sizeBytes: 2_500_000_000
         }
@@ -109,6 +110,25 @@ describe('getCatalogueSelector', (): void => {
       const [, modelB] = getCatalogueSelector(state);
 
       expect(modelB.error).toBeNull();
+    });
+  });
+
+  describe('with a removal error recorded for one installed entry', (): void => {
+    beforeEach((): void => {
+      state = {...state, removalErrors: {'model-b': 'EBUSY: resource busy or locked'}};
+    });
+
+    it('marks that entry\'s removal as failed', (): void => {
+      const [, modelB] = getCatalogueSelector(state);
+
+      expect(modelB.removalFailed).toBe(true);
+    });
+
+    it('marks every other entry\'s removal as not failed', (): void => {
+      const [modelA, , modelC] = getCatalogueSelector(state);
+
+      expect(modelA.removalFailed).toBe(false);
+      expect(modelC.removalFailed).toBe(false);
     });
   });
 });

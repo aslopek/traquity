@@ -1,6 +1,7 @@
 const crypto = require('node:crypto');
 const {modelEntrySchema} = require('../config/config-schema.js');
 const {digestOfFile} = require('../security/file-digest.js');
+const {messageOf} = require('../download/error-message.js');
 const {CATALOGUE, catalogueEntries} = require('./catalogue.js');
 
 /** @import {AiConfig, ModelEntry, TraQuityConfig} from '../config/config-schema.js' */
@@ -21,12 +22,19 @@ const {CATALOGUE, catalogueEntries} = require('./catalogue.js');
  */
 
 /**
- * The three functions this module needs off `fs` - declared minimally
+ * What `remove` answers with. There is no cancellation.
+ *
+ * @typedef {{status: 'removed'} | {status: 'failed', message: string}} AiRemoveOutcome
+ */
+
+/**
+ * The functions this module needs off `fs` - declared minimally
  *
  * @typedef {Object} AiRegistryFileSystem
  * @property {(path: string) => boolean} existsSync
  * @property {(path: string) => Buffer} readFileSync
  * @property {(path: string) => NodeJS.ReadableStream} createReadStream
+ * @property {(path: string, options: {force: boolean}) => void} rmSync
  */
 
 /**
@@ -36,6 +44,7 @@ const {CATALOGUE, catalogueEntries} = require('./catalogue.js');
  *   digest as the confirmation
  * @property {(key: string, modelPath: string) => void} install persists a completed download's path for `key`,
  *   replacing whatever was there; preserves the entry's existing `active` flag
+ * @property {(key: string) => Promise<AiRemoveOutcome>} remove deletes the file backing an installed AI model from the catalogue
  */
 
 /**
@@ -61,18 +70,28 @@ function createAiRegistry(options) {
   }
 
   /**
+   * @param {unknown} rawEntry
+   * @returns {ModelEntry | null} the parsed entry, if and only if it validates against the schema and its file
+   *   exists on disk - the digest is not checked here
+   */
+  function parsedInstalledEntry(rawEntry) {
+    const parsedEntry = modelEntrySchema.safeParse(rawEntry);
+    return parsedEntry.success && fileSystem.existsSync(parsedEntry.data.path) ? parsedEntry.data : null;
+  }
+
+  /**
    * @param {CatalogueRecord} entry
    * @param {unknown} rawEntry
    * @returns {Promise<ModelEntry | null>}
    */
   async function installedEntry(entry, rawEntry) {
-    const parsedEntry = modelEntrySchema.safeParse(rawEntry);
-    if (!parsedEntry.success || !fileSystem.existsSync(parsedEntry.data.path)) {
+    const parsedEntry = parsedInstalledEntry(rawEntry);
+    if (parsedEntry == null) {
       return null;
     }
     /** @type {string} */
-    const digest = await digestOfFile(parsedEntry.data.path, 'sha256', fileSystem.createReadStream);
-    return digest === entry.sha256 ? parsedEntry.data : null;
+    const digest = await digestOfFile(parsedEntry.path, 'sha256', fileSystem.createReadStream);
+    return digest === entry.sha256 ? parsedEntry : null;
   }
 
   /**
@@ -143,7 +162,44 @@ function createAiRegistry(options) {
     configFile.save(config);
   }
 
-  return {getState, confirm, install};
+  /**
+   * @param {string} key
+   * @returns {Promise<AiRemoveOutcome>}
+   */
+  async function remove(key) {
+    const catalogueEntry = /** @type {Record<string, CatalogueRecord>} */ (CATALOGUE)[key];
+    const installed = catalogueEntry == null ? null : parsedInstalledEntry(config.ai?.models?.[key]);
+    if (catalogueEntry == null || installed == null) {
+      return {status: 'failed', message: `No installed model for ${key}`};
+    }
+
+    /** @type {string} */
+    const digest = await digestOfFile(installed.path, 'sha256', fileSystem.createReadStream);
+    if (digest !== catalogueEntry.sha256) {
+      return {status: 'failed', message: `Installed model for ${key} failed digest verification`};
+    }
+
+    try {
+      fileSystem.rmSync(installed.path, {force: true});
+    } catch (error) {
+      return {status: 'failed', message: messageOf(error)};
+    }
+
+    const {[key]: _removedEntry, ...models} = config.ai?.models ?? {};
+
+    /** @type {AiConfig} */
+    const nextAiConfig = {models};
+    if (config.ai?.confirmedNotice != null) {
+      nextAiConfig.confirmedNotice = config.ai.confirmedNotice;
+    }
+
+    config.ai = nextAiConfig;
+    configFile.save(config);
+
+    return {status: 'removed'};
+  }
+
+  return {getState, confirm, install, remove};
 }
 
 module.exports = {createAiRegistry};
