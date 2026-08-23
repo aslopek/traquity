@@ -1,4 +1,4 @@
-import {AiDownloadProgress} from '../../../app/startup/ai-bridge.type';
+import {AiDownloadProgress} from '../../../bridge/ai-bridge.type';
 import {AiState} from '../ai.state';
 
 export function updateAiDownloadProgress(state: AiState, progress: AiDownloadProgress): AiState {

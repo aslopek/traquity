@@ -1,7 +1,7 @@
 import {Router} from "@angular/router";
 import {patchState} from "@ngrx/signals";
 import {WritableSignalStore} from "../../../../common/types/signal-store.type";
-import {BackendStartOutcome} from "../../startup-bridge.type";
+import {BackendStartOutcome} from "../../../../bridge/startup-bridge.type";
 import {phaseAfterFailedStart, startupRouteFor} from "../routing/startup-route";
 import {StartupComputed, StartupPhase, StartupStoreState} from "../startup.store";
 

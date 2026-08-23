@@ -1,4 +1,4 @@
-import {AuthState, KnownDatabase} from "../../startup/startup-bridge.type";
+import {AuthState, KnownDatabase} from "../../../bridge/startup-bridge.type";
 
 /**
  * The password state of a database, looked up in the list of the ones the app knows.

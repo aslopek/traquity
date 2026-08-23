@@ -2,7 +2,7 @@ import {inject, Signal} from "@angular/core";
 import {signalStore, withComputed, withMethods, withState} from "@ngrx/signals";
 import {RxMethod} from "@ngrx/signals/rxjs-interop";
 import {ReadableSignalStore, WritableSignalStore} from "../../../common/types/signal-store.type";
-import {StartupBridgeService} from "../../startup/startup-bridge.service";
+import {StartupBridgeService} from "../../../bridge/startup-bridge.service";
 import {ReadableStartupStore, StartupStore} from "../../startup/store/startup.store";
 import {canSubmit} from "./computed/can-submit";
 import {verifyPassword} from "./effects/verify-password";

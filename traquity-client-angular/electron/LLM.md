@@ -27,9 +27,9 @@ electron/
     catalogue.js                the curated models, pinned to a Hugging Face revision each; projects the
                                 public `CatalogueEntry` shape out of the full internal one
     ai-registry.js              the `ai` key of a loaded config: notice confirmation (re-hashed against the packaged
-                                notice resource), which catalogued models are actually installed (verified against
-                                the filesystem and the catalogue's own pinned digest), and `install`, which persists
-                                a completed download's path
+                                notice resource), which catalogued models are actually installed (each entry's path
+                                verified against the filesystem), and the three writes over that key - `install`,
+                                `remove` and `activate`
     model-download.js           downloads one catalogue entry from its pinned `resolve/<revision>/<file>` URL into a
                                 picked directory, staged then renamed. Validates sha256 digest after download
   download/                    mechanics shared by every streamed download in this app, agnostic of what is being
@@ -106,12 +106,13 @@ from the main process into the renderer:
 - `app:quit` (one-way)
 - `java:downloadProgress` (push, main → renderer)
 
-The channels `ipc/ai-bridge.js` registers — four request/response via `ipcMain.handle`, one push from the main process into the renderer:
+The channels `ipc/ai-bridge.js` registers — five request/response via `ipcMain.handle`, one push from the main process into the renderer:
 
 - `ai:getState`
 - `ai:confirm`
 - `ai:download`
 - `ai:remove`
+- `ai:activate`
 - `ai:downloadProgress` (push, main → renderer)
 
 `preload.js` exposes these two channel sets as separate `contextBridge` globals, `window.traquity` and `window.traquityAi`.
@@ -196,15 +197,16 @@ screen asks for one instead of inheriting the backend's own built-in default sil
 Every write of that file lands as mode `0600`, and a `chmod` to the same mode follows each one, since a `mode` passed to a write only
 applies to a file being created and an install predating this rule still carries whatever umask it was written under.
 
-Six channels write `traquity.config.json`, three of them in `ipc/startup-bridge.js` and three in `ipc/ai-bridge.js`: `auth:forget` removes
+Seven channels write `traquity.config.json`, three of them in `ipc/startup-bridge.js` and four in `ipc/ai-bridge.js`: `auth:forget` removes
 one `auth` entry immediately, while the screen is still up, `config:apply` persists the configuration screen on finish, touching
 `env.TQ_DB_FILE_PATH` and nothing else, `app:restartAndConfigure` sets `configureOnNextStart` on the way out, `ai:confirm` hashes the
 packaged AI notice resource and writes that digest as `ai.confirmedNotice`, initializing `ai.models` to `{}` the first time, `ai:download`
-sets one `ai.models[key]` entry on a completed download, and `ai:remove` drops one `ai.models[key]` entry once the file it names has been
-deleted from disk. All six reach the disk through a collaborator of their own (`config/auth-registry.js`'s `forget`,
-`config/configuration-writer.js`'s `apply`, `config/configure-on-next-start.js`'s `request`, `ai/ai-registry.js`'s `confirm`, `install` and
-`remove`); no `ConfigFile` is injected into either bridge directly, so no other channel can write at all. Nothing in the main process ever
-*writes* an `auth` entry outside `recordProvenStart`, which is what keeps "a failed start never discards a record" intact.
+sets one `ai.models[key]` entry on a completed download, `ai:remove` drops one `ai.models[key]` entry once the file it names has been
+deleted from disk, and `ai:activate` sets one `ai.models[key]`'s `active` flag to `true` while clearing it on every other entry. All seven
+reach the disk through a collaborator of their own (`config/auth-registry.js`'s `forget`, `config/configuration-writer.js`'s `apply`,
+`config/configure-on-next-start.js`'s `request`, `ai/ai-registry.js`'s `confirm`, `install`, `remove` and `activate`); no `ConfigFile` is
+injected into either bridge directly, so no other channel can write at all. Nothing in the main process ever *writes* an `auth` entry
+outside `recordProvenStart`, which is what keeps "a failed start never discards a record" intact.
 
 A database is identified everywhere by its **base path without extension** — `env.TQ_DB_FILE_PATH`, the `auth` map's keys and
 `StartupState.databasePath` are all that shape. The `.mv.db` suffix H2 materializes exists only at the dialog boundary, where

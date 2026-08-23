@@ -1,4 +1,4 @@
-import {AuthState} from "../../../startup/startup-bridge.type";
+import {AuthState} from "../../../../bridge/startup-bridge.type";
 
 /** Where the currently selected database came from. */
 export type SelectionOrigin = 'unchanged' | 'created' | 'picked' | 'known';

@@ -1,5 +1,6 @@
-import {AiDownloadProgress, CatalogueEntry} from '../../../app/startup/ai-bridge.type';
+import {AiDownloadProgress, CatalogueEntry} from '../../../bridge/ai-bridge.type';
 import {AiDownload, AiState} from '../ai.state';
+import {getActiveModelSelector} from './get-active-model.selector';
 
 export type CatalogueEntryViewModel = CatalogueEntry & {
   installed: boolean
@@ -11,12 +12,17 @@ export type CatalogueEntryViewModel = CatalogueEntry & {
   showDownloadButton: boolean
   /** True exactly when the most recent removal attempt for this entry failed. */
   removalFailed: boolean
+  /** True exactly for the currently active model. */
+  active: boolean
+  /** True exactly when the most recent activation attempt for this entry failed. */
+  activationFailed: boolean
 };
 
 export function getCatalogueSelector(
-  state: Pick<AiState, 'catalogue' | 'models' | 'download' | 'downloadErrors' | 'removalErrors'>
+  state: Pick<AiState, 'catalogue' | 'models' | 'download' | 'downloadErrors' | 'removalErrors' | 'activationErrors'>
 ): CatalogueEntryViewModel[] {
   const download: AiDownload | null = state.download;
+  const activeKey: string | null = getActiveModelSelector(state)?.key ?? null;
 
   return state.catalogue.map((entry: CatalogueEntry): CatalogueEntryViewModel => {
     const installed: boolean = state.models[entry.key] !== undefined;
@@ -27,7 +33,9 @@ export function getCatalogueSelector(
       progress: download != null && download.key === entry.key ? download.progress : null,
       error: state.downloadErrors[entry.key] ?? null,
       showDownloadButton: !installed && download == null,
-      removalFailed: state.removalErrors[entry.key] != null
+      removalFailed: state.removalErrors[entry.key] != null,
+      active: entry.key === activeKey,
+      activationFailed: state.activationErrors[entry.key] != null
     };
   });
 }

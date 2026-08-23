@@ -1,6 +1,6 @@
 import {beforeEach, describe, expect, it} from '@jest/globals';
 import {getState, signalState, SignalState} from '@ngrx/signals';
-import {JavaDownloadProgress, JavaVerification} from '../../../../startup/startup-bridge.type';
+import {JavaDownloadProgress, JavaVerification} from '../../../../../bridge/startup-bridge.type';
 import {ConfigureStoreState, initialState} from '../../configure.store';
 import {setJavaSetting} from './set-java-setting';
 

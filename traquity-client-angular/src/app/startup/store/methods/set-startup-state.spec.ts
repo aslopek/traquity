@@ -1,6 +1,6 @@
 import {beforeEach, describe, expect, it} from '@jest/globals';
 import {getState, signalState, SignalState} from '@ngrx/signals';
-import {StartupState} from '../../startup-bridge.type';
+import {StartupState} from '../../../../bridge/startup-bridge.type';
 import {initialState, StartupStoreState} from '../startup.store';
 import {setStartupState} from './set-startup-state';
 

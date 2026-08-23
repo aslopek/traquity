@@ -2,29 +2,29 @@ import {Actions, ofType} from '@ngrx/effects';
 import {Action} from '@ngrx/store';
 import {catchError, concat, EMPTY, exhaustMap, map, Observable, of, switchMap} from 'rxjs';
 import {AiBridgeService} from '../../../bridge/ai-bridge.service';
-import {AiDownloadOutcome, ElectronAiState} from '../../../bridge/ai-bridge.type';
+import {AiActivateOutcome, ElectronAiState} from '../../../bridge/ai-bridge.type';
 import {AiActions} from '../ai.actions';
 
-export type DownloadModelEffectArgs = {
+export type ActivateModelEffectArgs = {
   actions$: Actions
-  aiBridgeService: Pick<AiBridgeService, 'downloadModel' | 'getState'>
+  aiBridgeService: Pick<AiBridgeService, 'activateModel' | 'getState'>
 };
 
-export function downloadModel(effectArgs: DownloadModelEffectArgs): Observable<Action> {
+export function activateModel(effectArgs: ActivateModelEffectArgs): Observable<Action> {
   const {actions$, aiBridgeService} = effectArgs;
   return actions$.pipe(
-    ofType(AiActions.downloadModel),
-    exhaustMap(({key}): Observable<Action> => aiBridgeService.downloadModel(key).pipe(
-      switchMap((outcome: AiDownloadOutcome): Observable<Action> => outcome.status === 'completed'
+    ofType(AiActions.activateModel),
+    exhaustMap(({key}): Observable<Action> => aiBridgeService.activateModel(key).pipe(
+      switchMap((outcome: AiActivateOutcome): Observable<Action> => outcome.status === 'activated'
         ? concat(
           aiBridgeService.getState().pipe(
             map((electronAiState: ElectronAiState): Action => AiActions.loadAiStateDone({electronAiState})),
             catchError(() => EMPTY)
           ),
-          of(AiActions.aiDownloadFinished({key, outcome}))
+          of(AiActions.aiActivationFinished({key, outcome}))
         )
-        : of(AiActions.aiDownloadFinished({key, outcome}))),
-      catchError((error: unknown): Observable<Action> => of(AiActions.aiDownloadFinished({
+        : of(AiActions.aiActivationFinished({key, outcome}))),
+      catchError((error: unknown): Observable<Action> => of(AiActions.aiActivationFinished({
         key,
         outcome: {status: 'failed', message: error instanceof Error ? error.message : String(error)}
       })))

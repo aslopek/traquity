@@ -89,7 +89,9 @@ describe('getCatalogueSelector', (): void => {
           progress: null,
           removalFailed: false,
           showDownloadButton: false,
-          sizeBytes: 2_500_000_000
+          sizeBytes: 2_500_000_000,
+          active: false,
+          activationFailed: false
         }
       ]);
     });
@@ -129,6 +131,45 @@ describe('getCatalogueSelector', (): void => {
 
       expect(modelA.removalFailed).toBe(false);
       expect(modelC.removalFailed).toBe(false);
+    });
+  });
+
+  describe('active model', (): void => {
+    it('marks the entry the model is active for', (): void => {
+      const [, modelB] = getCatalogueSelector(state);
+
+      expect(modelB.active).toBe(true);
+    });
+
+    it('marks an installed but not active entry as not active', (): void => {
+      const [, , modelC] = getCatalogueSelector(state);
+
+      expect(modelC.active).toBe(false);
+    });
+
+    it('marks a not-installed entry as not active', (): void => {
+      const [modelA] = getCatalogueSelector(state);
+
+      expect(modelA.active).toBe(false);
+    });
+  });
+
+  describe('with an activation error recorded for one installed entry', (): void => {
+    beforeEach((): void => {
+      state = {...state, activationErrors: {'model-c': 'No installed model for model-c'}};
+    });
+
+    it('marks that entry\'s activation as failed', (): void => {
+      const [, , modelC] = getCatalogueSelector(state);
+
+      expect(modelC.activationFailed).toBe(true);
+    });
+
+    it('marks every other entry\'s activation as not failed', (): void => {
+      const [modelA, modelB] = getCatalogueSelector(state);
+
+      expect(modelA.activationFailed).toBe(false);
+      expect(modelB.activationFailed).toBe(false);
     });
   });
 });
