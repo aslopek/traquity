@@ -1,4 +1,4 @@
-import {AiDownloadProgress, CatalogueEntry, ModelEntry} from '../../app/startup/startup-bridge.type';
+import {AiDownloadProgress, CatalogueEntry, ModelEntry} from '../../app/startup/ai-bridge.type';
 
 export type AiDownload = {
   key: string
@@ -13,4 +13,6 @@ export type AiState = {
   download: AiDownload | null
   /** Keyed by catalogue key; an entry is cleared the moment a new download starts for that same key. */
   downloadErrors: Record<string, string>
+  /** Keyed by catalogue key; an entry is replaced or cleared once a further removal attempt for that same key finishes. */
+  removalErrors: Record<string, string>
 };

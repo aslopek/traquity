@@ -33,6 +33,8 @@ describe('aiBridge', () => {
   const getAiState = jest.fn(/** @type {() => Promise<AiState>} */ (() => Promise.resolve(aiState)));
   const confirmAi = jest.fn(/** @type {() => void} */ (() => undefined));
   const installAi = jest.fn(/** @type {(key: string, modelPath: string) => void} */ (() => undefined));
+  const removeAi = jest.fn(/** @type {(key: string) => Promise<import('../ai/ai-registry.js').AiRemoveOutcome>} */
+    (() => Promise.resolve({status: 'removed'})));
   const pickDownloadDirectory = jest.fn(/** @type {AiDialogs['pickDownloadDirectory']} */
     (() => Promise.resolve(modelDirectory)));
   const hasEnoughFreeSpace = jest.fn(/** @type {(directory: string, requiredBytes: number) => boolean} */ (() => true));
@@ -50,7 +52,7 @@ describe('aiBridge', () => {
   /** @type {IpcMainLike} */
   let ipcMain;
 
-  /** @type {Pick<AiRegistry, 'getState' | 'confirm' | 'install'>} */
+  /** @type {Pick<AiRegistry, 'getState' | 'confirm' | 'install' | 'remove'>} */
   let aiRegistry;
 
   /** @type {Pick<AiDialogs, 'pickDownloadDirectory'>} */
@@ -96,19 +98,20 @@ describe('aiBridge', () => {
     pickDownloadDirectory.mockResolvedValue(modelDirectory);
     hasEnoughFreeSpace.mockReturnValue(true);
     downloadModel.mockResolvedValue({status: 'completed', path: modelPath});
+    removeAi.mockResolvedValue({status: 'removed'});
     getMainWindow.mockReturnValue({webContents: {send}});
     isTrustedSender.mockReturnValue(true);
     tlsOverridden = false;
 
     ipcMain = {handle, on};
-    aiRegistry = {getState: getAiState, confirm: confirmAi, install: installAi};
+    aiRegistry = {getState: getAiState, confirm: confirmAi, install: installAi, remove: removeAi};
     aiDialogs = {pickDownloadDirectory};
 
     createBridge();
   });
 
-  it('registers exactly the three request/response channels via handle', () => {
-    expect(handle.mock.calls.map(([channel]) => channel)).toEqual(['ai:getState', 'ai:confirm', 'ai:download']);
+  it('registers exactly the four request/response channels via handle', () => {
+    expect(handle.mock.calls.map(([channel]) => channel)).toEqual(['ai:getState', 'ai:confirm', 'ai:download', 'ai:remove']);
   });
 
   it('registers no one-way channel', () => {
@@ -244,6 +247,29 @@ describe('aiBridge', () => {
     });
   });
 
+  describe('ai:remove', () => {
+    it('delegates to the registry with the parsed key', async () => {
+      await expect(handleListenerFor('ai:remove')(undefined, 'model-a')).resolves.toEqual({status: 'removed'});
+
+      expect(removeAi).toHaveBeenCalledTimes(1);
+      expect(removeAi).toHaveBeenCalledWith('model-a');
+    });
+
+    it('returns the registry\'s failed outcome unchanged', async () => {
+      removeAi.mockResolvedValue({status: 'failed', message: 'No installed model for model-a'});
+
+      await expect(handleListenerFor('ai:remove')(undefined, 'model-a')).resolves.toEqual({
+        status: 'failed',
+        message: 'No installed model for model-a'
+      });
+    });
+
+    it('rejects a non-string key without calling the registry', async () => {
+      await expect(handleListenerFor('ai:remove')(undefined, 42)).rejects.toThrow('Invalid key argument for ai:remove');
+      expect(removeAi).not.toHaveBeenCalled();
+    });
+  });
+
   describe('when the sender is refused', () => {
     /** @type {{senderFrame: string}} an event stood in for by the one member the decision is made on */
     let event;
@@ -265,6 +291,14 @@ describe('aiBridge', () => {
       expect(() => handleListenerFor('ai:download')(event, 'model-a'))
         .toThrow('Refused ai:download from an untrusted sender');
       expect(pickDownloadDirectory).not.toHaveBeenCalled();
+      expect(isTrustedSender).toHaveBeenCalledTimes(1);
+      expect(isTrustedSender).toHaveBeenCalledWith(event);
+    });
+
+    it('refuses ai:remove before its key is parsed, without calling the registry', () => {
+      expect(() => handleListenerFor('ai:remove')(event, 'model-a'))
+        .toThrow('Refused ai:remove from an untrusted sender');
+      expect(removeAi).not.toHaveBeenCalled();
       expect(isTrustedSender).toHaveBeenCalledTimes(1);
       expect(isTrustedSender).toHaveBeenCalledWith(event);
     });

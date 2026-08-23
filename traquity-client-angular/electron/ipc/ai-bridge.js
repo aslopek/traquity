@@ -1,4 +1,4 @@
-const {aiDownloadKeySchema} = require('./ipc-schema.js');
+const {aiModelKeySchema} = require('./ipc-schema.js');
 const {createTrustedChannels} = require('./trusted-channels.js');
 
 /** @import {IpcMainLike} from './trusted-channels.js' */
@@ -11,9 +11,10 @@ const {createTrustedChannels} = require('./trusted-channels.js');
  * Registers the `ai:*` IPC channels. `ai:downloadProgress` is the one push this module makes into the renderer, sent
  * straight to the window that invoked `ai:download`.
  *
- * `ai:confirm` sets `ai.confirmedNotice` (and `ai.models`, the first time) through `aiRegistry.confirm`, and
- * `ai:download` sets one `ai.models` entry on a completed download through `aiRegistry.install` - the two writes this
- * module makes to `traquity.config.json`.
+ * `ai:confirm` sets `ai.confirmedNotice` (and `ai.models`, the first time) through `aiRegistry.confirm`,
+ * `ai:download` sets one `ai.models` entry on a completed download through `aiRegistry.install`, and `ai:remove`
+ * drops one `ai.models` entry and deletes its file through `aiRegistry.remove` - the three writes this module makes
+ * to `traquity.config.json`.
  *
  * A TLS-overridden environment registers none of these channels: "nothing can be done" is then enforced by
  * architecture instead of left to each handler to refuse.
@@ -41,7 +42,7 @@ const {createTrustedChannels} = require('./trusted-channels.js');
 /**
  * @typedef {Object} AiBridgeOptions
  * @property {IpcMainLike} ipcMain
- * @property {Pick<AiRegistry, 'getState' | 'confirm' | 'install'>} aiRegistry
+ * @property {Pick<AiRegistry, 'getState' | 'confirm' | 'install' | 'remove'>} aiRegistry
  * @property {Record<string, CatalogueRecord>} catalogue the models, for resolving `ai:download`'s key argument
  * @property {Pick<AiDialogs, 'pickDownloadDirectory'>} aiDialogs
  * @property {(entry: CatalogueRecord, targetDirectory: string, onProgress: (progress: AiDownloadProgress) => void) =>
@@ -90,7 +91,7 @@ function createAiBridge(options) {
     handle('ai:confirm', () => aiRegistry.confirm());
 
     handle('ai:download', async (_event, key) => {
-      const parsedKey = aiDownloadKeySchema.safeParse(key);
+      const parsedKey = aiModelKeySchema.safeParse(key);
       if (!parsedKey.success) {
         throw new Error('Invalid key argument for ai:download');
       }
@@ -132,6 +133,14 @@ function createAiBridge(options) {
       } finally {
         downloading = false;
       }
+    });
+
+    handle('ai:remove', async (_event, key) => {
+      const parsedKey = aiModelKeySchema.safeParse(key);
+      if (!parsedKey.success) {
+        throw new Error('Invalid key argument for ai:remove');
+      }
+      return aiRegistry.remove(parsedKey.data);
     });
   }
 

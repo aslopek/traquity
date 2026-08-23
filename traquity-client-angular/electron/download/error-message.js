@@ -1,5 +1,5 @@
 /**
- * Formats an error for a failed-download message, agnostic of what was being downloaded or how it is verified.
+ * Formats an error into a failure message, agnostic of what produced it.
  */
 
 /** @type {number} how far a `cause` chain is followed - it is built by whoever threw, and may well be cyclic */

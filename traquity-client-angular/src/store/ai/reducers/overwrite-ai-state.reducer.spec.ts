@@ -1,5 +1,5 @@
 import {beforeEach, describe, expect, it} from '@jest/globals';
-import {ElectronAiState} from '../../../app/startup/startup-bridge.type';
+import {ElectronAiState} from '../../../app/startup/ai-bridge.type';
 import {AiState} from '../ai.state';
 import {overwriteAiState} from './overwrite-ai-state.reducer';
 import {initialState} from "../ai.reducer";
