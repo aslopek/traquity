@@ -52,22 +52,22 @@ The Angular + NgRx frontend, packaged as the Electron desktop app that ships to 
   (`src/app/insecure/`, admitted while the startup mode is `insecure` — see `electron/LLM.md`'s boot order for the
   `NODE_TLS_REJECT_UNAUTHORIZED` guard that produces it) are three sibling top-level routes with no chrome, rendered instead of the shell
   while the startup mode the main process computed calls for one of them.
-  `src/app/startup/` is the renderer's only door to the main process: `StartupBridgeService` wraps the `contextBridge` surface
-  (`window.traquity`, exposed by `electron/preload.js`) as observables, and `StartupStore` (a root-provided `@ngrx/signals` Signal Store,
-  not a global-store slice — it is read by an app initializer, a route guard and both startup screens) holds the startup mode, phase,
-  database path, the database's `authState` (what gates the unlock screen's `OK` button: only a stored `scrypt` record demands a local
-  match) and the `startFailed` flag (set on a failed `backend:start`, cleared on the next attempt), and drives the `backend:start` call.
-  `selectDatabase` is what keeps `databasePath`/`authState` correct once the configuration screen switches databases — the two arrive once
-  from `startup:getState` and describe the database the app *started* against — and `enterUnlock` sits alongside
-  `enterConfigure`/`enterBooting` as the way back into the unlock screen. Both `/unlock` and `/configure` route on the same `startFailed`
-  flag rather than each carrying their own. `startup.initializer.ts` resolves the startup state from the bridge before the router's first
-  navigation, which is what lets `startupPhaseGuard` decide synchronously which route to admit. In browser dev mode (`ng serve`, no bridge)
-  none of this activates: the guard admits the shell immediately and the app loads. The Settings page (`src/settings/settings-page/`)
-  carries a bridge-gated action, shown only while the bridge is available, that writes the one-shot `configureOnNextStart` flag and
-  relaunches the app through the same `StartupBridgeService`. A settings section unrelated to startup/configuration gets its own bridge
-  service alongside `StartupBridgeService`, shaped the same way (one `available` flag, one wrapper per channel deferring the call until
-  subscription) rather than growing `StartupBridgeService` itself — `AiBridgeService`, wrapping the `ai:*` channels for the AI settings
-  section (`src/settings/ai/`), is the reference.
+  `src/app/startup/` is the renderer's only door to the main process, over two `contextBridge` globals `electron/preload.js` exposes:
+  `window.traquity` for the startup/configuration/java channels and `window.traquityAi` for the `ai:*` channels. `StartupBridgeService`
+  wraps the former as observables, and `StartupStore` (a root-provided `@ngrx/signals` Signal Store, not a global-store slice — it is read
+  by an app initializer, a route guard and both startup screens) holds the startup mode, phase, database path, the database's `authState`
+  (what gates the unlock screen's `OK` button: only a stored `scrypt` record demands a local match) and the `startFailed` flag (set on a
+  failed `backend:start`, cleared on the next attempt), and drives the `backend:start` call. `selectDatabase` is what keeps
+  `databasePath`/`authState` correct once the configuration screen switches databases — the two arrive once from `startup:getState` and
+  describe the database the app *started* against — and `enterUnlock` sits alongside `enterConfigure`/`enterBooting` as the way back into
+  the unlock screen. Both `/unlock` and `/configure` route on one shared `startFailed` flag, not one each. `startup.initializer.ts`
+  resolves the startup state from the bridge before the router's first navigation, which is what lets `startupPhaseGuard` decide
+  synchronously which route to admit. In browser dev mode (`ng serve`, no bridge) none of this activates: the guard admits the shell
+  immediately and the app loads. The Settings page (`src/settings/settings-page/`) carries a bridge-gated action, shown only while the
+  bridge is available, that writes the one-shot `configureOnNextStart` flag and relaunches the app through the same `StartupBridgeService`.
+  `AiBridgeService` wraps `window.traquityAi` the same way — one `available` flag, one wrapper per channel deferring the call until
+  subscription — for the AI settings section (`src/settings/ai/`); a further settings-scoped bridge gets its own service and its own
+  `contextBridge` global, shaped the same way.
 - **Two kinds of state, kept strictly separate** — see the dedicated sections below for each:
   - The **global NgRx store** (`src/store/`) holds only data that's genuinely shared/global (loaded entities, cross-screen config) — never
     screen-local drafts or UI-only state.
