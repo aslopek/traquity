@@ -1,5 +1,5 @@
 import {beforeEach, describe, expect, it, jest} from '@jest/globals';
-import {AuthState} from '../../../startup/startup-bridge.type';
+import {AuthState} from '../../../../bridge/startup-bridge.type';
 import {DatabaseSelection} from '../../../startup/store/methods/select-database';
 import {ContinuableStartupStore, continueStartup} from './continue-startup';
 import {nextStartupStep, SelectionOrigin, StartupStep} from './next-startup-step';

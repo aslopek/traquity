@@ -4,7 +4,7 @@ import {Observable} from 'rxjs';
 import {RunHelpers, TestScheduler} from 'rxjs/testing';
 import {HotObservable} from 'rxjs/internal/testing/HotObservable';
 import {WritableSignalStore} from '../../../../../common/types/signal-store.type';
-import {StartupBridgeService} from '../../../../startup/startup-bridge.service';
+import {StartupBridgeService} from '../../../../../bridge/startup-bridge.service';
 import {ConfigureStoreState, initialState} from '../../configure.store';
 import {selectExistingDatabase} from '../methods/select-existing-database';
 import {pickExistingDatabasePipe} from './pick-existing-database';

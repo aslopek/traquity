@@ -1,7 +1,7 @@
 import {describe, expect, it} from '@jest/globals';
 import {signal, Signal} from '@angular/core';
 import {ReadableSignalStore} from '../../../../../common/types/signal-store.type';
-import {JavaVerification} from '../../../../startup/startup-bridge.type';
+import {JavaVerification} from '../../../../../bridge/startup-bridge.type';
 import {javaSelection, JavaSelection, JavaSelectionSlice} from './java-selection';
 
 describe('javaSelection', (): void => {

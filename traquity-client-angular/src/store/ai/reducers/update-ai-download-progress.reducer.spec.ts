@@ -1,5 +1,5 @@
 import {beforeEach, describe, expect, it} from '@jest/globals';
-import {AiDownloadProgress} from '../../../app/startup/ai-bridge.type';
+import {AiDownloadProgress} from '../../../bridge/ai-bridge.type';
 import {AiState} from '../ai.state';
 import {initialState} from '../ai.reducer';
 import {updateAiDownloadProgress} from './update-ai-download-progress.reducer';

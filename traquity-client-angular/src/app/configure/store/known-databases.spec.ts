@@ -1,5 +1,5 @@
 import {beforeEach, describe, expect, it} from '@jest/globals';
-import {KnownDatabase} from '../../startup/startup-bridge.type';
+import {KnownDatabase} from '../../../bridge/startup-bridge.type';
 import {authStateIn} from './known-databases';
 
 describe('authStateIn', (): void => {
