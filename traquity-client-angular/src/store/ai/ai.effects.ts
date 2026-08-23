@@ -4,6 +4,7 @@ import {AiBridgeService} from '../../app/startup/ai-bridge.service';
 import {confirmAiNotice, ConfirmAiNoticeEffectArgs} from './effects/confirm-ai-notice.effect';
 import {downloadModel, DownloadModelEffectArgs} from './effects/download-model.effect';
 import {loadAiState, LoadAiStateEffectArgs} from './effects/load-ai-state.effect';
+import {removeModel, RemoveModelEffectArgs} from './effects/remove-model.effect';
 import {trackAiDownloadProgress, TrackAiDownloadProgressEffectArgs} from './effects/track-ai-download-progress.effect';
 
 @Injectable()
@@ -31,4 +32,9 @@ export class AiEffects {
     actions$: this.actions$,
     aiBridgeService: this.aiBridgeService
   } satisfies TrackAiDownloadProgressEffectArgs));
+
+  readonly removeModel = createEffect(() => removeModel({
+    actions$: this.actions$,
+    aiBridgeService: this.aiBridgeService
+  } satisfies RemoveModelEffectArgs));
 }

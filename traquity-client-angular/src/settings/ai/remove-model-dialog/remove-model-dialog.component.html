@@ -1,0 +1,23 @@
+<div class="container">
+    <app-title-toolbar (onClose)="cancel()"
+                       title="Remove model"
+                       class="title-bar">
+    </app-title-toolbar>
+
+    <div class="wrapper">
+        <p>This deletes {{ description }} from disk.</p>
+
+        <div class="button-group">
+            <button (click)="confirm()"
+                    mat-flat-button
+                    color="warn">
+                Remove
+            </button>
+            <button (click)="cancel()"
+                    mat-stroked-button
+                    color="primary">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>

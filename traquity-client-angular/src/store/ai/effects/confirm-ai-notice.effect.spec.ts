@@ -4,7 +4,7 @@ import {Actions} from '@ngrx/effects';
 import {Observable} from 'rxjs';
 import {RunHelpers, TestScheduler} from 'rxjs/testing';
 import {AiBridgeService} from '../../../app/startup/ai-bridge.service';
-import {ElectronAiState} from '../../../app/startup/startup-bridge.type';
+import {ElectronAiState} from '../../../app/startup/ai-bridge.type';
 import {AiActions} from '../ai.actions';
 import {confirmAiNotice, ConfirmAiNoticeEffectArgs} from './confirm-ai-notice.effect';
 

@@ -2,6 +2,7 @@ import {createReducer, on} from '@ngrx/store';
 import {AiActions} from './ai.actions';
 import {AiState} from './ai.state';
 import {finishAiDownload} from './reducers/finish-ai-download.reducer';
+import {finishAiRemoval} from './reducers/finish-ai-removal.reducer';
 import {overwriteAiState} from './reducers/overwrite-ai-state.reducer';
 import {startAiDownload} from './reducers/start-ai-download.reducer';
 import {updateAiDownloadProgress} from './reducers/update-ai-download-progress.reducer';
@@ -11,7 +12,8 @@ export const initialState: AiState = {
   catalogue: [],
   models: {},
   download: null,
-  downloadErrors: {}
+  downloadErrors: {},
+  removalErrors: {}
 } as const;
 
 export const aiReducer = createReducer(
@@ -20,5 +22,6 @@ export const aiReducer = createReducer(
   on(AiActions.loadAiStateDone, (state, {electronAiState}) => overwriteAiState(state, electronAiState)),
   on(AiActions.downloadModel, (state, {key}) => startAiDownload(state, key)),
   on(AiActions.aiDownloadProgress, (state, {progress}) => updateAiDownloadProgress(state, progress)),
-  on(AiActions.aiDownloadFinished, (state, {key, outcome}) => finishAiDownload(state, key, outcome))
+  on(AiActions.aiDownloadFinished, (state, {key, outcome}) => finishAiDownload(state, key, outcome)),
+  on(AiActions.aiRemovalFinished, (state, {key, outcome}) => finishAiRemoval(state, key, outcome))
 );

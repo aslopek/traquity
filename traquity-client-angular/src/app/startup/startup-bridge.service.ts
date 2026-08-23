@@ -12,7 +12,7 @@ import {
   JavaVerification,
   PickedDatabase,
   StartupState,
-  TraQuityBridge
+  TraQuityStartupBridge
 } from "./startup-bridge.type";
 
 /**
@@ -24,7 +24,7 @@ import {
 @Injectable({providedIn: "root"})
 export class StartupBridgeService {
 
-  private readonly bridge: TraQuityBridge | null;
+  private readonly bridge: TraQuityStartupBridge | null;
 
   constructor(@Inject(BRIDGE_HOST) bridgeHost: BridgeHost) {
     this.bridge = bridgeHost.traquity ?? null;
@@ -101,7 +101,7 @@ export class StartupBridgeService {
     this.requireBridge().quit();
   }
 
-  private requireBridge(): TraQuityBridge {
+  private requireBridge(): TraQuityStartupBridge {
     if (this.bridge == null) {
       throw new Error("The traquity bridge is not available");
     }

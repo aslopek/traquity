@@ -79,46 +79,7 @@ export type AppliedConfiguration = {
   authState: AuthState
 };
 
-export type CatalogueEntry = {
-  key: string
-  description: string
-  sizeBytes: number
-  license: string
-};
-
-export type ModelEntry = {
-  path: string
-  active: boolean
-};
-
-/** Mirrors the main process's `AiState`. */
-export type ElectronAiState = {
-  isConfirmed: boolean
-  catalogue: CatalogueEntry[]
-  models: Record<string, ModelEntry>
-};
-
-export type AiDownloadPhase = 'downloading' | 'verifying' | 'installing';
-
-export type AiDownloadProgress = {
-  phase: AiDownloadPhase
-  receivedBytes: number
-  totalBytes: number | null
-  bytesPerSecond: number
-  secondsRemaining: number | null
-};
-
-/**
- * `cancelled` is a status separate from `failed`: dismissing the directory picker without choosing
- * anything is not an error. A `completed` outcome carries no path - the model this installed is read back through
- * `getAiState`.
- */
-export type AiDownloadOutcome =
-  | { status: 'completed' }
-  | { status: 'cancelled' }
-  | { status: 'failed', message: string };
-
-export type TraQuityBridge = {
+export type TraQuityStartupBridge = {
   getStartupState: () => Promise<StartupState>
   startBackend: (password: string) => Promise<BackendStartOutcome>
   verifyPassword: (password: string) => Promise<boolean>
@@ -130,11 +91,7 @@ export type TraQuityBridge = {
   verifyJava: (setting: string | null) => Promise<JavaVerification>
   pickJava: (currentSetting: string | null) => Promise<JavaPickResult | null>
   downloadJava: () => Promise<JavaDownloadOutcome>
-  getAiState: () => Promise<ElectronAiState>
-  confirmAiNotice: () => Promise<void>
-  downloadModel: (key: string) => Promise<AiDownloadOutcome>
   onJavaDownloadProgress: (listener: (progress: JavaDownloadProgress) => void) => () => void
-  onAiDownloadProgress: (listener: (progress: AiDownloadProgress) => void) => () => void
   restartAndConfigure: () => void
   quit: () => void
 };

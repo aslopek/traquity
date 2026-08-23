@@ -4,7 +4,7 @@ import {Actions} from '@ngrx/effects';
 import {Observable} from 'rxjs';
 import {RunHelpers, TestScheduler} from 'rxjs/testing';
 import {AiBridgeService} from '../../../app/startup/ai-bridge.service';
-import {AiDownloadOutcome, ElectronAiState} from '../../../app/startup/startup-bridge.type';
+import {AiDownloadOutcome, ElectronAiState} from '../../../app/startup/ai-bridge.type';
 import {AiActions} from '../ai.actions';
 import {downloadModel, DownloadModelEffectArgs} from './download-model.effect';
 

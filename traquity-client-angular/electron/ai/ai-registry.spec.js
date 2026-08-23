@@ -64,12 +64,15 @@ describe('aiRegistry', () => {
   const readFileSync = jest.fn(() => noticeBytes);
   /** @type {jest.Mock<(path: string) => NodeJS.ReadableStream>} */
   const createReadStream = jest.fn(() => Readable.from([modelBytes]));
+  /** @type {jest.Mock<(path: string, options: {force: boolean}) => void>} */
+  const rmSync = jest.fn(() => undefined);
 
   beforeEach(() => {
     jest.clearAllMocks();
     existsSync.mockReturnValue(true);
     readFileSync.mockReturnValue(noticeBytes);
     createReadStream.mockReturnValue(Readable.from([modelBytes]));
+    rmSync.mockReturnValue(undefined);
 
     config = {
       env: {},
@@ -79,7 +82,7 @@ describe('aiRegistry', () => {
     configFile = {save};
 
     /** @type {AiRegistryFileSystem} */
-    const fileSystem = {existsSync, readFileSync, createReadStream};
+    const fileSystem = {existsSync, readFileSync, createReadStream, rmSync};
 
     subjectUnderTest = createAiRegistry({configFile, config, noticePath, fileSystem});
   });
@@ -310,6 +313,102 @@ describe('aiRegistry', () => {
           'model-a': {path: newModelPath, active: false}
         }
       });
+    });
+  });
+
+  describe('remove', () => {
+    beforeEach(() => {
+      config.ai = {
+        confirmedNotice: noticeDigest,
+        models: {'model-a': {path: modelPath, active: true}}
+      };
+    });
+
+    it('deletes the file and drops the entry on a matching digest', async () => {
+      await expect(subjectUnderTest.remove('model-a')).resolves.toEqual({status: 'removed'});
+
+      expect(rmSync).toHaveBeenCalledTimes(1);
+      expect(rmSync).toHaveBeenCalledWith(modelPath, {force: true});
+      expect(config.ai).toEqual({confirmedNotice: noticeDigest, models: {}});
+      expect(save).toHaveBeenCalledTimes(1);
+      expect(save).toHaveBeenCalledWith(config);
+    });
+
+    it('keeps other installed models untouched', async () => {
+      config.ai = {
+        confirmedNotice: noticeDigest,
+        models: {
+          'model-a': {path: modelPath, active: true},
+          'model-b': {path: 'C:\\Users\\x\\traquity\\ai\\models\\model-b.gguf', active: false}
+        }
+      };
+
+      await subjectUnderTest.remove('model-a');
+
+      expect(config.ai).toEqual({
+        confirmedNotice: noticeDigest,
+        models: {'model-b': {path: 'C:\\Users\\x\\traquity\\ai\\models\\model-b.gguf', active: false}}
+      });
+    });
+
+    it('refuses an unknown catalogue key without touching disk or config', async () => {
+      await expect(subjectUnderTest.remove('unknown-model')).resolves.toEqual({
+        status: 'failed',
+        message: 'No installed model for unknown-model'
+      });
+
+      expect(rmSync).not.toHaveBeenCalled();
+      expect(save).not.toHaveBeenCalled();
+    });
+
+    it('refuses a key with no ai.models entry without touching disk or config', async () => {
+      config.ai = {confirmedNotice: noticeDigest, models: {}};
+
+      await expect(subjectUnderTest.remove('model-a')).resolves.toEqual({
+        status: 'failed',
+        message: 'No installed model for model-a'
+      });
+
+      expect(rmSync).not.toHaveBeenCalled();
+      expect(save).not.toHaveBeenCalled();
+    });
+
+    it('refuses a key whose file does not exist without touching disk or config', async () => {
+      existsSync.mockReturnValue(false);
+
+      await expect(subjectUnderTest.remove('model-a')).resolves.toEqual({
+        status: 'failed',
+        message: 'No installed model for model-a'
+      });
+
+      expect(rmSync).not.toHaveBeenCalled();
+      expect(save).not.toHaveBeenCalled();
+    });
+
+    it('refuses a key whose file digest does not match the catalogue without touching disk or config', async () => {
+      createReadStream.mockReturnValue(Readable.from([Buffer.from('tampered weights')]));
+
+      await expect(subjectUnderTest.remove('model-a')).resolves.toEqual({
+        status: 'failed',
+        message: 'Installed model for model-a failed digest verification'
+      });
+
+      expect(rmSync).not.toHaveBeenCalled();
+      expect(save).not.toHaveBeenCalled();
+    });
+
+    it('reports a failed deletion and leaves the entry in place', async () => {
+      rmSync.mockImplementation(() => {
+        throw new Error('EBUSY: resource busy or locked');
+      });
+
+      await expect(subjectUnderTest.remove('model-a')).resolves.toEqual({
+        status: 'failed',
+        message: 'EBUSY: resource busy or locked'
+      });
+
+      expect(config.ai).toEqual({confirmedNotice: noticeDigest, models: {'model-a': {path: modelPath, active: true}}});
+      expect(save).not.toHaveBeenCalled();
     });
   });
 
