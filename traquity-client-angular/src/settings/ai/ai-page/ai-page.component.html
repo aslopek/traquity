@@ -10,7 +10,10 @@
                     <span matListItemLine>Size: {{ entry.sizeBytes | tqByteSize:'GiB' }} · License: {{ entry.license }}</span>
                 }
                 @if (entry.error; as error) {
-                    <span matListItemLine class="download-error">{{ error }}</span>
+                    <span matListItemLine class="error-text">{{ error }}</span>
+                }
+                @if (entry.removalFailed) {
+                    <span matListItemLine class="error-text">Delete failed</span>
                 }
                 <span matListItemMeta>
                     @if (entry.showDownloadButton) {
@@ -19,8 +22,14 @@
                                 (click)="download(entry.key)">
                             Download
                         </button>
+                    } @else if (entry.installed) {
+                        <button mat-stroked-button
+                                color="warn"
+                                (click)="openRemoveDialog(entry)">
+                            Remove
+                        </button>
                     } @else if (!entry.downloading) {
-                        {{ entry.installed ? 'On disk' : 'Not installed' }}
+                        Not installed
                     }
                 </span>
             </mat-list-item>
