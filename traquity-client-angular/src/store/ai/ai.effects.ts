@@ -1,6 +1,7 @@
 import {inject, Injectable} from '@angular/core';
 import {Actions, createEffect} from '@ngrx/effects';
-import {AiBridgeService} from '../../app/startup/ai-bridge.service';
+import {AiBridgeService} from '../../bridge/ai-bridge.service';
+import {activateModel, ActivateModelEffectArgs} from './effects/activate-model.effect';
 import {confirmAiNotice, ConfirmAiNoticeEffectArgs} from './effects/confirm-ai-notice.effect';
 import {downloadModel, DownloadModelEffectArgs} from './effects/download-model.effect';
 import {loadAiState, LoadAiStateEffectArgs} from './effects/load-ai-state.effect';
@@ -37,4 +38,9 @@ export class AiEffects {
     actions$: this.actions$,
     aiBridgeService: this.aiBridgeService
   } satisfies RemoveModelEffectArgs));
+
+  readonly activateModel = createEffect(() => activateModel({
+    actions$: this.actions$,
+    aiBridgeService: this.aiBridgeService
+  } satisfies ActivateModelEffectArgs));
 }

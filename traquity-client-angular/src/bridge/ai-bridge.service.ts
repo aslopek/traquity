@@ -1,6 +1,13 @@
 import {Inject, Injectable} from "@angular/core";
 import {defer, from, Observable} from "rxjs";
-import {AiDownloadOutcome, AiDownloadProgress, AiRemoveOutcome, ElectronAiState, TraQuityAiBridge} from "./ai-bridge.type";
+import {
+  AiActivateOutcome,
+  AiDownloadOutcome,
+  AiDownloadProgress,
+  AiRemoveOutcome,
+  ElectronAiState,
+  TraQuityAiBridge
+} from "./ai-bridge.type";
 import {BRIDGE_HOST, BridgeHost} from "./bridge-host.token";
 
 /**
@@ -34,6 +41,10 @@ export class AiBridgeService {
 
   removeModel(key: string): Observable<AiRemoveOutcome> {
     return defer((): Observable<AiRemoveOutcome> => from(this.requireBridge().removeModel(key)));
+  }
+
+  activateModel(key: string): Observable<AiActivateOutcome> {
+    return defer((): Observable<AiActivateOutcome> => from(this.requireBridge().activateModel(key)));
   }
 
   /**

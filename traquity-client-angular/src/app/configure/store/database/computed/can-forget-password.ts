@@ -1,5 +1,5 @@
 import {computed, Signal} from "@angular/core";
-import {AuthState} from "../../../../startup/startup-bridge.type";
+import {AuthState} from "../../../../../bridge/startup-bridge.type";
 
 /**
  * Whether there is a stored password record to discard: discarding only ever *removes* an entry. `pending` databases can therefore not be

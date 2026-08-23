@@ -1,6 +1,7 @@
 import {createFeatureSelector, createSelector, MemoizedSelector} from '@ngrx/store';
 import {AppState} from '../app.state';
 import {AiState} from './ai.state';
+import {ActiveModel, getActiveModelSelector} from './selectors/get-active-model.selector';
 import {CatalogueEntryViewModel, getCatalogueSelector} from './selectors/get-catalogue.selector';
 import {getIsAiActiveSelector} from './selectors/get-is-ai-active.selector';
 import {getIsNoticeConfirmedSelector} from './selectors/get-is-notice-confirmed.selector';
@@ -18,3 +19,6 @@ export const getCatalogue: MemoizedSelector<AppState, CatalogueEntryViewModel[]>
 
 export const isAiActive: MemoizedSelector<AppState, boolean>
   = createSelector(aiSelector, getIsAiActiveSelector);
+
+export const getActiveModel: MemoizedSelector<AppState, ActiveModel | null>
+  = createSelector(aiSelector, getActiveModelSelector);

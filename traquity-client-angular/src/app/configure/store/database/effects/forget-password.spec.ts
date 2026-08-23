@@ -4,7 +4,7 @@ import {Observable} from 'rxjs';
 import {RunHelpers, TestScheduler} from 'rxjs/testing';
 import {HotObservable} from 'rxjs/internal/testing/HotObservable';
 import {WritableSignalStore} from '../../../../../common/types/signal-store.type';
-import {ConfigureState} from '../../../../startup/startup-bridge.type';
+import {ConfigureState} from '../../../../../bridge/startup-bridge.type';
 import {ConfigureStoreState, initialState} from '../../configure.store';
 import {setConfigureState} from '../../methods/set-configure-state';
 import {ForgetPasswordBridge, forgetPasswordPipe} from './forget-password';

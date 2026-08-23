@@ -3,8 +3,8 @@ import {Action} from '@ngrx/store';
 import {Actions} from '@ngrx/effects';
 import {Observable} from 'rxjs';
 import {RunHelpers, TestScheduler} from 'rxjs/testing';
-import {AiBridgeService} from '../../../app/startup/ai-bridge.service';
-import {AiDownloadOutcome, ElectronAiState} from '../../../app/startup/ai-bridge.type';
+import {AiBridgeService} from '../../../bridge/ai-bridge.service';
+import {AiDownloadOutcome, ElectronAiState} from '../../../bridge/ai-bridge.type';
 import {AiActions} from '../ai.actions';
 import {downloadModel, DownloadModelEffectArgs} from './download-model.effect';
 

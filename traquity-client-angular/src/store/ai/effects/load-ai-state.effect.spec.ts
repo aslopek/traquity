@@ -3,7 +3,7 @@ import {Action} from '@ngrx/store';
 import {Actions} from '@ngrx/effects';
 import {Observable} from 'rxjs';
 import {RunHelpers, TestScheduler} from 'rxjs/testing';
-import {ElectronAiState} from '../../../app/startup/ai-bridge.type';
+import {ElectronAiState} from '../../../bridge/ai-bridge.type';
 import {AppActions} from '../../app.actions';
 import {AiActions} from '../ai.actions';
 import {loadAiState, LoadAiStateEffectArgs} from './load-ai-state.effect';

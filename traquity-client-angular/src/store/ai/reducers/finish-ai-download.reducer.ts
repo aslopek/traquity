@@ -1,4 +1,4 @@
-import {AiDownloadOutcome} from '../../../app/startup/ai-bridge.type';
+import {AiDownloadOutcome} from '../../../bridge/ai-bridge.type';
 import {AiState} from '../ai.state';
 
 export function finishAiDownload(state: AiState, key: string, outcome: AiDownloadOutcome): AiState {

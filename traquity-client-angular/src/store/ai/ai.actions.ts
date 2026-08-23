@@ -1,5 +1,5 @@
 import {createActionGroup, emptyProps, props} from '@ngrx/store';
-import {AiDownloadOutcome, AiDownloadProgress, AiRemoveOutcome, ElectronAiState} from "../../app/startup/ai-bridge.type";
+import {AiActivateOutcome, AiDownloadOutcome, AiDownloadProgress, AiRemoveOutcome, ElectronAiState} from "../../bridge/ai-bridge.type";
 
 export type LoadAiStateDoneActionArgs = {
   electronAiState: ElectronAiState
@@ -27,6 +27,15 @@ export type AiRemovalFinishedActionArgs = {
   outcome: AiRemoveOutcome
 };
 
+export type ActivateModelActionArgs = {
+  key: string
+};
+
+export type AiActivationFinishedActionArgs = {
+  key: string
+  outcome: AiActivateOutcome
+};
+
 export const AiActions = createActionGroup({
   source: 'Ai',
   events: {
@@ -36,6 +45,8 @@ export const AiActions = createActionGroup({
     'Ai Download Progress': props<AiDownloadProgressActionArgs>(),
     'Ai Download Finished': props<AiDownloadFinishedActionArgs>(),
     'Remove Model': props<RemoveModelActionArgs>(),
-    'Ai Removal Finished': props<AiRemovalFinishedActionArgs>()
+    'Ai Removal Finished': props<AiRemovalFinishedActionArgs>(),
+    'Activate Model': props<ActivateModelActionArgs>(),
+    'Ai Activation Finished': props<AiActivationFinishedActionArgs>()
   }
 });

@@ -2,8 +2,8 @@ import {Signal} from "@angular/core";
 import {RxMethod, rxMethod} from "@ngrx/signals/rxjs-interop";
 import {exhaustMap, filter, Observable, pipe, tap} from "rxjs";
 import {WritableSignalStore} from "../../../../../common/types/signal-store.type";
-import {StartupBridgeService} from "../../../../startup/startup-bridge.service";
-import {PickedDatabase} from "../../../../startup/startup-bridge.type";
+import {StartupBridgeService} from "../../../../../bridge/startup-bridge.service";
+import {PickedDatabase} from "../../../../../bridge/startup-bridge.type";
 import {ConfigureStoreState} from "../../configure.store";
 import {adoptPickedDatabase} from "../methods/adopt-picked-database";
 

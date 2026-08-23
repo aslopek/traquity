@@ -1,8 +1,8 @@
 import {Actions, ofType} from '@ngrx/effects';
 import {Action} from '@ngrx/store';
 import {EMPTY, map, Observable, switchMap} from 'rxjs';
-import {AiBridgeService} from '../../../app/startup/ai-bridge.service';
-import {AiDownloadProgress} from '../../../app/startup/ai-bridge.type';
+import {AiBridgeService} from '../../../bridge/ai-bridge.service';
+import {AiDownloadProgress} from '../../../bridge/ai-bridge.type';
 import {AppActions} from '../../app.actions';
 import {AiActions} from '../ai.actions';
 

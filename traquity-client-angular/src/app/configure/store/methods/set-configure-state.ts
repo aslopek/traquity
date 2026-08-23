@@ -1,6 +1,6 @@
 import {patchState} from "@ngrx/signals";
 import {WritableSignalStore} from "../../../../common/types/signal-store.type";
-import {ConfigureState} from "../../../startup/startup-bridge.type";
+import {ConfigureState} from "../../../../bridge/startup-bridge.type";
 import {ConfigureStoreState} from "../configure.store";
 
 export function setConfigureState(signalStore: WritableSignalStore<ConfigureStoreState>,
