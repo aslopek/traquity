@@ -1,11 +1,13 @@
-# Dependabot Auto Releases
+# Dependabot
 
-`dependabot-auto-merge.yml`, `dependabot-rebase-behind.yml` and `dependabot-auto-release.yml` together turn a merged Dependabot PR into a
-dispatch of `release.yml`.
+How dependency updates reach a release. `.github/dependabot.yml` opens the PRs; a maintainer merges them and dispatches `release.yml`.
+
+ADR-1 through ADR-3 and ADR-5 describe the automation that used to sit in between — `dependabot-auto-merge.yml`,
+`dependabot-rebase-behind.yml` and `dependabot-auto-release.yml`, all three deleted.s.
 
 ## ADR-1: Every dependency update is released, as a patch version, without asking
 
-**Status:** ACCEPTED
+**Status:** SUPERSEDED by ADR-6
 
 **Decision:** A merged Dependabot PR touching npm or Maven dependencies dispatches `release.yml` with `bump=patch` — weekly version
 updates and GHSA-triggered security updates alike. No human step sits between the merge and the published release.
@@ -21,7 +23,7 @@ the three-OS build in `release.yml`.
 
 ## ADR-2: A batch of PRs produces one release, dispatched by the last one to merge
 
-**Status:** ACCEPTED
+**Status:** SUPERSEDED by ADR-6
 
 **Decision:** `dependabot-auto-release.yml` runs on every closed Dependabot PR and dispatches `release.yml` only when no Dependabot PR is
 left open against `main`. Every merge in a batch except the last one therefore releases nothing.
@@ -36,7 +38,7 @@ drains the queue. This can be mitigated by hand, since `release.yml` is a `workf
 
 ## ADR-3: GitHub Actions updates never trigger a release
 
-**Status:** ACCEPTED
+**Status:** SUPERSEDED by ADR-6
 
 **Decision:** PRs on `dependabot/github_actions/*` branches are excluded from `dependabot-auto-release.yml`, both as a trigger and from the
 count it waits for.
@@ -62,7 +64,7 @@ One shared slot is what lets ADR-2 and ADR-5 collapse the week's updates into on
 
 ## ADR-5: The count is preceded by a 15-minute wait, and later merges cancel earlier ones
 
-**Status:** ACCEPTED
+**Status:** SUPERSEDED by ADR-6
 
 **Decision:** `dependabot-auto-release.yml` sleeps 15 minutes before counting open Dependabot PRs, under a `concurrency` group keyed on the
 PR author with `cancel-in-progress: true`.
@@ -84,3 +86,23 @@ release.
 A release now trails the last merge of a wave by 15 minutes, security updates included, and a runner idles for that time. Canceled runs
 show up in the Actions list as a normal part of a wave rather than as failures. A wave whose PRs are spaced more than 15 minutes apart still
 splits into two releases, but the count keeps that harmless whenever the later PR is already open.
+
+## ADR-6: Dependabot only opens PRs; merging and releasing are both manual
+
+**Status:** ACCEPTED
+
+**Decision:** No workflow merges a Dependabot PR, and no workflow keeps one up to date with `main`. Maintainers check the open PRs, merge
+the ones worth merging, and then dispatch `release.yml` with `bump=patch` by hand. `dependabot-auto-merge.yml`,
+`dependabot-rebase-behind.yml` and `dependabot-auto-release.yml` are deleted; `release.yml` remains `workflow_dispatch`-only.
+
+**Rationale:** The previous workflow was consuming too many resources, since it created a cascade of workflows.
+
+Dropping the cascade also drops the Personal Access Token. The former `RELEASE_TOKEN` existed only so that a merge would trigger the next
+workflow, since GitHub starts no run for an event caused by `GITHUB_TOKEN`. With nothing left to cascade into, `release.yml` runs on the
+default token with per-job `contents` permissions, and the secret is deleted from both the Actions and the Dependabot store. See
+`MAINTAINING.md`.
+
+**Consequences, accepted:**
+
+A dependency fix reaches users when the next manual merges of Dependabot PRs and a manual release occur. There are no more automatic
+releases. Neither for regular Dependabot upgrades, nor for GHSA-triggered updates.
