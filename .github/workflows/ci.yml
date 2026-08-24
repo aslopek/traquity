@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [ main, next-release ]
+    branches: [ main ]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -50,6 +50,11 @@ jobs:
           node-version: '24'
           cache: npm
           cache-dependency-path: traquity-api/package-lock.json
+      # `storageDir` in openapitools.json, holding the ~32 MB generator jar that every `validate` and `generate` call pulls down on a miss
+      - uses: actions/cache@v4
+        with:
+          path: openapigen
+          key: openapigen-${{ hashFiles('*/openapitools.json') }}
       - run: npm ci
       - run: npm test
 
@@ -69,6 +74,11 @@ jobs:
           node-version: '24'
           cache: npm
           cache-dependency-path: traquity-client-angular/package-lock.json
+      # `storageDir` in openapitools.json, holding the ~32 MB generator jar that every `validate` and `generate` call pulls down on a miss
+      - uses: actions/cache@v4
+        with:
+          path: openapigen
+          key: openapigen-${{ hashFiles('*/openapitools.json') }}
       - run: npm ci
       - run: npm run build
       - run: npm run test
