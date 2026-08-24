@@ -13,12 +13,11 @@ concurrency:
   group: release
   cancel-in-progress: false
 
-permissions:
-  contents: write
-
 jobs:
   prepare:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       version: ${{ steps.bump.outputs.version }}
     steps:
@@ -45,9 +44,13 @@ jobs:
         with:
           name: release-notes
           path: release-notes.md
+          # Consumed by `publish` in the same run; the notes live on in the published release.
+          retention-days: 1
 
   build:
     needs: prepare
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -103,10 +106,15 @@ jobs:
           name: dist-${{ runner.os }}
           path: traquity-client-angular/release-artifacts/*
           if-no-files-found: error
+          # A packaged Electron distribution per OS, handed to `publish` minutes later and attached to the release there. Keeping the same
+          # bytes in the artifact store for the 90-day default would duplicate the whole download for no reader.
+          retention-days: 1
 
   publish:
     needs: [ prepare, build ]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/download-artifact@v8
         with:

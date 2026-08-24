@@ -23,7 +23,7 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      # No checkout (actions/checkout): the action compares the base and head dependency graphs over the API
       - uses: actions/dependency-review-action@v5
         with:
           allow-licenses: >-
