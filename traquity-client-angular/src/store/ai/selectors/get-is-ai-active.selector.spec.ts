@@ -39,4 +39,10 @@ describe('getIsAiActiveSelector', (): void => {
 
     expect(getIsAiActiveSelector(state)).toBe(false);
   });
+
+  it('reads false when the machine capability probe failed', (): void => {
+    state.probeFailed = true;
+
+    expect(getIsAiActiveSelector(state)).toBe(false);
+  });
 });

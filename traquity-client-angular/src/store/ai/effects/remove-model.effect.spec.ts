@@ -42,7 +42,7 @@ describe('removeModel', (): void => {
     removeResponseMarbles = '--(o|)';
     stateResponseMarbles = '--(v|)';
     removeOutcome = {status: 'removed'};
-    electronAiState = {isConfirmed: true, catalogue: [], models: {}};
+    electronAiState = {isConfirmed: true, catalogue: [], models: {}, verdicts: {}, probeFailed: false};
 
     actionValues = {
       a: AiActions.removeModel({key: 'model-a'})

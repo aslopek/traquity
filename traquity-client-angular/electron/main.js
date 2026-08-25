@@ -9,6 +9,7 @@ const {createAuthRegistry} = require('./config/auth-registry.js');
 const {createAiRegistry} = require('./ai/ai-registry.js');
 const {CATALOGUE} = require('./ai/catalogue.js');
 const {downloadModel} = require('./ai/model-download.js');
+const {probeMachineCapability} = require('./ai/machine-capability.js');
 const {hasEnoughFreeSpace} = require('./download/free-space.js');
 const {createConfigurationWriter} = require('./config/configuration-writer.js');
 const {createConfigureOnNextStart} = require('./config/configure-on-next-start.js');
@@ -97,6 +98,10 @@ const tlsOverridden = isTlsOverridden(process.env);
 /** @type {Promise<string | null>} */
 let javaPromise = tlsOverridden ? Promise.resolve(null) : javaRuntime.resolve();
 
+// resolved once and reused by every `ai:getState` call
+/** @type {Promise<import('./ai/machine-capability.js').MachineCapability | null>} */
+const machineCapabilityPromise = tlsOverridden ? Promise.resolve(null) : probeMachineCapability(resolveLlama);
+
 const backendProcess = createBackendProcess({
   spawn: spawnChildProcess,
   resolveJava: () => javaPromise,
@@ -168,6 +173,19 @@ function downloadJava(onProgress) {
     platform: process.platform,
     arch: process.arch
   });
+}
+
+/**
+ * `node-llama-cpp` ships ESM-only, so this process's CommonJS `main.js` reaches it through a dynamic `import()`
+ * instead of a static `require`.
+ *
+ * @returns {Promise<import('./ai/machine-capability.js').LlamaLike>}
+ */
+async function resolveLlama() {
+  const {getLlama} = await import('node-llama-cpp');
+  // `build: 'never'` states what this app relies on instead of leaving it to a library default: the probe uses a
+  // prebuilt binary or fails, and never compiles llama.cpp
+  return getLlama({build: 'never'});
 }
 
 /**
@@ -283,6 +301,7 @@ app.on('ready', () => {
     aiDialogs,
     downloadModel: downloadAiModel,
     hasEnoughFreeSpace: checkFreeSpace,
+    getMachineCapability: () => machineCapabilityPromise,
     getMainWindow,
     tlsOverridden,
     isTrustedSender: (event) => isTrustedSender(event, getMainWindow())

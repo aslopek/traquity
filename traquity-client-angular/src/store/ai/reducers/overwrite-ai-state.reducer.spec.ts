@@ -15,8 +15,10 @@ describe('overwriteAiState', (): void => {
     state = {...initialState};
     electronAiState = {
       isConfirmed: true,
-      catalogue: [{key: 'model-a', description: 'Model A', sizeBytes: 3013027808, license: 'Apache-2.0'}],
-      models: {'model-a': {path: modelAPath, active: true}}
+      catalogue: [{key: 'model-a', description: 'Model A', sizeBytes: 3013027808, license: 'Apache-2.0', requiredVram: 5368709120}],
+      models: {'model-a': {path: modelAPath, active: true}},
+      verdicts: {'model-a': {verdict: 'ok', reason: null}},
+      probeFailed: false
     };
   });
 
@@ -44,8 +46,8 @@ describe('overwriteAiState', (): void => {
       electronAiState = {
         ...electronAiState,
         catalogue: [
-          {key: 'model-a', description: 'Model A', sizeBytes: 3013027808, license: 'Apache-2.0'},
-          {key: 'model-b', description: 'Model B', sizeBytes: 1280835840, license: 'Apache-2.0'}
+          {key: 'model-a', description: 'Model A', sizeBytes: 3013027808, license: 'Apache-2.0', requiredVram: 5368709120},
+          {key: 'model-b', description: 'Model B', sizeBytes: 1280835840, license: 'Apache-2.0', requiredVram: 3221225472}
         ],
         models: {
           'model-a': {path: modelAPath, active: true},

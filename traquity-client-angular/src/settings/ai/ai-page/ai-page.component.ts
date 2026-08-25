@@ -5,25 +5,27 @@ import {MatDialog} from "@angular/material/dialog";
 import {Store} from "@ngrx/store";
 import {DownloadProgressComponent, TqByteSizePipe, TqDecimalPipe} from "../../../common";
 import {AiActions} from "../../../store/ai/ai.actions";
-import {getCatalogue, getIsNoticeConfirmed} from "../../../store/ai/ai.selector";
+import {getCatalogue, getIsNoticeConfirmed, isProbeFailed} from "../../../store/ai/ai.selector";
 import {CatalogueEntryViewModel} from "../../../store/ai/selectors/get-catalogue.selector";
 import {AppState} from "../../../store/app.state";
 import {RemoveModelDialog, RemoveModelDialogData} from "../remove-model-dialog/remove-model-dialog.component";
 import {AiDownloadPhaseLabelPipe} from "./ai-download-phase-label.pipe";
 import {AiNoticeComponent} from "../ai-notice/ai-notice.component";
+import {AiVerdictLabelPipe} from "./ai-verdict-label.pipe";
 
 @Component({
   selector: "app-ai-page",
   imports: [
     AiDownloadPhaseLabelPipe,
     AiNoticeComponent,
+    AiVerdictLabelPipe,
     DownloadProgressComponent,
     MatButton,
     MatCard,
     MatCardContent,
     TqByteSizePipe,
   ],
-  providers: [TqDecimalPipe],
+  providers: [TqDecimalPipe, TqByteSizePipe],
   templateUrl: "./ai-page.component.html",
   styleUrl: "./ai-page.component.scss",
 })
@@ -34,6 +36,7 @@ export class AiPageComponent {
 
   protected readonly isConfirmed: Signal<boolean> = this.store.selectSignal(getIsNoticeConfirmed);
   protected readonly catalogue: Signal<CatalogueEntryViewModel[]> = this.store.selectSignal(getCatalogue);
+  protected readonly probeFailed: Signal<boolean> = this.store.selectSignal(isProbeFailed);
 
   protected confirm(): void {
     this.store.dispatch(AiActions.confirmAiNotice());

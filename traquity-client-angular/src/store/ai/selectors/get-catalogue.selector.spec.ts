@@ -10,9 +10,9 @@ describe('getCatalogueSelector', (): void => {
     state = {
       ...initialState,
       catalogue: [
-        {key: 'model-a', description: 'Model A', sizeBytes: 4_000_000_000, license: 'Apache-2.0'},
-        {key: 'model-b', description: 'Model B', sizeBytes: 2_000_000_000, license: 'MIT'},
-        {key: 'model-c', description: 'Model C', sizeBytes: 2_500_000_000, license: 'MIT'},
+        {key: 'model-a', description: 'Model A', sizeBytes: 4_000_000_000, license: 'Apache-2.0', requiredVram: 5_000_000_000},
+        {key: 'model-b', description: 'Model B', sizeBytes: 2_000_000_000, license: 'MIT', requiredVram: 3_000_000_000},
+        {key: 'model-c', description: 'Model C', sizeBytes: 2_500_000_000, license: 'MIT', requiredVram: 3_000_000_000},
       ],
       models: {
         'model-b': {path: 'C:\\traquity\\ai\\models\\model-b.gguf', active: true},
@@ -88,6 +88,7 @@ describe('getCatalogueSelector', (): void => {
           license: "MIT",
           progress: null,
           removalFailed: false,
+          requiredVram: 3_000_000_000,
           showDownloadButton: false,
           sizeBytes: 2_500_000_000,
           active: false,
@@ -151,6 +152,24 @@ describe('getCatalogueSelector', (): void => {
       const [modelA] = getCatalogueSelector(state);
 
       expect(modelA.active).toBe(false);
+    });
+  });
+
+  describe('verdict', (): void => {
+    beforeEach((): void => {
+      state = {...state, verdicts: {'model-a': {verdict: 'ok', reason: null}}};
+    });
+
+    it('carries the verdict reported for that entry', (): void => {
+      const [modelA] = getCatalogueSelector(state);
+
+      expect(modelA.verdict).toEqual({verdict: 'ok', reason: null});
+    });
+
+    it('carries undefined for an entry the bridge reported no verdict for', (): void => {
+      const [, modelB] = getCatalogueSelector(state);
+
+      expect(modelB.verdict).toBeUndefined();
     });
   });
 
