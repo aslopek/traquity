@@ -19,6 +19,7 @@ const STUB_CATALOGUE = {
     description: 'Model A',
     sizeBytes: modelBytes.length,
     license: 'Apache-2.0',
+    requiredVram: 5_000_000_000,
     repo: 'org/model-a',
     revision: 'abc123',
     file: 'model-a.gguf',
@@ -29,6 +30,7 @@ const STUB_CATALOGUE = {
     description: 'Model B',
     sizeBytes: 42,
     license: 'Apache-2.0',
+    requiredVram: 3_000_000_000,
     repo: 'org/model-b',
     revision: 'def456',
     file: 'model-b.gguf',
@@ -36,8 +38,8 @@ const STUB_CATALOGUE = {
   }
 };
 
-const STUB_CATALOGUE_ENTRIES = Object.values(STUB_CATALOGUE).map(({key, description, sizeBytes, license}) =>
-  ({key, description, sizeBytes, license}));
+const STUB_CATALOGUE_ENTRIES = Object.values(STUB_CATALOGUE).map(({key, description, sizeBytes, license, requiredVram}) =>
+  ({key, description, sizeBytes, license, requiredVram}));
 
 jest.mock('./catalogue.js', () => ({CATALOGUE: STUB_CATALOGUE, catalogueEntries: () => STUB_CATALOGUE_ENTRIES}));
 

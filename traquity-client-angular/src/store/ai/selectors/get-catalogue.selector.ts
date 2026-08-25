@@ -1,4 +1,4 @@
-import {AiDownloadProgress, CatalogueEntry} from '../../../bridge/ai-bridge.type';
+import {AiDownloadProgress, CatalogueEntry, ModelVerdict} from '../../../bridge/ai-bridge.type';
 import {AiDownload, AiState} from '../ai.state';
 import {getActiveModelSelector} from './get-active-model.selector';
 
@@ -16,10 +16,12 @@ export type CatalogueEntryViewModel = CatalogueEntry & {
   active: boolean
   /** True exactly when the most recent activation attempt for this entry failed. */
   activationFailed: boolean
+  /** Undefined only before the bridge has ever reported state; a verdict never gates download or activation. */
+  verdict: ModelVerdict | undefined
 };
 
 export function getCatalogueSelector(
-  state: Pick<AiState, 'catalogue' | 'models' | 'download' | 'downloadErrors' | 'removalErrors' | 'activationErrors'>
+  state: Pick<AiState, 'catalogue' | 'models' | 'download' | 'downloadErrors' | 'removalErrors' | 'activationErrors' | 'verdicts'>
 ): CatalogueEntryViewModel[] {
   const download: AiDownload | null = state.download;
   const activeKey: string | null = getActiveModelSelector(state)?.key ?? null;
@@ -35,7 +37,8 @@ export function getCatalogueSelector(
       showDownloadButton: !installed && download == null,
       removalFailed: state.removalErrors[entry.key] != null,
       active: entry.key === activeKey,
-      activationFailed: state.activationErrors[entry.key] != null
+      activationFailed: state.activationErrors[entry.key] != null,
+      verdict: state.verdicts[entry.key]
     };
   });
 }

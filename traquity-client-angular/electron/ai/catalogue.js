@@ -10,6 +10,8 @@
  * @property {string} description human-readable label, e.g. "Qwen 3.5 4B Q4"
  * @property {number} sizeBytes
  * @property {string} license
+ * @property {number} requiredVram bytes of VRAM a machine capability probe (`machine-capability.js`) must report free on a
+ *   recognized GPU backend for this entry to verdict `ok`
  * @property {string} repo the Hugging Face repo, e.g. "bartowski/Qwen_Qwen3.5-4B-GGUF"
  * @property {string} revision the pinned commit this app downloads from
  * @property {string} file the file name within `repo`@`revision`
@@ -22,7 +24,11 @@
  * @property {string} description
  * @property {number} sizeBytes
  * @property {string} license
+ * @property {number} requiredVram
  */
+
+/** @type {number} */
+const GIBIBYTE = 2 ** 30;
 
 /** @satisfies {Record<string, CatalogueRecord>} */
 const CATALOGUE = {
@@ -31,6 +37,7 @@ const CATALOGUE = {
     description: 'Qwen 3.5 2B Q4 K_M',
     sizeBytes: 1280835840,
     license: 'Apache-2.0',
+    requiredVram: 3 * GIBIBYTE,
     repo: 'unsloth/Qwen3.5-2B-GGUF',
     revision: 'f6d5376be1edb4d416d56da11e5397a961aca8ae',
     file: 'Qwen3.5-2B-Q4_K_M.gguf',
@@ -41,6 +48,7 @@ const CATALOGUE = {
     description: 'Qwen 3.5 4B Q4 K_M',
     sizeBytes: 3013027808,
     license: 'Apache-2.0',
+    requiredVram: 5 * GIBIBYTE,
     repo: 'bartowski/Qwen_Qwen3.5-4B-GGUF',
     revision: '4168f45a16a1290d65a4ec0fa312ae917a4c15d6',
     file: 'Qwen_Qwen3.5-4B-Q4_K_M.gguf',
@@ -51,6 +59,7 @@ const CATALOGUE = {
     description: 'Qwen 3.5 9B Q4 K_M',
     sizeBytes: 6169341984,
     license: 'Apache-2.0',
+    requiredVram: 11 * GIBIBYTE,
     repo: 'bartowski/Qwen_Qwen3.5-9B-GGUF',
     revision: '182be2fd6c7bc44887d88a91cb03ff009cc9f549',
     file: 'Qwen_Qwen3.5-9B-Q4_K_M.gguf',
@@ -64,7 +73,8 @@ const CATALOGUE = {
  * @returns {CatalogueEntry[]}
  */
 function catalogueEntries() {
-  return Object.values(CATALOGUE).map(({key, description, sizeBytes, license}) => ({key, description, sizeBytes, license}));
+  return Object.values(CATALOGUE).map(({key, description, sizeBytes, license, requiredVram}) =>
+    ({key, description, sizeBytes, license, requiredVram}));
 }
 
 module.exports = {CATALOGUE, catalogueEntries};

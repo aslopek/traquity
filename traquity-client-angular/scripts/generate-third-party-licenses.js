@@ -6,8 +6,8 @@
  *  1. dist/traquity/3rdpartylicenses.txt — written by `ng build`; contains name, license id and the verbatim
  *     license text (incl. copyright header) of every package that actually ends up in the shipped Angular bundle.
  *  2. The Electron shell packages that are distributed outside the Angular bundle: the `electron` runtime itself, and
- *     every `dependencies` entry of package.json — the main process's own runtime closure, which electron-packager
- *     keeps in the asar.
+ *     every `dependencies` entry of package.json with its own production closure, optional dependencies included —
+ *     the main process's own runtime closure, which electron-packager keeps in the package.
  *  3. Every package a stylesheet pulls in — angular.json's `styles` entries and the `@use`/`@import`/`url()`
  *     specifiers in src/. These reach the shipped app as *assets* (fonts, images) rather than as bundled
  *     JavaScript, which is why neither source above sees them: a font contributes nothing to a JS chunk, so it
@@ -29,6 +29,10 @@ const angularJsonPath = path.join(projectRoot, 'angular.json');
 const outputPath = path.join(projectRoot, 'dist', 'traquity', 'browser', 'assets', 'third-party-licenses.json');
 const ownPackageJson = JSON.parse(fs.readFileSync(path.join(projectRoot, 'package.json'), 'utf-8'));
 
+/** @typedef {{name: string, traverse: boolean, optional?: boolean}} ShellPackageEntry */
+
+/** @typedef {{dependencies?: Record<string, string>, optionalDependencies?: Record<string, string>}} DependencyManifest */
+
 // packages shipped by the Electron shell outside the Angular bundle. `traverse` follows the production dependency
 // closure. electron is a leaf: its npm dependencies are install-time tooling only — the shipped runtime binary is
 // covered by the electron LICENSE plus the packaged LICENSES.chromium.html (see addRuntimeNotes).
@@ -41,11 +45,125 @@ const shellPackageRoots = [
   ...Object.keys(ownPackageJson.dependencies ?? {}).map(name => ({name, traverse: true}))
 ];
 
+// A package carrying a prebuilt native binary splits it across one optional dependency per platform, of which npm
+// installs only those the machine matches - so the closure below covers exactly the binaries this build ships, and
+// an optional dependency npm skipped is skipped here too instead of failing the run.
+/**
+ * @param {DependencyManifest} packageJson
+ * @returns {ShellPackageEntry[]}
+ */
+function collectEntries(packageJson) {
+  return [
+    ...Object.keys(packageJson.dependencies ?? {}).map(name => ({name, traverse: true, optional: false})),
+    ...Object.keys(packageJson.optionalDependencies ?? {}).map(name => ({name, traverse: true, optional: true}))
+  ];
+}
+
 // The rule the bundle file draws between two records, matched only where it trails a record: anchored at the end of
 // the block and without the `m` flag, so a rule *inside* a license text is never mistaken for it.
+/** @type {RegExp} */
 const trailingSeparator = /\n-{10,}\s*$/;
-const licenseFileNames = ['LICENSE', 'LICENSE.txt', 'LICENSE.md', 'LICENCE', 'LICENSE-MIT.txt'];
+
+/** @type {string[]} */
+const licenseFileNames = ['LICENSE', 'LICENSE.txt', 'LICENSE.md', 'LICENCE', 'LICENSE-MIT.txt', 'LICENSE-MIT', 'LICENSE.MIT'];
+
+/** @type {string[]} */
 const noticeFileNames = ['NOTICE', 'NOTICE.txt', 'NOTICE.md'];
+
+/** @type {string} canonical MIT license without copyright */
+const MIT = `MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.`;
+
+/**
+ * The canonical text of an SPDX license id without copyright
+ * @type {Record<string, string>}
+ */
+const SPDX_LICENSE_TEMPLATES = {
+  MIT: MIT
+};
+
+// The About dialog renders a license text in a `<pre>`, which does not wrap, so a generated paragraph is hard-wrapped
+// here to the width the license texts above already use.
+const noteWidth = 118;
+
+/**
+ * @param {string} text
+ * @returns {string}
+ */
+function hardWrap(text) {
+  /** @type {string[]} */
+  const lines = [];
+  /** @type {string} */
+  let line = '';
+  for (const word of text.split(' ')) {
+    if (line.length === 0) {
+      line = word;
+    } else if (line.length + 1 + word.length <= noteWidth) {
+      line += ` ${word}`;
+    } else {
+      lines.push(line);
+      line = word;
+    }
+  }
+  lines.push(line);
+  return lines.join('\n');
+}
+
+/** @typedef {{license: string, author?: string | {name: string}}} PackageAuthorAndLicense */
+
+/**
+ * States, above a canonical license text, that the package supplied none of its own and what it did supply instead —
+ * so a reader can tell an attribution the package made from one this script assembled out of its metadata. A
+ * declared author is reported as exactly that, since naming an author is not the same act as claiming a copyright.
+ * @param {string} name
+ * @param {PackageAuthorAndLicense} packageJson
+ * @returns {string}
+ */
+function provenanceNoteFor(name, packageJson) {
+  /** @type {string | undefined} */
+  const author = typeof packageJson.author === 'string' ? packageJson.author : packageJson.author?.name;
+  const declared = author === undefined
+    ? `Its package.json declares the license ${packageJson.license}.`
+    : `Its package.json declares the license ${packageJson.license} and names ${author} as author.`;
+  const reason = author === undefined
+    ? 'the package names no copyright holder'
+    : 'a declared author is not a copyright notice';
+  return hardWrap(`${name} ships no license file of its own. ${declared} The canonical text of ${packageJson.license} `
+    + `follows; it carries no copyright line, because ${reason}.`);
+}
+
+/**
+ * The license text to attribute a package with: its own license file when it ships one, otherwise the canonical text
+ * of the SPDX id its package.json declares, for the identifiers SPDX_LICENSE_TEMPLATES carries, under a note saying
+ * so. Neither present is left to the missingTexts check in main() to catch.
+ * @param {string} name
+ * @param {string} packageDirectory
+ * @param {PackageAuthorAndLicense} packageJson
+ * @returns {string | null}
+ */
+function licenseTextFor(name, packageDirectory, packageJson) {
+  const fileText = readFirstExistingFile(packageDirectory, licenseFileNames);
+  if (fileText !== null) {
+    return fileText;
+  }
+  const template = SPDX_LICENSE_TEMPLATES[packageJson.license];
+  if (template === undefined) {
+    return null;
+  }
+  return `${provenanceNoteFor(name, packageJson)}\n\n${template}`;
+}
 
 const stylesheetExtensions = ['.scss', '.css'];
 
@@ -74,11 +192,27 @@ function readPackageJson(packageName) {
   return JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
 }
 
+/**
+ * The first of `fileNames` the directory holds, compared case-insensitively and in the order given, so the most
+ * specific name wins.
+ * @param {string} directory
+ * @param {string[]} fileNames
+ * @returns {string | null}
+ */
 function readFirstExistingFile(directory, fileNames) {
+  if (!fs.existsSync(directory)) {
+    return null;
+  }
+
+  /** @type {string[]} */
+  const presentNames = fs.readdirSync(directory, {withFileTypes: true})
+    .filter(entry => !entry.isDirectory())
+    .map(entry => entry.name);
+
   for (const fileName of fileNames) {
-    const filePath = path.join(directory, fileName);
-    if (fs.existsSync(filePath)) {
-      return fs.readFileSync(filePath, 'utf-8');
+    const match = presentNames.find(presentName => presentName.toLowerCase() === fileName.toLowerCase());
+    if (match !== undefined) {
+      return fs.readFileSync(path.join(directory, match), 'utf-8');
     }
   }
   return null;
@@ -144,7 +278,7 @@ function collectShellPackages(packagesByName) {
   const visited = new Set();
 
   while (queue.length > 0) {
-    const {name, traverse} = queue.shift();
+    const {name, traverse, optional} = queue.shift();
     if (visited.has(name)) {
       continue;
     }
@@ -152,6 +286,9 @@ function collectShellPackages(packagesByName) {
 
     const packageJson = readPackageJson(name);
     if (packageJson === null) {
+      if (optional) {
+        continue;
+      }
       fail(`Shell package "${name}" not found in node_modules — run "npm install" first.`);
     }
 
@@ -161,16 +298,14 @@ function collectShellPackages(packagesByName) {
         name,
         version: packageJson.version,
         license: packageJson.license ?? null,
-        licenseText: readFirstExistingFile(packageDirectory, licenseFileNames),
+        licenseText: licenseTextFor(name, packageDirectory, packageJson),
         noticeText: readFirstExistingFile(packageDirectory, noticeFileNames),
         source: 'electron-shell'
       });
     }
 
     if (traverse) {
-      for (const dependency of Object.keys(packageJson.dependencies ?? {})) {
-        queue.push({name: dependency, traverse: true});
-      }
+      queue.push(...collectEntries(packageJson));
     }
   }
 }
@@ -257,7 +392,7 @@ function collectStylesheetPackages(packagesByName) {
       name,
       version: packageJson.version,
       license: packageJson.license ?? null,
-      licenseText: readFirstExistingFile(packageDirectory, licenseFileNames),
+      licenseText: licenseTextFor(name, packageDirectory, packageJson),
       noticeText: readFirstExistingFile(packageDirectory, noticeFileNames),
       source: 'stylesheet-asset'
     });

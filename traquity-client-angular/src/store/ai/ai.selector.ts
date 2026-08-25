@@ -5,6 +5,7 @@ import {ActiveModel, getActiveModelSelector} from './selectors/get-active-model.
 import {CatalogueEntryViewModel, getCatalogueSelector} from './selectors/get-catalogue.selector';
 import {getIsAiActiveSelector} from './selectors/get-is-ai-active.selector';
 import {getIsNoticeConfirmedSelector} from './selectors/get-is-notice-confirmed.selector';
+import {getProbeFailedSelector} from './selectors/get-probe-failed.selector';
 
 export const aiStore = 'ai';
 
@@ -22,3 +23,6 @@ export const isAiActive: MemoizedSelector<AppState, boolean>
 
 export const getActiveModel: MemoizedSelector<AppState, ActiveModel | null>
   = createSelector(aiSelector, getActiveModelSelector);
+
+export const isProbeFailed: MemoizedSelector<AppState, boolean>
+  = createSelector(aiSelector, getProbeFailedSelector);

@@ -12,6 +12,8 @@ export const initialState: AiState = {
   isConfirmed: false,
   catalogue: [],
   models: {},
+  verdicts: {},
+  probeFailed: false,
   download: null,
   downloadErrors: {},
   removalErrors: {},

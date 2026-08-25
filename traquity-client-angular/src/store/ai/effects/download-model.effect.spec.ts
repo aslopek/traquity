@@ -42,7 +42,7 @@ describe('downloadModel', (): void => {
     downloadResponseMarbles = '--(o|)';
     stateResponseMarbles = '--(v|)';
     downloadOutcome = {status: 'completed'};
-    electronAiState = {isConfirmed: true, catalogue: [], models: {}};
+    electronAiState = {isConfirmed: true, catalogue: [], models: {}, verdicts: {}, probeFailed: false};
 
     actionValues = {
       a: AiActions.downloadModel({key: 'model-a'})

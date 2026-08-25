@@ -1,4 +1,7 @@
 @if (isConfirmed()) {
+    @if (probeFailed()) {
+        <div class="probe-failed-banner">The machine could not be probed for AI capability.</div>
+    }
     <div class="model-list">
         @for (entry of catalogue(); track entry.key) {
             <mat-card appearance="outlined">
@@ -16,15 +19,25 @@
                         <span class="error-text">Activation failed</span>
                     }
                     <div class="model-actions">
-                        @if (!entry.downloading) {
-                            @if (entry.active) {
-                                <span class="status-chip status-chip-active">Active</span>
-                            } @else if (entry.installed) {
-                                <span class="status-chip status-chip-on-disk">On disk</span>
-                            } @else {
-                                <span class="status-chip status-chip-not-on-disk">Not on disk</span>
+                        <div class="model-status">
+                            @if (!entry.downloading) {
+                                @if (entry.active) {
+                                    <span class="status-chip status-chip-active">Active</span>
+                                } @else if (entry.installed) {
+                                    <span class="status-chip status-chip-on-disk">On disk</span>
+                                } @else {
+                                    <span class="status-chip status-chip-not-on-disk">Not on disk</span>
+                                }
                             }
-                        }
+                            @let verdictLabel = entry.verdict | aiVerdictLabel;
+                            @if (verdictLabel) {
+                                <span class="status-chip"
+                                      [class.status-chip-unsupported]="entry.verdict?.verdict === 'unsupported'"
+                                      [class.status-chip-unknown]="entry.verdict?.verdict === 'unknown'">
+                                    {{ verdictLabel }}
+                                </span>
+                            }
+                        </div>
                         @if (entry.showDownloadButton) {
                             <button mat-stroked-button
                                     color="primary"

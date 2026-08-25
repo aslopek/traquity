@@ -3,6 +3,7 @@ export type CatalogueEntry = {
   description: string
   sizeBytes: number
   license: string
+  requiredVram: number
 };
 
 export type ModelEntry = {
@@ -10,11 +11,25 @@ export type ModelEntry = {
   active: boolean
 };
 
-/** Mirrors the main process's `AiState`. */
+export type VerdictReason =
+  | { kind: 'probeFailed' }
+  | { kind: 'noGpuBackend' }
+  | { kind: 'unrecognizedBackend' }
+  | { kind: 'insufficientVram', requiredBytes: number, availableBytes: number };
+
+export type ModelVerdict = {
+  verdict: 'ok' | 'unsupported' | 'unknown'
+  /** `null` if and only if `verdict` is `'ok'`. */
+  reason: VerdictReason | null
+};
+
+/** Mirrors the main process's `AiGetStateResult`. */
 export type ElectronAiState = {
   isConfirmed: boolean
   catalogue: CatalogueEntry[]
   models: Record<string, ModelEntry>
+  verdicts: Record<string, ModelVerdict>
+  probeFailed: boolean
 };
 
 export type AiDownloadPhase = 'downloading' | 'verifying' | 'installing';
