@@ -32,6 +32,8 @@ electron/
                                 `remove` and `activate`
     model-download.js           downloads one catalogue entry from its pinned `resolve/<revision>/<file>` URL into a
                                 picked directory, staged then renamed. Validates sha256 digest after download
+    machine-capability.js       probes the GPU backend and VRAM `node-llama-cpp` reports and derives a per-catalogue-entry
+                                verdict from it, fresh on every read and never persisted
   download/                    mechanics shared by every streamed download in this app, agnostic of what is being
                                downloaded and of how a completed one is verified, if at all
     byte-cap-transform.js      a stream `Transform` that ends the pipeline once a byte cap is passed, enforced
@@ -132,6 +134,12 @@ mode when it resolves to `null`) and `backend/backend-process.js`'s `resolveJava
 once. `startup:getState` therefore answers from a `Promise<StartupState>` rather than a plain value - `ipcMain.handle` awaits whatever its
 listener returns, so the window opens immediately while the probe runs concurrently with the renderer's own bootstrap. The one thing that
 invalidates `javaPromise` is `config:apply`, which reassigns it after saving, since that is the only write able to change `java.path`.
+
+The machine capability probe is held the same way: `ai/machine-capability.js` is kicked off once in `main.js` and its
+`Promise<MachineCapability | null>` answers every `ai:getState`, so a changed machine is picked up on the next start. Nothing reassigns it,
+and it never rejects — a missing prebuilt binary or a refusing driver resolves to `null`, which is what the per-entry verdict turns into
+`unknown`. The verdict itself is derived on every read and written nowhere, so `traquity.config.json` can never carry a verdict that
+outlived the machine it was computed for.
 
 That probe is one place this app runs a binary it did not ship, named by a config file or a file dialog, so
 `java/java-version.js` treats it as untrusted and every one of its bounds exists for a reason worth keeping: an absolute path named
@@ -320,6 +328,12 @@ attribution is not something to remember here. Its license still has to pass `np
 rule. The reverse direction is the one that needs care: a package required only by a spec stays a `devDependency` (`expect`, used by
 `testing/base64-of.js`, is the example) and must never be moved into `dependencies` to make something resolve — that would ship a test
 library to users and put it in the license report.
+
+`node-llama-cpp` is the one entry there that is neither CommonJS nor pure JavaScript, and both halves of that cost something. It is
+ESM-only, so `main.js` reaches it through a dynamic `import()` — the only one in this directory. Its binding is a native addon delivered by
+a per-platform `@node-llama-cpp/*` optional dependency, next to the shared libraries the OS loader resolves beside it on a real filesystem,
+which an asar archive is not: `forge.config.js` unpacks that whole scope, and `scripts/generate-third-party-licenses.js`
+follows `optionalDependencies` so the binaries a release carries are attributed like everything else.
 
 ## What of this directory ships
 

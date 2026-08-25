@@ -27,10 +27,13 @@ const ALLOWED_LICENSES = [
 ];
 
 /**
- * When necessary, will contain SPDX license identifier expressions.
+ * SPDX license identifier expressions, each a choice of licenses where every option is itself in ALLOWED_LICENSES.
  * @type {string[]}
  */
-const ALLOWED_EXPRESSIONS = [];
+const ALLOWED_EXPRESSIONS = [
+  '(BSD-2-Clause OR MIT OR Apache-2.0)',
+  '(MIT OR CC0-1.0)'
+];
 
 function fail(message) {
   console.error(`[check-third-party-licenses] ${message}`);

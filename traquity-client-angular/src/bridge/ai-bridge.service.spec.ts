@@ -35,8 +35,10 @@ describe('AiBridgeService', (): void => {
   beforeEach((): void => {
     aiState = {
       isConfirmed: true,
-      catalogue: [{key: 'model-a', description: 'Model A', sizeBytes: 3013027808, license: 'Apache-2.0'}],
-      models: {}
+      catalogue: [{key: 'model-a', description: 'Model A', sizeBytes: 3013027808, license: 'Apache-2.0', requiredVram: 5368709120}],
+      models: {},
+      verdicts: {},
+      probeFailed: false
     };
     downloadOutcome = {status: 'completed'};
     removeOutcome = {status: 'removed'};

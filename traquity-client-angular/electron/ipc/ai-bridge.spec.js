@@ -19,6 +19,7 @@ describe('aiBridge', () => {
       description: 'Model A',
       sizeBytes: 1_000_000_000,
       license: 'Apache-2.0',
+      requiredVram: 5_000_000_000,
       repo: 'org/model-a',
       revision: 'abc123',
       file: 'model-a.gguf',
@@ -47,6 +48,8 @@ describe('aiBridge', () => {
   const isTrustedSender = jest.fn(/** @type {(event: unknown) => boolean} */ (() => true));
   const send = jest.fn(/** @type {ProgressWindowLike['webContents']['send']} */ (() => undefined));
   const getMainWindow = jest.fn(/** @type {() => ProgressWindowLike | null} */ (() => ({webContents: {send}})));
+  const getMachineCapability = jest.fn(
+    /** @type {() => Promise<import('../ai/machine-capability.js').MachineCapability | null>} */ (() => Promise.resolve(null)));
 
   /** @type {AiState} */
   let aiState;
@@ -86,6 +89,7 @@ describe('aiBridge', () => {
       aiDialogs,
       downloadModel,
       hasEnoughFreeSpace,
+      getMachineCapability,
       getMainWindow,
       tlsOverridden,
       isTrustedSender
@@ -102,6 +106,7 @@ describe('aiBridge', () => {
     downloadModel.mockResolvedValue({status: 'completed', path: modelPath});
     removeAi.mockResolvedValue({status: 'removed'});
     activateAi.mockReturnValue({status: 'activated'});
+    getMachineCapability.mockResolvedValue(null);
     getMainWindow.mockReturnValue({webContents: {send}});
     isTrustedSender.mockReturnValue(true);
     tlsOverridden = false;
@@ -122,8 +127,48 @@ describe('aiBridge', () => {
     expect(on).not.toHaveBeenCalled();
   });
 
-  it('answers ai:getState with the registry\'s own state', () => {
-    expect(handleListenerFor('ai:getState')(undefined)).toBe(aiState);
+  describe('ai:getState', () => {
+    it('merges the registry\'s state with an empty verdict map for an empty catalogue', async () => {
+      await expect(handleListenerFor('ai:getState')(undefined)).resolves.toEqual({...aiState, verdicts: {}, probeFailed: true});
+    });
+
+    it('reports probeFailed false once the capability probe resolves', async () => {
+      getMachineCapability.mockResolvedValue({gpu: 'cuda', totalVramBytes: 8_000_000_000});
+
+      await expect(handleListenerFor('ai:getState')(undefined)).resolves.toMatchObject({probeFailed: false});
+    });
+
+    it('keys the verdict for each catalogued entry by its catalogue key, ok on cuda with enough free vram', async () => {
+      aiState = {
+        isConfirmed: true,
+        catalogue: [{key: 'model-a', description: 'Model A', sizeBytes: 1_000_000_000, license: 'Apache-2.0', requiredVram: 5_000_000_000}],
+        models: {}
+      };
+      getAiState.mockReturnValue(aiState);
+      getMachineCapability.mockResolvedValue({gpu: 'cuda', totalVramBytes: 8_000_000_000});
+
+      await expect(handleListenerFor('ai:getState')(undefined)).resolves.toEqual({
+        ...aiState,
+        verdicts: {'model-a': {verdict: 'ok', reason: null}},
+        probeFailed: false
+      });
+    });
+
+    it('verdicts every entry unknown when the capability probe failed', async () => {
+      aiState = {
+        isConfirmed: true,
+        catalogue: [{key: 'model-a', description: 'Model A', sizeBytes: 1_000_000_000, license: 'Apache-2.0', requiredVram: 5_000_000_000}],
+        models: {}
+      };
+      getAiState.mockReturnValue(aiState);
+      getMachineCapability.mockResolvedValue(null);
+
+      await expect(handleListenerFor('ai:getState')(undefined)).resolves.toEqual({
+        ...aiState,
+        verdicts: {'model-a': {verdict: 'unknown', reason: {kind: 'probeFailed'}}},
+        probeFailed: true
+      });
+    });
   });
 
   it('delegates ai:confirm to the registry, taking no argument off the renderer', () => {
