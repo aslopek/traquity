@@ -38,7 +38,7 @@ describe('loadAiState', (): void => {
 
     actionMarbles = '-a';
     stateResponseMarbles = '---(v|)';
-    electronAiState = {isConfirmed: true, catalogue: [], models: {}};
+    electronAiState = {isConfirmed: true, catalogue: [], models: {}, verdicts: {}, probeFailed: false};
 
     actionValues = {
       a: AppActions.initialize()

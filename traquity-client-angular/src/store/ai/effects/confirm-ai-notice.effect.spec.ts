@@ -39,7 +39,7 @@ describe('confirmAiNotice', (): void => {
     actionMarbles = '-a';
     confirmResponseMarbles = '--(c|)';
     stateResponseMarbles = '--(v|)';
-    electronAiState = {isConfirmed: true, catalogue: [], models: {}};
+    electronAiState = {isConfirmed: true, catalogue: [], models: {}, verdicts: {}, probeFailed: false};
 
     actionValues = {
       a: AiActions.confirmAiNotice()

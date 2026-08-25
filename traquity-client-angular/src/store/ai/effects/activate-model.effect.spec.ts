@@ -42,7 +42,7 @@ describe('activateModel', (): void => {
     activateResponseMarbles = '--(o|)';
     stateResponseMarbles = '--(v|)';
     activateOutcome = {status: 'activated'};
-    electronAiState = {isConfirmed: true, catalogue: [], models: {}};
+    electronAiState = {isConfirmed: true, catalogue: [], models: {}, verdicts: {}, probeFailed: false};
 
     actionValues = {
       a: AiActions.activateModel({key: 'model-a'})

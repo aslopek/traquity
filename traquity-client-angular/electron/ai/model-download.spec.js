@@ -92,6 +92,7 @@ describe('downloadModel', () => {
       description: 'Model A',
       sizeBytes: modelBytes.length,
       license: 'Apache-2.0',
+      requiredVram: 5_000_000_000,
       repo: 'org/model-a',
       revision: '4168f45a16a1290d65a4ec0fa312ae917a4c15d6',
       file: 'model-a.gguf',

@@ -1,11 +1,13 @@
 const {aiModelKeySchema} = require('./ipc-schema.js');
 const {createTrustedChannels} = require('./trusted-channels.js');
+const {verdictsFor} = require('../ai/machine-capability.js');
 
 /** @import {IpcMainLike} from './trusted-channels.js' */
 /** @import {AiRegistry, AiState} from '../ai/ai-registry.js' */
 /** @import {AiDialogs} from '../window/ai-dialogs.js' */
 /** @import {AiDownloadProgress, ModelDownloadResult} from '../ai/model-download.js' */
 /** @import {CatalogueRecord} from '../ai/catalogue.js' */
+/** @import {MachineCapability, ModelVerdict} from '../ai/machine-capability.js' */
 
 /**
  * Registers the `ai:*` IPC channels. `ai:downloadProgress` is the one push this module makes into the renderer, sent
@@ -16,6 +18,9 @@ const {createTrustedChannels} = require('./trusted-channels.js');
  * drops one `ai.models` entry and deletes its file through `aiRegistry.remove`, and `ai:activate` marks one
  * `ai.models` entry active and clears the flag on every other through `aiRegistry.activate` - the four writes this
  * module makes to `traquity.config.json`.
+ *
+ * `ai:getState` writes nothing: it merges `aiRegistry.getState()` with a machine capability verdict per catalogue
+ * entry, derived fresh from `getMachineCapability()` on every call and never persisted.
  *
  * A TLS-overridden environment registers none of these channels: "nothing can be done" is then enforced by
  * architecture instead of left to each handler to refuse.
@@ -41,6 +46,13 @@ const {createTrustedChannels} = require('./trusted-channels.js');
  */
 
 /**
+ * What `ai:getState` answers with: the registry's own state plus a verdict per catalogue entry and whether the
+ * machine capability probe itself failed.
+ *
+ * @typedef {AiState & {verdicts: Record<string, ModelVerdict>, probeFailed: boolean}} AiGetStateResult
+ */
+
+/**
  * @typedef {Object} AiBridgeOptions
  * @property {IpcMainLike} ipcMain
  * @property {Pick<AiRegistry, 'getState' | 'confirm' | 'install' | 'remove' | 'activate'>} aiRegistry
@@ -49,6 +61,7 @@ const {createTrustedChannels} = require('./trusted-channels.js');
  * @property {(entry: CatalogueRecord, targetDirectory: string, onProgress: (progress: AiDownloadProgress) => void) =>
  *   Promise<ModelDownloadResult>} downloadModel
  * @property {(directory: string, requiredBytes: number) => boolean} hasEnoughFreeSpace
+ * @property {() => Promise<MachineCapability | null>} getMachineCapability
  * @property {() => ProgressWindowLike | null} getMainWindow
  * @property {boolean} tlsOverridden
  * @property {(event: unknown) => boolean} isTrustedSender whether an IPC event's sender may be served at all
@@ -69,6 +82,7 @@ function createAiBridge(options) {
     aiDialogs,
     downloadModel,
     hasEnoughFreeSpace,
+    getMachineCapability,
     getMainWindow,
     tlsOverridden,
     isTrustedSender
@@ -87,7 +101,19 @@ function createAiBridge(options) {
       return;
     }
 
-    handle('ai:getState', () => aiRegistry.getState());
+    handle('ai:getState', async () => {
+      /** @type {AiState} */
+      const state = aiRegistry.getState();
+      /** @type {MachineCapability | null} */
+      const capability = await getMachineCapability();
+      /** @type {AiGetStateResult} */
+      const result = {
+        ...state,
+        verdicts: verdictsFor(state.catalogue, capability),
+        probeFailed: capability == null
+      };
+      return result;
+    });
 
     handle('ai:confirm', () => aiRegistry.confirm());
 

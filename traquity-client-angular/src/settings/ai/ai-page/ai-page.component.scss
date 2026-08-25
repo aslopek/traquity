@@ -9,6 +9,12 @@
   color: styles.$color-error;
 }
 
+.probe-failed-banner {
+  color: styles.$color-muted-text;
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+}
+
 .model-list {
   display: flex;
   flex-direction: column;
@@ -41,6 +47,14 @@
   margin-top: 0.75rem;
 }
 
+.model-status {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .primary-outline {
   --mat-button-outlined-outline-color: currentColor;
 }
@@ -68,5 +82,15 @@
 
 .status-chip-not-on-disk {
   border-color: styles.$color-button-grey;
+  color: styles.$color-muted-text;
+}
+
+.status-chip-unsupported {
+  border-color: styles.$color-warning;
+  color: styles.$color-warning;
+}
+
+.status-chip-unknown {
+  border-color: styles.$color-muted-text;
   color: styles.$color-muted-text;
 }

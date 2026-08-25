@@ -103,9 +103,9 @@ contextBridge.exposeInMainWorld('traquity', {
   quit: () => ipcRenderer.send('app:quit')
 });
 
-/** @import {AiActivateOutcome, AiRemoveOutcome, AiState} from './ai/ai-registry.js' */
+/** @import {AiActivateOutcome, AiRemoveOutcome} from './ai/ai-registry.js' */
 /** @import {AiDownloadProgress} from './ai/model-download.js' */
-/** @import {AiDownloadOutcome} from './ipc/ai-bridge.js' */
+/** @import {AiDownloadOutcome, AiGetStateResult} from './ipc/ai-bridge.js' */
 
 // The five request/response channels below plus `ai:downloadProgress` are duplicated against `ipc/ai-bridge.js`:
 //   - `ai:getState`
@@ -116,7 +116,7 @@ contextBridge.exposeInMainWorld('traquity', {
 //   - `ai:downloadProgress` (push, main -> renderer)
 // The manual checklist (`electron/LLM.md`) is what keeps the two copies in step.
 contextBridge.exposeInMainWorld('traquityAi', {
-  /** @returns {Promise<AiState>} */
+  /** @returns {Promise<AiGetStateResult>} */
   getAiState: () => ipcRenderer.invoke('ai:getState'),
 
   /** @returns {Promise<void>} */
