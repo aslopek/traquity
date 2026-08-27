@@ -39,7 +39,6 @@ describe('getCatalogueSelector', (): void => {
     expect(modelA).toEqual(expect.objectContaining({
       key: 'model-a',
       downloading: false,
-      progress: null,
       showDownloadButton: true
     } satisfies Partial<CatalogueEntryViewModel>));
   });
@@ -63,13 +62,12 @@ describe('getCatalogueSelector', (): void => {
       };
     });
 
-    it('reports that entry as downloading, carrying its progress', (): void => {
+    it('reports that entry as downloading', (): void => {
       const [modelA] = getCatalogueSelector(state);
 
       expect(modelA).toEqual(expect.objectContaining({
         key: 'model-a',
         downloading: true,
-        progress: state.download?.progress,
         showDownloadButton: false
       } satisfies Partial<CatalogueEntryViewModel>));
     });
@@ -86,7 +84,6 @@ describe('getCatalogueSelector', (): void => {
           installed: false,
           key: "model-c",
           license: "MIT",
-          progress: null,
           removalFailed: false,
           requiredVram: 3_000_000_000,
           showDownloadButton: false,

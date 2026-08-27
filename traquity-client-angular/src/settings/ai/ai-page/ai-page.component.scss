@@ -47,6 +47,23 @@
   margin-top: 0.75rem;
 }
 
+.download-navigation-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  color: styles.$color-muted-text;
+}
+
+.download-navigation-hint-icon {
+  flex: 0 0 auto;
+  width: 1.125rem;
+  height: 1.125rem;
+  font-size: 1.125rem;
+  color: mat.get-theme-color(styles.$traquity-theme, primary);
+}
+
 .model-status {
   display: flex;
   flex-direction: row;

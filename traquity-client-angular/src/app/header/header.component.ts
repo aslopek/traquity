@@ -17,6 +17,7 @@ import {AppState} from "../../store/app.state";
 import {Page} from "../page.type";
 import {DepotControlsComponent} from "../../depot/depot-controls/depot-controls.component";
 import {SecurityControlsComponent} from "../../security/security-controls/security-controls.component";
+import {AiDownloadIndicatorComponent} from "./ai-download-indicator/ai-download-indicator.component";
 import {UpdateIndicatorComponent} from "./update-indicator/update-indicator.component";
 
 @Component({
@@ -29,6 +30,7 @@ import {UpdateIndicatorComponent} from "./update-indicator/update-indicator.comp
     NotificationsComponent,
     SecurityControlsComponent,
     DepotControlsComponent,
+    AiDownloadIndicatorComponent,
     UpdateIndicatorComponent,
     AboutButtonComponent,
   ],
