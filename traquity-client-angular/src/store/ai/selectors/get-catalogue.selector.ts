@@ -1,4 +1,4 @@
-import {AiDownloadProgress, CatalogueEntry, ModelVerdict} from '../../../bridge/ai-bridge.type';
+import {CatalogueEntry, ModelVerdict} from '../../../bridge/ai-bridge.type';
 import {AiDownload, AiState} from '../ai.state';
 import {getActiveModelSelector} from './get-active-model.selector';
 
@@ -6,7 +6,6 @@ export type CatalogueEntryViewModel = CatalogueEntry & {
   installed: boolean
   /** True exactly for the one entry `state.download` names, if any. */
   downloading: boolean
-  progress: AiDownloadProgress | null
   error: string | null
   /** False for an installed entry, and for a not-installed one while any download - its own or another entry's - is running. */
   showDownloadButton: boolean
@@ -32,7 +31,6 @@ export function getCatalogueSelector(
       ...entry,
       installed,
       downloading: download != null && download.key === entry.key,
-      progress: download != null && download.key === entry.key ? download.progress : null,
       error: state.downloadErrors[entry.key] ?? null,
       showDownloadButton: !installed && download == null,
       removalFailed: state.removalErrors[entry.key] != null,
