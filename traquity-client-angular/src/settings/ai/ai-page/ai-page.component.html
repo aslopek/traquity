@@ -61,12 +61,13 @@
                             </button>
                         }
                     </div>
-                    @if (entry.downloading && entry.progress; as progress) {
-                        <app-download-progress [receivedBytes]="progress.receivedBytes"
-                                               [totalBytes]="progress.totalBytes ?? undefined"
-                                               [bytesPerSecond]="progress.bytesPerSecond"
-                                               [secondsRemaining]="progress.secondsRemaining ?? undefined"
-                                               [label]="progress.phase | aiDownloadPhaseLabel"/>
+                    @if (entry.downloading) {
+                        <div class="download-navigation-hint">
+                            <mat-icon fontIcon="info"
+                                      class="download-navigation-hint-icon">
+                            </mat-icon>
+                            <span>You can navigate elsewhere in the app while this downloads</span>
+                        </div>
                     }
                 </mat-card-content>
             </mat-card>
