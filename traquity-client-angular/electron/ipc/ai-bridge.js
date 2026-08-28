@@ -1,4 +1,4 @@
-const {aiModelKeySchema} = require('./ipc-schema.js');
+const {aiExtractionRequestSchema, aiModelKeySchema} = require('./ipc-schema.js');
 const {createTrustedChannels} = require('./trusted-channels.js');
 const {verdictsFor} = require('../ai/machine-capability.js');
 
@@ -8,6 +8,8 @@ const {verdictsFor} = require('../ai/machine-capability.js');
 /** @import {AiDownloadProgress, ModelDownloadResult} from '../ai/model-download.js' */
 /** @import {CatalogueRecord} from '../ai/catalogue.js' */
 /** @import {MachineCapability, ModelVerdict} from '../ai/machine-capability.js' */
+/** @import {TransactionExtractionOutcome} from '../ai/transaction-extraction/transaction-extractor.js' */
+/** @import {DocumentToken} from './ipc-schema.js' */
 
 /**
  * Registers the `ai:*` IPC channels. `ai:downloadProgress` is the one push this module makes into the renderer, sent
@@ -21,6 +23,10 @@ const {verdictsFor} = require('../ai/machine-capability.js');
  *
  * `ai:getState` writes nothing: it merges `aiRegistry.getState()` with a machine capability verdict per catalogue
  * entry, derived fresh from `getMachineCapability()` on every call and never persisted.
+ *
+ * `ai:extractTransaction` writes nothing: it validates the request and hands it on, and every decision about models,
+ * prompts and grammars is made behind `extractTransaction`. A refused request is logged here, since a rejected
+ * `invoke` carries no outcome to name the field in.
  *
  * A TLS-overridden environment registers none of these channels: "nothing can be done" is then enforced by
  * architecture instead of left to each handler to refuse.
@@ -62,9 +68,12 @@ const {verdictsFor} = require('../ai/machine-capability.js');
  *   Promise<ModelDownloadResult>} downloadModel
  * @property {(directory: string, requiredBytes: number) => boolean} hasEnoughFreeSpace
  * @property {() => Promise<MachineCapability | null>} getMachineCapability
+ * @property {(modelKey: string, document: string, tokens: DocumentToken[], currency: string) =>
+ *   Promise<TransactionExtractionOutcome>} extractTransaction
  * @property {() => ProgressWindowLike | null} getMainWindow
  * @property {boolean} tlsOverridden
  * @property {(event: unknown) => boolean} isTrustedSender whether an IPC event's sender may be served at all
+ * @property {(message: string) => void} log
  */
 
 /** @type {number} the margin added on top of a model's exact catalogued size before its download starts */
@@ -83,9 +92,11 @@ function createAiBridge(options) {
     downloadModel,
     hasEnoughFreeSpace,
     getMachineCapability,
+    extractTransaction,
     getMainWindow,
     tlsOverridden,
-    isTrustedSender
+    isTrustedSender,
+    log
   } = options;
 
   const {handle} = createTrustedChannels({ipcMain, isTrustedSender});
@@ -160,6 +171,17 @@ function createAiBridge(options) {
       } finally {
         downloading = false;
       }
+    });
+
+    handle('ai:extractTransaction', async (_event, request) => {
+      const parsedRequest = aiExtractionRequestSchema.safeParse(request);
+      if (!parsedRequest.success) {
+        // a rejected `invoke` carries no outcome, so the refused field is written down here or nowhere
+        log(`[ai:extractTransaction] refused the request:\n${parsedRequest.error.message}`);
+        throw new Error('Invalid request argument for ai:extractTransaction');
+      }
+      const {modelKey, document, tokens, currency} = parsedRequest.data;
+      return extractTransaction(modelKey, document, tokens, currency);
     });
 
     handle('ai:remove', async (_event, key) => {
