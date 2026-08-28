@@ -37,6 +37,45 @@ const MAXIMUM_AI_KEY_LENGTH = 64;
 
 const aiModelKeySchema = z.string().min(1).max(MAXIMUM_AI_KEY_LENGTH);
 
+/**
+ * The longest extracted document an extraction request may carry, measured in UTF-16 code units.
+ * @type {number}
+ */
+const MAXIMUM_AI_DOCUMENT_LENGTH = 2 ** 18;
+
+/**
+ * How many values a document may state, and how long each part of one may be.
+ *
+ * `text` and `value` hold one printed figure, so a tight bound fits them. A `label` is the prose in front of a
+ * figure, which is a whole printed row — a settlement footer naming a board of directors runs well past a hundred
+ * characters — so sizing it like a figure refuses ordinary documents. Each bound sits far above any real value and
+ * far below what makes one call more work than the main process can finish.
+ */
+const MAXIMUM_AI_TOKENS = 2 ** 10;
+const MAXIMUM_AI_TOKEN_LENGTH = 128;
+const MAXIMUM_AI_LABEL_LENGTH = 2 ** 9;
+
+/** One value a page states, read in the renderer that parsed it (see `../LLM.md`). */
+const aiDocumentTokenSchema = z.strictObject({
+  id: z.int().positive().max(MAXIMUM_AI_TOKENS),
+  kind: z.enum(['date', 'time', 'number']),
+  text: z.string().min(1).max(MAXIMUM_AI_TOKEN_LENGTH),
+  value: z.string().min(1).max(MAXIMUM_AI_TOKEN_LENGTH),
+  label: z.string().max(MAXIMUM_AI_LABEL_LENGTH).nullable(),
+  currency: z.string().regex(/^[A-Z]{3}$/).optional()
+});
+
+const aiDocumentTokensSchema = z.array(aiDocumentTokenSchema).max(MAXIMUM_AI_TOKENS);
+
+/** @typedef {z.infer<typeof aiDocumentTokenSchema>} DocumentToken */
+
+const aiExtractionRequestSchema = z.strictObject({
+  document: z.string().min(1).max(MAXIMUM_AI_DOCUMENT_LENGTH),
+  tokens: aiDocumentTokensSchema,
+  currency: z.string().regex(/^[A-Z]{3}$/),
+  modelKey: aiModelKeySchema
+});
+
 module.exports = {
   backendStartPasswordSchema,
   authVerifyPasswordSchema,
@@ -45,6 +84,13 @@ module.exports = {
   configurationChangesSchema,
   javaSettingSchema,
   aiModelKeySchema,
+  aiExtractionRequestSchema,
+  aiDocumentTokenSchema,
   MAXIMUM_PASSWORD_LENGTH,
-  MAXIMUM_PATH_LENGTH
+  MAXIMUM_PATH_LENGTH,
+  MAXIMUM_AI_KEY_LENGTH,
+  MAXIMUM_AI_DOCUMENT_LENGTH,
+  MAXIMUM_AI_TOKENS,
+  MAXIMUM_AI_TOKEN_LENGTH,
+  MAXIMUM_AI_LABEL_LENGTH
 };

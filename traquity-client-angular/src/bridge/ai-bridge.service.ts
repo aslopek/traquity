@@ -4,6 +4,8 @@ import {
   AiActivateOutcome,
   AiDownloadOutcome,
   AiDownloadProgress,
+  AiExtractionOutcome,
+  AiExtractionRequest,
   AiRemoveOutcome,
   ElectronAiState,
   TraQuityAiBridge
@@ -11,7 +13,7 @@ import {
 import {BRIDGE_HOST, BridgeHost} from "./bridge-host.token";
 
 /**
- * Wraps the `ai:*` channels of the `window.traquityAi` `contextBridge` surface `preload.js` exposes. An `available` flag plus one
+ * Wraps the `ai:*` channels of the `window.traquityAi` `contextBridge` surface: an `available` flag plus one
  * wrapper per channel, each deferring the bridge call until subscription.
  */
 @Injectable({providedIn: "root"})
@@ -37,6 +39,10 @@ export class AiBridgeService {
 
   downloadModel(key: string): Observable<AiDownloadOutcome> {
     return defer((): Observable<AiDownloadOutcome> => from(this.requireBridge().downloadModel(key)));
+  }
+
+  extractTransaction(request: AiExtractionRequest): Observable<AiExtractionOutcome> {
+    return defer((): Observable<AiExtractionOutcome> => from(this.requireBridge().extractTransaction(request)));
   }
 
   removeModel(key: string): Observable<AiRemoveOutcome> {

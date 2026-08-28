@@ -82,8 +82,8 @@ The Angular + NgRx frontend, packaged as the Electron desktop app that ships to 
 - **Feature folders** under `src/` (`depot`, `dividends`, `security`, `settings`) hold routed page/feature components and consume the global
   store + generated API clients directly, or a local Signal Store where one exists; `src/common` holds cross-feature building blocks
   (re-exported via `src/common/index.ts`: shared components, `tq-*` pipes for currency/date/decimal/percent formatting, the
-  `ReadableSignalStore`/ `WritableSignalStore` types); `src/app` holds app-shell chrome (header incl. notifications, database connection
-  dialog, splash screen, license, info, privacy).
+  `ReadableSignalStore`/ `WritableSignalStore` types, `pdf/`, `file-drop/`); `src/app` holds app-shell chrome (header incl. notifications,
+  database connection dialog, splash screen, license, info, privacy).
 - **The About dialog and the transparency note**: `src/app/info/` is the About dialog, two `mat-tab`s — `About` (version, license,
   third-party software; the tab that opens) and `Transparency`, which renders `PrivacyNoticeComponent` from `src/app/privacy/`. That
   component is static text and renders before a backend exists, which is what lets the note be read from every screen.
@@ -236,6 +236,38 @@ container component's `providers: [XStore]`, then have descendant components
 - Keep datepicker inputs `readonly` with click-to-open (see `stock-split.component.html`): `TqDateAdapter` only overrides `format()`, so
   typed input would fall through to the native `parse()` and not respect the configured format.
 
+## PDF extraction (`src/common/pdf/`)
+
+A PDF is parsed **in the UI** (`architecture/ai.md` ADR-008), through the five stages of ADR-009: text runs, runs joined on one
+baseline, rows clustered by baseline, cells split by gap, and what each cell's words are. `extract-pdf.ts` is the pdf.js adapter and the
+only module importing the library; everything else is pure and has a spec of its own. `render-pdf-document.ts` turns the model into the
+one-line-per-row text a language model reads, `tokens-of-document.ts` states every value the document states (id, kind, text as printed,
+normalized value, label, currency), `isin-of-document.ts` the security it names where it names exactly one, and `label-of-token.ts` holds
+the one rule for what names a value.
+
+**The currency is an input and never a lookup** (ADR-009). `extractPdf` takes the one code amounts may be denoted in — the depot's, the same
+one the extraction request carries — and `classify-cells.ts` marks an amount only where exactly that code stands beside it.
+
+**This package is the only place a page's notation is read** (ADR-013). Each reader has two levels over one implementation: `readingsOf<X>`
+enumerates every reading, the likelier one first, since a notation is often genuinely ambiguous (`1.005` is a thousand and five or a
+fraction, `03/04` is March 4th or April 3rd); `parse<X>` takes the first of them, which is what a token carries. A notation added here
+reaches the grammar with no second edit anywhere, and one missing here is missing everywhere.
+
+Three things are load-bearing. **The tolerances in the geometry stages are tuned constants**, and no unit test can tell a good split from a
+bad one, so one changed by hand is a regression the suite cannot catch. The parse is **bounded** by page count, run count and a time
+budget, because a hang here blocks the window. And `configure-pdf-worker.ts` is called once from `app.config.ts`: the worker is emitted as
+a chunk of this build (`pdf.worker.ts` plus a relative `new URL(..., import.meta.url)`), so `script-src 'self'` covers it and
+`index.html`'s CSP needs no directive added.
+
+`pdfjs-dist` is a **devDependency**, where every UI library sits.
+
+## Directives
+
+`src/common/file-drop/` is the first and so far only directive. Two things about it are the pattern: it decides nothing about the files it
+emits — which types are acceptable and what a refusal says belong to the caller rendering the message — and its boundary is a plain
+`@Input`/`@Output` pair, because `input()` and `output()` need an injection context and the test suite runs in a node environment with no
+TestBed.
+
 ## Templates
 
 - Only the modern control-flow syntax (`@if`/`@else`/`@for`/`@switch`). `*ngIf`/`*ngFor`/`*ngSwitch` must not be used in new or edited
@@ -354,7 +386,9 @@ The focus on testing in the angular app is on logic. Use `jest` to test:
     reference across every test in that block; a mutation by one test, or by the code under test, then leaks into the next test's arrange
     step, and the leak only shows up as a failure that depends on run order. Assigning a fresh instance in `beforeEach()` gives every test
     its own copy. This applies to any complex/mutable object — plain objects, arrays, factory-produced fixtures, mocks — a primitive
-    (`string`, `number`, `boolean`) is fine as `const` at `describe()` scope, since it cannot be mutated in place.
+    (`string`, `number`, `boolean`) is fine as `const` at `describe()` scope, since it cannot be mutated in place. File-scope `const`
+    fixtures leak the same way and across every `describe()` in the file on top of that, so a mutable one moves into the `describe()`'s
+    `let` + `beforeEach()` as well.
   - Use nested `describe()` if you want multiple tests with the same alteration from the baseline: the shared alteration goes into the
     nested `describe()`'s own `beforeEach()` — never into the `describe()` body, which runs at collection time, before any `beforeEach()`.
     E.g. if tests only make sense if they alter n > 1 preconditions, then the nested `describe()`'s `beforeEach()` may alter up to n-1
