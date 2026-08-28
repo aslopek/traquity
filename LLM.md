@@ -100,7 +100,9 @@ Dependency inversion is a rule about knowledge, not merely about `import` statem
 import does. A unit that must not depend on its callers must not *describe* them either: **a comment on a function, class, module or type
 explains what that unit does, what its parameters and return value mean, and which invariants it upholds — never who calls it, in what
 order, from which screen, or what a downstream consumer will later do with the result.** This holds in all three parts, for every comment
-form (JSDoc, Javadoc, `//`), and it holds for callers the code has today just as much as for the ones a story happens to mention.
+form (JSDoc, Javadoc, `//`), and it holds for callers the code has today just as much as for the ones a story happens to mention. A
+test name falls under it too: it states what that test asserts on its own, never "the same way" as the test above it, which stops being
+true the moment that neighbor is edited or deleted.
 
 Naming the caller in prose is worse than importing it, because nothing checks it. The compiler catches a stale import; a comment claiming
 "this runs on both finish buttons so the unlock screen's `OK` gates correctly" survives every rename, every new caller and the deletion of
@@ -121,6 +123,12 @@ What this does not forbid: naming a *seam the unit itself owns* is part of its c
 the channel it serves, a delegate implementation the endpoint it fulfills, a preload script the bridge key it exposes. The test is whether
 the statement stays true when every existing caller is deleted. If it does, it is the unit's contract; if it doesn't, it is a caller's
 business.
+
+## Documentation
+
+When creating documentation (ADRs or any other Markdown files, JavaDoc, JSDoc, code comments etc.), write in a normal, direct, and modern
+tone. Completely avoid pompous phrases, archaic sentence structures, rhetorical flourishes, and that preachy, textbook-like lecture tone.
+Explain things short, crisp, and straight to the point.
 
 ## Outbound requests are disclosed in the app
 
