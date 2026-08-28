@@ -1,11 +1,13 @@
 const {beforeEach, describe, expect, it} = require('@jest/globals');
 const {
+  aiExtractionRequestSchema,
   aiModelKeySchema,
   authVerifyPasswordSchema,
   backendStartPasswordSchema,
   configurationChangesSchema,
   databasePathSchema,
   javaSettingSchema,
+  MAXIMUM_AI_DOCUMENT_LENGTH,
   MAXIMUM_PASSWORD_LENGTH,
   MAXIMUM_PATH_LENGTH
 } = require('./ipc-schema.js');
@@ -129,6 +131,75 @@ describe('ipc schemas', () => {
 
     it('refuses one longer than the maximum length', () => {
       expect(aiModelKeySchema.safeParse('x'.repeat(65)).success).toBe(false);
+    });
+  });
+
+  describe('ai extraction request', () => {
+    /** @type {{document: string, currency: string, modelKey: string}} */
+    let request;
+
+    beforeEach(() => {
+      request = {
+        document: 'Wertpapierabrechnung Kauf\nStück 0,55814 ACME INC\nKurswert 1.700,00 EUR',
+        currency: 'EUR',
+        modelKey: 'model-a'
+      };
+    });
+
+    it('accepts a complete request', () => {
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(true);
+    });
+
+    it('accepts a document of exactly the maximum length', () => {
+      request.document = 'x'.repeat(MAXIMUM_AI_DOCUMENT_LENGTH);
+
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(true);
+    });
+
+    it('refuses a document one code unit longer than the maximum length', () => {
+      request.document = 'x'.repeat(MAXIMUM_AI_DOCUMENT_LENGTH + 1);
+
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(false);
+    });
+
+    it('counts a character outside the basic plane as the two code units it occupies', () => {
+      request.document = '\u{1F600}'.repeat(MAXIMUM_AI_DOCUMENT_LENGTH / 2 + 1);
+
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(false);
+    });
+
+    it('refuses an empty document', () => {
+      request.document = '';
+
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(false);
+    });
+
+    it('refuses a lower-case currency code', () => {
+      request.currency = 'eur';
+
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(false);
+    });
+
+    it('refuses a currency code that is not three letters long', () => {
+      request.currency = 'EURO';
+
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(false);
+    });
+
+    it('refuses a currency code carrying a digit', () => {
+      request.currency = 'EU1';
+
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(false);
+    });
+
+    it('refuses an empty model key', () => {
+      request.modelKey = '';
+
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(false);
+    });
+
+    it('refuses an unknown key', () => {
+      expect(aiExtractionRequestSchema.safeParse({...request, somethingElse: 'value'}).success).toBe(false);
     });
   });
 });

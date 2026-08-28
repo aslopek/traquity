@@ -34,3 +34,46 @@
 .form-button {
   margin-right: 1rem;
 }
+
+.import-row {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.file-input {
+  display: none;
+}
+
+.import-hint {
+  font-size: 0.75rem;
+  opacity: 0.7;
+
+  &.disabled {
+    opacity: 0.38;
+  }
+}
+
+.import-message {
+  font-size: 0.75rem;
+  margin: 0.25rem 0 0.5rem;
+
+  &.info {
+    color: var(--tq-color-primary);
+  }
+
+  &.warning {
+    color: #f9992c;
+  }
+
+  &.error {
+    color: #f44336;
+  }
+}
+
+// the class the file drop directive sets while a drag is over the dialog
+:host .content.file-drop-over {
+  outline: 0.125rem dashed #f9992c;
+  outline-offset: -0.25rem;
+}

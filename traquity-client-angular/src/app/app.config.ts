@@ -7,6 +7,7 @@ import {MatIconRegistry} from "@angular/material/icon";
 import {DateAdapter, MatNativeDateModule} from "@angular/material/core";
 import {provideRouter} from "@angular/router";
 import {TqDateAdapter, TqDatePipe} from "../common";
+import {configurePdfWorker} from "../common/pdf/configure-pdf-worker";
 import {provideEffects} from "@ngrx/effects";
 import {provideStore} from "@ngrx/store";
 import {AiEffects} from "../store/ai/ai.effects";
@@ -29,6 +30,9 @@ import {depotReducer} from "../store/depot/depot.reducer";
 import {DepotEffects} from "../store/depot/depot.effects";
 
 registerLocaleData(localeDe, "de-DE", localeDeExtra);
+
+// A pdf.js global, so it is set once for the application and not per parse.
+configurePdfWorker();
 
 export function initialize() {
   return (): Promise<void> => {

@@ -82,7 +82,8 @@ The Angular + NgRx frontend, packaged as the Electron desktop app that ships to 
 - **Feature folders** under `src/` (`depot`, `dividends`, `security`, `settings`) hold routed page/feature components and consume the global
   store + generated API clients directly, or a local Signal Store where one exists; `src/common` holds cross-feature building blocks
   (re-exported via `src/common/index.ts`: shared components, `tq-*` pipes for currency/date/decimal/percent formatting, the
-  `ReadableSignalStore`/ `WritableSignalStore` types); `src/app` holds app-shell chrome (header incl. notifications, database connection
+  `ReadableSignalStore`/ `WritableSignalStore` types, `pdf/` and `file-drop/`); `src/app` holds app-shell chrome (header incl.
+  notifications, database connection
   dialog, splash screen, license, info, privacy).
 - **The About dialog and the transparency note**: `src/app/info/` is the About dialog, two `mat-tab`s — `About` (version, license,
   third-party software; the tab that opens) and `Transparency`, which renders `PrivacyNoticeComponent` from `src/app/privacy/`. That
@@ -235,6 +236,29 @@ container component's `providers: [XStore]`, then have descendant components
   `TqDateAdapter` with the native adapter for that subtree. `MatNativeDateModule` belongs in `app.config.ts` only.
 - Keep datepicker inputs `readonly` with click-to-open (see `stock-split.component.html`): `TqDateAdapter` only overrides `format()`, so
   typed input would fall through to the native `parse()` and not respect the configured format.
+
+## PDF extraction (`src/common/pdf/`)
+
+A PDF is parsed **in the renderer** (`architecture/ai.md` ADR-008), through the five stages of ADR-009: text runs, runs joined on one
+baseline, rows clustered by baseline, cells split by gap, and what each cell's words are. `extract-pdf.ts` is the pdf.js adapter and the
+only module there that imports the library; everything else is pure and has a spec of its own. `render-pdf-document.ts` turns the model into
+the one-line-per-row text a language model reads.
+
+Three things about it are load-bearing and not preferences. The stages were **ported from a measured prototype** (`.scratchpad/ai/`), so a
+tolerance changed by hand is a regression no unit test catches — the eight real broker documents are the golden master. The parse is
+**bounded** by page count, run count and a time budget, because a hang here blocks the window. And `configure-pdf-worker.ts` is called once
+from `app.config.ts`: the worker is emitted as a chunk of this build (`pdf.worker.ts` plus a relative `new URL(..., import.meta.url)`), so
+`script-src 'self'` covers it and `index.html`'s CSP needs no directive added.
+
+`pdfjs-dist` is a **devDependency**, where every renderer library sits — the `dependencies` block of this package is the main process's.
+Attribution is unaffected: `ng build` writes it into `3rdpartylicenses.txt` because it is bundled.
+
+## Directives
+
+`src/common/file-drop/` is the first and, so far, only directive. Two things about it are the pattern to follow: it decides nothing about
+the files it emits — which types are acceptable and what a refusal says belong to the caller that renders the message — and its boundary is
+a plain `@Input`/`@Output` pair, because `input()` and `output()` need an injection context and this suite runs in a node environment with
+no TestBed.
 
 ## Templates
 

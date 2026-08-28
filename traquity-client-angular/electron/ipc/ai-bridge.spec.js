@@ -50,6 +50,10 @@ describe('aiBridge', () => {
   const getMainWindow = jest.fn(/** @type {() => ProgressWindowLike | null} */ (() => ({webContents: {send}})));
   const getMachineCapability = jest.fn(
     /** @type {() => Promise<import('../ai/machine-capability.js').MachineCapability | null>} */ (() => Promise.resolve(null)));
+  const extractTransaction = jest.fn(
+    /** @type {(modelKey: string, document: string, currency: string) =>
+     *   Promise<import('../ai/transaction-extraction/transaction-extractor.js').TransactionExtractionOutcome>} */
+    (() => Promise.resolve({status: 'failed', message: 'stub'})));
 
   /** @type {AiState} */
   let aiState;
@@ -90,6 +94,7 @@ describe('aiBridge', () => {
       downloadModel,
       hasEnoughFreeSpace,
       getMachineCapability,
+      extractTransaction,
       getMainWindow,
       tlsOverridden,
       isTrustedSender
@@ -118,9 +123,9 @@ describe('aiBridge', () => {
     createBridge();
   });
 
-  it('registers exactly the five request/response channels via handle', () => {
+  it('registers exactly the six request/response channels via handle', () => {
     expect(handle.mock.calls.map(([channel]) => channel))
-      .toEqual(['ai:getState', 'ai:confirm', 'ai:download', 'ai:remove', 'ai:activate']);
+      .toEqual(['ai:getState', 'ai:confirm', 'ai:download', 'ai:extractTransaction', 'ai:remove', 'ai:activate']);
   });
 
   it('registers no one-way channel', () => {
@@ -293,6 +298,61 @@ describe('aiBridge', () => {
         message: 'HTTP 503'
       });
       expect(downloadModel).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('ai:extractTransaction', () => {
+
+    /** @type {{document: string, currency: string, modelKey: string}} */
+    let request;
+
+    beforeEach(() => {
+      extractTransaction.mockResolvedValue({
+        status: 'extracted',
+        transaction: {transactionType: 'SELL', date: '2024-02-02', securityCountOriginal: 10, grossValue: 1700}
+      });
+      createBridge();
+      request = {document: 'Kurswert  |  1.700,00 EUR', currency: 'EUR', modelKey: 'model-a'};
+    });
+
+    it('hands the request on, the key first', async () => {
+      await handleListenerFor('ai:extractTransaction')({}, request);
+
+      expect(extractTransaction).toHaveBeenCalledWith(request.modelKey, request.document, request.currency);
+      expect(extractTransaction).toHaveBeenCalledTimes(1);
+    });
+
+    it('answers with what the extraction said', async () => {
+      extractTransaction.mockResolvedValue({status: 'failed', message: 'The model model-a is not installed.'});
+
+      await expect(handleListenerFor('ai:extractTransaction')({}, request))
+        .resolves.toEqual({status: 'failed', message: 'The model model-a is not installed.'});
+    });
+
+    it('refuses a request carrying no document', async () => {
+      request = {...request, document: ''};
+
+      await expect(handleListenerFor('ai:extractTransaction')({}, request)).rejects.toThrow();
+      expect(extractTransaction).not.toHaveBeenCalled();
+    });
+
+    it('refuses a currency that is not a three-letter code', async () => {
+      request = {...request, currency: 'Euro'};
+
+      await expect(handleListenerFor('ai:extractTransaction')({}, request)).rejects.toThrow();
+      expect(extractTransaction).not.toHaveBeenCalled();
+    });
+
+    it('refuses a document longer than the bound admits', async () => {
+      request = {...request, document: 'x'.repeat((2 ** 18) + 1)};
+
+      await expect(handleListenerFor('ai:extractTransaction')({}, request)).rejects.toThrow();
+      expect(extractTransaction).not.toHaveBeenCalled();
+    });
+
+    it('refuses a request carrying a key the schema does not declare', async () => {
+      await expect(handleListenerFor('ai:extractTransaction')({}, {...request, temperature: 2})).rejects.toThrow();
+      expect(extractTransaction).not.toHaveBeenCalled();
     });
   });
 

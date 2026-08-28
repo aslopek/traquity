@@ -5,6 +5,7 @@ import {getSecurityByIdSelector} from './selectors/get-security-by-id.selector';
 import {AppState} from '../app.state';
 import {getSecuritiesByIdSelector} from './selectors/get-securities-by-id.selector';
 import {getSecurityIdsByNameSelector} from './selectors/get-security-ids-by-name.selector';
+import {getSecuritiesByIsinSelector, SecuritiesByIsin} from './selectors/get-securities-by-isin.selector';
 import {HistoricalSecurityPriceConfigRead} from '../../gen/api/historical-security-price';
 import {getHistoricalSecurityPriceConfigSelector} from './selectors/get-historical-security-price-config.selector';
 import {getHistoricalSecurityPriceConfigsSelector} from './selectors/get-historical-security-price-configs.selector';
@@ -19,6 +20,9 @@ const securitySelector: MemoizedSelector<AppState, SecurityState>
 
 export const securitiesById: MemoizedSelector<AppState, SecuritiesById>
   = createSelector(securitySelector, getSecuritiesByIdSelector);
+
+export const securitiesByIsin: MemoizedSelector<AppState, SecuritiesByIsin>
+  = createSelector(securitySelector, getSecuritiesByIsinSelector);
 
 export const securityIdsByName: MemoizedSelector<AppState, { [securityName: string]: number }>
   = createSelector(securitySelector, getSecurityIdsByNameSelector);
