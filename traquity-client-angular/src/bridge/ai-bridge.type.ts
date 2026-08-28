@@ -1,3 +1,5 @@
+import {DocumentLiterals} from "../common/pdf/literals-of-document";
+
 export type CatalogueEntry = {
   key: string
   description: string
@@ -62,10 +64,46 @@ export type AiActivateOutcome =
   | { status: 'activated' }
   | { status: 'failed', message: string };
 
+/** What the extraction request carries. Mirrors the main process's `aiExtractionRequestSchema`. */
+export type AiExtractionRequest = {
+  /** The page as the extractor rendered it: one line per printed row. */
+  document: string
+  /** Everything that page states, in the notation an answer uses, as the extractor read it off the tokens. */
+  literals: DocumentLiterals
+  /** Three upper-case letters. Amounts denoted in any other currency are not extracted. */
+  currency: string
+  /** The AI model with which the extraction will be executed. */
+  modelKey: string
+};
+
+/**
+ * The keys of `TransactionCreate` a model can state off a document. The security is none of them: it is read off
+ * the parsed document itself, and `securityCountSplitAdjusted` is derived from stock splits no document prints.
+ */
+export type ExtractedTransaction = {
+  transactionType: 'BUY' | 'SELL' | 'DIVIDEND' | 'TAX'
+  /** `yyyy-MM-dd`. */
+  date: string
+  /** `HH:mm:ss`. */
+  time?: string
+  securityCountOriginal: number
+  grossValue: number
+  /** The document's tax lines, summed. */
+  tax?: number
+  /** The document's fee lines, summed. */
+  fee?: number
+};
+
+/** There is no cancellation for a prompt, so only these two outcomes exist. */
+export type AiExtractionOutcome =
+  | { status: 'extracted', transaction: ExtractedTransaction }
+  | { status: 'failed', message: string };
+
 export type TraQuityAiBridge = {
   getAiState: () => Promise<ElectronAiState>
   confirmAiNotice: () => Promise<void>
   downloadModel: (key: string) => Promise<AiDownloadOutcome>
+  extractTransaction: (request: AiExtractionRequest) => Promise<AiExtractionOutcome>
   removeModel: (key: string) => Promise<AiRemoveOutcome>
   activateModel: (key: string) => Promise<AiActivateOutcome>
   onAiDownloadProgress: (listener: (progress: AiDownloadProgress) => void) => () => void
