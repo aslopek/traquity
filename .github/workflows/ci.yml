@@ -51,7 +51,7 @@ jobs:
           cache: npm
           cache-dependency-path: traquity-api/package-lock.json
       # `storageDir` in openapitools.json, holding the ~32 MB generator jar that every `validate` and `generate` call pulls down on a miss
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: openapigen
           key: openapigen-${{ hashFiles('*/openapitools.json') }}
@@ -75,7 +75,7 @@ jobs:
           cache: npm
           cache-dependency-path: traquity-client-angular/package-lock.json
       # `storageDir` in openapitools.json, holding the ~32 MB generator jar that every `validate` and `generate` call pulls down on a miss
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: openapigen
           key: openapigen-${{ hashFiles('*/openapitools.json') }}
