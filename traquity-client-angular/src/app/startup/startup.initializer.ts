@@ -1,7 +1,7 @@
 import {inject} from "@angular/core";
 import {map, Observable, of, tap} from "rxjs";
-import {StartupBridgeService} from "./startup-bridge.service";
-import {StartupState} from "./startup-bridge.type";
+import {StartupBridgeService} from "../../bridge/startup-bridge.service";
+import {StartupState} from "../../bridge/startup-bridge.type";
 import {ReadableStartupStore, StartupStore} from "./store/startup.store";
 
 /**

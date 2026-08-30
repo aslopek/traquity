@@ -1,0 +1,10 @@
+@if (activeDownload(); as download) {
+    <div class="ai-download-indicator">
+        <span class="ai-download-indicator-label">Downloading {{ download.description }}</span>
+        <app-download-progress [receivedBytes]="download.progress.receivedBytes"
+                               [totalBytes]="download.progress.totalBytes ?? undefined"
+                               [bytesPerSecond]="download.progress.bytesPerSecond"
+                               [secondsRemaining]="download.progress.secondsRemaining ?? undefined"
+                               [label]="download.progress.phase | aiDownloadPhaseLabel"/>
+    </div>
+}

@@ -1,6 +1,6 @@
 import {beforeEach, describe, expect, it} from '@jest/globals';
 import {signal, Signal, WritableSignal} from '@angular/core';
-import {ConfigFileState} from '../../../startup/startup-bridge.type';
+import {ConfigFileState} from '../../../../bridge/startup-bridge.type';
 import {enableDiscardAndStart} from './enable-discard-and-start';
 
 describe('enableDiscardAndStart', (): void => {

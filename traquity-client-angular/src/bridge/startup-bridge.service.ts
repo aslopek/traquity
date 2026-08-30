@@ -12,17 +12,18 @@ import {
   JavaVerification,
   PickedDatabase,
   StartupState,
-  TraQuityBridge
+  TraQuityStartupBridge
 } from "./startup-bridge.type";
 
 /**
- * The only place in the renderer that touches the `contextBridge` surface exposed by `preload.js`. A further bridge
- * method is added here as another wrapper, never by reaching into `window.traquity` from somewhere else.
+ * Wraps the startup/configuration channels of the `window.traquity` `contextBridge` surface `preload.js` exposes as
+ * observables. A further channel on that same global is added here as another wrapper, never by reaching into
+ * `window.traquity` from somewhere else; a channel on a different global belongs to that global's own bridge service.
  */
 @Injectable({providedIn: "root"})
 export class StartupBridgeService {
 
-  private readonly bridge: TraQuityBridge | null;
+  private readonly bridge: TraQuityStartupBridge | null;
 
   constructor(@Inject(BRIDGE_HOST) bridgeHost: BridgeHost) {
     this.bridge = bridgeHost.traquity ?? null;
@@ -99,7 +100,7 @@ export class StartupBridgeService {
     this.requireBridge().quit();
   }
 
-  private requireBridge(): TraQuityBridge {
+  private requireBridge(): TraQuityStartupBridge {
     if (this.bridge == null) {
       throw new Error("The traquity bridge is not available");
     }

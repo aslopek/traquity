@@ -1,0 +1,113 @@
+@use '@angular/material' as mat;
+@use '../../../styles' as styles;
+
+.confirm-button {
+  margin-top: 2rem;
+}
+
+.error-text {
+  color: styles.$color-error;
+}
+
+.probe-failed-banner {
+  color: styles.$color-muted-text;
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+}
+
+.model-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.model-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem;
+}
+
+.model-key {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.model-description,
+.model-meta {
+  font-size: 0.875rem;
+  color: styles.$color-muted-text;
+}
+
+.model-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.download-navigation-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  color: styles.$color-muted-text;
+}
+
+.download-navigation-hint-icon {
+  flex: 0 0 auto;
+  width: 1.125rem;
+  height: 1.125rem;
+  font-size: 1.125rem;
+  color: mat.get-theme-color(styles.$traquity-theme, primary);
+}
+
+.model-status {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.primary-outline {
+  --mat-button-outlined-outline-color: currentColor;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border: 0.0625rem solid;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+}
+
+.status-chip-active {
+  border-color: mat.get-theme-color(styles.$traquity-theme, primary);
+  color: mat.get-theme-color(styles.$traquity-theme, primary);
+}
+
+.status-chip-on-disk {
+  border-color: styles.$color-positive;
+  color: styles.$color-positive;
+}
+
+.status-chip-not-on-disk {
+  border-color: styles.$color-button-grey;
+  color: styles.$color-muted-text;
+}
+
+.status-chip-unsupported {
+  border-color: styles.$color-warning;
+  color: styles.$color-warning;
+}
+
+.status-chip-unknown {
+  border-color: styles.$color-muted-text;
+  color: styles.$color-muted-text;
+}

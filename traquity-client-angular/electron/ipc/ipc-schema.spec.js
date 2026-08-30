@@ -1,5 +1,6 @@
 const {beforeEach, describe, expect, it} = require('@jest/globals');
 const {
+  aiModelKeySchema,
   authVerifyPasswordSchema,
   backendStartPasswordSchema,
   configurationChangesSchema,
@@ -114,6 +115,20 @@ describe('ipc schemas', () => {
 
     it('refuses an unknown key', () => {
       expect(configurationChangesSchema.safeParse({...changes, somethingElse: 'value'}).success).toBe(false);
+    });
+  });
+
+  describe('ai model key', () => {
+    it('accepts a catalogue key', () => {
+      expect(aiModelKeySchema.safeParse('model-a').success).toBe(true);
+    });
+
+    it('refuses an empty string', () => {
+      expect(aiModelKeySchema.safeParse('').success).toBe(false);
+    });
+
+    it('refuses one longer than the maximum length', () => {
+      expect(aiModelKeySchema.safeParse('x'.repeat(65)).success).toBe(false);
     });
   });
 });

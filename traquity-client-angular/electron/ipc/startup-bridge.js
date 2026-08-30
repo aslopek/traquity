@@ -6,7 +6,9 @@ const {
   databaseSelectionSchema,
   javaSettingSchema
 } = require('./ipc-schema.js');
+const {createTrustedChannels} = require('./trusted-channels.js');
 
+/** @import {IpcMainLike} from './trusted-channels.js' */
 /** @import {AuthRegistry, KnownDatabase} from '../config/auth-registry.js' */
 /** @import {AuthState} from '../config/auth.js' */
 /** @import {BackendProcess, BackendStartOutcome} from '../backend/backend-process.js' */
@@ -22,16 +24,16 @@ const {
 /** @import {StartupState} from '../window/startup-mode.js' */
 
 /**
- * Registers the IPC channels the preload's `contextBridge` surface calls into. No generic `invoke(channel, ...)`
- * passthrough, ever - a wider surface would let the renderer reach into the main process in uncontrolled manner. All
- * but two are request/response (registered via `ipcMain.handle`); `app:restartAndConfigure` and `app:quit` are
- * one-way (`ipcMain.on`) because neither has an answer to give. `java:downloadProgress` is the one push the main
- * process makes into the renderer, sent straight to the window that invoked `java:download` rather than broadcast.
+ * Registers the startup/configuration IPC channels the preload's `contextBridge` surface calls into. No generic
+ * `invoke(channel, ...)` passthrough, ever - a wider surface would let the renderer reach into the main process in
+ * uncontrolled manner. All but two are request/response (registered via `ipcMain.handle`); `app:restartAndConfigure`
+ * and `app:quit` are one-way (`ipcMain.on`) because neither has an answer to give. `java:downloadProgress` is the
+ * push this module makes into the renderer, sent straight to the window that invoked `java:download`.
  *
- * Exactly three channels write `traquity.config.json`: `auth:forget` removes one `auth` entry through
- * `authRegistry.forget`, `config:apply` sets `env.TQ_DB_FILE_PATH` and `java` through `configurationWriter.apply`,
- * and `app:restartAndConfigure` sets `configureOnNextStart` through `restartIntoConfiguration.restart`. Nothing
- * here ever *writes* an `auth` entry: recording one is a proven start's job.
+ * Three channels write `traquity.config.json`: `auth:forget` removes one `auth` entry through `authRegistry.forget`,
+ * `config:apply` sets `env.TQ_DB_FILE_PATH` and `java` through `configurationWriter.apply`, and
+ * `app:restartAndConfigure` sets `configureOnNextStart` through `restartIntoConfiguration.restart`. Nothing here
+ * ever *writes* an `auth` entry: recording one is a proven start's job.
  *
  * A TLS-overridden environment collapses the registration to two channels - `startup:getState` and `app:quit` -
  * before anything else is registered: with no `java:download`, no `backend:start` and no `config:apply` registered,
@@ -43,17 +45,8 @@ const {
  */
 
 /**
- * `require('electron')` is not loadable under jest (`testEnvironment: 'node'`), so this module must not import it.
- * Electron's real `ipcMain` is structurally assignable to this minimal shape.
- *
- * @typedef {Object} IpcMainLike
- * @property {(channel: string, listener: (event: unknown, ...args: unknown[]) => unknown) => void} handle
- * @property {(channel: string, listener: (event: unknown, ...args: unknown[]) => void) => void} on
- */
-
-/**
- * The one member `java:download` needs off the main window, to push progress to exactly the renderer that asked for
- * it rather than broadcasting.
+ * The one member `java:download` needs off the main window, to push progress to exactly the renderer that asked
+ * for it.
  *
  * @typedef {Object} ProgressWindowLike
  * @property {{send: (channel: string, progress: JavaDownloadProgress) => void}} webContents
@@ -99,6 +92,7 @@ const {
  * @property {IpcMainLike} ipcMain
  * @property {Promise<StartupState>} startupState
  * @property {ConfigFileState} configFileState
+ * @property {(directory: string, requiredBytes: number) => boolean} hasEnoughFreeSpace
  * @property {Pick<BackendProcess, 'start'>} backendProcess
  * @property {Pick<AuthRegistry, 'verify' | 'knownDatabases' | 'forget'>} authRegistry
  * @property {Pick<ConfigurationWriter, 'apply'>} configurationWriter
@@ -109,6 +103,8 @@ const {
  * @property {(onProgress: (progress: JavaDownloadProgress) => void) => Promise<JavaDownloadResult>} downloadJava
  * @property {string} javaDownloadTarget where a download puts a runtime, offered as the picker's starting point when
  *   nothing is configured yet
+ * @property {string} javaDownloadDirectory the directory a download's free-space check is measured against - the
+ *   parent of `javaDownloadTarget`, since a download also stages into a sibling directory there
  * @property {TraQuityConfig} config
  * @property {string} logPath
  * @property {() => void} quit
@@ -119,6 +115,9 @@ const {
  *   sees whatever the save just wrote
  */
 
+/** @type {number} the free space a Java download requires - the most its own archive download could ever write to disk */
+const JAVA_DOWNLOAD_REQUIRED_BYTES = 2 ** 30;
+
 /**
  * @param {StartupBridgeOptions} options
  * @returns {{register: () => void}}
@@ -128,6 +127,7 @@ function createStartupBridge(options) {
     ipcMain,
     startupState,
     configFileState,
+    hasEnoughFreeSpace,
     backendProcess,
     authRegistry,
     configurationWriter,
@@ -137,6 +137,7 @@ function createStartupBridge(options) {
     javaRuntime,
     downloadJava,
     javaDownloadTarget,
+    javaDownloadDirectory,
     config,
     logPath,
     quit,
@@ -146,41 +147,10 @@ function createStartupBridge(options) {
     reresolveJava
   } = options;
 
+  const {handle, on} = createTrustedChannels({ipcMain, isTrustedSender});
+
   // set for as long as a download runs, so `java:download` stays single-flight whatever the renderer does
   let downloading = false;
-
-  /**
-   * Registers a request/response channel that refuses an untrusted sender by throwing, which is what `ipcMain.handle`
-   * turns into a rejected `invoke` on the other side - the same shape a rejected argument schema takes.
-   *
-   * @param {string} channel
-   * @param {(event: unknown, ...args: unknown[]) => unknown} listener
-   * @returns {void}
-   */
-  function handle(channel, listener) {
-    ipcMain.handle(channel, (event, ...args) => {
-      if (!isTrustedSender(event)) {
-        throw new Error(`Refused ${channel} from an untrusted sender`);
-      }
-      return listener(event, ...args);
-    });
-  }
-
-  /**
-   * Registers a one-way channel. An untrusted sender is dropped rather than reported: there is no answer to reject.
-   *
-   * @param {string} channel
-   * @param {(event: unknown, ...args: unknown[]) => void} listener
-   * @returns {void}
-   */
-  function on(channel, listener) {
-    ipcMain.on(channel, (event, ...args) => {
-      if (!isTrustedSender(event)) {
-        return;
-      }
-      listener(event, ...args);
-    });
-  }
 
   /**
    * @returns {void}
@@ -293,26 +263,28 @@ function createStartupBridge(options) {
       }
       downloading = true;
 
-      /** @type {JavaDownloadResult} */
-      let result;
       try {
-        result = await downloadJava(progress => {
+        if (!hasEnoughFreeSpace(javaDownloadDirectory, JAVA_DOWNLOAD_REQUIRED_BYTES)) {
+          return {status: 'failed', message: 'Not enough free disk space to download the Java runtime'};
+        }
+
+        const result = await downloadJava(progress => {
           const window = getMainWindow();
           if (window != null) {
             window.webContents.send('java:downloadProgress', progress);
           }
         });
+        if (result.status !== 'completed') {
+          return result;
+        }
+        const verification = await javaRuntime.verifySetting(result.javaPath);
+        if (verification.status !== 'ok') {
+          return {status: 'failed', message: verification.message};
+        }
+        return {...result, verification};
       } finally {
         downloading = false;
       }
-      if (result.status !== 'completed') {
-        return result;
-      }
-      const verification = await javaRuntime.verifySetting(result.javaPath);
-      if (verification.status !== 'ok') {
-        return {status: 'failed', message: verification.message};
-      }
-      return {...result, verification};
     });
 
     on('app:restartAndConfigure', () => restartIntoConfiguration.restart());

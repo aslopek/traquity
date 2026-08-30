@@ -1,0 +1,16 @@
+.ai-download-indicator {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  width: 28rem;
+  min-width: 0;
+  margin-left: 1.5rem;
+}
+
+.ai-download-indicator-label {
+  display: block;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

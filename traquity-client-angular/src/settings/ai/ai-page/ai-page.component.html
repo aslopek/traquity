@@ -1,0 +1,85 @@
+@if (isConfirmed()) {
+    @if (probeFailed()) {
+        <div class="probe-failed-banner">The machine could not be probed for AI capability.</div>
+    }
+    <div class="model-list">
+        @for (entry of catalogue(); track entry.key) {
+            <mat-card appearance="outlined">
+                <mat-card-content class="model-card-content">
+                    <span class="model-key">{{ entry.key }}</span>
+                    <span class="model-description">{{ entry.description }}</span>
+                    <span class="model-meta">{{ entry.sizeBytes | tqByteSize:'GiB' }} · {{ entry.license }}</span>
+                    @if (entry.error; as error) {
+                        <span class="error-text">{{ error }}</span>
+                    }
+                    @if (entry.removalFailed) {
+                        <span class="error-text">Delete failed</span>
+                    }
+                    @if (entry.activationFailed) {
+                        <span class="error-text">Activation failed</span>
+                    }
+                    <div class="model-actions">
+                        <div class="model-status">
+                            @if (!entry.downloading) {
+                                @if (entry.active) {
+                                    <span class="status-chip status-chip-active">Active</span>
+                                } @else if (entry.installed) {
+                                    <span class="status-chip status-chip-on-disk">On disk</span>
+                                } @else {
+                                    <span class="status-chip status-chip-not-on-disk">Not on disk</span>
+                                }
+                            }
+                            @let verdictLabel = entry.verdict | aiVerdictLabel;
+                            @if (verdictLabel) {
+                                <span class="status-chip"
+                                      [class.status-chip-unsupported]="entry.verdict?.verdict === 'unsupported'"
+                                      [class.status-chip-unknown]="entry.verdict?.verdict === 'unknown'">
+                                    {{ verdictLabel }}
+                                </span>
+                            }
+                        </div>
+                        @if (entry.showDownloadButton) {
+                            <button mat-stroked-button
+                                    color="primary"
+                                    class="primary-outline"
+                                    (click)="download(entry.key)">
+                                Download
+                            </button>
+                        } @else if (entry.installed) {
+                            <button mat-stroked-button
+                                    color="warn"
+                                    (click)="openRemoveDialog(entry)">
+                                Remove
+                            </button>
+                        }
+                        @if (entry.installed && !entry.active) {
+                            <button mat-stroked-button
+                                    color="primary"
+                                    class="primary-outline"
+                                    (click)="activate(entry.key)">
+                                Activate
+                            </button>
+                        }
+                    </div>
+                    @if (entry.downloading) {
+                        <div class="download-navigation-hint">
+                            <mat-icon fontIcon="info"
+                                      class="download-navigation-hint-icon">
+                            </mat-icon>
+                            <span>You can navigate elsewhere in the app while this downloads</span>
+                        </div>
+                    }
+                </mat-card-content>
+            </mat-card>
+        }
+    </div>
+} @else {
+    <app-ai-notice></app-ai-notice>
+
+    <button (click)="confirm()"
+            class="confirm-button"
+            mat-stroked-button
+            color="primary">
+        Confirm
+    </button>
+}

@@ -39,5 +39,5 @@ export const AppOpenPage = {
 
 export const AppSideMenuOpen = {
   key: `${appConfigPrefix}.side-menu-open`,
-  default: false
+  default: true
 } as const;

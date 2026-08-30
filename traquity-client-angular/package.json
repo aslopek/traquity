@@ -36,6 +36,7 @@
     "@fontsource/noto-color-emoji": "^5.3.0",
     "@fontsource/roboto": "^5.3.0",
     "material-symbols": "^0.46.0",
+    "node-llama-cpp": "^3.20.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

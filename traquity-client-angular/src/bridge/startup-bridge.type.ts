@@ -79,7 +79,7 @@ export type AppliedConfiguration = {
   authState: AuthState
 };
 
-export type TraQuityBridge = {
+export type TraQuityStartupBridge = {
   getStartupState: () => Promise<StartupState>
   startBackend: (password: string) => Promise<BackendStartOutcome>
   verifyPassword: (password: string) => Promise<boolean>

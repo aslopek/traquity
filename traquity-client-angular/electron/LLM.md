@@ -22,7 +22,27 @@ See the parent `LLM.md` for the Angular renderer, and the root `LLM.md` for how 
 ```
 electron/
   main.js                      entry point; wiring only, no logic worth testing
-  preload.js                   contextBridge surface shared with the renderer
+  preload.js                   the two contextBridge surfaces shared with the renderer
+  ai/
+    catalogue.js                the curated models, pinned to a Hugging Face revision each; projects the
+                                public `CatalogueEntry` shape out of the full internal one
+    ai-registry.js              the `ai` key of a loaded config: notice confirmation (re-hashed against the packaged
+                                notice resource), which catalogued models are actually installed (each entry's path
+                                verified against the filesystem), and the three writes over that key - `install`,
+                                `remove` and `activate`
+    model-download.js           downloads one catalogue entry from its pinned `resolve/<revision>/<file>` URL into a
+                                picked directory, staged then renamed. Validates sha256 digest after download
+    machine-capability.js       probes the GPU backend and VRAM `node-llama-cpp` reports and derives a per-catalogue-entry
+                                verdict from it, fresh on every read and never persisted
+  download/                    mechanics shared by every streamed download in this app, agnostic of what is being
+                               downloaded and of how a completed one is verified, if at all
+    byte-cap-transform.js      a stream `Transform` that ends the pipeline once a byte cap is passed, enforced
+                               on the stream itself
+    progress-reporter.js       throttled, rolling-window-averaged `downloading`-phase progress, shared by
+                               `java/corretto-download.js` and `ai/model-download.js`
+    error-message.js           an error's message followed by its `cause` chain, down to a bounded depth
+    free-space.js              whether a directory's disk has a required number of free bytes, should be cecked before
+                               starting a download
   app/
     restart-into-configuration.js sets `configureOnNextStart`, kills the backend, relaunches and exits, in that order
   config/
@@ -49,11 +69,15 @@ electron/
   ipc/
     ipc-schema.js              zod schema for IPC input crossing the renderer boundary
     trusted-sender.js          whether an IPC event came from the main frame of the app's own window
-    startup-bridge.js          registers the IPC channels listed below
+    trusted-channels.js        the `handle`/`on` registration mechanics shared by every bridge module below -
+                               refuses an untrusted sender, throwing for `handle` and dropping for `on`
+    startup-bridge.js          registers the startup/configuration IPC channels
+    ai-bridge.js               registers the `ai:*` IPC channels
   security/
     signature-bounds.js        how long a detached signature may be, for every schema that validates one
     tls-override.js            whether `NODE_TLS_REJECT_UNAUTHORIZED` overrides the default, verifying behavior
     verify-hash.js             verifies a detached signature over a file streamed into the hash, format-agnostic
+    file-digest.js             digests a file streamed into the hash, no signature involved
   window/
     startup-mode.js            computes the startup mode (`boot` | `configure` | `insecure` | `unlock`) and consumes
                                `configureOnNextStart`
@@ -62,11 +86,12 @@ electron/
     navigation-policy.js       whether a URL may be opened by the OS, and whether the window may navigate to it
     database-dialogs.js        native open/save dialogs for the database file, normalizing to base paths
     java-dialogs.js            native picker for a java binary or its containing directory
+    ai-dialogs.js              native directory picker for choosing where a model download lands
   testing/                     shared spec-only helpers (custom matchers, ...) used by more than one *.spec.js
 ```
 
-The channels `ipc/startup-bridge.js` registers — eleven request/response via `ipcMain.handle`, two one-way via `ipcMain.on`, one push from
-the main process into the renderer:
+The channels `ipc/startup-bridge.js` registers — eleven request/response via `ipcMain.handle`, two one-way via `ipcMain.on`, one push
+from the main process into the renderer:
 
 - `startup:getState`
 - `backend:start`
@@ -83,13 +108,25 @@ the main process into the renderer:
 - `app:quit` (one-way)
 - `java:downloadProgress` (push, main → renderer)
 
+The channels `ipc/ai-bridge.js` registers — five request/response via `ipcMain.handle`, one push from the main process into the renderer:
+
+- `ai:getState`
+- `ai:confirm`
+- `ai:download`
+- `ai:remove`
+- `ai:activate`
+- `ai:downloadProgress` (push, main → renderer)
+
+`preload.js` exposes these two channel sets as separate `contextBridge` globals, `window.traquity` and `window.traquityAi`.
+
 Keep this map current as new channels land — it is what a reader starts from.
 
 ## Boot order
 
-`app.on('ready')` loads the config, computes the startup mode (`window/startup-mode.js`), registers the IPC bridge (`ipc/startup-bridge.js`)
-and opens the single `BrowserWindow` (`window/main-window.js`). The backend is spawned only when the renderer calls `backend:start` over
-that bridge, handled by `backend/backend-process.js`, which resolves with an outcome (`reachable` or not) the renderer routes on.
+`app.on('ready')` loads the config, computes the startup mode (`window/startup-mode.js`), registers the two IPC bridges
+(`ipc/startup-bridge.js`, `ipc/ai-bridge.js`) and opens the single `BrowserWindow` (`window/main-window.js`). The backend is spawned only
+when the renderer calls `backend:start` over the first of those bridges, handled by `backend/backend-process.js`, which resolves with an
+outcome (`reachable` or not) the renderer routes on.
 
 Java resolution now decides the startup mode rather than running lazily at spawn time: `java/java-runtime.js`'s `resolve()` is kicked off
 once, its `Promise<string | null>` held in `main.js` as `javaPromise` and reused by both `window/startup-mode.js` (which yields `configure`
@@ -97,6 +134,12 @@ mode when it resolves to `null`) and `backend/backend-process.js`'s `resolveJava
 once. `startup:getState` therefore answers from a `Promise<StartupState>` rather than a plain value - `ipcMain.handle` awaits whatever its
 listener returns, so the window opens immediately while the probe runs concurrently with the renderer's own bootstrap. The one thing that
 invalidates `javaPromise` is `config:apply`, which reassigns it after saving, since that is the only write able to change `java.path`.
+
+The machine capability probe is held the same way: `ai/machine-capability.js` is kicked off once in `main.js` and its
+`Promise<MachineCapability | null>` answers every `ai:getState`, so a changed machine is picked up on the next start. Nothing reassigns it,
+and it never rejects — a missing prebuilt binary or a refusing driver resolves to `null`, which is what the per-entry verdict turns into
+`unknown`. The verdict itself is derived on every read and written nowhere, so `traquity.config.json` can never carry a verdict that
+outlived the machine it was computed for.
 
 That probe is one place this app runs a binary it did not ship, named by a config file or a file dialog, so
 `java/java-version.js` treats it as untrusted and every one of its bounds exists for a reason worth keeping: an absolute path named
@@ -117,8 +160,8 @@ of the above written into the config can come back in through it either.
 
 `NODE_TLS_REJECT_UNAUTHORIZED` set to anything other than `1` (see `security/tls-override.js`) short-circuits all of this: the startup mode
 resolves to `insecure` before the auth registry is consulted or `configureOnNextStart` is consumed, `javaPromise` becomes
-`Promise.resolve(null)` so no JVM is ever spawned, and the bridge registers only `startup:getState` and `app:quit` - two channels only, so
-"nothing can be done" is enforced.
+`Promise.resolve(null)` so no JVM is ever spawned, `ipc/startup-bridge.js` registers only `startup:getState` and `app:quit`, and
+`ipc/ai-bridge.js` registers nothing at all - two channels only across both bridges, so "nothing can be done" is enforced.
 
 The spawn passes the database password as the entire content of the child's stdin, closed right after, rather than through the child's
 environment: the environment carries `TQ_DB_FILE_PASSWORD_STDIN=true` as a marker and no password at all. A few rules govern
@@ -128,9 +171,10 @@ write callback, because Node queues the chunk by reference rather than copying i
 never reads its stdin surfaces as a failed start through the existing reachability poll instead of hanging the IPC call.
 
 The preload (`preload.js`) runs in Electron's sandboxed preload context, where `require` is a limited polyfill resolving only `electron`
-and a handful of Node built-ins — it cannot `require` a module of this app. That is why the IPC channel names listed above are
-literals duplicated in both `preload.js` and `ipc/startup-bridge.js` rather than shared via an import. Nothing checks that the two copies
-agree — a renamed channel compiles, passes the suite, and fails only at runtime, so a change to one literal is a change to two files.
+and a handful of Node built-ins — it cannot `require` a module of this app. That is why the IPC channel names listed above are literals
+duplicated between `preload.js` and whichever of `ipc/startup-bridge.js`/`ipc/ai-bridge.js` registers them, not shared via an import.
+Nothing checks that the two copies agree — a renamed channel compiles, passes the suite, and fails only at runtime, so a change to one
+literal is a change to two files.
 
 The window itself is locked down in `window/main-window.js`, and the two decisions worth arguing about live in `window/navigation-policy.js`
 so they can be tested at all (`main-window.js` needs a real Electron and therefore gets no spec). A URL a renderer hands over is **data** —
@@ -161,13 +205,16 @@ screen asks for one instead of inheriting the backend's own built-in default sil
 Every write of that file lands as mode `0600`, and a `chmod` to the same mode follows each one, since a `mode` passed to a write only
 applies to a file being created and an install predating this rule still carries whatever umask it was written under.
 
-Exactly three channels write `traquity.config.json`: `auth:forget` removes one `auth` entry immediately, while the screen is still up,
-`config:apply` persists the configuration screen on finish, touching `env.TQ_DB_FILE_PATH` and nothing else, and `app:restartAndConfigure`
-sets `configureOnNextStart` on the way out. All three reach the disk through a collaborator of their own
-(`config/auth-registry.js`'s `forget`, `config/configuration-writer.js`'s `apply`, `config/configure-on-next-start.js`'s `request`); no
-`ConfigFile` is injected into the bridge, so no other channel can write at all. Nothing in the main process ever *writes* an `auth` entry
-outside `recordProvenStart`, which is what keeps epic ADR-003's "a failed start never discards a record" structural rather than
-conventional.
+Seven channels write `traquity.config.json`, three of them in `ipc/startup-bridge.js` and four in `ipc/ai-bridge.js`: `auth:forget` removes
+one `auth` entry immediately, while the screen is still up, `config:apply` persists the configuration screen on finish, touching
+`env.TQ_DB_FILE_PATH` and nothing else, `app:restartAndConfigure` sets `configureOnNextStart` on the way out, `ai:confirm` hashes the
+packaged AI notice resource and writes that digest as `ai.confirmedNotice`, initializing `ai.models` to `{}` the first time, `ai:download`
+sets one `ai.models[key]` entry on a completed download, `ai:remove` drops one `ai.models[key]` entry once the file it names has been
+deleted from disk, and `ai:activate` sets one `ai.models[key]`'s `active` flag to `true` while clearing it on every other entry. All seven
+reach the disk through a collaborator of their own (`config/auth-registry.js`'s `forget`, `config/configuration-writer.js`'s `apply`,
+`config/configure-on-next-start.js`'s `request`, `ai/ai-registry.js`'s `confirm`, `install`, `remove` and `activate`); no `ConfigFile` is
+injected into either bridge directly, so no other channel can write at all. Nothing in the main process ever *writes* an `auth` entry
+outside `recordProvenStart`, which is what keeps "a failed start never discards a record" intact.
 
 A database is identified everywhere by its **base path without extension** — `env.TQ_DB_FILE_PATH`, the `auth` map's keys and
 `StartupState.databasePath` are all that shape. The `.mv.db` suffix H2 materializes exists only at the dialog boundary, where
@@ -264,11 +311,12 @@ type: a password is run through scrypt, a path is spawned or written to the conf
 looks like — it renders what a database and an HTTP response contain — so a new field there gets a bound like the others.
 
 One check runs *before* any of those schemas: `ipc/trusted-sender.js` decides whether the event's sending frame is the main frame of the
-app's own window, and `ipc/startup-bridge.js` registers every channel — the two one-way ones included — behind it. A registration is per
-channel name rather than per frame, so which frame an event came from is a question only the event answers, and the answer is an identity
-comparison against an object this process created rather than a check on a URL the sender influences. A refused `handle` throws (the
-renderer sees a rejected `invoke`, the same shape a rejected argument takes); a refused `on` is dropped, since there is no answer to
-reject. Adding a channel means adding it through the module's own `handle`/`on` helpers, never through `ipcMain` directly.
+app's own window, and `ipc/trusted-channels.js`'s `handle`/`on` wrappers - shared by `ipc/startup-bridge.js` and `ipc/ai-bridge.js` - run it
+behind every channel either module registers, the two one-way ones included. A registration is per channel name, not per frame, so which
+frame an event came from is a question only the event answers, and the answer is an identity comparison against an object this process
+created, not a check on a URL the sender influences. A refused `handle` throws (the renderer sees a rejected `invoke`, the same shape
+a rejected argument takes); a refused `on` is dropped, since there is no answer to reject. Adding a channel means adding it through
+`trusted-channels.js`'s `handle`/`on`, never through `ipcMain` directly.
 
 ## Runtime dependencies
 
@@ -280,6 +328,12 @@ attribution is not something to remember here. Its license still has to pass `np
 rule. The reverse direction is the one that needs care: a package required only by a spec stays a `devDependency` (`expect`, used by
 `testing/base64-of.js`, is the example) and must never be moved into `dependencies` to make something resolve — that would ship a test
 library to users and put it in the license report.
+
+`node-llama-cpp` is the one entry there that is neither CommonJS nor pure JavaScript, and both halves of that cost something. It is
+ESM-only, so `main.js` reaches it through a dynamic `import()` — the only one in this directory. Its binding is a native addon delivered by
+a per-platform `@node-llama-cpp/*` optional dependency, next to the shared libraries the OS loader resolves beside it on a real filesystem,
+which an asar archive is not: `forge.config.js` unpacks that whole scope, and `scripts/generate-third-party-licenses.js`
+follows `optionalDependencies` so the binaries a release carries are attributed like everything else.
 
 ## What of this directory ships
 

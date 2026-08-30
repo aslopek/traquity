@@ -13,7 +13,7 @@ import {
   JavaVerification,
   PickedDatabase,
   StartupState,
-  TraQuityBridge
+  TraQuityStartupBridge
 } from './startup-bridge.type';
 
 type GetStartupState = () => Promise<StartupState>;
@@ -95,7 +95,7 @@ describe('StartupBridgeService', (): void => {
     restartAndConfigure = jest.fn<() => void>();
     quit = jest.fn<() => void>();
 
-    const traquity: TraQuityBridge = {
+    const traquity: TraQuityStartupBridge = {
       getStartupState,
       startBackend,
       verifyPassword,

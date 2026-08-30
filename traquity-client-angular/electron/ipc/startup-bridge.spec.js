@@ -13,7 +13,8 @@ const {createStartupBridge} = require('./startup-bridge.js');
 /** @import {JavaVerification} from '../java/java-version.js' */
 /** @import {RestartIntoConfiguration} from '../app/restart-into-configuration.js' */
 /** @import {StartupState} from '../window/startup-mode.js' */
-/** @import {IpcMainLike, ProgressWindowLike} from './startup-bridge.js' */
+/** @import {IpcMainLike} from './trusted-channels.js' */
+/** @import {ProgressWindowLike} from './startup-bridge.js' */
 
 describe('startupBridge', () => {
   const databasePath = 'C:\\Users\\x\\traquity';
@@ -21,6 +22,7 @@ describe('startupBridge', () => {
   const logPath = 'C:\\apps\\traquity\\traquity.log';
   const javaPath = 'C:\\jdk\\bin\\java.exe';
   const javaDownloadTarget = 'C:\\apps\\traquity\\java';
+  const javaDownloadDirectory = 'C:\\apps\\traquity';
 
   /** @type {StartupState} */
   let startupState;
@@ -48,6 +50,7 @@ describe('startupBridge', () => {
     (() => Promise.resolve(javaVerification)));
   const downloadJava = jest.fn(/** @type {(onProgress: (progress: JavaDownloadProgress) => void) => Promise<JavaDownloadResult>} */
     (() => Promise.resolve({status: 'completed', javaPath, signature: 'c2ln'})));
+  const hasEnoughFreeSpace = jest.fn(/** @type {(directory: string, requiredBytes: number) => boolean} */ (() => true));
   const quit = jest.fn();
   const isTrustedSender = jest.fn(/** @type {(event: unknown) => boolean} */ (() => true));
   const reresolveJava = jest.fn();
@@ -119,6 +122,7 @@ describe('startupBridge', () => {
       ipcMain,
       startupState: Promise.resolve(startupState),
       configFileState: 'read',
+      hasEnoughFreeSpace,
       backendProcess,
       authRegistry,
       configurationWriter,
@@ -128,6 +132,7 @@ describe('startupBridge', () => {
       javaRuntime,
       downloadJava,
       javaDownloadTarget,
+      javaDownloadDirectory,
       config,
       logPath,
       quit,
@@ -158,6 +163,7 @@ describe('startupBridge', () => {
     pickJavaBinary.mockResolvedValue(javaPath);
     verifySetting.mockResolvedValue(javaVerification);
     downloadJava.mockResolvedValue({status: 'completed', javaPath, signature: 'c2ln'});
+    hasEnoughFreeSpace.mockReturnValue(true);
     getMainWindow.mockReturnValue({webContents: {send}});
     isTrustedSender.mockReturnValue(true);
     tlsOverridden = false;
@@ -416,6 +422,24 @@ describe('startupBridge', () => {
   });
 
   describe('java:download', () => {
+    it('checks free space for the download directory against one gibibyte', async () => {
+      await handleListenerFor('java:download')(undefined);
+
+      expect(hasEnoughFreeSpace).toHaveBeenCalledTimes(1);
+      expect(hasEnoughFreeSpace).toHaveBeenCalledWith(javaDownloadDirectory, 2 ** 30);
+    });
+
+    it('fails on insufficient free space without downloading or verifying anything', async () => {
+      hasEnoughFreeSpace.mockReturnValue(false);
+
+      await expect(handleListenerFor('java:download')(undefined)).resolves.toEqual({
+        status: 'failed',
+        message: 'Not enough free disk space to download the Java runtime'
+      });
+      expect(downloadJava).not.toHaveBeenCalled();
+      expect(verifySetting).not.toHaveBeenCalled();
+    });
+
     it('answers a completed download with its path, its signature and the verification of the extracted binary', async () => {
       await expect(handleListenerFor('java:download')(undefined)).resolves.toEqual({
         status: 'completed',

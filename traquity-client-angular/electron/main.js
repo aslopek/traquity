@@ -6,6 +6,11 @@ const fs = require('fs');
 const os = require('os');
 const {createConfigFile} = require('./config/config-file.js');
 const {createAuthRegistry} = require('./config/auth-registry.js');
+const {createAiRegistry} = require('./ai/ai-registry.js');
+const {CATALOGUE} = require('./ai/catalogue.js');
+const {downloadModel} = require('./ai/model-download.js');
+const {probeMachineCapability} = require('./ai/machine-capability.js');
+const {hasEnoughFreeSpace} = require('./download/free-space.js');
 const {createConfigurationWriter} = require('./config/configuration-writer.js');
 const {createConfigureOnNextStart} = require('./config/configure-on-next-start.js');
 const {createRestartIntoConfiguration} = require('./app/restart-into-configuration.js');
@@ -13,8 +18,10 @@ const {BACKEND_PID_URL, createBackendReachability} = require('./backend/backend-
 const {createBackendProcess} = require('./backend/backend-process.js');
 const {createDatabaseDialogs} = require('./window/database-dialogs.js');
 const {createJavaDialogs} = require('./window/java-dialogs.js');
+const {createAiDialogs} = require('./window/ai-dialogs.js');
 const {createStartupMode} = require('./window/startup-mode.js');
 const {createStartupBridge} = require('./ipc/startup-bridge.js');
+const {createAiBridge} = require('./ipc/ai-bridge.js');
 const {isTrustedSender} = require('./ipc/trusted-sender.js');
 const {createMainWindow, getMainWindow} = require('./window/main-window.js');
 const {findJavaOnPath, normalizeToJavaBinary} = require('./java/java-path.js');
@@ -31,6 +38,7 @@ if (process.platform === 'darwin') {
 
 const resourcesDir = app.isPackaged ? process.resourcesPath : path.join(__dirname, '..', 'resources');
 const backendPath = path.join(resourcesDir, 'backend.jar');
+const aiNoticePath = path.join(resourcesDir, 'ai-notice.component.html');
 
 // the app's own technical input/output goes here, e.g. `traquity.config.json` and `traquity.log`
 const appDataDir = path.join(os.homedir(), 'traquity');
@@ -44,6 +52,12 @@ const configFile = createConfigFile({
 });
 const {config, state: configFileState} = configFile.load();
 const authRegistry = createAuthRegistry({configFile, config});
+const aiRegistry = createAiRegistry({
+  configFile,
+  config,
+  noticePath: aiNoticePath,
+  fileSystem: fs
+});
 const configurationWriter = createConfigurationWriter({configFile, config, authRegistry});
 const configureOnNextStart = createConfigureOnNextStart({configFile, config});
 const backendReachability = createBackendReachability({
@@ -59,6 +73,10 @@ const javaDialogs = createJavaDialogs({
   dialog,
   getParentWindow: getMainWindow,
   fileSystem: fs
+});
+const aiDialogs = createAiDialogs({
+  dialog,
+  getParentWindow: getMainWindow
 });
 // `NodeJS.ProcessEnv` is a pure index signature (`interface ProcessEnv extends Dict<string> {}`), so it is never
 // structurally assignable to named keys a boundary declares as required, as a `Pick<>` of them does - the assertion
@@ -80,6 +98,10 @@ const tlsOverridden = isTlsOverridden(process.env);
 /** @type {Promise<string | null>} */
 let javaPromise = tlsOverridden ? Promise.resolve(null) : javaRuntime.resolve();
 
+// resolved once and reused by every `ai:getState` call
+/** @type {Promise<import('./ai/machine-capability.js').MachineCapability | null>} */
+const machineCapabilityPromise = tlsOverridden ? Promise.resolve(null) : probeMachineCapability(resolveLlama);
+
 const backendProcess = createBackendProcess({
   spawn: spawnChildProcess,
   resolveJava: () => javaPromise,
@@ -87,7 +109,7 @@ const backendProcess = createBackendProcess({
   config,
   authRegistry,
   backendReachability,
-  logFileSystem: {createWriteStream: fs.createWriteStream},
+  logFileSystem: fs,
   logPath
 });
 
@@ -154,6 +176,45 @@ function downloadJava(onProgress) {
 }
 
 /**
+ * `node-llama-cpp` ships ESM-only, so this process's CommonJS `main.js` reaches it through a dynamic `import()`
+ * instead of a static `require`.
+ *
+ * @returns {Promise<import('./ai/machine-capability.js').LlamaLike>}
+ */
+async function resolveLlama() {
+  const {getLlama} = await import('node-llama-cpp');
+  // `build: 'never'` states what this app relies on instead of leaving it to a library default: the probe uses a
+  // prebuilt binary or fails, and never compiles llama.cpp
+  return getLlama({build: 'never'});
+}
+
+/**
+ * @param {import('./ai/catalogue.js').CatalogueRecord} entry
+ * @param {string} targetDirectory
+ * @param {(progress: import('./ai/model-download.js').AiDownloadProgress) => void} onProgress
+ * @returns {Promise<import('./ai/model-download.js').ModelDownloadResult>}
+ */
+function downloadAiModel(entry, targetDirectory, onProgress) {
+  return downloadModel({
+    entry,
+    targetDirectory,
+    fetch,
+    fileSystem: fs,
+    now: () => Date.now(),
+    onProgress
+  });
+}
+
+/**
+ * @param {string} directory
+ * @param {number} requiredBytes
+ * @returns {boolean}
+ */
+function checkFreeSpace(directory, requiredBytes) {
+  return hasEnoughFreeSpace(directory, requiredBytes, fs);
+}
+
+/**
  * Creates `appDataDir` if it does not exist yet, so that both `configFile.save()` and the backend's log writes have
  * somewhere to land - neither creates its own parent directory. A failure is logged rather than thrown: the write it
  * would have enabled fails on its own terms right after, through its own existing error handling.
@@ -212,6 +273,7 @@ app.on('ready', () => {
     ipcMain,
     startupState: startupStatePromise,
     configFileState,
+    hasEnoughFreeSpace: checkFreeSpace,
     backendProcess,
     authRegistry,
     configurationWriter,
@@ -221,6 +283,7 @@ app.on('ready', () => {
     javaRuntime,
     downloadJava,
     javaDownloadTarget: downloadTarget(),
+    javaDownloadDirectory: path.dirname(downloadTarget()),
     config,
     logPath,
     quit: () => app.quit(),
@@ -230,6 +293,18 @@ app.on('ready', () => {
     reresolveJava: () => {
       javaPromise = javaRuntime.resolve();
     }
+  }).register();
+  createAiBridge({
+    ipcMain,
+    aiRegistry,
+    catalogue: CATALOGUE,
+    aiDialogs,
+    downloadModel: downloadAiModel,
+    hasEnoughFreeSpace: checkFreeSpace,
+    getMachineCapability: () => machineCapabilityPromise,
+    getMainWindow,
+    tlsOverridden,
+    isTrustedSender: (event) => isTrustedSender(event, getMainWindow())
   }).register();
   createMainWindow();
 });

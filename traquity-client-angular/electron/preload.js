@@ -10,8 +10,8 @@ const {contextBridge, ipcRenderer} = require('electron');
 
 // Channel names are literals here on purpose: a sandboxed preload's `require` is a limited polyfill that resolves
 // `electron` and a handful of Node built-ins only - it cannot require a module of this app, so `ipc/` cannot be
-// shared with it. All eleven request/response literals plus the two one-way channels and the one push channel are
-// duplicated in `ipc/startup-bridge.js`:
+// shared with it. The eleven request/response channels below plus the two one-way channels and
+// `java:downloadProgress` are duplicated against `ipc/startup-bridge.js`:
 //   - `startup:getState`
 //   - `backend:start`
 //   - `auth:verify`
@@ -101,4 +101,53 @@ contextBridge.exposeInMainWorld('traquity', {
 
   /** @returns {void} */
   quit: () => ipcRenderer.send('app:quit')
+});
+
+/** @import {AiActivateOutcome, AiRemoveOutcome} from './ai/ai-registry.js' */
+/** @import {AiDownloadProgress} from './ai/model-download.js' */
+/** @import {AiDownloadOutcome, AiGetStateResult} from './ipc/ai-bridge.js' */
+
+// The five request/response channels below plus `ai:downloadProgress` are duplicated against `ipc/ai-bridge.js`:
+//   - `ai:getState`
+//   - `ai:confirm`
+//   - `ai:download`
+//   - `ai:remove`
+//   - `ai:activate`
+//   - `ai:downloadProgress` (push, main -> renderer)
+// The manual checklist (`electron/LLM.md`) is what keeps the two copies in step.
+contextBridge.exposeInMainWorld('traquityAi', {
+  /** @returns {Promise<AiGetStateResult>} */
+  getAiState: () => ipcRenderer.invoke('ai:getState'),
+
+  /** @returns {Promise<void>} */
+  confirmAiNotice: () => ipcRenderer.invoke('ai:confirm'),
+
+  /**
+   * @param {string} key
+   * @returns {Promise<AiDownloadOutcome>}
+   */
+  downloadModel: (key) => ipcRenderer.invoke('ai:download', key),
+
+  /**
+   * @param {string} key
+   * @returns {Promise<AiRemoveOutcome>}
+   */
+  removeModel: (key) => ipcRenderer.invoke('ai:remove', key),
+
+  /**
+   * @param {string} key
+   * @returns {Promise<AiActivateOutcome>}
+   */
+  activateModel: (key) => ipcRenderer.invoke('ai:activate', key),
+
+  /**
+   * @param {(progress: AiDownloadProgress) => void} listener
+   * @returns {() => void} unsubscribes the listener
+   */
+  onAiDownloadProgress: (listener) => {
+    /** @param {unknown} _event @param {AiDownloadProgress} progress */
+    const wrapped = (_event, progress) => listener(progress);
+    ipcRenderer.on('ai:downloadProgress', wrapped);
+    return () => ipcRenderer.removeListener('ai:downloadProgress', wrapped);
+  }
 });
