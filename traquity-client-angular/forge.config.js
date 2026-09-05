@@ -60,14 +60,19 @@ module.exports = {
             const backendSrc = path.join(__dirname, '..', 'traquity-server-spring', 'target', fileName);
             const resources = path.join(__dirname, 'resources');
 
-          // the ai:confirm/ai:getState handlers hash this exact resource, so it has to be the same bytes as the
+            // the ai:confirm/ai:getState handlers hash this exact resource, so it has to be the same bytes as the
             // template AiNoticeComponent compiles from - copying the original html to rule out any drifting
-          const aiNoticeSrc = path.join(__dirname, 'src', 'settings', 'ai', 'ai-notice', 'ai-notice.component.html');
+            const aiNoticeSrc = path.join(__dirname, 'src', 'settings', 'ai', 'ai-notice', 'ai-notice.component.html');
+
+            // the packaged layers of the system prompt resolution: one directory per usecase, resolved against
+            // process.resourcesPath at runtime
+            const promptsSrc = path.join(__dirname, 'prompts');
 
             rimrafSync(resources);
             fs.mkdirSync(resources);
-          fs.cpSync(backendSrc, path.join(resources, 'backend.jar'));
-          fs.cpSync(aiNoticeSrc, path.join(resources, 'ai-notice.component.html'));
+            fs.cpSync(backendSrc, path.join(resources, 'backend.jar'));
+            fs.cpSync(aiNoticeSrc, path.join(resources, 'ai-notice.component.html'));
+            fs.cpSync(promptsSrc, path.join(resources, 'prompts'), {recursive: true});
         }
     },
     packagerConfig: {
@@ -81,7 +86,7 @@ module.exports = {
       },
         icon: 'src/assets/icon',
         ...(process.platform === 'linux' ? {executableName: 'traquity'} : {}),
-      extraResource: ['resources/backend.jar', 'resources/ai-notice.component.html'],
+        extraResource: ['resources/backend.jar', 'resources/ai-notice.component.html', 'resources/prompts'],
         ignore: filePath => !isPackaged(filePath)
     },
     rebuildConfig: {},

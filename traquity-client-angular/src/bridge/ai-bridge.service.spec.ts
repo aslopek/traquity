@@ -4,6 +4,8 @@ import {
   AiActivateOutcome,
   AiDownloadOutcome,
   AiDownloadProgress,
+  AiExtractionOutcome,
+  AiExtractionRequest,
   AiRemoveOutcome,
   ElectronAiState,
   TraQuityAiBridge
@@ -14,6 +16,7 @@ import {BridgeHost} from './bridge-host.token';
 type GetAiState = () => Promise<ElectronAiState>;
 type ConfirmAiNotice = () => Promise<void>;
 type DownloadModel = (key: string) => Promise<AiDownloadOutcome>;
+type ExtractTransaction = (request: AiExtractionRequest) => Promise<AiExtractionOutcome>;
 type RemoveModel = (key: string) => Promise<AiRemoveOutcome>;
 type ActivateModel = (key: string) => Promise<AiActivateOutcome>;
 type OnAiDownloadProgress = (listener: (progress: AiDownloadProgress) => void) => () => void;
@@ -26,6 +29,9 @@ describe('AiBridgeService', (): void => {
   let getAiState: jest.Mock<GetAiState>;
   let confirmAiNotice: jest.Mock<ConfirmAiNotice>;
   let downloadModel: jest.Mock<DownloadModel>;
+  let extractTransaction: jest.Mock<ExtractTransaction>;
+  let extractionOutcome: AiExtractionOutcome;
+  let extractionRequest: AiExtractionRequest;
   let removeModel: jest.Mock<RemoveModel>;
   let activateModel: jest.Mock<ActivateModel>;
   let onAiDownloadProgress: jest.Mock<OnAiDownloadProgress>;
@@ -46,7 +52,10 @@ describe('AiBridgeService', (): void => {
 
     getAiState = jest.fn<GetAiState>(() => Promise.resolve(aiState));
     confirmAiNotice = jest.fn<ConfirmAiNotice>(() => Promise.resolve());
+    extractionOutcome = {status: 'failed', message: 'The model qwen-4b is not installed.'};
+    extractionRequest = {document: 'Kurswert | 1700.00 EUR', currency: 'EUR', modelKey: 'qwen-4b'};
     downloadModel = jest.fn<DownloadModel>(() => Promise.resolve(downloadOutcome));
+    extractTransaction = jest.fn<ExtractTransaction>(() => Promise.resolve(extractionOutcome));
     removeModel = jest.fn<RemoveModel>(() => Promise.resolve(removeOutcome));
     activateModel = jest.fn<ActivateModel>(() => Promise.resolve(activateOutcome));
     unsubscribeAiDownloadProgress = jest.fn<() => void>();
@@ -56,6 +65,7 @@ describe('AiBridgeService', (): void => {
       getAiState,
       confirmAiNotice,
       downloadModel,
+      extractTransaction,
       removeModel,
       activateModel,
       onAiDownloadProgress
@@ -105,6 +115,20 @@ describe('AiBridgeService', (): void => {
     expect(downloadModel).toHaveBeenCalledTimes(1);
     expect(downloadModel).toHaveBeenCalledWith('model-a');
     expect(outcome).toBe(downloadOutcome);
+  });
+
+  it('does not call the bridge before subscription for extractTransaction', (): void => {
+    service.extractTransaction(extractionRequest);
+
+    expect(extractTransaction).not.toHaveBeenCalled();
+  });
+
+  it('extracts a transaction through the bridge with the given request', async (): Promise<void> => {
+    const outcome: AiExtractionOutcome = await firstValueFrom(service.extractTransaction(extractionRequest));
+
+    expect(extractTransaction).toHaveBeenCalledTimes(1);
+    expect(extractTransaction).toHaveBeenCalledWith(extractionRequest);
+    expect(outcome).toBe(extractionOutcome);
   });
 
   it('does not call the bridge before subscription for removeModel', (): void => {
@@ -176,6 +200,7 @@ describe('AiBridgeService', (): void => {
       ['getState', (): unknown => firstValueFrom(service.getState())],
       ['confirmNotice', (): unknown => firstValueFrom(service.confirmNotice())],
       ['downloadModel', (): unknown => firstValueFrom(service.downloadModel('model-a'))],
+      ['extractTransaction', (): unknown => firstValueFrom(service.extractTransaction(extractionRequest))],
       ['removeModel', (): unknown => firstValueFrom(service.removeModel('model-a'))],
       ['activateModel', (): unknown => firstValueFrom(service.activateModel('model-a'))],
       ['downloadProgress$', (): unknown => firstValueFrom(service.downloadProgress$)]

@@ -1,4 +1,4 @@
-const {aiModelKeySchema} = require('./ipc-schema.js');
+const {aiExtractionRequestSchema, aiModelKeySchema} = require('./ipc-schema.js');
 const {createTrustedChannels} = require('./trusted-channels.js');
 const {verdictsFor} = require('../ai/machine-capability.js');
 
@@ -8,6 +8,7 @@ const {verdictsFor} = require('../ai/machine-capability.js');
 /** @import {AiDownloadProgress, ModelDownloadResult} from '../ai/model-download.js' */
 /** @import {CatalogueRecord} from '../ai/catalogue.js' */
 /** @import {MachineCapability, ModelVerdict} from '../ai/machine-capability.js' */
+/** @import {TransactionExtractionOutcome} from '../ai/transaction-extraction/transaction-extractor.js' */
 
 /**
  * Registers the `ai:*` IPC channels. `ai:downloadProgress` is the one push this module makes into the renderer, sent
@@ -21,6 +22,9 @@ const {verdictsFor} = require('../ai/machine-capability.js');
  *
  * `ai:getState` writes nothing: it merges `aiRegistry.getState()` with a machine capability verdict per catalogue
  * entry, derived fresh from `getMachineCapability()` on every call and never persisted.
+ *
+ * `ai:extractTransaction` writes nothing: it validates the request and hands it on, and every decision about models, prompts and grammars
+ * is made behind `extractTransaction`.
  *
  * A TLS-overridden environment registers none of these channels: "nothing can be done" is then enforced by
  * architecture instead of left to each handler to refuse.
@@ -62,6 +66,8 @@ const {verdictsFor} = require('../ai/machine-capability.js');
  *   Promise<ModelDownloadResult>} downloadModel
  * @property {(directory: string, requiredBytes: number) => boolean} hasEnoughFreeSpace
  * @property {() => Promise<MachineCapability | null>} getMachineCapability
+ * @property {(modelKey: string, document: string, currency: string) =>
+ *   Promise<TransactionExtractionOutcome>} extractTransaction
  * @property {() => ProgressWindowLike | null} getMainWindow
  * @property {boolean} tlsOverridden
  * @property {(event: unknown) => boolean} isTrustedSender whether an IPC event's sender may be served at all
@@ -83,6 +89,7 @@ function createAiBridge(options) {
     downloadModel,
     hasEnoughFreeSpace,
     getMachineCapability,
+    extractTransaction,
     getMainWindow,
     tlsOverridden,
     isTrustedSender
@@ -160,6 +167,15 @@ function createAiBridge(options) {
       } finally {
         downloading = false;
       }
+    });
+
+    handle('ai:extractTransaction', async (_event, request) => {
+      const parsedRequest = aiExtractionRequestSchema.safeParse(request);
+      if (!parsedRequest.success) {
+        throw new Error('Invalid request argument for ai:extractTransaction');
+      }
+      const {modelKey, document, currency} = parsedRequest.data;
+      return extractTransaction(modelKey, document, currency);
     });
 
     handle('ai:remove', async (_event, key) => {

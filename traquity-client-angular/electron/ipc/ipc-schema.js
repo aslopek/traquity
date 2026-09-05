@@ -37,6 +37,18 @@ const MAXIMUM_AI_KEY_LENGTH = 64;
 
 const aiModelKeySchema = z.string().min(1).max(MAXIMUM_AI_KEY_LENGTH);
 
+/**
+ * The longest extracted document an extraction request may carry, measured in UTF-16 code units.
+ * @type {number}
+ */
+const MAXIMUM_AI_DOCUMENT_LENGTH = 2 ** 18;
+
+const aiExtractionRequestSchema = z.strictObject({
+  document: z.string().min(1).max(MAXIMUM_AI_DOCUMENT_LENGTH),
+  currency: z.string().regex(/^[A-Z]{3}$/),
+  modelKey: aiModelKeySchema
+});
+
 module.exports = {
   backendStartPasswordSchema,
   authVerifyPasswordSchema,
@@ -45,6 +57,8 @@ module.exports = {
   configurationChangesSchema,
   javaSettingSchema,
   aiModelKeySchema,
+  aiExtractionRequestSchema,
   MAXIMUM_PASSWORD_LENGTH,
-  MAXIMUM_PATH_LENGTH
+  MAXIMUM_PATH_LENGTH,
+  MAXIMUM_AI_DOCUMENT_LENGTH
 };

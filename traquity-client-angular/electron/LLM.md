@@ -34,6 +34,25 @@ electron/
                                 picked directory, staged then renamed. Validates sha256 digest after download
     machine-capability.js       probes the GPU backend and VRAM `node-llama-cpp` reports and derives a per-catalogue-entry
                                 verdict from it, fresh on every read and never persisted
+    prompt-resolver.js          the system prompt for a (usecase, model) pair, out of four layers - two overrides on
+                                disk and two packaged - with the layer that answered as part of the result
+    transaction-extraction/
+      printed-number.js         one printed word read into the notation an answer uses, whichever notation the page
+                                states it in and whichever separator groups its thousands and separates decimal places
+      transaction-extraction.js the document-extraction usecase: the literals a page prints, the grammar generated
+                                from them, the message the model reads, the schema its answer is parsed with, and
+                                the one ISIN a page names, read off it instead of asked of the model
+      transaction-extractor.js  one transaction out of one document: model by key, prompt by layer, grammar by
+                                document, ISIN by document, answer by schema; a request runs to an outcome, with
+                                no cancellation
+    local-inference.js          the one place a model is loaded and prompted, in the main process itself
+    inference-lock.js           one generation at a time across every usecase: wraps a run and refuses, never
+                                queues, whatever arrives while one is in flight
+    context-size.js             how large a context one generation needs, and whether the model can hold one
+    response-text.js            the text of a generation, taken from every part of it, segments included
+  logging/
+    log-file.js                one entry at a time into `traquity.log`, appended synchronously so entries from
+                               several sources keep the order they happened in
   download/                    mechanics shared by every streamed download in this app, agnostic of what is being
                                downloaded and of how a completed one is verified, if at all
     byte-cap-transform.js      a stream `Transform` that ends the pipeline once a byte cap is passed, enforced
@@ -108,11 +127,12 @@ from the main process into the renderer:
 - `app:quit` (one-way)
 - `java:downloadProgress` (push, main → renderer)
 
-The channels `ipc/ai-bridge.js` registers — five request/response via `ipcMain.handle`, one push from the main process into the renderer:
+The channels `ipc/ai-bridge.js` registers — six request/response via `ipcMain.handle`, one push from the main process into the renderer:
 
 - `ai:getState`
 - `ai:confirm`
 - `ai:download`
+- `ai:extractTransaction`
 - `ai:remove`
 - `ai:activate`
 - `ai:downloadProgress` (push, main → renderer)
@@ -120,6 +140,87 @@ The channels `ipc/ai-bridge.js` registers — five request/response via `ipcMain
 `preload.js` exposes these two channel sets as separate `contextBridge` globals, `window.traquity` and `window.traquityAi`.
 
 Keep this map current as new channels land — it is what a reader starts from.
+
+## Running a model
+
+Everything under `ai/` and outside `transaction-extraction/` is usecase-agnostic, and deliberately so: the catalogue, the registry and the
+download are about models alone, `ai/prompt-resolver.js` takes the usecase as a parameter, and `ai/local-inference.js` is the one place a
+model is loaded and prompted at all. What a usecase contributes on top of that is three things — a packaged prompt directory
+(`prompts/<usecase>/`, a `default.md` plus a `<modelKey>.md` for each model that measurably needs one — `architecture/ai.md` ADR-010, and
+transaction extraction currently needs none), the grammar its answer decodes under (if needed), and the schema that answer
+is parsed with. A second usecase therefore leaves every module named in this section untouched. `ai/transaction-extraction/` is the first
+one and further usecases get their own subdirectory.
+
+What `node-llama-cpp` itself reports goes to `traquity.log`, through the `logger`.
+
+A few things about running a model are not obvious and expensive to find, so they are written down here:
+
+- **Only one generation runs at a time, and the lock is per process, never per usecase.** The machine holds the weights of one model at a
+  time, so what a second request was going to ask is irrelevant — a document extraction and a question put to the assistant exclude
+  each other exactly as two extractions do. `ai/inference-lock.js` is where that is decided, wired in `main.js` once around
+  `ai/local-inference.js`'s `run`; a usecase is handed the lock's `run` and never the raw one, which is what keeps the rule from being one
+  flag per usecase. A refused request rejects with a sentence a screen can show, so a usecase already reporting what a failing run said
+  reports this without a branch of its own. Nothing queues: a generation holds a model and a context for seconds to minutes.
+- **A model is loaded in the main process, not in a utility process.** `node-llama-cpp` tests a GPU-enabled binary in a child process before
+  loading it (on Windows, whenever the binary is not CPU-only) and picks how to fork by runtime: under Electron it asks for
+  `utilityProcess`, and otherwise falls back to `child_process.fork`, which starts `process.execPath`. Both halves of that go wrong
+  inside a utility process - it reports itself as Electron, since `process.versions.electron` is set, while the `electron` module it can
+  reach carries `net` and `systemPreferences` and no `utilityProcess` - so it takes the fallback. In a packaged build `process.execPath` is
+  this app's own executable, which loads the app out of `app.asar` and ignores the script argument: the fork starts a second TraQuity, whose
+  `app.on('ready')` puts a window on screen and runs `removePreviousLog()` over the log of the run in progress. From the main process the
+  same code finds `utilityProcess` and forks a Chromium child, which is why `ai/local-inference.js` runs where it does — measured at zero
+  `child_process.fork` calls there, against one per generation from a utility process. See `architecture/ai.md` ADR-007 for the trade that
+  buys, and nothing in the suite can catch a regression: it shows up as a flashing window on a packaged run.
+- **A thinking model's answer is not in `responseText`.** The chat wrapper for such a model force-opens a thought segment before the first
+  generated token, and the plain response text leaves segments out. Under a grammar every token belongs to the answer, so the whole answer
+  lands in that segment and `responseText` is the empty string - which a usecase sees as a model that answered nothing at all.
+  `ai/response-text.js` is what the answer is read through for that reason, and `promptWithMeta` is what it is called on to get the parts at
+  all.
+- **The context is sized to the prompt, and the layer split follows from it.** Left to itself the library fills the VRAM with model layers
+  and sizes the context into whatever is left, which for a large model on a modest card is a context far below the prompt it was handed.
+  So `ai/local-inference.js` counts the prompt's tokens first — through a `vocabOnly` load, which reads the tokenizer out of the same file
+  without a single weight tensor — asks `ai/context-size.js` how large a context that needs, and passes it to `loadModel` as
+  `gpuLayers: {fitContext: {contextSize}}`, so a long prompt moves layers to the CPU instead of losing its own text. The context is then
+  pinned to exactly that size: one that merely almost fits shifts the top of the prompt back out of the window, and answers confidently
+  from what is left. A size beyond what the model was trained on is refused with a message naming both numbers.
+- **`fitContext` is an estimate, and it comes out short.** It is answered against the VRAM free at that moment, on a card also holding a
+  window, a renderer and whatever else the machine is doing, so `createContext` can still fail with an `InsufficientMemoryError` for the
+  very size `loadModel` was asked to leave room for. So the failure is retried against `ai/context-size.js`'s `gpuLayerLadder`, which walks
+  down in fifths from the count the library actually chose and ends at nothing on the GPU. The context size never moves — it is what the
+  prompt dictates; the placement is what gives.
+- **The weights are released by `dispose`, and by nothing else.** The `finally` blocks in `ai/local-inference.js` around the context and the
+  model are the only thing that returns gigabytes to the machine, in a process that outlives every generation. A path added there that
+  leaves either undisposed leaks for the rest of the run.
+
+## Transaction extraction
+
+One transaction read out of one already-parsed broker document, served by `ai:extractTransaction` and implemented under
+`ai/transaction-extraction/` plus `prompts/transaction-extraction/`. Everything in this section is about that usecase.
+
+`ai:extractTransaction` is one channel that runs a model. It takes an **already extracted** document — the renderer parses the PDF itself
+(`architecture/ai.md` ADR-008) — plus the currency the amounts are to be read in and the catalogue key of the model to use. Behind it,
+`ai/transaction-extraction/transaction-extractor.js` resolves the prompt and the model, generates the grammar for that document and hands
+the request to `ai/local-inference.js`; nothing about it is written to `traquity.config.json`.
+
+Its failures are the ones a user cannot debug from the screen: `The model did not answer with a transaction.` is one sentence covering an
+answer that was not JSON and an answer the schema rejected. So the whole run is written to `traquity.log` instead — the document text, the
+generated grammar, which prompt layer answered, the raw answer, the precise parse failure, and which `stopReason` ended the generation
+(`maxTokens` being the one that explains truncated JSON).
+
+Two things about this usecase are not obvious and expensive to find:
+
+**The ISIN is read off the document and is no part of the answer** (`architecture/ai.md` ADR-013). `isinOf` matches the shape alone and
+states the match only where there is exactly one; a page with none and a page with several both yield no ISIN.
+So the grammar has no `isin` rule, the answer schema no `isin` key and the packaged prompts no ISIN instruction, and a change that puts one
+back has to say what the model would be selecting between. The rule this follows is the general one: a field needing no judgement about the
+page is read here, and every field a page prints several candidates for stays the model's.
+
+**A grammar literal and the prompt's reading rule are one decision made in two files.** The alternation a field decodes under is built from
+what `ai/transaction-extraction/printed-number.js` reads off the page, and the prompt tells the model how to read the very same words. Where
+the two disagree the model cannot state what it read, and a constrained decode does not fail for it: the alternation admits the other
+numbers of the page, so an order number is emitted as the quantity and the answer parses. That is why a page printing `Stück 0,55814` needs
+both the reader to keep five decimals and the prompt to stop saying two, and why neither the literal notation nor the reading rule in
+`prompts/transaction-extraction/*.md` moves alone. A missing literal is never a refusal - it is a wrong value.
 
 ## Boot order
 

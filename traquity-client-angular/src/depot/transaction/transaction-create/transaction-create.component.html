@@ -3,7 +3,39 @@
                    title="Add Transaction">
 </app-title-toolbar>
 
-<div class="content">
+<div (filesDropped)="importFile($event)"
+     [fileDropDisabled]="!importStore.canImport()"
+     appFileDrop
+     class="content">
+    @if (bridgeAvailable) {
+        <div class="import-row">
+            <input #pdfUpload
+                   (change)="selectPdf($event)"
+                   accept="application/pdf,.pdf"
+                   class="file-input"
+                   type="file">
+            <button (click)="pdfUpload.click()"
+                    [disabled]="!importStore.canImport()"
+                    color="primary"
+                    mat-stroked-button>
+                Import PDF
+            </button>
+            @if (importStore.canImport()) {
+                <span class="import-hint">or drop a PDF here</span>
+            } @else if (!importStore.busy()) {
+                <span class="import-hint disabled">AI is switched off — enable it in Settings</span>
+            }
+        </div>
+
+        @if (importStore.busy()) {
+            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        }
+
+        @if (importStore.message(); as message) {
+            <p class="import-message {{ message.kind }}">{{ message.text }}</p>
+        }
+    }
+
     <form class="wrapper-column">
         <div class="wrapper-row">
             <mat-form-field class="transaction-type-select">
@@ -107,7 +139,7 @@
     </form>
 
     <button (click)="createTransaction()"
-            [disabled]="!formValid()"
+            [disabled]="!formValid() || importStore.busy()"
             class="form-button"
             color="primary"
             mat-flat-button>

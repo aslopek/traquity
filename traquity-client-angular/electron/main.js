@@ -7,6 +7,10 @@ const os = require('os');
 const {createConfigFile} = require('./config/config-file.js');
 const {createAuthRegistry} = require('./config/auth-registry.js');
 const {createAiRegistry} = require('./ai/ai-registry.js');
+const {createPromptResolver} = require('./ai/prompt-resolver.js');
+const {createLocalInference} = require('./ai/local-inference.js');
+const {createInferenceLock} = require('./ai/inference-lock.js');
+const {createTransactionExtractor} = require('./ai/transaction-extraction/transaction-extractor.js');
 const {CATALOGUE} = require('./ai/catalogue.js');
 const {downloadModel} = require('./ai/model-download.js');
 const {probeMachineCapability} = require('./ai/machine-capability.js');
@@ -31,6 +35,7 @@ const {downloadCorretto, downloadTarget, resolveTarPath} = require('./java/corre
 const {verifyDetachedSignature} = require('./java/corretto-signature.js');
 const {CORRETTO_PUBLIC_KEY} = require('./java/corretto-public-key.js');
 const {isTlsOverridden} = require('./security/tls-override.js');
+const {createLogFile} = require('./logging/log-file.js');
 
 if (process.platform === 'darwin') {
   process.chdir(path.resolve(process.argv0, '..', '..', '..', '..'));
@@ -39,12 +44,14 @@ if (process.platform === 'darwin') {
 const resourcesDir = app.isPackaged ? process.resourcesPath : path.join(__dirname, '..', 'resources');
 const backendPath = path.join(resourcesDir, 'backend.jar');
 const aiNoticePath = path.join(resourcesDir, 'ai-notice.component.html');
+const packagedPromptsDir = path.join(resourcesDir, 'prompts');
 
 // the app's own technical input/output goes here, e.g. `traquity.config.json` and `traquity.log`
 const appDataDir = path.join(os.homedir(), 'traquity');
 ensureAppDataDir();
 
 const logPath = path.join(appDataDir, 'traquity.log');
+const logFile = createLogFile({fileSystem: fs, logPath});
 
 const configFile = createConfigFile({
   fileSystem: fs,
@@ -57,6 +64,24 @@ const aiRegistry = createAiRegistry({
   config,
   noticePath: aiNoticePath,
   fileSystem: fs
+});
+const promptResolver = createPromptResolver({
+  overrideDirectory: path.join(appDataDir, 'ai', 'prompts'),
+  packagedDirectory: packagedPromptsDir,
+  fileSystem: fs
+});
+const localInference = createLocalInference({
+  resolveLlama,
+  isOutOfMemory,
+  log: logFile.write
+});
+// every usecase runs the model through this one lock, so a request of any kind refuses one of any other kind
+const inferenceLock = createInferenceLock({runInference: localInference.run, log: logFile.write});
+const transactionExtractor = createTransactionExtractor({
+  promptResolver,
+  aiRegistry,
+  runInference: inferenceLock.run,
+  log: logFile.write
 });
 const configurationWriter = createConfigurationWriter({configFile, config, authRegistry});
 const configureOnNextStart = createConfigureOnNextStart({configFile, config});
@@ -179,13 +204,34 @@ function downloadJava(onProgress) {
  * `node-llama-cpp` ships ESM-only, so this process's CommonJS `main.js` reaches it through a dynamic `import()`
  * instead of a static `require`.
  *
- * @returns {Promise<import('./ai/machine-capability.js').LlamaLike>}
+ * @returns {Promise<import('node-llama-cpp', {with: {'resolution-mode': 'import'}}).Llama>}
  */
 async function resolveLlama() {
   const {getLlama} = await import('node-llama-cpp');
   // `build: 'never'` states what this app relies on instead of leaving it to a library default: the probe uses a
   // prebuilt binary or fails, and never compiles llama.cpp
-  return getLlama({build: 'never'});
+  return getLlama({
+    build: 'never',
+    // what the library reports about a model goes to this process's stdout otherwise, which a packaged app has
+    // nowhere to show
+    logger: (level, message) => logFile.write(`[node-llama-cpp] ${level}: ${message}`)
+  });
+}
+
+/**
+ * Whether a failure was memory refusing an allocation. The class is the library's own, so it is reached where the
+ * library is, and a failure to reach it answers `false` - a failure that cannot be classified is not retried.
+ *
+ * @param {unknown} error
+ * @returns {Promise<boolean>}
+ */
+async function isOutOfMemory(error) {
+  try {
+    const {InsufficientMemoryError} = await import('node-llama-cpp');
+    return error instanceof InsufficientMemoryError;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -302,6 +348,7 @@ app.on('ready', () => {
     downloadModel: downloadAiModel,
     hasEnoughFreeSpace: checkFreeSpace,
     getMachineCapability: () => machineCapabilityPromise,
+    extractTransaction: transactionExtractor.extract,
     getMainWindow,
     tlsOverridden,
     isTrustedSender: (event) => isTrustedSender(event, getMainWindow())

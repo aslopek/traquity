@@ -232,27 +232,25 @@ up, its outcome feeds that screen's own `javaValid` gate, and it re-derives from
 - `downloadErrors` is arguable — losing it on navigation would be defensible. It stays because it is keyed by catalogue key and cleared by
   the reducer that starts a download.
 
-## ADR-007: Inference runs in a child process, one request at a time, run to an outcome
+## ADR-007: Inference runs in the main process, one request at a time, run to an outcome
 
 **Status:** accepted
 
 **Context.** ADR-005 already loads `node-llama-cpp` in the main process for the capability probe, which reads no weights and allocates no
-context. Running a generation there is a different proposition: it is seconds to minutes of work on the event loop that owns the window, the
-config file and the backend spawn. A prompt evaluation alone takes 5–10 s on a warm GPU, and a partially offloaded model has been measured
-at 53–100 s per answer.
+context. Running a generation is a different proposition: it is seconds to minutes of work on the event loop that owns the window, the
+config file and the backend spawn.
 
-**Decision.** A model is loaded and prompted in a `utilityProcess` the main process spawns, never inline on the main process and never in
-the renderer. One model is loaded at a time: loading another unloads the current one, and an idle timeout unloads it entirely. A second
-request while one is running is rejected with that as the reason.
+**Decision.** A model is loaded and prompted in the main process, and never in the renderer. One model is loaded at a time: a request loads
+it, and the answer is followed by disposing the context and the model, so nothing stays resident between two documents and no idle timer has
+to decide when to unload. A second request while one is running is rejected.
 
-**No cancel**, for the reason ADR-003 already gives for a download: a teardown path through the child, the request and the caller's state
-buys back a wait the caller can simply sit out. An abandoned generation costs the user the seconds it had left; nothing is written either
-way, so there is no partial state to unwind.
+**No cancel**, for the reason ADR-003 already gives for a download: a teardown path through the generation, the request and the caller's
+state buys back a wait the caller can simply sit out.
 
 **Every request names its model by catalogue key.** The caller sends the key, never a path and never nothing; the main process resolves it
 through `ai-registry.js`, which already answers a key with the config's entry and **checks only that a file exists at that path** — what the
 bytes there are is not its question. That check is the whole validation a request performs. The digest was verified once, at download time
-(ADR-003), and re-hashing 1.3–6.2 GB on the way into every extraction would cost seconds to answer a question already answered.
+(ADR-003), and re-hashing 1.3–6.2 GB on the way into every extraction would cost seconds for each prompt.
 
 **Why the key and not the process's own idea of "the active model".** ADR-002 makes the active flag hand-editable and explicitly declines to
 resolve more than one active entry, leaving the renderer to pick one when the config is ingested. A request carrying the key keeps that one
@@ -262,16 +260,33 @@ pointing one usecase at a different key needs no new channel, no config shape an
 **Why not the renderer.** Prompt resolution (ADR-010), the grammar (ADR-011) and the model's lifetime need one owner, and the weights sit on
 a disk path the renderer has no business reading. The renderer stays a bridge client, as ADR-004 already has it for model management.
 
+**Alternatives declined.**
+
+- *A `utilityProcess` the main process spawns.* This was the decision first taken and rejected: It starts a second copy of the application
+  per extraction in a packaged build, with a window and a wiped log.
+- *A `utilityProcess`, with the library's fork patched.* A stand-in for the binary test's four-message exchange, pinned to the version's
+  internals, was built and worked. Declined as a thing to carry: nothing checks it against an upgrade, and it silently disables a crash
+  guard.
+- *A `utilityProcess`, with a single-instance guard.* The second copy would quit before showing a window, but the binary test then fails,
+  and a failed test makes `getLlama` skip the whole CUDA candidate and fall back to a slower backend. It trades a visible flicker for a
+  silent loss of GPU acceleration.
+
 **Consequences.**
 
-- One request/response channel per usecase, each through `ipc/trusted-sender.js` with a bounded `ipc/ipc-schema.js` entry like the rest. The
-  model key is one of the bounded arguments, and `aiModelKeySchema` already exists for it.
-- A key with no entry, or an entry whose file has gone, is a failed request naming that as the reason. It is the same state a removed or
-  hand-moved model already produces everywhere else, so nothing new has to model it.
+- One request/response channel per usecase, each through `ipc/trusted-sender.js` with a bounded `ipc/ipc-schema.js` entry. The model key is
+  one of the bounded arguments, and `aiModelKeySchema` already exists for it.
+- A key with no entry, or an entry whose file has gone, is a failed request. It is the same state a removed or hand-moved model already
+  produces everywhere else, so nothing new has to model it.
 - The key also picks the model-specific prompt layer (ADR-010), so one argument decides both the weights and the prompt.
 - A cold load costs seconds to tens of seconds, so the bridge distinguishes **loading** from **generating**; a caller that cannot tell them
   apart shows a wait that reads as a hang.
-- A crash or a hang in the child kills a process that holds nothing: the window stays up and the failure is reportable.
+- **A crash in the native binding takes the application down**, where a child process would have absorbed it and left the failure
+  reportable. This is the price of the decision. The binary test that guards against it now runs the way the library intends, which is what
+  makes the exposure acceptable.
+- **The weights are released by `dispose` and by nothing else.** A process ending used to do it 'for free'. The `finally` blocks around the
+  context and the model are now the only thing returning gigabytes to a process that outlives every extraction.
+- The measurement is a property of the library, not of this application. A version that moves evaluation onto the JavaScript thread
+  invalidates the premise, and the symptom would be a main process that stops answering IPC for the length of a generation.
 
 ## ADR-008: PDF parsing runs in the renderer
 
@@ -289,8 +304,7 @@ into an IPC result type, a schema entry and an error string threaded back throug
 
 **Alternatives declined.**
 
-- *Parsing in the inference process (ADR-007).* It buys process isolation for the parse and costs the error handling above. The isolation is
-  also less than it looks: that child is a Node process with ambient file-system and spawn access, so it is not a sandbox either.
+- *Parsing where inference runs (ADR-007).* It buys the parse whatever isolation that process has and costs the error handling.
 - *Parsing in a Java library.* Puts the extraction on the far side of an HTTP boundary from the model that consumes it, for no gain, and
   contradicts ADR-004's "no AI surface in the backend".
 
@@ -377,7 +391,8 @@ must be versioned with the release.
   someone edited, breaks that. The resolver therefore treats "no layer answered" as a failed request naming the usecase whose prompt is
   missing, and never runs the model on an empty system prompt: a wrong answer produced with no instructions is worse than a stated failure.
 - `default.md` is the file that wins on the most models, and a `<model>.md` exists only where it earns points on that model. One is deleted
-  when it stops costing the others anything.
+  when it stops costing the others anything. Transaction extraction ships none: measured after ADR-013, the 2B scored higher on the shared
+  `default.md` (44 %) than on the file that had been written for it (37 %), so `qwen-2b.md` was removed.
 - Renaming a catalogue key (ADR-002) orphans any model-specific override for it. Layer 2 or 4 then answers, so behavior stays correct and
   the file silently stops being consulted — which is why the app must be able to report **which layer resolved** a given request. The
   failure mode of an override is forgetting one is in place and debugging the wrong prompt.
@@ -418,5 +433,57 @@ result is wanted in; lines in any other currency are not extracted.
 - **The extractor becomes the ceiling.** A value ADR-009 missed is a value the model cannot emit. That is the right trade — a missing field
   shown as empty beats a plausible invented one — but it makes extractor coverage another bottleneck.
 - One invocation per document costs nothing: no cross-document state, no context pressure, graceful degradation on weaker models.
-- Where a target type carries one summed field, the model is asked for the sum and not for the lines. That is safe only because of the
-  currency rule above; without it, the foreign-currency duplicate of a tax line enters the total.
+- Where a target type carries one summed field, the model states the lines it attributes to that field and `transaction-extraction.js` adds
+  them up. Asking for the sum instead was measured at 65-71% against 91-100% for every field the model merely selects. The lines are safe to
+  collect only because of the currency rule above; without it, the foreign-currency duplicate of a tax line enters the total.
+
+## ADR-012: A changed system prompt releases as a patch, the first prompt for a usecase as a minor
+
+**Status:** accepted
+
+**Context.** ADR-010 makes prompts packaged files versioned with the release, and calls them the artifact this domain iterates on most. A
+release whose entire content is a reworded instruction is therefore a plausible release here, and `CHANGELOG.md` commits the project to
+semver. `architecture/api.md`'s ADR-013 already fixed how one shipped artifact maps onto that; prompts need the same statement, because
+without one every tuning round is arguable in both directions.
+
+**Decision.** The release class follows what a prompt change does to the app's surface, and packaged prompt files split into two cases:
+
+- **Editing a packaged prompt is a patch.** Rewording, restructuring, adding or dropping an instruction, replacing an example — whatever it
+  does to the quality of the answers. Adding a `prompts/<usecase>/<model>.md` where layer 4's `default.md` already answered is the same
+  case, and so is deleting one once it stops earning its points (ADR-010): the usecase already answered on that model, and what moved is how
+  well.
+- **Shipping the first packaged prompt for a usecase is a minor.** Layer 4 is what makes ADR-010's resolution total, so a usecase with no
+  packaged `default.md` fails every request naming its missing prompt. The file that turns "this feature reports it has no prompt" into
+  "this feature answers" adds functionality, and semver's minor is the place for it. However, a new usecase also requires at least UI and an
+  IPC channel for that usecase wrapped around it, therefore a new 'default.md' by itself would not change anything about how users can
+  engage with AI in this app.
+
+**Why an improved prompt is not a minor.** A prompt is not surface. After a reworded system prompt the app offers the same screens, the same
+IPC channels, the same catalogue keys and the same JSON shape — ADR-011 pins that shape to a grammar, so even the extraction's output type
+is unmoved. There is nothing a caller can do afterwards that it could not do before; what changed is how often the draft in front of the
+user is right, on a path where a human confirms every value anyway. Classifying that as a minor would also make the minor version a count of
+tuning rounds, which tells a reader nothing about compatibility and hides the additions that do matter.
+
+**Nothing in a prompt can force a major.** Model output is not a compatibility surface. Two releases answering one document differently is
+the expected outcome of tuning and never a breach: the grammar bounds what may come out, and the values inside it were never promised to be
+stable across versions. A prompt also sits behind the bridge, so no third party can address it. A major stays what `architecture/api.md`'s
+ADR-013 makes it — a recorded convention broken on purpose.
+
+**Alternatives declined.**
+
+- *Every packaged prompt file that is added is a minor, whichever layer it sits in.* Mechanical and cheap to apply, and wrong on the case it
+  decides: a `<model>.md` written because the shared default underperforms on one model is an improvement to a shipped usecase, and shipping
+  the identical improvement by editing `default.md` instead would then be a patch. The version would depend on which file the fix landed in.
+
+**Consequences.**
+
+- A prompt-only release is a patch, and it appears under `Changed` in `CHANGELOG.md`. It is a user-visible improvement to a feature, so it
+  is worth a line there even though the version's third component is all that moves.
+- **The minor half of this rule rarely fires by itself.** A new usecase's `default.md` ships with the code that calls it, and that code is
+  already a minor.
+- **On-disk overrides are outside this entirely.** Layers 1 and 2 are user files, carry no version, and keep winning after a patch rewrote
+  the packaged file underneath them. That is ADR-010's "debugging the wrong prompt" failure mode with a version number attached, and it is
+  why a report against a patch has to name which layer resolved the request.
+- Changing the AI model catalogue is a different question and not this ADR's scope.
+- A prompt edit that only works together with a code change — a field the grammar has to allow (ADR-011), a value an extraction stage has to
+  produce first (ADR-009) — is classified by that code. The prompt is then part of a larger change, not the change itself.
