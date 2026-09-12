@@ -37,6 +37,42 @@ const MAXIMUM_AI_KEY_LENGTH = 64;
 
 const aiModelKeySchema = z.string().min(1).max(MAXIMUM_AI_KEY_LENGTH);
 
+/**
+ * The longest extracted document an extraction request may carry, measured in UTF-16 code units.
+ * @type {number}
+ */
+const MAXIMUM_AI_DOCUMENT_LENGTH = 2 ** 18;
+
+/**
+ * How many values of one kind a document may state, and how long one of them may be. A literal becomes a rule of a
+ * generated grammar, so the bound is about what llama.cpp is asked to compile: the count caps the alternation and
+ * the length caps one branch of it. Both sit far above what a settlement prints and far below a grammar that takes
+ * longer to compile than the generation it constrains.
+ */
+const MAXIMUM_AI_LITERALS = 2 ** 12;
+const MAXIMUM_AI_LITERAL_LENGTH = 64;
+
+const aiLiteralsSchema = z.array(z.string().min(1).max(MAXIMUM_AI_LITERAL_LENGTH)).max(MAXIMUM_AI_LITERALS);
+
+/**
+ * The values a document states, read in the renderer that parsed the page (see `../LLM.md`) and stated in the
+ * notation an answer uses.
+ */
+const aiDocumentLiteralsSchema = z.strictObject({
+  dates: aiLiteralsSchema,
+  times: aiLiteralsSchema,
+  numbers: aiLiteralsSchema
+});
+
+/** @typedef {z.infer<typeof aiDocumentLiteralsSchema>} DocumentLiterals */
+
+const aiExtractionRequestSchema = z.strictObject({
+  document: z.string().min(1).max(MAXIMUM_AI_DOCUMENT_LENGTH),
+  literals: aiDocumentLiteralsSchema,
+  currency: z.string().regex(/^[A-Z]{3}$/),
+  modelKey: aiModelKeySchema
+});
+
 module.exports = {
   backendStartPasswordSchema,
   authVerifyPasswordSchema,
@@ -45,6 +81,11 @@ module.exports = {
   configurationChangesSchema,
   javaSettingSchema,
   aiModelKeySchema,
+  aiExtractionRequestSchema,
+  aiDocumentLiteralsSchema,
   MAXIMUM_PASSWORD_LENGTH,
-  MAXIMUM_PATH_LENGTH
+  MAXIMUM_PATH_LENGTH,
+  MAXIMUM_AI_DOCUMENT_LENGTH,
+  MAXIMUM_AI_LITERALS,
+  MAXIMUM_AI_LITERAL_LENGTH
 };

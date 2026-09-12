@@ -4,6 +4,8 @@ import {
   AiActivateOutcome,
   AiDownloadOutcome,
   AiDownloadProgress,
+  AiExtractionOutcome,
+  AiExtractionRequest,
   AiRemoveOutcome,
   ElectronAiState,
   TraQuityAiBridge
@@ -37,6 +39,10 @@ export class AiBridgeService {
 
   downloadModel(key: string): Observable<AiDownloadOutcome> {
     return defer((): Observable<AiDownloadOutcome> => from(this.requireBridge().downloadModel(key)));
+  }
+
+  extractTransaction(request: AiExtractionRequest): Observable<AiExtractionOutcome> {
+    return defer((): Observable<AiExtractionOutcome> => from(this.requireBridge().extractTransaction(request)));
   }
 
   removeModel(key: string): Observable<AiRemoveOutcome> {

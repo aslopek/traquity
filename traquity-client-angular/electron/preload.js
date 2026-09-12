@@ -106,11 +106,13 @@ contextBridge.exposeInMainWorld('traquity', {
 /** @import {AiActivateOutcome, AiRemoveOutcome} from './ai/ai-registry.js' */
 /** @import {AiDownloadProgress} from './ai/model-download.js' */
 /** @import {AiDownloadOutcome, AiGetStateResult} from './ipc/ai-bridge.js' */
+/** @import {TransactionExtractionOutcome} from './ai/transaction-extraction/transaction-extractor.js' */
 
-// The five request/response channels below plus `ai:downloadProgress` are duplicated against `ipc/ai-bridge.js`:
+// The six request/response channels below plus `ai:downloadProgress` are duplicated against `ipc/ai-bridge.js`:
 //   - `ai:getState`
 //   - `ai:confirm`
 //   - `ai:download`
+//   - `ai:extractTransaction`
 //   - `ai:remove`
 //   - `ai:activate`
 //   - `ai:downloadProgress` (push, main -> renderer)
@@ -127,6 +129,12 @@ contextBridge.exposeInMainWorld('traquityAi', {
    * @returns {Promise<AiDownloadOutcome>}
    */
   downloadModel: (key) => ipcRenderer.invoke('ai:download', key),
+
+  /**
+   * @param {{document: string, currency: string, modelKey: string}} request
+   * @returns {Promise<TransactionExtractionOutcome>}
+   */
+  extractTransaction: (request) => ipcRenderer.invoke('ai:extractTransaction', request),
 
   /**
    * @param {string} key

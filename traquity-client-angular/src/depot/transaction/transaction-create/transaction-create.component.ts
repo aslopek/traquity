@@ -1,4 +1,5 @@
-import {Component, computed, inject, Signal, signal, WritableSignal} from "@angular/core";
+import {Component, computed, effect, inject, Signal, signal, WritableSignal} from "@angular/core";
+import {MatProgressBarModule} from "@angular/material/progress-bar";
 import {MatAutocompleteModule} from "@angular/material/autocomplete";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCheckboxModule} from "@angular/material/checkbox";
@@ -17,6 +18,14 @@ import {AppState} from "../../../store/app.state";
 import {DepotActions} from "../../../store/depot/depot.actions";
 import {selectedDepotCurrency, selectedDepotIds} from "../../../store/depot/depot.selector";
 import {ReadableTransactionPageStore, transactionPageStore} from "../transaction-store/transaction-page.store";
+import {AiBridgeService} from "../../../bridge/ai-bridge.service";
+import {FileDropDirective} from "../../../common/file-drop/file-drop.directive";
+import {getActiveModel} from "../../../store/ai/ai.selector";
+import {ActiveModel} from "../../../store/ai/selectors/get-active-model.selector";
+import {securitiesByIsin} from "../../../store/security/security.selector";
+import {SecuritiesByIsin} from "../../../store/security/selectors/get-securities-by-isin.selector";
+import {ReadableTransactionImportStore, TransactionImportStore} from "./store/transaction-import.store";
+import {TransactionPrefill} from "./store/transaction-import.type";
 
 type TransactionFormModel = {
   transactionType: TransactionType | null;
@@ -58,7 +67,10 @@ const timeRegex: RegExp = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
     TqNetValuePipe,
     TqCurrencyPipe,
     FormField,
+    FileDropDirective,
+    MatProgressBarModule,
   ],
+  providers: [TransactionImportStore],
   templateUrl: "./transaction-create.component.html",
   styleUrl: "./transaction-create.component.scss",
 })
@@ -71,6 +83,13 @@ export class TransactionCreateComponent {
   private readonly transactionApi: TransactionApi = inject(TransactionApi);
   private readonly dialogRef: MatDialogRef<TransactionCreateComponent> = inject(MatDialogRef);
   protected readonly transactionPageStore: ReadableTransactionPageStore = inject(transactionPageStore);
+  protected readonly importStore: ReadableTransactionImportStore = inject(TransactionImportStore);
+
+  /** Without the bridge there is no AI at all, so the import controls are not rendered instead of being disabled. */
+  protected readonly bridgeAvailable: boolean = inject(AiBridgeService).available;
+
+  private readonly activeModel: Signal<ActiveModel | null> = this.store.selectSignal(getActiveModel);
+  private readonly knownSecurities: Signal<SecuritiesByIsin> = this.store.selectSignal(securitiesByIsin);
 
   protected readonly depotId: Signal<number> = computed((): number => this.store.selectSignal(selectedDepotIds)()[0]);
   protected readonly depotCurrency: Signal<string> = this.store.selectSignal(selectedDepotCurrency);
@@ -144,6 +163,50 @@ export class TransactionCreateComponent {
       fee: values.fee,
     };
   });
+
+  /**
+   * Takes the values a completed extraction offers into the form model, which is what makes the existing validation
+   * run over them and what `Create` then sends. Writing into the template alone would leave stale values behind.
+   */
+  private readonly applyPrefill: unknown = effect((): void => {
+    const prefill: TransactionPrefill | null = this.importStore.prefill();
+    if (prefill == null) {
+      return;
+    }
+    this.formModel.update((values: TransactionFormModel): TransactionFormModel => ({
+      ...values,
+      transactionType: prefill.transactionType,
+      isSpecialDividend: prefill.isSpecialDividend,
+      securityName: prefill.securityName,
+      date: prefill.date ?? values.date,
+      time: prefill.time,
+      securityCountOriginal: prefill.securityCountOriginal,
+      securityCountSplitAdjusted: "",
+      grossValue: prefill.grossValue,
+      tax: prefill.tax,
+      fee: prefill.fee,
+    }));
+    this.importStore.clearPrefill();
+  });
+
+  protected importFile(files: File[]): void {
+    const file: File | undefined = files[0];
+    if (file == null) {
+      return;
+    }
+    this.importStore.importPdf({
+      file,
+      currency: this.depotCurrency(),
+      modelKey: this.activeModel()?.key ?? null,
+      securitiesByIsin: this.knownSecurities(),
+    });
+  }
+
+  protected selectPdf(event: Event): void {
+    const input: HTMLInputElement = event.target as HTMLInputElement;
+    this.importFile(Array.from(input.files ?? []));
+    input.value = "";
+  }
 
   protected close(): void {
     this.dialogRef.close();
