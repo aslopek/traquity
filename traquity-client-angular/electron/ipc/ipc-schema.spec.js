@@ -1,15 +1,22 @@
 const {beforeEach, describe, expect, it} = require('@jest/globals');
 const {
+  aiExtractionRequestSchema,
   aiModelKeySchema,
   authVerifyPasswordSchema,
   backendStartPasswordSchema,
   configurationChangesSchema,
   databasePathSchema,
   javaSettingSchema,
+  MAXIMUM_AI_DOCUMENT_LENGTH,
+  MAXIMUM_AI_LABEL_LENGTH,
+  MAXIMUM_AI_TOKEN_LENGTH,
+  MAXIMUM_AI_TOKENS,
   MAXIMUM_PASSWORD_LENGTH,
   MAXIMUM_PATH_LENGTH
 } = require('./ipc-schema.js');
 const {MAXIMUM_SIGNATURE_LENGTH} = require('../security/signature-bounds.js');
+
+/** @import {DocumentToken} from './ipc-schema.js' */
 
 describe('ipc schemas', () => {
   describe('passwords', () => {
@@ -129,6 +136,130 @@ describe('ipc schemas', () => {
 
     it('refuses one longer than the maximum length', () => {
       expect(aiModelKeySchema.safeParse('x'.repeat(65)).success).toBe(false);
+    });
+  });
+
+  describe('ai extraction request', () => {
+    /** @type {import('zod').infer<typeof aiExtractionRequestSchema>} */
+    let request;
+    /** @type {DocumentToken} the one value the baseline document states */
+    let token;
+
+    beforeEach(() => {
+      token = {id: 1, kind: 'number', text: '1.700,00', value: '1700.00', label: 'Kurswert', currency: 'EUR'};
+      request = {
+        document: 'Wertpapierabrechnung Kauf\nStück 0,55814 ACME INC\nKurswert 1.700,00 EUR',
+        tokens: [token],
+        currency: 'EUR',
+        modelKey: 'model-a'
+      };
+    });
+
+    it('accepts a complete request', () => {
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(true);
+    });
+
+    it('accepts a label as long as the prose a settlement prints in front of a figure', () => {
+      request.tokens = [{
+        ...token, label: 'Scalable Capital GmbH • Geschäftsführung: Erik Podzuweit, Florian '
+          + 'Prucker, Martin Krebs, Dirk Urmoneit, Dirk Franzmeyer • Aufsichtsrat: Patrick Olson (Vorsitzender) • HRB'
+      }];
+
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(true);
+    });
+
+    it('accepts a label of exactly the maximum length', () => {
+      request.tokens = [{...token, label: 'x'.repeat(MAXIMUM_AI_LABEL_LENGTH)}];
+
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(true);
+    });
+
+    it('refuses a label one code unit longer than the maximum length', () => {
+      request.tokens = [{...token, label: 'x'.repeat(MAXIMUM_AI_LABEL_LENGTH + 1)}];
+
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(false);
+    });
+
+    it('accepts a figure printed at exactly the maximum notation length', () => {
+      request.tokens = [{...token, text: '1'.repeat(MAXIMUM_AI_TOKEN_LENGTH)}];
+
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(true);
+    });
+
+    it('refuses a figure printed one code unit longer than the maximum notation length', () => {
+      request.tokens = [{...token, text: '1'.repeat(MAXIMUM_AI_TOKEN_LENGTH + 1)}];
+
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(false);
+    });
+
+    it('refuses a value one code unit longer than the maximum notation length', () => {
+      request.tokens = [{...token, value: '1'.repeat(MAXIMUM_AI_TOKEN_LENGTH + 1)}];
+
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(false);
+    });
+
+    it('accepts as many values as a document may state', () => {
+      request.tokens = Array.from({length: MAXIMUM_AI_TOKENS}, (_entry, index) => ({...token, id: index + 1}));
+
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(true);
+    });
+
+    it('refuses one value more than a document may state', () => {
+      request.tokens = Array.from({length: MAXIMUM_AI_TOKENS + 1}, (_entry, index) => ({...token, id: index + 1}));
+
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(false);
+    });
+
+    it('accepts a document of exactly the maximum length', () => {
+      request.document = 'x'.repeat(MAXIMUM_AI_DOCUMENT_LENGTH);
+
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(true);
+    });
+
+    it('refuses a document one code unit longer than the maximum length', () => {
+      request.document = 'x'.repeat(MAXIMUM_AI_DOCUMENT_LENGTH + 1);
+
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(false);
+    });
+
+    it('counts a character outside the basic plane as the two code units it occupies', () => {
+      request.document = '\u{1F600}'.repeat(MAXIMUM_AI_DOCUMENT_LENGTH / 2 + 1);
+
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(false);
+    });
+
+    it('refuses an empty document', () => {
+      request.document = '';
+
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(false);
+    });
+
+    it('refuses a lower-case currency code', () => {
+      request.currency = 'eur';
+
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(false);
+    });
+
+    it('refuses a currency code that is not three letters long', () => {
+      request.currency = 'EURO';
+
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(false);
+    });
+
+    it('refuses a currency code carrying a digit', () => {
+      request.currency = 'EU1';
+
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(false);
+    });
+
+    it('refuses an empty model key', () => {
+      request.modelKey = '';
+
+      expect(aiExtractionRequestSchema.safeParse(request).success).toBe(false);
+    });
+
+    it('refuses an unknown key', () => {
+      expect(aiExtractionRequestSchema.safeParse({...request, somethingElse: 'value'}).success).toBe(false);
     });
   });
 });
