@@ -40,7 +40,6 @@
     "zod": "^4.6.2"
   },
   "devDependencies": {
-    "@angular/animations": "^22.1.0",
     "@angular/build": "^22.1.8",
     "@angular/cdk": "^22.1.6",
     "@angular/cli": "^22.1.8",
@@ -51,7 +50,6 @@
     "@angular/forms": "^22.1.6",
     "@angular/material": "^22.1.6",
     "@angular/platform-browser": "^22.1.6",
-    "@angular/platform-browser-dynamic": "^22.1.0",
     "@angular/router": "^22.1.6",
     "@babel/preset-env": "^8.0.5",
     "@electron-forge/cli": "^7.2.0",
