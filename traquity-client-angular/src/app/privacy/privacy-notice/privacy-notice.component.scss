@@ -1,11 +1,30 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-4);
+  color: var(--tq-text-muted);
+  line-height: var(--tq-line-height);
+}
+
 h3 {
-  margin-top: 0;
+  font-size: var(--tq-font-size-md);
+  color: var(--tq-text);
 }
 
 h4 {
-  margin-bottom: 0.25rem;
+  font-size: var(--tq-font-size-base);
+  color: var(--tq-text);
+  margin-bottom: var(--tq-space-1);
 }
 
-code {
-  font-size: 0.85rem;
+p {
+  margin-bottom: var(--tq-space-2);
+}
+
+ul {
+  margin: 0;
+  padding-left: var(--tq-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-1);
 }

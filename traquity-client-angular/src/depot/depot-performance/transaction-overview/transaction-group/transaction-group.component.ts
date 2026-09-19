@@ -1,7 +1,7 @@
 import {Component, computed, input, InputSignal, Signal} from "@angular/core";
-import {MatCard, MatCardContent, MatCardHeader, MatCardTitle} from "@angular/material/card";
-import {TqCurrencyPipe, TqDatePipe, SecurityNamePipe, TransactionTypeDisplayIconPipe, TransactionTypeDisplayNamePipe} from "../../../../common";
-import {NgClass} from "@angular/common";
+import {
+  SecurityNamePipe, TqCurrencyPipe, TqDatePipe, TransactionTypeDisplayIconPipe, TransactionTypeDisplayNamePipe
+} from "../../../../common";
 import {Store} from "@ngrx/store";
 import {AppState} from "../../../../store/app.state";
 import {selectedDepotCurrency} from "../../../../store/depot/depot.selector";
@@ -13,12 +13,7 @@ import {SecurityLogoComponent} from "../../../../common/components/security-logo
 @Component({
   selector: "app-transaction-group",
   imports: [
-    MatCard,
-    MatCardHeader,
-    MatCardTitle,
     TqDatePipe,
-    MatCardContent,
-    NgClass,
     TransactionTypeDisplayIconPipe,
     SecurityNamePipe,
     TqCurrencyPipe,

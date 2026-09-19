@@ -1,5 +1,5 @@
-<div class="wrapper">
-    <div class="data-source-list">
+<div class="data-source-page">
+    <div class="data-source-page__list tq-scroll">
         @for (dataSource of dataSources(); track dataSource.id) {
             <app-data-source-card [dataSource]="dataSource"
                                   (remove)="delete($event)">
@@ -8,7 +8,8 @@
         <app-data-source-card dataSource="new">
         </app-data-source-card>
     </div>
-    <div class="detail-view">
+
+    <div class="data-source-page__detail">
         @if (showApiKeyOnly()) {
             <app-data-source-api-key>
             </app-data-source-api-key>

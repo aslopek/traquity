@@ -1,10 +1,8 @@
 import {Component, inject, OnInit, signal, WritableSignal} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
-import {MatButtonModule} from "@angular/material/button";
 import {MatDialogRef} from "@angular/material/dialog";
 import {MatIconModule} from "@angular/material/icon";
 import {MatTabsModule} from "@angular/material/tabs";
-import {MatToolbarModule} from "@angular/material/toolbar";
 import {firstValueFrom} from "rxjs";
 import * as packageJson from "../../../package.json";
 import {TitleToolbarComponent} from "../../common";
@@ -18,8 +16,6 @@ import {ThirdPartyLicenseEntry, ThirdPartyLicensesFile} from "./third-party-lice
   selector: "app-info",
   imports: [
     MatTabsModule,
-    MatToolbarModule,
-    MatButtonModule,
     MatIconModule,
     TitleToolbarComponent,
     LicenseComponent,

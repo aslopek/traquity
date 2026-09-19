@@ -1,76 +1,61 @@
-@use '../../../../styles' as styles;
-
-// .position-item is always the sole child of this component's host, so :not(:last-child) has to be checked on the
+// .position-row is always the sole child of this component's host, so :not(:last-child) has to be checked on the
 // host itself - the host elements are the actual siblings the @for in position-list.component.html renders.
 :host {
   display: block;
 }
 
-:host(:not(:last-child)) .position-item {
-  border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.08);
+:host(:not(:last-child)) .position-row {
+  border-bottom: 0.0625rem solid var(--tq-border);
 }
 
-.margin-right {
-  margin-right: 1rem;
-}
-
-.position-item {
-  width: 100%;
-  padding: 0.6rem 0.4rem;
+.position-row {
   display: flex;
   align-items: center;
-  flex-direction: row;
-  align-content: center;
+  gap: var(--tq-space-4);
+  width: 100%;
+  padding: var(--tq-space-3) var(--tq-space-2);
   cursor: pointer;
-  border-radius: 0.5rem;
-  transition: background-color 0.15s ease;
+  border-radius: var(--tq-radius-sm);
+  transition: background-color var(--tq-duration-fast) var(--tq-ease);
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--tq-surface-hover);
   }
 }
 
-.position-item-column {
+.position-row__name {
+  font-size: var(--tq-font-size-md);
+  font-weight: 500;
+}
+
+.position-row__column {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  width: 30%;
+  gap: var(--tq-space-1);
 }
 
-h3 {
+.position-row__value {
+  font-size: var(--tq-font-size-md);
   font-weight: 500;
-  font-size: 1.05rem;
-  margin: 0;
 }
 
-// use em instead of rem on h4/h5: .performance-positive/.performance-negative below use em
-// border-radius/padding so the pill badge scales with whichever of these two font-sizes it's applied to
-h4 {
+.position-row__sub-value {
+  font-size: var(--tq-font-size-sm);
+  color: var(--tq-text-muted);
+}
+
+.position-row__sub-pill {
+  font-size: var(--tq-font-size-sm);
   font-weight: 500;
-  font-size: 0.95em;
-  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
 }
 
-h5 {
-  font-weight: 400;
-  font-size: 0.8em;
-  margin: 0.2em 0 0;
+.position-row__sub-pill--positive {
+  color: var(--tq-positive-soft);
 }
 
-.sub-value {
-  opacity: 0.6;
-}
-
-.performance-positive {
-  background-color: styles.$color-positive-tint;
-  color: styles.$color-positive;
-  padding: 0.15em 0.6em;
-  border-radius: 1em;
-}
-
-.performance-negative {
-  background-color: styles.$color-negative-tint;
-  color: styles.$color-negative;
-  padding: 0.15em 0.6em;
-  border-radius: 1em;
+.position-row__sub-pill--negative {
+  color: var(--tq-negative-soft);
 }

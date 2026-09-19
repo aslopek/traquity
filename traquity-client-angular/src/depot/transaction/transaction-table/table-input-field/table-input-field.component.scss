@@ -1,12 +1,16 @@
-@use '@angular/material' as mat;
-@use '../../../../styles' as styles;
-
 .input {
-  max-width: 5rem;
-  background-color: gray;
-  color: white;
-  border: 0.15rem solid mat.get-theme-color(styles.$traquity-theme, primary);
-  border-radius: 0.625rem;
-  padding: 0 0.5rem;
+  max-width: 6rem;
+  padding: var(--tq-space-1) var(--tq-space-2);
+  background-color: var(--tq-surface-sunken);
+  color: var(--tq-text);
+  border: 0.0625rem solid var(--tq-border-accent);
+  border-radius: var(--tq-radius-sm);
   outline: none;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+
+  &:focus {
+    box-shadow: 0 0 0 0.0625rem var(--tq-border-accent);
+  }
 }

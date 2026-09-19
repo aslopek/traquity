@@ -1,44 +1,46 @@
-<div class="wrapper">
-    <div class="control-panel">
-        @if (isBenchmarkActive()) {
-            <button matButton="filled"
-                    color="primary"
-                    (click)="stopBenchmark()">
-                Stop Benchmark
-            </button>
-        } @else {
-            <button matButton="filled"
-                    color="primary"
-                    [disabled]="benchmark() == null"
-                    (click)="startBenchmark()">
-                Start benchmark
-            </button>
-        }
+<section class="tq-card benchmark">
+    <header class="tq-card__head">
+        <h2 class="tq-card__title">Benchmark</h2>
+        <div class="tq-card__actions">
+            @if (isBenchmarkActive()) {
+                <button matButton="filled"
+                        (click)="stopBenchmark()">
+                    Stop benchmark
+                </button>
+            } @else {
+                <button matButton="filled"
+                        [disabled]="benchmark() == null"
+                        (click)="startBenchmark()">
+                    Start benchmark
+                </button>
+            }
+        </div>
+    </header>
 
-        <mat-button-toggle-group
-                [value]="mode()"
-                (change)="mode.set($event.value)">
-            <mat-button-toggle value="fixedInterest.cashFlowBased">
-                Fixed Interest (Cashflow based)
-            </mat-button-toggle>
-            <mat-button-toggle value="fixedInterest.intervalBased">
-                Fixed Interest (Regular Investments)
-            </mat-button-toggle>
-            <mat-button-toggle value="security.cashflowBased"
-                               [disabled]="true">
-                Security (Cashflow based)
-            </mat-button-toggle>
-            <mat-button-toggle value="security.intervalBased"
-                               [disabled]="true">
-                Security (Regular Investments)
-            </mat-button-toggle>
-            <mat-button-toggle value="security.luckyInvestor"
-                               [disabled]="true">
-                Security (Lucky Investor)
-            </mat-button-toggle>
-        </mat-button-toggle-group>
-    </div>
+    <mat-button-toggle-group class="benchmark__modes"
+                             [value]="mode()"
+                             (change)="mode.set($event.value)">
+        <mat-button-toggle value="fixedInterest.cashFlowBased">
+            Fixed Interest (Cashflow based)
+        </mat-button-toggle>
+        <mat-button-toggle value="fixedInterest.intervalBased">
+            Fixed Interest (Regular Investments)
+        </mat-button-toggle>
+        <mat-button-toggle value="security.cashflowBased"
+                           [disabled]="true">
+            Security (Cashflow based)
+        </mat-button-toggle>
+        <mat-button-toggle value="security.intervalBased"
+                           [disabled]="true">
+            Security (Regular Investments)
+        </mat-button-toggle>
+        <mat-button-toggle value="security.luckyInvestor"
+                           [disabled]="true">
+            Security (Lucky Investor)
+        </mat-button-toggle>
+    </mat-button-toggle-group>
+
     <app-fixed-interest-benchmark [mode]="mode()"
                                   (benchmark)="onBenchmarkUpdate($event)">
     </app-fixed-interest-benchmark>
-</div>
+</section>

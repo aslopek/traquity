@@ -3,6 +3,7 @@ import {AggregatedDividends} from "../store/computed/get-aggregated-dividends";
 import type {BarSeriesOption} from 'echarts';
 import {EChartsOption} from "echarts";
 import {TqCurrencyPipe} from "../../../common";
+import {chartToken} from "../../../common/chart/chart-token";
 
 @Pipe({
   name: "dividendBarChart",
@@ -10,6 +11,21 @@ import {TqCurrencyPipe} from "../../../common";
 export class DividendBarChartPipe implements PipeTransform {
 
   private readonly tqCurrencyPipe: TqCurrencyPipe = inject(TqCurrencyPipe);
+  private readonly seriesColors: string[] = [
+    chartToken("--tq-series-1"),
+    chartToken("--tq-series-2"),
+    chartToken("--tq-series-3"),
+    chartToken("--tq-series-4"),
+    chartToken("--tq-series-5"),
+    chartToken("--tq-series-6")
+  ];
+  private readonly surfaceColor: string = chartToken("--tq-surface-raised");
+  private readonly borderColor: string = chartToken("--tq-border");
+  private readonly textColor: string = chartToken("--tq-text");
+  private readonly mutedTextColor: string = chartToken("--tq-text-muted");
+  private readonly tooltipColor: string = chartToken("--tq-glass-bg");
+  private readonly tooltipCss: string = `box-shadow: ${chartToken("--tq-shadow-2")};`
+    + ` border-radius: ${chartToken("--tq-radius-md")}; backdrop-filter: ${chartToken("--tq-glass-blur")};`;
 
   transform(dividends: AggregatedDividends, hideAbsoluteValues: boolean, currency: string): EChartsOption {
     const seriesLabels: string[] = dividends.years.map((year: number) => `${year}`);
@@ -33,12 +49,12 @@ export class DividendBarChartPipe implements PipeTransform {
       },
       rich: {
         absolute: {
-          color: '#4C5058',
-          backgroundColor: '#8C8D8E',
+          color: this.textColor,
+          backgroundColor: this.surfaceColor,
           borderRadius: 4,
           align: 'center',
           fontWeight: 'bold',
-          fontSize: 14
+          fontSize: 12
         }
       }
     };
@@ -53,7 +69,8 @@ export class DividendBarChartPipe implements PipeTransform {
           emphasis: {focus: 'series'},
           data: dividends.slices.map(s => s.aggregated[0]),
           itemStyle: {
-            color: '#4C5058'
+            color: this.seriesColors[0],
+            borderRadius: [4, 4, 0, 0]
           }
         }
       ];
@@ -63,16 +80,22 @@ export class DividendBarChartPipe implements PipeTransform {
         type: 'bar',
         label: labelOption,
         emphasis: {focus: 'series'},
+        itemStyle: {
+          color: this.seriesColors[i % this.seriesColors.length],
+          borderRadius: [4, 4, 0, 0]
+        },
         data
       }));
     }
 
     return {
+      backgroundColor: 'transparent',
       legend: {
         show: dividends.timespan !== 'year',
-        backgroundColor: '#8C8D8E',
-        borderColor: '#8C8D8E',
-        borderWidth: 2,
+        textStyle: {color: this.mutedTextColor},
+        inactiveColor: this.borderColor,
+        itemWidth: 12,
+        itemHeight: 12,
         borderRadius: 4
       },
       tooltip: {
@@ -85,10 +108,12 @@ export class DividendBarChartPipe implements PipeTransform {
           }
         },
         trigger: 'axis',
-        backgroundColor: '#8C8D8E',
-        borderColor: '#8C8D8E',
-        borderWidth: 2,
-        borderRadius: 4,
+        backgroundColor: this.tooltipColor,
+        borderColor: this.borderColor,
+        borderWidth: 1,
+        textStyle: {color: this.textColor, fontSize: 13},
+        padding: [10, 14],
+        extraCssText: this.tooltipCss,
         axisPointer: {
           type: 'shadow'
         }
@@ -98,12 +123,19 @@ export class DividendBarChartPipe implements PipeTransform {
         data: this.getXAxisLabels(dividends),
         axisTick: {
           show: false
-        }
+        },
+        axisLine: {lineStyle: {color: this.borderColor}},
+        axisLabel: {color: this.mutedTextColor, fontSize: 11}
       },
       yAxis: {
         type: 'value',
+        axisLine: {show: false},
+        axisTick: {show: false},
+        splitLine: {lineStyle: {color: this.borderColor}},
         axisLabel: {
           show: !hideAbsoluteValues,
+          color: this.mutedTextColor,
+          fontSize: 11,
           formatter: value => this.tqCurrencyPipe.transform(value, currency, '1.0-0')
         }
       },

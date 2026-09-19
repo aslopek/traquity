@@ -1,4 +1,13 @@
-.column {
+.appearance {
   display: flex;
   flex-direction: column;
+  gap: var(--tq-space-5);
+  padding: var(--tq-space-4) 0;
+}
+
+.appearance__toggles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-3);
+  align-items: flex-start;
 }

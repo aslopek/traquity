@@ -1,9 +1,7 @@
 import {AfterViewInit, Component, inject, Inject,} from "@angular/core";
 import {MatButtonModule} from "@angular/material/button";
 import {MatIconModule} from "@angular/material/icon";
-import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatTabsModule} from "@angular/material/tabs";
-import {MatToolbarModule} from "@angular/material/toolbar";
 import {TitleToolbarComponent} from "../../common";
 import {SecurityMasterDataComponent} from "../details/security-master-data/security-master-data.component";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
@@ -21,10 +19,8 @@ export type UpdateSecurityDialogData = {
   imports: [
     MatButtonModule,
     MatTabsModule,
-    MatToolbarModule,
     MatIconModule,
     TitleToolbarComponent,
-    MatProgressSpinnerModule,
     SecurityMasterDataComponent,
     HistoricalPriceConfigComponent,
     StockSplitComponent,

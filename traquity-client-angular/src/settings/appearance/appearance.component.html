@@ -1,42 +1,44 @@
-<div class="column">
-    <mat-form-field>
-        <mat-label>Date Format</mat-label>
-        <mat-select [value]="dateFormat$ | async"
-                    (selectionChange)="setDateFormat($event)">
-            <mat-option [value]="AppDateFormat.default">2024/12/08</mat-option>
-            <mat-option value="dd.MM.yyyy">08.12.2024</mat-option>
-            <mat-option value="dd. MMM yyyy">08. Dec 2024</mat-option>
-            <mat-option value="dd. MMMM yyyy">08. December 2024</mat-option>
-        </mat-select>
-    </mat-form-field>
+<div class="appearance">
+    <div class="tq-form-grid">
+        <mat-form-field>
+            <mat-label>Date Format</mat-label>
+            <mat-select [value]="dateFormat$ | async"
+                        (selectionChange)="setDateFormat($event)">
+                <mat-option [value]="AppDateFormat.default">2024/12/08</mat-option>
+                <mat-option value="dd.MM.yyyy">08.12.2024</mat-option>
+                <mat-option value="dd. MMM yyyy">08. Dec 2024</mat-option>
+                <mat-option value="dd. MMMM yyyy">08. December 2024</mat-option>
+            </mat-select>
+        </mat-form-field>
 
-    <mat-form-field>
-        <mat-label>Currency Format</mat-label>
-        <mat-select [value]="currencyLocale$ | async"
-                    (selectionChange)="setCurrencyLocale($event)">
-            <mat-option [value]="AppCurrencyLocale.default">$1,234.56</mat-option>
-            <mat-option value="de-DE">1.234,56 $</mat-option>
-        </mat-select>
-    </mat-form-field>
+        <mat-form-field>
+            <mat-label>Currency Format</mat-label>
+            <mat-select [value]="currencyLocale$ | async"
+                        (selectionChange)="setCurrencyLocale($event)">
+                <mat-option [value]="AppCurrencyLocale.default">$1,234.56</mat-option>
+                <mat-option value="de-DE">1.234,56 $</mat-option>
+            </mat-select>
+        </mat-form-field>
 
-    <mat-form-field>
-        <mat-label>Numeric Format</mat-label>
-        <mat-select [value]="decimalFormat$ | async"
-                    (selectionChange)="setOtherNumericLocales($event)">
-            <mat-option [value]="AppDecimalLocale.default">1,234.56</mat-option>
-            <mat-option value="de-DE">1.234,56</mat-option>
-        </mat-select>
-    </mat-form-field>
+        <mat-form-field>
+            <mat-label>Numeric Format</mat-label>
+            <mat-select [value]="decimalFormat$ | async"
+                        (selectionChange)="setOtherNumericLocales($event)">
+                <mat-option [value]="AppDecimalLocale.default">1,234.56</mat-option>
+                <mat-option value="de-DE">1.234,56</mat-option>
+            </mat-select>
+        </mat-form-field>
+    </div>
 
-    <mat-checkbox [ngModel]="hideAbsoluteValues$ | async"
-                  (click)="toggleHideAbsoluteValues()"
-                  color="primary">
-        Hide Absolute Values
-    </mat-checkbox>
+    <div class="appearance__toggles">
+        <mat-slide-toggle [ngModel]="hideAbsoluteValues$ | async"
+                          (click)="toggleHideAbsoluteValues()">
+            Hide Absolute Values
+        </mat-slide-toggle>
 
-    <mat-checkbox [ngModel]="devModeActive$ | async"
-                  (click)="toggleDevMode()"
-                  color="primary">
-        Enable Dev Mode
-    </mat-checkbox>
+        <mat-slide-toggle [ngModel]="devModeActive$ | async"
+                          (click)="toggleDevMode()">
+            Enable Dev Mode
+        </mat-slide-toggle>
+    </div>
 </div>

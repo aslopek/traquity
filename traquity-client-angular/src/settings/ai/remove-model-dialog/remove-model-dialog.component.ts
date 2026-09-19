@@ -1,4 +1,5 @@
 import {Component, inject} from "@angular/core";
+import {MatIcon} from "@angular/material/icon";
 import {MatButton} from "@angular/material/button";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
 import {Store} from "@ngrx/store";
@@ -15,7 +16,8 @@ export type RemoveModelDialogData = {
   selector: "app-remove-model-dialog",
   imports: [
     MatButton,
-    TitleToolbarComponent
+    TitleToolbarComponent,
+    MatIcon
   ],
   templateUrl: "./remove-model-dialog.component.html",
   styleUrl: "./remove-model-dialog.component.scss",

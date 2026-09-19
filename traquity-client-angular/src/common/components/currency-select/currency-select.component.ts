@@ -1,6 +1,5 @@
 import {Component, EventEmitter, OnInit, Output,} from "@angular/core";
 import {MatOptionModule} from "@angular/material/core";
-import {MatInputModule} from "@angular/material/input";
 import {MatSelectModule} from "@angular/material/select";
 import {firstValueFrom} from "rxjs";
 import {ConfigApi} from "../../../gen/api/configuration";
@@ -9,7 +8,6 @@ import {TqCurrencySymbolPipe} from "../../pipe/tq-currency-symbol.pipe";
 @Component({
   selector: "app-currency-select",
   imports: [
-    MatInputModule,
     MatOptionModule,
     TqCurrencySymbolPipe,
     MatSelectModule,

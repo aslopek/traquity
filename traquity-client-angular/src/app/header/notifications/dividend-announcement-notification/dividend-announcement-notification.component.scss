@@ -1,28 +1,43 @@
-.wrapper {
-  padding-bottom: 1rem;
+:host {
+  display: block;
 }
 
-.dividend-announcement-container {
+.notification {
   display: flex;
-  flex-direction: row;
   align-items: center;
-  cursor: default;
+  gap: var(--tq-space-4);
+  padding: var(--tq-space-3) var(--tq-space-4);
+  min-width: 20rem;
+  border-radius: var(--tq-radius-sm);
+  transition: background-color var(--tq-duration-fast) var(--tq-ease);
+
+  &:hover {
+    background-color: var(--tq-surface-hover);
+  }
 }
 
-.dividend-announcement-icon {
-  margin-right: 1rem;
-  min-width: 3.5rem;
-  width: 20%;
+.notification__logo {
+  flex: 0 0 auto;
 }
 
-.dividend-announcement-text {
-  max-width: 70%;
+.notification__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
-.acknowledge-button {
-  width: 10%;
+.notification__name {
+  font-weight: 500;
 }
 
-.spacer {
-  flex: 1 1 auto
+.notification__meta {
+  font-size: var(--tq-font-size-sm);
+  color: var(--tq-text-muted);
+}
+
+.notification__amount {
+  font-size: var(--tq-font-size-sm);
+  color: var(--tq-text);
 }

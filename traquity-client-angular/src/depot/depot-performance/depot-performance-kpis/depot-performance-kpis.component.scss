@@ -1,74 +1,50 @@
-@use '../../../styles' as styles;
-
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
-  gap: 1rem;
-  width: 100%;
-  margin-top: 1rem;
+:host {
+  display: block;
 }
 
-.kpi-card {
-  border-radius: 0.75rem;
-  background-color: rgba(255, 255, 255, 0.03);
-  border: 0.0625rem solid rgba(255, 255, 255, 0.08);
-  padding: 1rem;
-  box-shadow: none !important;
-  transition: transform 0.2s ease, border-color 0.2s ease;
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-2);
+  padding: var(--tq-space-4) var(--tq-space-5);
+  background-color: var(--tq-surface-raised);
+  border: 0.0625rem solid var(--tq-border);
+  border-left: 0.1875rem solid var(--tq-border);
+  border-radius: var(--tq-radius-md);
+  transition: border-color var(--tq-duration) var(--tq-ease),
+  box-shadow var(--tq-duration) var(--tq-ease);
 
   &:hover {
-    border-color: #3f3f46;
+    border-color: var(--tq-border-strong);
+    box-shadow: var(--tq-shadow-2);
+  }
+}
+
+.kpi__caption {
+  font-size: var(--tq-font-size-sm);
+  color: var(--tq-text-faint);
+}
+
+.kpi--positive {
+  border-left-color: var(--tq-positive);
+
+  .tq-value {
+    color: var(--tq-positive-soft);
   }
 
-  mat-card-header {
-    padding: 0;
-    margin-bottom: 0.5rem;
+  &:hover {
+    border-left-color: var(--tq-positive);
+  }
+}
 
-    mat-card-subtitle {
-      color: #a1a1aa;
-      font-size: 0.875rem;
-      font-weight: 500;
-      letter-spacing: 0.0313rem;
-    }
+.kpi--negative {
+  border-left-color: var(--tq-negative);
+
+  .tq-value {
+    color: var(--tq-negative-soft);
   }
 
-  mat-card-content {
-    padding: 0;
-
-    .kpi-value-container {
-      display: flex;
-      flex-direction: column;
-      gap: 0.125rem;
-    }
-
-    .kpi-value {
-      font-size: 1.625rem;
-      font-weight: 700;
-      color: #ffffff;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .kpi-sub-value {
-      font-size: 0.813rem;
-      font-weight: 500;
-      color: rgba(255, 255, 255, 0.4);
-      font-variant-numeric: tabular-nums;
-    }
-  }
-
-  &.positive {
-    border-left: 0.25rem solid styles.$color-positive;
-
-    .kpi-value {
-      color: styles.$color-positive-light;
-    }
-  }
-
-  &.negative {
-    border-left: 0.25rem solid styles.$color-negative;
-
-    .kpi-value {
-      color: styles.$color-negative-light;
-    }
+  &:hover {
+    border-left-color: var(--tq-negative);
   }
 }

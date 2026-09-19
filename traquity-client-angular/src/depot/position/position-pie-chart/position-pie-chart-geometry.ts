@@ -4,6 +4,7 @@ export type PositionPieChartGeometry = {
   doughnutOuterRadius: number
   hairlineRadius: number
   hairlineStrokeWidth: number
+  labelLineLength: number
   labelRadius: number
   labelRadiusFlipped: number
   labelFontSize: number
@@ -12,8 +13,6 @@ export type PositionPieChartGeometry = {
   averageGlyphWidthFactor: number
   hoverBandInnerPadding: number
   hoverBandOuterPadding: number
-  hairlineColor: string
-  labelColor: string
 };
 
 export const positionPieChartGeometry: PositionPieChartGeometry = {
@@ -22,6 +21,10 @@ export const positionPieChartGeometry: PositionPieChartGeometry = {
   doughnutOuterRadius: 40,
   hairlineRadius: 42.5,
   hairlineStrokeWidth: 0.31,
+  // pixels, not viewBox units: echarts measures a leader line in device pixels. A label keeps its place on the ray
+  // of its own slice and is truncated to whatever room is left between there and the canvas edge, so every pixel
+  // spent here is a pixel the label text no longer has - short both sits the labels near the donut and feeds them.
+  labelLineLength: 30,
   labelRadius: 44.5,
   labelRadiusFlipped: 46.5,
   labelFontSize: 1.9,
@@ -32,7 +35,5 @@ export const positionPieChartGeometry: PositionPieChartGeometry = {
   // the outer padding covers the label glyphs' ascenders/descenders so the tooltip area includes the label even
   // when it's too small to render its own text
   hoverBandInnerPadding: 1.25,
-  hoverBandOuterPadding: 1.5,
-  hairlineColor: '#C6CBD4',
-  labelColor: '#D6D8DC'
+  hoverBandOuterPadding: 1.5
 } as const;

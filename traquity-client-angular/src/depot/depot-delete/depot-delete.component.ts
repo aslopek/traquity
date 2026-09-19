@@ -6,6 +6,7 @@ import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
 import {DepotRead} from "../../gen/api/depot";
+import {TitleToolbarComponent} from "../../common/components/title-toolbar/title-toolbar.component";
 import {Store} from "@ngrx/store";
 import {AppState} from "../../store/app.state";
 import {DepotActions} from "../../store/depot/depot.actions";
@@ -22,6 +23,7 @@ export type DepotDeleteComponentDialogData = {
     MatIconModule,
     MatInputModule,
     ReactiveFormsModule,
+    TitleToolbarComponent,
   ],
   templateUrl: "./depot-delete.component.html",
   styleUrl: "./depot-delete.component.scss",

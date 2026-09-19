@@ -1,4 +1,5 @@
 import {Component, inject} from "@angular/core";
+import {TitleToolbarComponent} from "../../../common/components/title-toolbar/title-toolbar.component";
 import {DataSourceWithId} from "../data-source.type";
 import {Action, Store} from "@ngrx/store";
 import {AppState} from "../../../store/app.state";
@@ -10,7 +11,8 @@ import {WarnIconComponent} from "../../../common/components/warn-icon/warn-icon.
   selector: "app-delete-data-source-dialog",
   imports: [
     MatButton,
-    WarnIconComponent
+    WarnIconComponent,
+    TitleToolbarComponent
   ],
   templateUrl: "./delete-data-source-dialog.component.html",
   styleUrl: "./delete-data-source-dialog.component.scss",

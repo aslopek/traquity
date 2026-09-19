@@ -1,42 +1,6 @@
-.security-table {
-  width: 100%;
-}
-
-.security-table-selected-row {
-  background-color: darkgray;
-}
-
-.security-chart {
-  box-sizing: border-box;
-  width: 100%;
-  margin-top: 1rem;
-  padding: 1.5rem;
-  border: 0.0625rem solid rgba(255, 255, 255, 0.08);
-  border-radius: 0.5rem;
-  background: linear-gradient(
-          to bottom,
-          rgba(255, 255, 255, 0.03) 0%,
-          rgba(255, 255, 255, 0.01) 100%
-  );
-}
-
-.logo-column {
-  width: 4.5rem;
-}
-
-.price-column {
-  text-align: center;
-}
-
-.edit-button {
-  cursor: pointer
-}
-
-.edit-button-column {
-  width: 4rem;
-}
-
-.row {
+:host {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
 }

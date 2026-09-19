@@ -1,14 +1,13 @@
-.title-bar {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-}
-
-.stepper {
-  overflow: auto;
-}
-
-.step {
+:host {
   display: flex;
   flex-direction: column;
+  min-width: 40rem;
+  min-height: 0;
+}
+
+.transaction-import__stepper {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 var(--tq-space-2) var(--tq-space-4);
 }

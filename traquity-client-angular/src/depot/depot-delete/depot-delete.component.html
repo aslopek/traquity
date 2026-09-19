@@ -1,27 +1,34 @@
-<div class="wrapper">
-    <p>
-        Please confirm the name of the depot you would like to delete:
-    </p>
-    <p>
-        {{ depot().name }}
-    </p>
+<app-title-toolbar (onClose)="cancel()"
+                   title="Delete Depot">
+</app-title-toolbar>
+
+<div class="tq-dialog__body">
+    <div class="tq-notice tq-notice--error">
+        <mat-icon class="tq-notice__icon"
+                  fontIcon="warning"></mat-icon>
+        <span>Deleting a depot removes it and all of its transactions. This cannot be undone.</span>
+    </div>
+
+    <p class="tq-muted">Type the depot's name to confirm:</p>
+    <p class="depot-delete__name">{{ depot().name }}</p>
+
     <mat-form-field>
         <mat-label>Confirm Depot Name</mat-label>
         <input #confirmDepotName
                matInput
                type="text">
     </mat-form-field>
-    <div class="button-group">
-        <button (click)="deleteDepot()"
-                [disabled]="depot().name !== confirmDepotName.value"
-                color="warn"
-                mat-flat-button>
-            Delete
-        </button>
-        <button (click)="cancel()"
-                color="primary"
-                mat-stroked-button>
-            Cancel
-        </button>
-    </div>
+</div>
+
+<div class="tq-dialog__actions">
+    <button (click)="cancel()"
+            matButton>
+        Cancel
+    </button>
+    <button (click)="deleteDepot()"
+            [disabled]="depot().name !== confirmDepotName.value"
+            class="tq-danger"
+            matButton="filled">
+        Delete
+    </button>
 </div>

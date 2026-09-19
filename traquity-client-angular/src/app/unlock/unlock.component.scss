@@ -1,66 +1,68 @@
-.unlock-screen {
+.unlock {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
-  height: 100%;
+  padding: var(--tq-space-6);
+  background: radial-gradient(circle at 50% 25%, var(--tq-accent-surface), transparent 45%),
+  var(--tq-surface-canvas);
 }
 
 // the only control on this screen that is not about the database being unlocked, so it sits out of the centered
 // column rather than in it
-.about-button {
+.unlock__about {
   position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
+  top: var(--tq-space-2);
+  right: var(--tq-space-2);
 }
 
-.unlock-content {
+.unlock__card {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
   width: 100%;
-  max-width: 32rem;
-  padding: 2rem;
+  max-width: 26rem;
+  padding: var(--tq-space-6);
+  background-color: var(--tq-surface-raised);
+  border: 0.0625rem solid var(--tq-border);
+  border-radius: var(--tq-radius-lg);
+  box-shadow: var(--tq-shadow-3);
 }
 
-.app-logo {
-  max-width: 50%;
-  border-radius: 20%;
-  margin-bottom: 2rem;
+.unlock__logo {
+  width: 5rem;
+  height: 5rem;
+  object-fit: contain;
   align-self: center;
+  border-radius: var(--tq-radius-md);
+  margin-bottom: var(--tq-space-5);
 }
 
-.database-file-name {
-  margin: 0;
+.unlock__file-name {
   text-align: center;
   word-break: break-all;
+  font-size: var(--tq-font-size-lg);
 }
 
-.database-path {
-  margin: 0.5rem 0 1.5rem;
+.unlock__path {
+  margin-top: var(--tq-space-2);
   text-align: center;
   word-break: break-all;
-  font-size: 0.875rem;
-  color: var(--mat-sys-on-surface-variant);
+  font-size: var(--tq-font-size-sm);
 }
 
-.start-failed {
-  margin: 0 0 1rem;
-  color: var(--mat-sys-error);
+.unlock__field {
+  margin-top: var(--tq-space-5);
 }
 
-.actions {
+.unlock__actions {
   display: flex;
   justify-content: flex-end;
-  gap: 1rem;
+  gap: var(--tq-space-2);
+  margin-top: var(--tq-space-4);
 }
 
-.use-different-database {
+.unlock__alternative {
   align-self: center;
-  margin-top: 1rem;
+  margin-top: var(--tq-space-4);
 }

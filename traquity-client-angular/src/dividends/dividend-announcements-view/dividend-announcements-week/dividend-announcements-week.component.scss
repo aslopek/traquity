@@ -1,22 +1,16 @@
-.row {
-  display: flex;
-  flex-direction: row;
+.week {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--tq-space-4);
 }
 
-.column {
+.week__day {
   display: flex;
   flex-direction: column;
-  width: 20%;
-}
-
-.margin-right {
-  margin-right: 1rem;
-}
-
-.list-item {
-  margin-top: 1rem;
-}
-
-.hidden-list {
-  visibility: hidden;
+  gap: var(--tq-space-2);
+  padding: var(--tq-space-3);
+  border: 0.0625rem solid var(--tq-border);
+  border-radius: var(--tq-radius-sm);
+  background-color: var(--tq-surface-sunken);
+  min-width: 0;
 }

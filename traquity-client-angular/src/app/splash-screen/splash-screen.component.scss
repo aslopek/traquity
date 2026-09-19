@@ -1,42 +1,44 @@
-.app-splash-screen {
+.splash {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   display: flex;
-  justify-content: center;
   align-items: center;
-  width: 100%;
-  height: 100%;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 35%, var(--tq-accent-surface), transparent 45%),
+  var(--tq-surface-canvas);
   z-index: 100;
 }
 
-.app-label {
-  margin-top: 2rem;
-  color: #fff;
-  font-size: 2.5rem;
-  font-family: 'Roboto', cursive;
-}
-
-.app-splash-inner {
+.splash__inner {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
+  gap: var(--tq-space-3);
+  width: 18rem;
 }
 
-.app-logo {
-  max-width: 50%;
-  border-radius: 20%;
-  margin-bottom: 2rem;
+// no radius and no shadow: the logo is a transparent PNG, so a radius clips nothing and a shadow traces the
+// element's box rather than the artwork, framing it like the boxed logos `tq-icon` draws. Here it stands on its own.
+.splash__logo {
+  width: 12rem;
+  height: 12rem;
+  object-fit: contain;
+  margin-bottom: var(--tq-space-4);
 }
 
-.app-loader {
-  max-width: 100%;
-  background: no-repeat center;
-  background-size: contain;
-  width: 5rem;
-  height: 5rem;
-  margin-top: 5rem;
+.splash__label {
+  font-size: var(--tq-font-size-2xl);
+  font-weight: 700;
+  // em: the wordmark's tracking scales with its own font-size
+  letter-spacing: 0.04em;
+}
+
+.splash__hint {
+  color: var(--tq-text-muted);
+  font-size: var(--tq-font-size-base);
+}
+
+.splash__progress {
+  width: 100%;
+  margin-top: var(--tq-space-4);
 }

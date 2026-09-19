@@ -1,26 +1,19 @@
-<div
-        *ngrxLet="{
-    dividendAnnouncements: dividendAnnouncements$ | async,
-  } as notifications"
->
+<div *ngrxLet="{dividendAnnouncements: dividendAnnouncements$ | async} as notifications">
     @if ((notifications.dividendAnnouncements?.length ?? 0) > 0) {
-        <button mat-icon-button [matMenuTriggerFor]="notificationMenu">
-            <mat-icon
-                    fontIcon="notifications"
-                    [matBadge]="
-          $safeNavigationMigration(notifications.dividendAnnouncements?.length)
-        "
-            >
+        <button mat-icon-button
+                aria-label="Notifications"
+                matTooltip="Notifications"
+                [matMenuTriggerFor]="notificationMenu">
+            <mat-icon fontIcon="notifications"
+                      [matBadge]="$safeNavigationMigration(notifications.dividendAnnouncements?.length)">
             </mat-icon>
         </button>
     }
-    <mat-menu #notificationMenu="matMenu">
-        @for (dividendAnnouncement of notifications.dividendAnnouncements;
-          track dividendAnnouncement) {
-            <app-dividend-announcement-notification
-                    [dividendAnnouncement]="dividendAnnouncement"
-                    (click)="$event.stopPropagation()"
-            >
+    <mat-menu #notificationMenu="matMenu"
+              class="notifications__menu">
+        @for (dividendAnnouncement of notifications.dividendAnnouncements; track dividendAnnouncement) {
+            <app-dividend-announcement-notification [dividendAnnouncement]="dividendAnnouncement"
+                                                    (click)="$event.stopPropagation()">
             </app-dividend-announcement-notification>
         }
     </mat-menu>

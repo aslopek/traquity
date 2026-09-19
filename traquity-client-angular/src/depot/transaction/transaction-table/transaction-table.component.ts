@@ -2,12 +2,10 @@ import {AsyncPipe} from "@angular/common";
 import {Component, DestroyRef, EventEmitter, inject, Signal, signal, viewChild, ViewContainerRef, WritableSignal,} from "@angular/core";
 import {takeUntilDestroyed, toObservable} from "@angular/core/rxjs-interop";
 import {FormControl, ReactiveFormsModule} from "@angular/forms";
-import {MatAutocompleteModule} from "@angular/material/autocomplete";
 import {MatButtonModule} from "@angular/material/button";
 import {MatButtonToggleModule} from "@angular/material/button-toggle";
 import {MatDialog, MatDialogRef} from "@angular/material/dialog";
 import {MatIconModule} from "@angular/material/icon";
-import {MatInputModule} from "@angular/material/input";
 import {MatPaginator, MatPaginatorModule, PageEvent,} from "@angular/material/paginator";
 import {MatSelectModule} from "@angular/material/select";
 import {MatTableModule} from "@angular/material/table";
@@ -48,9 +46,7 @@ import {ReadableTransactionPageStore, transactionPageStore} from "../transaction
     MatTooltipModule,
     MatButtonToggleModule,
     MatButtonModule,
-    MatInputModule,
     ReactiveFormsModule,
-    MatAutocompleteModule,
     MatSelectModule,
     TqCurrencyPipe,
     TqDatePipe,
@@ -145,7 +141,7 @@ export class TransactionTableComponent {
       panelClass: "mat-app-background",
       autoFocus: false,
       disableClose: true,
-      width: "60em",
+      width: "60rem",
       maxHeight: "90vh",
     });
   }

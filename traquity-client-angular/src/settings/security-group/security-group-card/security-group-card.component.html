@@ -1,33 +1,35 @@
 @let group = securityGroup();
-<div class="security-group-entry"
-     [class.selected]="isSelected()"
+<div class="security-group-card"
+     [class.security-group-card--selected]="isSelected()"
+     [class.security-group-card--new]="group === 'new'"
      (click)="clickSecurityGroup()">
     @if (group !== 'new' && group.securities.length > 0) {
-        <security-logo class="group-logo"
-                       [securityId]="group.securities[0]">
-        </security-logo>
+        <security-logo [securityId]="group.securities[0]"></security-logo>
     }
-    <div class="security-group-info">
-        <div class="security-group-name">
+
+    <div class="security-group-card__info">
+        <span class="security-group-card__name tq-truncate">
             @if (group === 'new') {
-                Add new Security Group
+                Add new security group
             } @else {
                 {{ group.name }}
             }
-        </div>
+        </span>
         @if (group !== 'new') {
-            <div class="security-group-count">
+            <span class="security-group-card__count tq-numeric">
                 {{ group.securities.length }} securities
-            </div>
+            </span>
         }
     </div>
-    <div class="side-button"
-         (click)="clickSideButton($event)"
-         mat-ripple>
+
+    <button class="security-group-card__action"
+            type="button"
+            [attr.aria-label]="group === 'new' ? 'Add security group' : 'Delete security group'"
+            (click)="clickSideButton($event)">
         @if (group === 'new') {
             <mat-icon fontIcon="add"></mat-icon>
         } @else {
             <mat-icon fontIcon="delete"></mat-icon>
         }
-    </div>
+    </button>
 </div>

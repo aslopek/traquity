@@ -1,17 +1,38 @@
-@use '../../../../../styles' as styles;
-
-.content {
-  padding: 1rem;
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-4);
+  padding: var(--tq-space-4) 0;
 }
 
-.file-input {
+.step__file-input {
   display: none;
 }
 
-.error {
-  color: styles.$color-error;
+.step__row {
+  display: flex;
+  align-items: center;
+  gap: var(--tq-space-3);
 }
 
-.next-button {
-  cursor: pointer;
+.step__summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-2);
+  padding: var(--tq-space-4);
+  border: 0.0625rem solid var(--tq-border);
+  border-radius: var(--tq-radius-sm);
+  background-color: var(--tq-surface-sunken);
+}
+
+.step__summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--tq-space-4);
+  min-width: 0;
+}
+
+.step__actions {
+  display: flex;
+  justify-content: flex-end;
 }

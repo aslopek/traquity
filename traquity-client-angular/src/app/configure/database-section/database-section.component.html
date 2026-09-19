@@ -45,11 +45,11 @@
     </mat-form-field>
 
     <div class="database-actions">
-        <button mat-stroked-button
+        <button matButton="outlined"
                 (click)="configureStore.pickExistingDatabase()">
             Use existing…
         </button>
-        <button mat-stroked-button
+        <button matButton="outlined"
                 (click)="configureStore.pickNewDatabase()">
             Create new…
         </button>
@@ -68,8 +68,9 @@
                         mat-icon-button
                         type="button"
                         [attr.aria-label]="configureStore.passwordVisible() ? 'Hide password' : 'Show password'"
+                        [matTooltip]="configureStore.passwordVisible() ? 'Hide password' : 'Show password'"
                         (click)="configureStore.togglePasswordVisibility()">
-                    <mat-icon>{{ configureStore.passwordVisible() ? 'visibility_off' : 'visibility' }}</mat-icon>
+                    <mat-icon [fontIcon]="configureStore.passwordVisible() ? 'visibility_off' : 'visibility'"></mat-icon>
                 </button>
             </mat-form-field>
 
@@ -84,29 +85,32 @@
                         mat-icon-button
                         type="button"
                         [attr.aria-label]="configureStore.passwordVisible() ? 'Hide password' : 'Show password'"
+                        [matTooltip]="configureStore.passwordVisible() ? 'Hide password' : 'Show password'"
                         (click)="configureStore.togglePasswordVisibility()">
-                    <mat-icon>{{ configureStore.passwordVisible() ? 'visibility_off' : 'visibility' }}</mat-icon>
+                    <mat-icon [fontIcon]="configureStore.passwordVisible() ? 'visibility_off' : 'visibility'"></mat-icon>
                 </button>
             </mat-form-field>
 
             @if (configureStore.passwordMismatch()) {
-                <p class="password-mismatch">
-                    <mat-icon class="message-icon">error</mat-icon>
+                <div class="tq-notice tq-notice--error">
+                    <mat-icon class="tq-notice__icon"
+                              fontIcon="error"></mat-icon>
                     <span>The confirmation does not match the password.</span>
-                </p>
+                </div>
             }
 
             @if (configureStore.passwordlessWarning()) {
-                <p class="passwordless-warning">
-                    <mat-icon class="message-icon">warning</mat-icon>
+                <div class="tq-notice tq-notice--warn">
+                    <mat-icon class="tq-notice__icon"
+                              fontIcon="warning"></mat-icon>
                     <span>Leave both empty and this database will be accessible without a password.</span>
-                </p>
+                </div>
             }
         </div>
     }
 
     <div class="re-verify">
-        <button mat-stroked-button
+        <button matButton="outlined"
                 [disabled]="!configureStore.canForgetPassword()"
                 (click)="configureStore.forgetPassword()">
             Re-verify the password on next start

@@ -1,22 +1,22 @@
-<div class="wrapper">
-    <div class="position-page-menu">
-        <mat-button-toggle-group class="position-page-menu-item"
-                                 hideSingleSelectionIndicator="true">
+<div class="position-page">
+    <div class="position-page__toolbar">
+        <mat-button-toggle-group hideSingleSelectionIndicator="true">
             <mat-button-toggle (click)="selectView('donut')"
                                [checked]="selectedView() === 'donut'"
+                               aria-label="Donut Chart"
                                matTooltip="Donut Chart">
-                <mat-icon>donut_large</mat-icon>
+                <mat-icon fontIcon="donut_large"></mat-icon>
             </mat-button-toggle>
 
             <mat-button-toggle (click)="selectView('list')"
                                [checked]="selectedView() === 'list'"
+                               aria-label="List"
                                matTooltip="List">
-                <mat-icon>format_list_bulleted</mat-icon>
+                <mat-icon fontIcon="format_list_bulleted"></mat-icon>
             </mat-button-toggle>
         </mat-button-toggle-group>
 
-        <mat-form-field appearance="outline"
-                        class="position-page-menu-item"
+        <mat-form-field class="position-page__group-by"
                         subscriptSizing="dynamic">
             <mat-label>Group by</mat-label>
             <mat-select (selectionChange)="selectGroupBy($event.value)"
@@ -29,28 +29,37 @@
             </mat-select>
         </mat-form-field>
 
-        <mat-checkbox (click)="toggleUseBuyIn()"
-                      [checked]="useBuyIn()"
-                      class="position-page-menu-item">
+        <mat-slide-toggle (click)="toggleUseBuyIn()"
+                          [checked]="useBuyIn()">
             Use Buy-In Values
-        </mat-checkbox>
+        </mat-slide-toggle>
+
+        <span class="tq-spacer"></span>
 
         <button (click)="downloadImage()"
                 [disabled]="selectedDepots().length === 0"
                 mat-icon-button
-                matTooltip="Download Chart as Image"
-                class="position-page-menu-item">
-            <mat-icon>file_download</mat-icon>
+                aria-label="Download Chart as Image"
+                matTooltip="Download Chart as Image">
+            <mat-icon fontIcon="file_download"></mat-icon>
         </button>
-
     </div>
+
     @if (selectedDepots().length > 0) {
-        <div id="position-view-container">
+        <div id="position-view-container"
+             class="position-page__view">
             @if (selectedView() === 'donut') {
                 <app-position-pie-chart></app-position-pie-chart>
             } @else if (selectedView() === 'list') {
                 <app-position-list></app-position-list>
             }
+        </div>
+    } @else {
+        <div class="tq-empty">
+            <mat-icon class="tq-empty__icon"
+                      fontIcon="pie_chart"></mat-icon>
+            <span class="tq-empty__title">No depot selected</span>
+            <span class="tq-empty__hint">Pick a depot in the header to see its positions.</span>
         </div>
     }
 </div>

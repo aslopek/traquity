@@ -1,14 +1,15 @@
-<div class="configure-screen">
-    <app-about-button class="about-button"></app-about-button>
+<div class="configure">
+    <app-about-button class="configure__about"></app-about-button>
 
-    <div class="configure-content">
-        <h1 class="configure-title">Configuration</h1>
+    <div class="configure__content">
+        <h1 class="configure__title">Configuration</h1>
 
         @if (configureStore.configUnreadable()) {
-            <div class="notice notice-error">
-                <mat-icon>report</mat-icon>
-                <div class="notice-text">
-                    <p class="notice-headline">traquity.config.json could not be read</p>
+            <div class="tq-notice tq-notice--error">
+                <mat-icon class="tq-notice__icon"
+                          fontIcon="report"></mat-icon>
+                <div class="tq-notice__body">
+                    <p class="configure__notice-headline">traquity.config.json could not be read</p>
                     <p>
                         It was left on disk unchanged, so it can still be corrected by hand. See
                         {{ configureStore.logPath() }} for the reason.
@@ -18,19 +19,18 @@
         }
 
         @if (startupStore.startFailed()) {
-            <div class="notice notice-warning">
-                <mat-icon>warning</mat-icon>
-                <div class="notice-text">
-                    <p class="notice-headline">
+            <div class="tq-notice tq-notice--warn">
+                <mat-icon class="tq-notice__icon"
+                          fontIcon="warning"></mat-icon>
+                <div class="tq-notice__body">
+                    <p class="configure__notice-headline">
                         {{ startupStore.databasePath() | fileName:'.mv.db' }} could not be opened
                     </p>
-                    <p class="notice-directory">
+                    <p class="configure__notice-path tq-muted">
                         {{ startupStore.databasePath() | fileDirectory }}
                     </p>
                     @if (configureStore.logPath(); as logPath) {
-                        <p>
-                            See {{ logPath }} for the cause.
-                        </p>
+                        <p>See {{ logPath }} for the cause.</p>
                     }
                 </div>
             </div>
@@ -39,14 +39,13 @@
         <app-database-section/>
         <app-java-section/>
 
-        <div class="actions">
-            <button mat-stroked-button
+        <div class="configure__actions">
+            <button matButton="outlined"
                     [disabled]="!configureStore.enableDiscardAndStart()"
                     (click)="configureStore.discardAndStart()">
                 Discard &amp; start
             </button>
-            <button mat-raised-button
-                    color="primary"
+            <button matButton="filled"
                     [disabled]="!configureStore.enableSaveAndStart()"
                     (click)="configureStore.saveAndStart()">
                 Save &amp; start

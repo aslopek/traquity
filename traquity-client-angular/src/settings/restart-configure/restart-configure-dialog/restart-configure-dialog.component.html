@@ -1,23 +1,18 @@
-<div class="container">
-    <app-title-toolbar (onClose)="cancel()"
-                       title="Restart & configure database"
-                       class="title-bar">
-    </app-title-toolbar>
+<app-title-toolbar (onClose)="cancel()"
+                   title="Restart &amp; configure database">
+</app-title-toolbar>
 
-    <div class="wrapper">
-        <p>The app restarts and opens the configuration screen.</p>
+<div class="tq-dialog__body">
+    <p class="tq-muted">The app restarts and opens the configuration screen.</p>
+</div>
 
-        <div class="button-group">
-            <button (click)="confirm()"
-                    mat-flat-button
-                    color="primary">
-                Restart & configure
-            </button>
-            <button (click)="cancel()"
-                    mat-stroked-button
-                    color="primary">
-                Cancel
-            </button>
-        </div>
-    </div>
+<div class="tq-dialog__actions">
+    <button (click)="cancel()"
+            matButton>
+        Cancel
+    </button>
+    <button (click)="confirm()"
+            matButton="filled">
+        Restart &amp; configure
+    </button>
 </div>

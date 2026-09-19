@@ -1,0 +1,12 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0 var(--tq-space-5);
+}
+
+.depot-page__tabs {
+  flex: 1 1 auto;
+  min-height: 0;
+}

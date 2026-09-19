@@ -1,91 +1,105 @@
-.wrapper {
+:host {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.pie-chart {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 80vh;
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
 }
 
-.chart-stack {
+// full width, not a fraction of it: the donut is sized off the smaller of the two dimensions, so in a landscape
+// window the extra width goes entirely to the labels echarts would otherwise truncate
+.pie-chart__stack {
   position: relative;
-  width: 80%;
-  height: 100%;
-}
-
-.chart {
   width: 100%;
   height: 100%;
 }
 
-.group-overlay {
+.pie-chart__canvas {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.pie-chart__overlay {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
 
-.hover-tag {
+// stroke and fill are CSS properties, so the group ring's chrome reads the same tokens the DOM does
+.pie-chart__hairline {
+  stroke: var(--tq-border-strong);
+}
+
+.pie-chart__label {
+  fill: var(--tq-text-muted);
+  font-family: var(--tq-font);
+}
+
+.pie-chart__hover-tag {
   position: absolute;
   transform: translate(-50%, -120%);
   display: flex;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.375rem 0.625rem;
-  background-color: #1E1E1E;
-  border: 0.125rem solid #5A5F66;
-  border-radius: 0.25rem;
-  box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.5);
+  gap: var(--tq-space-2);
+  padding: var(--tq-space-2) var(--tq-space-3);
+  // glass: this floats directly over the donut, which is the one case the styleguide grants it
+  background-color: var(--tq-glass-bg);
+  backdrop-filter: var(--tq-glass-blur);
+  border: 0.0625rem solid var(--tq-border);
+  border-radius: var(--tq-radius-md);
+  box-shadow: var(--tq-shadow-2);
   white-space: nowrap;
   pointer-events: none;
-  font-size: 0.85rem;
-  color: #ffffff;
+  font-size: var(--tq-font-size-base);
+  color: var(--tq-text);
 }
 
-.position-tag-name {
+.pie-chart__tag-name {
   font-weight: 500;
 }
 
-.position-tag-relative {
-  color: #ffffff;
-  background-color: #4C5058;
-  padding: 0.1rem 0.4rem;
-  border-radius: 0.25rem;
+.pie-chart__tag-size {
+  color: var(--tq-text-muted);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
 }
 
-.chart-background {
-  height: 100%;
-  width: 100%;
+.pie-chart__tag-relative {
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--tq-radius-xs);
+  background-color: var(--tq-surface-active);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+.pie-chart__center {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: var(--tq-space-1);
 }
 
-.wrapper {
-  position: relative;
+.pie-chart__total {
+  font-size: var(--tq-font-size-2xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
 }
 
-.wrapper .chart {
-  position: relative;
-}
-
-.wrapper .chart-background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
-}
-
-.chart-background .title {
-  font-weight: 500;
-  font-size: 1.6rem;
-  margin: 0;
-}
-
-.chart-background .subtitle {
-  font-weight: 400;
-  font-size: 1rem;
-  margin: 0.3rem 0 0;
-  opacity: 0.6;
+.pie-chart__count {
+  font-size: var(--tq-font-size-base);
+  color: var(--tq-text-muted);
 }

@@ -1,28 +1,27 @@
-<div class="wrapper">
-    <mat-form-field class="wrapper">
-        <mat-label>Create new Depot</mat-label>
+<app-title-toolbar (onClose)="cancel()"
+                   title="Create Depot">
+</app-title-toolbar>
+
+<div class="tq-dialog__body">
+    <mat-form-field>
+        <mat-label>Name</mat-label>
         <input (keyup.enter)="createDepot()"
                [(ngModel)]="name"
                matInput
                type="text">
-        <button (click)="createDepot()"
-                [disabled]="name.trim().length === 0"
-                mat-icon-button
-                matSuffix>
-        </button>
     </mat-form-field>
+
     <app-currency-select (onCurrencySelect)="setCurrency($event)"></app-currency-select>
-    <div class="button-group">
-        <button (click)="createDepot()"
-                [disabled]="name.trim().length === 0"
-                color="primary"
-                mat-flat-button>
-            Create
-        </button>
-        <button (click)="cancel()"
-                color="primary"
-                mat-stroked-button>
-            Cancel
-        </button>
-    </div>
+</div>
+
+<div class="tq-dialog__actions">
+    <button (click)="cancel()"
+            matButton>
+        Cancel
+    </button>
+    <button (click)="createDepot()"
+            [disabled]="name.trim().length === 0"
+            matButton="filled">
+        Create
+    </button>
 </div>

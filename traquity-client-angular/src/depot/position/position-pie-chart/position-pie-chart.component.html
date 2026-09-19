@@ -1,18 +1,18 @@
-<div class="wrapper">
+<div class="pie-chart">
     @if (depotComposition().positions.length > 0) {
-        <div class="chart-stack">
+        <div class="pie-chart__stack">
             @let groupingActive = grouping().groups.length > 0;
 
             <div (chartInit)="onChartInit($event)"
                  (chartMouseOver)="onChartMouseOver($event)"
                  (chartMouseOut)="onChartMouseOut()"
                  [options]="grouping().positions | positionPieChart : hideAbsoluteValues() : currency() : useBuyIn() : groupingActive"
-                 class="chart"
+                 class="pie-chart__canvas"
                  echarts>
             </div>
 
             @if (groupingActive) {
-                <svg class="group-overlay"
+                <svg class="pie-chart__overlay"
                      viewBox="0 0 100 100"
                      preserveAspectRatio="xMidYMid meet"
                      width="100%"
@@ -25,8 +25,8 @@
                             </path>
                         </defs>
 
-                        <path [attr.d]="arc.hairlinePath"
-                              [attr.stroke]="geometry.hairlineColor"
+                        <path class="pie-chart__hairline"
+                              [attr.d]="arc.hairlinePath"
                               [attr.stroke-width]="geometry.hairlineStrokeWidth"
                               fill="none"
                               stroke-linecap="round">
@@ -42,10 +42,9 @@
                         </path>
 
                         @if (arc.label !== '') {
-                            <text [attr.fill]="geometry.labelColor"
+                            <text class="pie-chart__label"
                                   [attr.font-size]="geometry.labelFontSize"
                                   [attr.letter-spacing]="geometry.labelLetterSpacing"
-                                  font-family="Roboto, 'Helvetica Neue', sans-serif"
                                   font-weight="500"
                                   pointer-events="none">
                                 <textPath [attr.href]="'#' + arc.id"
@@ -60,7 +59,7 @@
             }
 
             @if (groupingActive && hoveredPosition(); as position) {
-                <div class="hover-tag"
+                <div class="pie-chart__hover-tag"
                      [style.left.px]="hoverPoint()?.x"
                      [style.top.px]="hoverPoint()?.y">
                     <tq-icon size="small"
@@ -68,23 +67,23 @@
                              [src]="position.securityIds[0] | securityLogoUrl">
                     </tq-icon>
 
-                    <span class="position-tag-name">{{ position.displayName }}:</span>
+                    <span class="pie-chart__tag-name">{{ position.displayName }}:</span>
 
                     @if (!hideAbsoluteValues()) {
-                        <span class="position-tag-size">
+                        <span class="pie-chart__tag-size tq-numeric">
                             {{ (useBuyIn() ? position.buyInAbsolute : position.currentSizeAbsolute) | tqCurrency:currency() }}
                             ({{ position.count | tqDecimal:'1.0-3' }})
                         </span>
                     }
 
-                    <span class="position-tag-relative">
+                    <span class="pie-chart__tag-relative">
                         {{ (useBuyIn() ? position.buyInRelative : position.currentSizeRelative) | tqPercent }}
                     </span>
                 </div>
             }
 
             @if (groupingActive && hoveredGroupArc(); as arc) {
-                <div class="hover-tag"
+                <div class="pie-chart__hover-tag"
                      [style.left.px]="groupHoverPoint()?.x"
                      [style.top.px]="groupHoverPoint()?.y">
                     {{ arc.tooltip }}
@@ -92,12 +91,12 @@
             }
         </div>
 
-        <div class="chart-background">
+        <div class="pie-chart__center">
             @if (!hideAbsoluteValues()) {
                 @let total = useBuyIn() ? depotComposition().buyInAbsolute : depotComposition().currentSizeAbsolute;
-                <h1 class="title">{{ total | tqCurrency:currency() }}</h1>
+                <span class="pie-chart__total tq-numeric">{{ total | tqCurrency:currency() }}</span>
             }
-            <h1 class="subtitle">{{ depotComposition().positions.length }} Positions</h1>
+            <span class="pie-chart__count">{{ depotComposition().positions.length }} Positions</span>
         </div>
     }
 </div>

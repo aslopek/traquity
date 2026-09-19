@@ -1,7 +1,33 @@
-.content {
-  padding: 1rem;
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-4);
+  padding: var(--tq-space-4) 0;
 }
 
-.close-button {
-  margin-top: 1rem;
+.step__progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-2);
+}
+
+.step__summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-2);
+  padding: var(--tq-space-4);
+  border: 0.0625rem solid var(--tq-border);
+  border-radius: var(--tq-radius-sm);
+  background-color: var(--tq-surface-sunken);
+}
+
+.step__summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--tq-space-4);
+}
+
+.step__actions {
+  display: flex;
+  justify-content: flex-end;
 }

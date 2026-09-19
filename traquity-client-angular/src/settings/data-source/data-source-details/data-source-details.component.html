@@ -1,288 +1,267 @@
 @let source = selectedDataSource();
-<div class="data-source-container">
 
-    <div class="action-bar">
-        <input type="file"
-               #fileInput
-               (change)="onFileSelected($event)"
-               accept=".json,application/json"
-               class="hidden-input">
+<div class="data-source-details">
+    <header class="data-source-details__head">
+        <h3 class="data-source-details__name tq-truncate">{{ source.name }}</h3>
 
-        <button mat-stroked-button
-                type="button"
-                (click)="fileInput.click()">
-            <mat-icon>upload_file</mat-icon>
-            Select Configuration File
-        </button>
+        <div class="data-source-details__actions">
+            <input type="file"
+                   #fileInput
+                   (change)="onFileSelected($event)"
+                   accept=".json,application/json"
+                   class="data-source-details__file-input">
 
-        <button mat-flat-button
-                color="primary"
-                [disabled]="isSaveDisabled()"
-                (click)="save()">
-            <mat-icon>save</mat-icon>
-            Save
-        </button>
-    </div>
+            <button matButton="outlined"
+                    type="button"
+                    (click)="fileInput.click()">
+                <mat-icon fontIcon="upload_file"></mat-icon>
+                Select Configuration File
+            </button>
 
-    <!-- Header Card -->
-    <mat-card class="header-card">
-        <mat-card-header>
-            <mat-card-title>{{ source.name }}</mat-card-title>
-        </mat-card-header>
-    </mat-card>
+            <button matButton="filled"
+                    [disabled]="isSaveDisabled()"
+                    (click)="save()">
+                <mat-icon fontIcon="save"></mat-icon>
+                Save
+            </button>
+        </div>
+    </header>
 
-    <div class="grid-layout">
+    <div class="data-source-details__grid">
+        <section class="tq-card">
+            <header class="tq-card__head">
+                <h4 class="tq-card__title">Date and Value</h4>
+            </header>
 
-        <!-- Date and Value -->
-        <mat-card>
-            <mat-card-header>
-                <mat-card-title>Date and Value</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-                <div class="meta-grid">
-                    <div class="meta-label">JSON Path Value</div>
-                    <div class="meta-value code-text">{{ source.jsonPathValue }}</div>
+            <dl class="data-source-details__meta">
+                <dt class="tq-section-label">JSON Path Value</dt>
+                <dd class="data-source-details__code">{{ source.jsonPathValue }}</dd>
 
-                    <div class="meta-label">JSON Path Date</div>
-                    <div class="meta-value code-text">{{ source.jsonPathDate }}</div>
+                <dt class="tq-section-label">JSON Path Date</dt>
+                <dd class="data-source-details__code">{{ source.jsonPathDate }}</dd>
 
-                    <div class="meta-label">Date Format</div>
-                    <div class="meta-value">
-                        <mat-chip-set>
-                            @if (source.dateFormat.customPattern) {
-                                <mat-chip>{{ source.dateFormat.customPattern }}</mat-chip>
-                            } @else {
-                                <mat-chip>{{ source.dateFormat.format }}</mat-chip>
-                            }
-                        </mat-chip-set>
-                    </div>
-
-                    @if (source.jsonPathCurrency || source.regexCurrency) {
-                        @if (source.jsonPathCurrency) {
-                            <div class="meta-label">JSON Path Currency</div>
-                            <div class="meta-value code-text">{{ source.jsonPathCurrency }}</div>
-                        }
-                        @if (source.regexCurrency) {
-                            <div class="meta-label">Currency Regex</div>
-                            <div class="meta-value code-text">
-                                {{ source.regexCurrency }} (Group: {{ source.regexCurrencyGroup ?? 0 }})
-                            </div>
-                        }
-                    }
-                </div>
-            </mat-card-content>
-        </mat-card>
-
-        <!-- Market Closing Times -->
-        @if (source.marketCloseTimes != null) {
-            <mat-card>
-                <mat-card-header>
-                    <mat-card-title>Market Closing Times</mat-card-title>
-                </mat-card-header>
-                <mat-card-content>
-                    @if (source.marketCloseTimes.length > 0) {
-                        <div class="table-container">
-                            <table mat-table [dataSource]="source.marketCloseTimes">
-                                <ng-container matColumnDef="time">
-                                    <th mat-header-cell
-                                        *matHeaderCellDef>
-                                        Time
-                                    </th>
-                                    <td mat-cell
-                                        *matCellDef="let element">
-                                        {{ element.time }}
-                                    </td>
-                                </ng-container>
-                                <ng-container matColumnDef="timezone">
-                                    <th mat-header-cell
-                                        *matHeaderCellDef>
-                                        Time Zone
-                                    </th>
-                                    <td mat-cell
-                                        *matCellDef="let element">
-                                        {{ element.timeZone }}
-                                    </td>
-                                </ng-container>
-                                <tr mat-header-row
-                                    *matHeaderRowDef="marketCloseColumns">
-                                </tr>
-                                <tr mat-row
-                                    *matRowDef="let row; columns: marketCloseColumns;">
-                                </tr>
-                            </table>
-                        </div>
+                <dt class="tq-section-label">Date Format</dt>
+                <dd>
+                    @if (source.dateFormat.customPattern) {
+                        <span class="tq-pill tq-pill--neutral">{{ source.dateFormat.customPattern }}</span>
                     } @else {
-                        <div class="empty-state">
-                            <p>No data available</p>
-                        </div>
+                        <span class="tq-pill tq-pill--neutral">{{ source.dateFormat.format }}</span>
                     }
-                </mat-card-content>
-            </mat-card>
+                </dd>
+
+                @if (source.jsonPathCurrency) {
+                    <dt class="tq-section-label">JSON Path Currency</dt>
+                    <dd class="data-source-details__code">{{ source.jsonPathCurrency }}</dd>
+                }
+                @if (source.regexCurrency) {
+                    <dt class="tq-section-label">Currency Regex</dt>
+                    <dd class="data-source-details__code">
+                        {{ source.regexCurrency }} (Group: {{ source.regexCurrencyGroup ?? 0 }})
+                    </dd>
+                }
+            </dl>
+        </section>
+
+        @if (source.marketCloseTimes != null) {
+            <section class="tq-card">
+                <header class="tq-card__head">
+                    <h4 class="tq-card__title">Market Closing Times</h4>
+                </header>
+
+                @if (source.marketCloseTimes.length > 0) {
+                    <div class="data-source-details__table">
+                        <table mat-table [dataSource]="source.marketCloseTimes">
+                            <ng-container matColumnDef="time">
+                                <th mat-header-cell
+                                    *matHeaderCellDef>
+                                    Time
+                                </th>
+                                <td mat-cell
+                                    *matCellDef="let element"
+                                    class="tq-numeric">
+                                    {{ element.time }}
+                                </td>
+                            </ng-container>
+                            <ng-container matColumnDef="timezone">
+                                <th mat-header-cell
+                                    *matHeaderCellDef>
+                                    Time Zone
+                                </th>
+                                <td mat-cell
+                                    *matCellDef="let element">
+                                    {{ element.timeZone }}
+                                </td>
+                            </ng-container>
+                            <tr mat-header-row
+                                *matHeaderRowDef="marketCloseColumns">
+                            </tr>
+                            <tr mat-row
+                                *matRowDef="let row; columns: marketCloseColumns;">
+                            </tr>
+                        </table>
+                    </div>
+                } @else {
+                    <p class="data-source-details__empty">No data available</p>
+                }
+            </section>
         }
 
-        <!-- URL Patterns -->
-        <mat-card class="full-width">
-            <mat-card-header>
-                <mat-card-title>URL Patterns</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-                @if (urlPatternRows().length > 0) {
-                    <div class="table-container">
-                        <table mat-table [dataSource]="urlPatternRows()">
-                            <ng-container matColumnDef="timespan">
-                                <th mat-header-cell
-                                    *matHeaderCellDef>
-                                    Timespan (Days)
-                                </th>
-                                <td mat-cell
-                                    *matCellDef="let element">
-                                    <mat-chip>{{ element.timespanInDays | tqDecimal:'1.0-0' }}</mat-chip>
-                                </td>
-                            </ng-container>
-                            <ng-container matColumnDef="pattern">
-                                <th mat-header-cell
-                                    *matHeaderCellDef>
-                                    URL Pattern
-                                </th>
-                                <td mat-cell
-                                    *matCellDef="let element"
-                                    class="code-text">
-                                    @let urlTokens = (element.urlPattern | tokenizeScript);
-                                    <span class="token-wrapper">
-                                        @for (token of urlTokens; track $index) {
-                                            @if (token.isScript) {
-                                                <span class="script-highlight">
-                                                    {{ token.text }}
-                                                </span>
-                                            } @else {
-                                                {{ token.text }}
-                                            }
+        <section class="tq-card data-source-details__full">
+            <header class="tq-card__head">
+                <h4 class="tq-card__title">URL Patterns</h4>
+            </header>
+
+            @if (urlPatternRows().length > 0) {
+                <div class="data-source-details__table">
+                    <table mat-table [dataSource]="urlPatternRows()">
+                        <ng-container matColumnDef="timespan">
+                            <th mat-header-cell
+                                *matHeaderCellDef>
+                                Timespan (Days)
+                            </th>
+                            <td mat-cell
+                                *matCellDef="let element">
+                                <span class="tq-pill tq-pill--neutral">
+                                    {{ element.timespanInDays | tqDecimal:'1.0-0' }}
+                                </span>
+                            </td>
+                        </ng-container>
+                        <ng-container matColumnDef="pattern">
+                            <th mat-header-cell
+                                *matHeaderCellDef>
+                                URL Pattern
+                            </th>
+                            <td mat-cell
+                                *matCellDef="let element"
+                                class="data-source-details__code">
+                                @let urlTokens = (element.urlPattern | tokenizeScript);
+                                <span class="data-source-details__tokens">
+                                    @for (token of urlTokens; track $index) {
+                                        @if (token.isScript) {
+                                            <span class="data-source-details__script">{{ token.text }}</span>
+                                        } @else {
+                                            {{ token.text }}
                                         }
-                                    </span>
-                                </td>
-                            </ng-container>
-                            <tr mat-header-row
-                                *matHeaderRowDef="urlPatternColumns()">
-                            </tr>
-                            <tr mat-row
-                                *matRowDef="let row; columns: urlPatternColumns();">
-                            </tr>
-                        </table>
-                    </div>
-                } @else {
-                    <div class="empty-state">
-                        <p>No data available</p>
-                    </div>
-                }
-            </mat-card-content>
-        </mat-card>
+                                    }
+                                </span>
+                            </td>
+                        </ng-container>
+                        <tr mat-header-row
+                            *matHeaderRowDef="urlPatternColumns()">
+                        </tr>
+                        <tr mat-row
+                            *matRowDef="let row; columns: urlPatternColumns();">
+                        </tr>
+                    </table>
+                </div>
+            } @else {
+                <p class="data-source-details__empty">No data available</p>
+            }
+        </section>
 
-        <!-- Request Headers -->
-        <mat-card>
-            <mat-card-header>
-                <mat-card-title>Request Headers</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-                @if (source.requestHeaders.length > 0) {
-                    <div class="table-container">
-                        <table mat-table [dataSource]="source.requestHeaders">
-                            <ng-container matColumnDef="name">
-                                <th mat-header-cell *matHeaderCellDef>
-                                    Header
-                                </th>
-                                <td mat-cell
-                                    *matCellDef="let element">
-                                    <strong>{{ element.headerName }}</strong>
-                                </td>
-                            </ng-container>
-                            <ng-container matColumnDef="value">
-                                <th mat-header-cell
-                                    *matHeaderCellDef>
-                                    Value
-                                </th>
-                                <td mat-cell
-                                    *matCellDef="let element"
-                                    class="code-text">
-                                    @let headerTokens = (element.headerValue | tokenizeScript);
-                                    <span class="token-wrapper">
-                                        @for (token of headerTokens; track $index) {
-                                            @if (token.isScript) {
-                                                <span class="script-highlight">
-                                                    {{ token.text }}
-                                                </span>
-                                            } @else {
-                                                {{ token.text }}
-                                            }
+        <section class="tq-card">
+            <header class="tq-card__head">
+                <h4 class="tq-card__title">Request Headers</h4>
+            </header>
+
+            @if (source.requestHeaders.length > 0) {
+                <div class="data-source-details__table">
+                    <table mat-table [dataSource]="source.requestHeaders">
+                        <ng-container matColumnDef="name">
+                            <th mat-header-cell
+                                *matHeaderCellDef>
+                                Header
+                            </th>
+                            <td mat-cell
+                                *matCellDef="let element"
+                                class="data-source-details__header-name">
+                                {{ element.headerName }}
+                            </td>
+                        </ng-container>
+                        <ng-container matColumnDef="value">
+                            <th mat-header-cell
+                                *matHeaderCellDef>
+                                Value
+                            </th>
+                            <td mat-cell
+                                *matCellDef="let element"
+                                class="data-source-details__code">
+                                @let headerTokens = (element.headerValue | tokenizeScript);
+                                <span class="data-source-details__tokens">
+                                    @for (token of headerTokens; track $index) {
+                                        @if (token.isScript) {
+                                            <span class="data-source-details__script">{{ token.text }}</span>
+                                        } @else {
+                                            {{ token.text }}
                                         }
-                                    </span>
-                                </td>
-                            </ng-container>
+                                    }
+                                </span>
+                            </td>
+                        </ng-container>
+                        <tr mat-header-row
+                            *matHeaderRowDef="headerColumns">
+                        </tr>
+                        <tr mat-row
+                            *matRowDef="let row; columns: headerColumns;">
+                        </tr>
+                    </table>
+                </div>
+            } @else {
+                <p class="data-source-details__empty">No data available</p>
+            }
+        </section>
 
-                            <tr mat-header-row
-                                *matHeaderRowDef="headerColumns">
-                            </tr>
-                            <tr mat-row
-                                *matRowDef="let row; columns: headerColumns;">
-                            </tr>
-                        </table>
-                    </div>
-                } @else {
-                    <div class="empty-state"><p>No data available</p></div>
-                }
-            </mat-card-content>
-        </mat-card>
+        <section class="tq-card">
+            <header class="tq-card__head">
+                <h4 class="tq-card__title">Currency Mappings</h4>
+            </header>
 
-        <!-- Currency Mappings -->
-        <mat-card>
-            <mat-card-header>
-                <mat-card-title>Currency Mappings</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-                @if (source.currencyMappings.length > 0) {
-                    <div class="table-container">
-                        <table mat-table [dataSource]="source.currencyMappings">
-                            <ng-container matColumnDef="key">
-                                <th mat-header-cell *matHeaderCellDef>
-                                    Currency Key
-                                </th>
-                                <td mat-cell
-                                    *matCellDef="let element">
-                                    {{ element.currencyKey }}
-                                </td>
-                            </ng-container>
-                            <ng-container matColumnDef="code">
-                                <th mat-header-cell
-                                    *matHeaderCellDef>
-                                    ISO Code
-                                </th>
-                                <td mat-cell
-                                    *matCellDef="let element">
-                                    <mat-chip>{{ element.mappedCurrencyCode }}</mat-chip>
-                                </td>
-                            </ng-container>
-                            <ng-container matColumnDef="multiplier">
-                                <th mat-header-cell
-                                    *matHeaderCellDef>
-                                    Multiplier
-                                </th>
-                                <td mat-cell *matCellDef="let element">
-                                    {{ (element.multiplier ?? 1) | tqDecimal }}
-                                </td>
-                            </ng-container>
-                            <tr mat-header-row
-                                *matHeaderRowDef="currencyColumns">
-                            </tr>
-                            <tr mat-row
-                                *matRowDef="let row; columns: currencyColumns;">
-                            </tr>
-                        </table>
-                    </div>
-                } @else {
-                    <div class="empty-state">
-                        <p>No data available</p>
-                    </div>
-                }
-            </mat-card-content>
-        </mat-card>
+            @if (source.currencyMappings.length > 0) {
+                <div class="data-source-details__table">
+                    <table mat-table [dataSource]="source.currencyMappings">
+                        <ng-container matColumnDef="key">
+                            <th mat-header-cell
+                                *matHeaderCellDef>
+                                Currency Key
+                            </th>
+                            <td mat-cell
+                                *matCellDef="let element">
+                                {{ element.currencyKey }}
+                            </td>
+                        </ng-container>
+                        <ng-container matColumnDef="code">
+                            <th mat-header-cell
+                                *matHeaderCellDef>
+                                ISO Code
+                            </th>
+                            <td mat-cell
+                                *matCellDef="let element">
+                                <span class="tq-pill tq-pill--neutral">{{ element.mappedCurrencyCode }}</span>
+                            </td>
+                        </ng-container>
+                        <ng-container matColumnDef="multiplier">
+                            <th mat-header-cell
+                                *matHeaderCellDef
+                                class="tq-table__cell--numeric">
+                                Multiplier
+                            </th>
+                            <td mat-cell
+                                *matCellDef="let element"
+                                class="tq-table__cell--numeric">
+                                {{ (element.multiplier ?? 1) | tqDecimal }}
+                            </td>
+                        </ng-container>
+                        <tr mat-header-row
+                            *matHeaderRowDef="currencyColumns">
+                        </tr>
+                        <tr mat-row
+                            *matRowDef="let row; columns: currencyColumns;">
+                        </tr>
+                    </table>
+                </div>
+            } @else {
+                <p class="data-source-details__empty">No data available</p>
+            }
+        </section>
     </div>
 </div>

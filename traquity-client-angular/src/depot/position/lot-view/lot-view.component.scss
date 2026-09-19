@@ -1,43 +1,37 @@
-.lots-container {
+:host {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--tq-space-4);
   width: 100%;
-  padding: 1rem;
-  box-sizing: border-box;
 }
 
 .lot {
   display: flex;
   flex-direction: column;
-  padding: 1rem 1.25rem;
-  border-radius: 0.75rem;
-  background-color: rgba(255, 255, 255, 0.04);
-  border: 0.0625rem solid rgba(255, 255, 255, 0.08);
+  gap: var(--tq-space-2);
+  padding: var(--tq-space-4);
 }
 
-.lot-header {
+.lot__title {
+  font-size: var(--tq-font-size-md);
   font-weight: 500;
-  font-size: 1.05rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--tq-space-1);
 }
 
-.row {
+.lot__row {
   display: flex;
-  flex-direction: row;
   justify-content: space-between;
   align-items: baseline;
-  gap: 1rem;
-  margin-top: 0.35rem;
+  gap: var(--tq-space-4);
 }
 
-.row-label {
-  opacity: 0.6;
-  font-size: 0.9rem;
+.lot__label {
+  color: var(--tq-text-muted);
+  font-size: var(--tq-font-size-base);
   white-space: nowrap;
 }
 
-.row-value {
-  font-size: 0.9rem;
+.lot__value {
+  font-size: var(--tq-font-size-base);
   text-align: right;
 }

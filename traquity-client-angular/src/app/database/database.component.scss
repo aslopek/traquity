@@ -1,43 +1,84 @@
-.database-content {
-  height: 100%;
-  width: 100%;
-}
-
-.flex-column {
+:host {
   display: flex;
   flex-direction: column;
   height: 100%;
   width: 100%;
 }
 
-.drawer {
-  height: 100%;
+// the drawer takes its width from the panel inside it rather than a fixed one, so collapsing the panel to its
+// toggle button collapses the drawer with it. `autosize` on the container is what re-measures the content margin
+// when that happens - without it the console keeps the margin the open panel left behind.
+.database__body {
+  --mat-sidenav-container-width: auto;
+
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
-  flex-grow: unset;
 }
 
-.side-panel {
-  padding-left: 1rem;
-  padding-right: 1rem;
-  margin-bottom: 1rem;
+.database__panel {
   display: flex;
   flex-direction: column;
+  gap: var(--tq-space-4);
+  padding: var(--tq-space-2);
+  box-sizing: border-box;
+}
+
+// only the open panel carries a width: closed it is one icon button, and shrink-to-fit is what makes the drawer
+// as narrow as that button
+.database__panel--open {
+  width: 18rem;
+  padding: var(--tq-space-3);
+}
+
+.database__panel-head {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
 }
 
-.side-panel-toggle-button {
-  flex-direction: row-reverse;
-  padding: 0;
-}
-
-.side-panel-text {
-  margin-top: 0;
-  margin-bottom: 0;
+.database__entry {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  gap: var(--tq-space-1);
+  min-width: 0;
 }
 
-.copy-button {
+.database__value {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--tq-space-2);
+  padding: var(--tq-space-2) var(--tq-space-3);
+  border: 0.0625rem solid var(--tq-border);
+  border-radius: var(--tq-radius-sm);
+  background-color: var(--tq-surface-sunken);
+  font-size: var(--tq-font-size-sm);
+  min-width: 0;
+}
+
+// a JDBC URL has nothing to break on, so it is allowed to break mid-token. Wrapping rather than ellipsising is
+// what keeps the value readable in full without the panel having to be as wide as the longest one.
+.database__value-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.database__copy {
+  flex: 0 0 auto;
   cursor: pointer;
-  transform: scale(0.75);
+  color: var(--tq-text-muted);
+  font-size: 1.125rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  transition: color var(--tq-duration-fast) var(--tq-ease);
+
+  &:hover {
+    color: var(--tq-accent-soft);
+  }
+}
+
+.database__console {
+  height: 100%;
+  width: 100%;
+  border: none;
 }

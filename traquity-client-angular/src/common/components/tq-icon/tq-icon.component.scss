@@ -1,35 +1,31 @@
-@use '../../../styles' as styles;
-
 .logo-background {
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
   display: flex;
   justify-content: center;
   align-items: center;
-  border-radius: 20%;
+  border-radius: var(--tq-radius-md);
+  border: 0.0625rem solid var(--tq-border);
   overflow: clip;
+  flex: 0 0 auto;
 
   // the background modifier is always emitted by the template, defaulting to --surface
   &--surface {
-    background-color: styles.$color-surface-card;
+    background-color: var(--tq-surface-sunken);
   }
 
   &--transparent {
     background-color: transparent;
+    border-color: transparent;
   }
 
   &--medium {
-    width: 3.5rem;
-    height: 3.5rem;
-    max-height: 3.5rem;
-    max-width: 3.5rem;
+    width: 3rem;
+    height: 3rem;
   }
 
   &--small {
     width: 1.5rem;
     height: 1.5rem;
-    max-height: 1.5rem;
-    max-width: 1.5rem;
+    border-radius: var(--tq-radius-xs);
   }
 }
 
@@ -39,8 +35,8 @@
   width: auto;
 
   &--medium {
-    height: 2.5rem;
-    max-width: 2.5rem;
+    height: 2rem;
+    max-width: 2.25rem;
   }
 
   &--small {

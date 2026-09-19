@@ -1,16 +1,29 @@
-.wrapper {
-  margin-top: 1rem;
-}
-
-.dividend-page-menu {
+:host {
   display: flex;
-  justify-content: flex-start;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
-.dividend-page-menu-item {
-  margin-right: 1rem;
+.dividend-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-4);
+  padding: var(--tq-space-4) 0;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
-.padding {
-  padding: 1rem;
+.dividend-page__toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--tq-space-4);
+  flex-wrap: wrap;
+}
+
+.dividend-page__view {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }

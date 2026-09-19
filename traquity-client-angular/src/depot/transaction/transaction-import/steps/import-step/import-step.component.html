@@ -1,29 +1,51 @@
-<div class="content">
+<div class="step">
     @if (transactionImportStore.phase() === 'importing') {
-        <p>Importing... ({{ transactionImportStore.requestsSent() }} / {{ transactionImportStore.requestsTotal() }})</p>
-        <mat-progress-bar color="accent"
-                          mode="determinate"
-                          [value]="progress()">
-        </mat-progress-bar>
+        <div class="step__progress">
+            <span class="tq-section-label">Importing</span>
+            <mat-progress-bar mode="determinate"
+                              [value]="progress()">
+            </mat-progress-bar>
+            <span class="tq-field-hint tq-numeric">
+                {{ transactionImportStore.requestsSent() }} / {{ transactionImportStore.requestsTotal() }}
+            </span>
+        </div>
     }
 
     @if (transactionImportStore.phase() === 'done') {
-        <p>{{ transactionImportStore.securitiesCreated() }} of {{ transactionImportStore.securitiesAttempted() }} securities created</p>
-        <p>{{ transactionImportStore.transactionsCreated() }} of {{ transactionImportStore.transactionsAttempted() }} transactions created</p>
+        <div class="step__summary">
+            <div class="step__summary-row">
+                <span class="tq-muted">Securities created</span>
+                <span class="tq-numeric">
+                    {{ transactionImportStore.securitiesCreated() }} of {{ transactionImportStore.securitiesAttempted() }}
+                </span>
+            </div>
+            <div class="step__summary-row">
+                <span class="tq-muted">Transactions created</span>
+                <span class="tq-numeric">
+                    {{ transactionImportStore.transactionsCreated() }} of {{ transactionImportStore.transactionsAttempted() }}
+                </span>
+            </div>
+        </div>
 
         @if (transactionImportStore.failedRowIndices().length > 0) {
-            <p>{{ transactionImportStore.failedRowIndices().length }} row(s) could not be imported.</p>
-            <button (click)="downloadFailedCsv()"
-                    mat-stroked-button>
-                Download Failed Rows
-            </button>
+            <div class="tq-notice tq-notice--warn">
+                <mat-icon class="tq-notice__icon"
+                          fontIcon="warning"></mat-icon>
+                <div class="tq-notice__body">
+                    <span>{{ transactionImportStore.failedRowIndices().length }} row(s) could not be imported.</span>
+                    <button (click)="downloadFailedCsv()"
+                            matButton="outlined">
+                        Download Failed Rows
+                    </button>
+                </div>
+            </div>
         }
 
-        <button (click)="closeDialog()"
-                class="close-button"
-                color="primary"
-                mat-flat-button>
-            Close
-        </button>
+        <div class="step__actions">
+            <button (click)="closeDialog()"
+                    matButton="filled">
+                Close
+            </button>
+        </div>
     }
 </div>

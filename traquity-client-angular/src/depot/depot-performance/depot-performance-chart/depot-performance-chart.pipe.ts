@@ -2,6 +2,8 @@ import {inject, Pipe, PipeTransform} from "@angular/core";
 import {EChartsOption} from "echarts";
 import {RebasedDepotValue} from "../store/computed/rebased-depot-value.type";
 import {TqCurrencyPipe, TqDatePipe, TqPercentPipe} from "../../../common";
+import {chartToken, chartTokenAlpha} from "../../../common/chart/chart-token";
+import {escapeHtml} from "../../../common/chart/escape-html";
 import {BenchmarkResult} from "../store/benchmark/benchmark.type";
 
 @Pipe({
@@ -12,7 +14,20 @@ export class DepotPerformanceChartPipe implements PipeTransform {
   private readonly tqCurrencyPipe: TqCurrencyPipe = inject(TqCurrencyPipe);
   private readonly tqDatePipe: TqDatePipe = inject(TqDatePipe);
   private readonly tqPercentPipe: TqPercentPipe = inject(TqPercentPipe);
-  private readonly primaryColorRgb: { r: number, g: number, b: number } = this.readPrimaryColorRgb();
+  private readonly seriesColor: string = chartToken("--tq-series-1");
+  private readonly seriesFillTop: string = chartTokenAlpha("--tq-series-1", 0.18);
+  private readonly seriesFillBottom: string = chartTokenAlpha("--tq-series-1", 0);
+  private readonly benchmarkColors: readonly string[] = [chartToken("--tq-series-2"), chartToken("--tq-series-5")];
+  private readonly borderColor: string = chartToken("--tq-border");
+  private readonly axisLabelColor: string = chartToken("--tq-text-faint");
+  private readonly guideLineColor: string = chartToken("--tq-border-strong");
+  private readonly tooltipColor: string = chartToken("--tq-glass-bg");
+  private readonly tooltipCss: string = `box-shadow: ${chartToken("--tq-shadow-2")};`
+    + ` border-radius: ${chartToken("--tq-radius-md")}; backdrop-filter: ${chartToken("--tq-glass-blur")};`;
+  private readonly textColor: string = chartToken("--tq-text");
+  private readonly mutedTextColor: string = chartToken("--tq-text-muted");
+  private readonly positiveColor: string = chartToken("--tq-positive-soft");
+  private readonly negativeColor: string = chartToken("--tq-negative-soft");
 
   transform(
     positions: RebasedDepotValue[],
@@ -46,7 +61,6 @@ export class DepotPerformanceChartPipe implements PipeTransform {
       }
     }
 
-    const {r, g, b}: { r: number, g: number, b: number } = this.primaryColorRgb;
     const series: NonNullable<EChartsOption['series']> = [
       {
         name: 'Depot Value',
@@ -54,13 +68,13 @@ export class DepotPerformanceChartPipe implements PipeTransform {
         data: absoluteValues,
         showSymbol: false,
         smooth: 0.2,
-        lineStyle: {width: 3, color: `rgb(${r}, ${g}, ${b})`},
+        lineStyle: {width: 2, color: this.seriesColor},
         areaStyle: {
           color: {
             type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
             colorStops: [
-              {offset: 0, color: `rgba(${r}, ${g}, ${b}, 0.16)`},
-              {offset: 1, color: `rgba(${r}, ${g}, ${b}, 0)`}
+              {offset: 0, color: this.seriesFillTop},
+              {offset: 1, color: this.seriesFillBottom}
             ]
           }
         }
@@ -78,7 +92,7 @@ export class DepotPerformanceChartPipe implements PipeTransform {
         lineStyle: {
           width: 1.5,
           type: 'dashed',
-          color: 'rgba(255, 255, 255, 0.25)'
+          color: this.guideLineColor
         }
       });
     }
@@ -95,14 +109,13 @@ export class DepotPerformanceChartPipe implements PipeTransform {
         lineStyle: {
           width: 1,
           type: 'dashed',
-          color: 'rgba(255, 255, 255, 0.25)'
+          color: this.guideLineColor
         }
       });
     }
 
     if (benchmark) {
       const benchmarkList: BenchmarkResult[] = Array.isArray(benchmark) ? benchmark : [benchmark];
-      const benchmarkColors: string[] = ['#f97316', '#a855f7'];
 
       benchmarkList.forEach((bench: BenchmarkResult, index: number): void => {
         series.push({
@@ -114,7 +127,7 @@ export class DepotPerformanceChartPipe implements PipeTransform {
           lineStyle: {
             width: 2,
             type: 'solid',
-            color: benchmarkColors[index] ?? '#10b981'
+            color: this.benchmarkColors[index % this.benchmarkColors.length]
           }
         });
       });
@@ -124,21 +137,23 @@ export class DepotPerformanceChartPipe implements PipeTransform {
       backgroundColor: 'transparent',
       tooltip: {
         trigger: 'axis',
-        backgroundColor: 'rgba(28, 28, 30, 0.95)',
-        borderColor: 'rgba(255, 255, 255, 0.08)',
+        backgroundColor: this.tooltipColor,
+        borderColor: this.borderColor,
         borderWidth: 1,
         textStyle: {
-          color: '#ffffff',
+          color: this.textColor,
           fontSize: 13
         },
         padding: [10, 14],
-        extraCssText: 'box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3); border-radius: 8px;',
+        extraCssText: this.tooltipCss,
+        // echarts takes this as an HTML string, so nothing escapes it for us. seriesName and date are controlled today
+        // (fixed labels, formatted dates), but go through escapeHtml anyway so a later user-named benchmark is safe.
         formatter: (params: unknown): string => {
           if (!Array.isArray(params) || params.length === 0) return '';
 
           const date: string = params[0].name;
           const rawProfit: number = performanceAbsolute[date] ?? 0;
-          const profitColor: string = rawProfit >= 0 ? '#22c55e' : '#ef4444';
+          const profitColor: string = rawProfit >= 0 ? this.positiveColor : this.negativeColor;
 
           let seriesHtml: string = '';
 
@@ -154,21 +169,25 @@ export class DepotPerformanceChartPipe implements PipeTransform {
 
             seriesHtml += `
               <div style="display: flex; justify-content: space-between; gap: 24px; margin-bottom: 4px;">
-                <span style="color: rgba(255, 255, 255, 0.7);">${this.escapeHtml(seriesName)}:</span>
-                <strong style="font-variant-numeric: tabular-nums; color: #ffffff;">${formattedValue}</strong>
+                <span style="color: ${this.mutedTextColor};">${escapeHtml(seriesName)}:</span>
+                <strong style="font-variant-numeric: tabular-nums; color: ${this.textColor};">${formattedValue}</strong>
               </div>
             `;
           });
 
-          const formattedPerformanceAbsolute: string = hideAbsoluteValues ? '••••••' : `${rawProfit >= 0 ? '+' : ''}${this.formatCurrency(rawProfit, currency)}`;
+          const formattedPerformanceAbsolute: string = hideAbsoluteValues
+            ? '••••••'
+            : `${rawProfit >= 0 ? '+' : ''}${this.formatCurrency(rawProfit, currency)}`;
           const formattedPerformanceRelative: string = `${rawProfit >= 0 ? '+' : ''}${this.formatPercent(performanceRelative[date])}`;
           return `
-            <div style="font-weight: 600; margin-bottom: 6px; color: rgba(255, 255, 255, 0.5); font-size: 11px;">${this.escapeHtml(date)}</div>
+            <div style="font-weight: 500; margin-bottom: 6px; font-size: 11px;
+                        color: ${this.axisLabelColor};">${escapeHtml(date)}</div>
             
             ${seriesHtml}
             
-            <div style="display: flex; justify-content: space-between; gap: 24px; margin-top: 6px; border-top: 1px dashed rgba(255, 255, 255, 0.1); padding-top: 4px;">
-              <span style="color: rgba(255, 255, 255, 0.7);">${rawProfit >= 0 ? 'Growth' : 'Decline'}:</span>
+            <div style="display: flex; justify-content: space-between; gap: 24px; margin-top: 6px;
+                        border-top: 1px dashed ${this.borderColor}; padding-top: 4px;">
+              <span style="color: ${this.mutedTextColor};">${rawProfit >= 0 ? 'Growth' : 'Decline'}:</span>
               <strong style="color: ${profitColor}; font-variant-numeric: tabular-nums;">${formattedPerformanceAbsolute}</strong>
             </div>
             <div style="display: flex; justify-content: space-between; gap: 24px;">
@@ -191,10 +210,10 @@ export class DepotPerformanceChartPipe implements PipeTransform {
         type: 'category',
         data: dates,
         boundaryGap: false,
-        axisLine: {lineStyle: {color: 'rgba(255, 255, 255, 0.08)'}},
+        axisLine: {lineStyle: {color: this.borderColor}},
         axisTick: {show: false},
         axisLabel: {
-          color: 'rgba(255, 255, 255, 0.4)',
+          color: this.axisLabelColor,
           fontSize: 11,
           margin: 12
         }
@@ -205,28 +224,15 @@ export class DepotPerformanceChartPipe implements PipeTransform {
         scale: true,
         axisLine: {show: false},
         axisTick: {show: false},
-        splitLine: {lineStyle: {color: 'rgba(255, 255, 255, 0.04)'}},
+        splitLine: {lineStyle: {color: this.borderColor}},
         axisLabel: {
-          color: 'rgba(255, 255, 255, 0.4)',
+          color: this.axisLabelColor,
           fontSize: 11,
           formatter: (value: number): string => hideAbsoluteValues ? '••••' : this.formatCurrency(value, currency)
         }
       },
       series
     };
-  }
-
-  /**
-   * `--tq-color-primary` is set in styles.scss from the Material theme's primary palette, so this
-   * stays in sync with the theme instead of hardcoding a second copy of the color here.
-   */
-  private readPrimaryColorRgb(): { r: number, g: number, b: number } {
-    const hex: string = getComputedStyle(document.documentElement).getPropertyValue('--tq-color-primary').trim();
-    const match: RegExpMatchArray | null = hex.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
-    if (!match) {
-      return {r: 59, g: 130, b: 246};
-    }
-    return {r: parseInt(match[1], 16), g: parseInt(match[2], 16), b: parseInt(match[3], 16)};
   }
 
   private formatCurrency(value: number, currency: string): string {
@@ -239,19 +245,5 @@ export class DepotPerformanceChartPipe implements PipeTransform {
 
   private formatPercent(value: number | 'infinity'): string {
     return value === 'infinity' ? '∞' : this.tqPercentPipe.transform(value);
-  }
-
-  /**
-   * The tooltip formatter builds HTML via string interpolation for echarts. seriesName/date are controlled today (fixed labels,
-   * formatted dates), but escape them anyway so this stays safe if a future feature (e.g. user-named benchmarks) makes seriesName
-   * attacker-influenced.
-   */
-  private escapeHtml(value: string): string {
-    return value
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
   }
 }

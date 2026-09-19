@@ -1,17 +1,20 @@
-.stepper {
-  overflow: auto;
-}
-
-.step {
+:host {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-width: 40rem;
+  height: 100%;
+  min-height: 0;
 }
 
-.next-button {
-  cursor: pointer;
-}
-
-.vertical-spacer {
+.wizard__stepper {
   flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 var(--tq-space-2) var(--tq-space-4);
+}
+
+.wizard__actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--tq-space-4);
 }

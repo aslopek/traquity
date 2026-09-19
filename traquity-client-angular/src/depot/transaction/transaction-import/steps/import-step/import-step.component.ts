@@ -1,4 +1,5 @@
 import {Component, computed, EventEmitter, inject, Output, Signal} from '@angular/core';
+import {MatIcon} from '@angular/material/icon';
 import {MatButtonModule} from '@angular/material/button';
 import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {ReadableTransactionImportStore, TransactionImportStore} from '../../store/transaction-import.store';
@@ -7,7 +8,7 @@ import {CsvRow} from '../../store/csv/csv.type';
 
 @Component({
   selector: 'app-import-step',
-  imports: [MatButtonModule, MatProgressBarModule],
+  imports: [MatButtonModule, MatProgressBarModule, MatIcon],
   templateUrl: './import-step.component.html',
   styleUrl: './import-step.component.scss'
 })

@@ -1,11 +1,11 @@
-<div class="wrapper">
-    <div class="search-bar">
-        <mat-form-field class="search-field"
+<div class="yield-table">
+    <div class="yield-table__toolbar">
+        <mat-form-field class="yield-table__search"
                         subscriptSizing="dynamic">
+            <mat-label>Search Securities</mat-label>
             <mat-icon matPrefix
                       fontIcon="search">
             </mat-icon>
-            <mat-label>Search Securities</mat-label>
             <input #searchInput
                    (input)="applyFilter($event)"
                    matInput
@@ -13,6 +13,8 @@
             @if (searchInput.value.length > 0) {
                 <button (click)="clearFilter(searchInput)"
                         mat-icon-button
+                        aria-label="Clear search"
+                        matTooltip="Clear search"
                         matSuffix>
                     <mat-icon fontIcon="close"></mat-icon>
                 </button>
@@ -20,96 +22,103 @@
         </mat-form-field>
 
         @if (searchInput.value.length > 0) {
-            <span class="search-result-count">{{ dataSource.filteredData.length }} of {{ dataSource.data.length }} securities</span>
+            <span class="tq-field-hint tq-numeric">
+                {{ dataSource.filteredData.length }} of {{ dataSource.data.length }} securities
+            </span>
         }
     </div>
 
-    <table [dataSource]="dataSource"
-           matSort
-           mat-table>
-        <ng-container matColumnDef="name">
-            <th *matHeaderCellDef
-                mat-header-cell>
-                Name
-            </th>
-            <td *matCellDef="let row"
-                mat-cell>
-                {{ row.displayName }}
-            </td>
-        </ng-container>
+    <div class="tq-card tq-card--flush yield-table__surface">
+        <table [dataSource]="dataSource"
+               matSort
+               mat-table>
+            <ng-container matColumnDef="name">
+                <th *matHeaderCellDef
+                    mat-header-cell>
+                    Name
+                </th>
+                <td *matCellDef="let row"
+                    mat-cell>
+                    {{ row.displayName }}
+                </td>
+            </ng-container>
 
-        <ng-container matColumnDef="regularDividendPaymentsPerYear">
-            <th *matHeaderCellDef
-                mat-sort-header
-                mat-header-cell
-                class="numeric-column">
-                Payments per Year
-            </th>
-            <td *matCellDef="let row"
-                mat-cell
-                class="numeric-column">
-                {{ row.regularDividendPaymentsPerYear }}
-            </td>
-        </ng-container>
+            <ng-container matColumnDef="regularDividendPaymentsPerYear">
+                <th *matHeaderCellDef
+                    mat-sort-header
+                    mat-header-cell
+                    class="yield-table__numeric tq-table__cell--numeric">
+                    Payments per Year
+                </th>
+                <td *matCellDef="let row"
+                    mat-cell
+                    class="yield-table__numeric tq-numeric">
+                    {{ row.regularDividendPaymentsPerYear }}
+                </td>
+            </ng-container>
 
-        <ng-container matColumnDef="estimatedPayment">
-            <th *matHeaderCellDef
-                mat-sort-header="estimatedPaymentGross"
-                mat-header-cell
-                class="numeric-column">
-                Estimated Payment per Year
-            </th>
-            <td *matCellDef="let row"
-                mat-cell
-                class="numeric-column"
-                matTooltip="Based on last regular payment of {{((useGrossValues() ? row.estimatedPaymentGross : row.estimatedPaymentNet) / row.regularDividendPaymentsPerYear) | tqCurrency:currency()}}">
-                {{ (useGrossValues() ? row.estimatedPaymentGross : row.estimatedPaymentNet) | tqCurrency:currency() }}
-            </td>
-        </ng-container>
+            <ng-container matColumnDef="estimatedPayment">
+                <th *matHeaderCellDef
+                    mat-sort-header="estimatedPaymentGross"
+                    mat-header-cell
+                    class="yield-table__numeric tq-table__cell--numeric">
+                    Estimated Payment per Year
+                </th>
+                <td *matCellDef="let row"
+                    mat-cell
+                    class="yield-table__numeric tq-numeric"
+                    matTooltip="Based on last regular payment of {{
+                        ((useGrossValues() ? row.estimatedPaymentGross : row.estimatedPaymentNet)
+                            / row.regularDividendPaymentsPerYear) | tqCurrency:currency()
+                    }}">
+                    {{ (useGrossValues() ? row.estimatedPaymentGross : row.estimatedPaymentNet) | tqCurrency:currency() }}
+                </td>
+            </ng-container>
 
-        <ng-container matColumnDef="currentYield">
-            <th *matHeaderCellDef
-                mat-sort-header="currentYieldGross"
-                mat-header-cell
-                class="numeric-column">
-                Current Yield
-            </th>
-            <td *matCellDef="let row"
-                mat-cell
-                class="numeric-column">
-                {{ (useGrossValues() ? row.currentYieldGross : row.currentYieldNet) | tqPercent }}
-            </td>
-        </ng-container>
+            <ng-container matColumnDef="currentYield">
+                <th *matHeaderCellDef
+                    mat-sort-header="currentYieldGross"
+                    mat-header-cell
+                    class="yield-table__numeric tq-table__cell--numeric">
+                    Current Yield
+                </th>
+                <td *matCellDef="let row"
+                    mat-cell
+                    class="yield-table__numeric tq-numeric">
+                    {{ (useGrossValues() ? row.currentYieldGross : row.currentYieldNet) | tqPercent }}
+                </td>
+            </ng-container>
 
-        <ng-container matColumnDef="yieldOnCost">
-            <th *matHeaderCellDef
-                mat-sort-header="yieldOnCostGross"
-                mat-header-cell
-                class="numeric-column">
-                Yield on Cost
-            </th>
-            <td *matCellDef="let row"
-                mat-cell
-                class="numeric-column">
-                @if (row.yieldOnCostNet === 0.0 && row.estimatedPaymentNet > 0) {
-                    &infin;
-                } @else {
-                    {{ (useGrossValues() ? row.yieldOnCostGross : row.yieldOnCostNet) | tqPercent }}
-                }
-            </td>
-        </ng-container>
+            <ng-container matColumnDef="yieldOnCost">
+                <th *matHeaderCellDef
+                    mat-sort-header="yieldOnCostGross"
+                    mat-header-cell
+                    class="yield-table__numeric tq-table__cell--numeric">
+                    Yield on Cost
+                </th>
+                <td *matCellDef="let row"
+                    mat-cell
+                    class="yield-table__numeric tq-numeric">
+                    @if (row.yieldOnCostNet === 0.0 && row.estimatedPaymentNet > 0) {
+                        &infin;
+                    } @else {
+                        {{ (useGrossValues() ? row.yieldOnCostGross : row.yieldOnCostNet) | tqPercent }}
+                    }
+                </td>
+            </ng-container>
 
-        <tr *matHeaderRowDef="columnNames"
-            mat-header-row>
-        </tr>
-        <tr *matRowDef="let row; columns: columnNames"
-            mat-row>
-        </tr>
-        <tr *matNoDataRow
-            class="no-data-row">
-            <td [attr.colspan]="columnNames.length">
-                No securities match your search.
-            </td>
-        </tr>
-    </table>
+            <tr *matHeaderRowDef="columnNames"
+                mat-header-row>
+            </tr>
+            <tr *matRowDef="let row; columns: columnNames"
+                mat-row>
+            </tr>
+            <tr *matNoDataRow
+                class="yield-table__no-data">
+                <td [attr.colspan]="columnNames.length">
+                    No securities match your search.
+                </td>
+            </tr>
+        </table>
+    </div>
 </div>

@@ -1,0 +1,133 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background-color: var(--tq-surface-canvas);
+  color: var(--tq-text);
+  font-family: var(--tq-font);
+  font-size: var(--tq-font-size-base);
+  line-height: var(--tq-line-height);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-weight: 500;
+  line-height: var(--tq-line-height-tight);
+  color: var(--tq-text);
+}
+
+h1 {
+  font-size: var(--tq-font-size-xl);
+}
+
+h2 {
+  font-size: var(--tq-font-size-lg);
+}
+
+h3 {
+  font-size: var(--tq-font-size-md);
+}
+
+h4,
+h5,
+h6 {
+  font-size: var(--tq-font-size-base);
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--tq-accent-soft);
+  text-decoration: none;
+  transition: color var(--tq-duration-fast) var(--tq-ease);
+
+  &:hover {
+    color: var(--tq-accent);
+    text-decoration: underline;
+  }
+}
+
+code {
+  // em: the chip scales with the text it sits in
+  padding: 0.1em 0.35em;
+  border-radius: var(--tq-radius-xs);
+  background-color: var(--tq-surface-sunken);
+  color: var(--tq-text);
+  font-family: var(--tq-font-mono);
+  font-size: 0.9em;
+}
+
+:focus-visible {
+  outline: 0.125rem solid var(--tq-border-accent);
+  outline-offset: 0.125rem;
+}
+
+::selection {
+  background-color: var(--tq-accent-surface);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--tq-border-strong) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 0.5rem;
+  height: 0.5rem;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--tq-border-strong);
+  border-radius: var(--tq-radius-pill);
+
+  &:hover {
+    background-color: var(--tq-text-faint);
+  }
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 1.5rem;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0,
+  'wght' 400,
+  'GRAD' 0,
+  'opsz' 24;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

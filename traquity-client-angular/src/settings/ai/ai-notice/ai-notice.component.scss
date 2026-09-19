@@ -1,16 +1,30 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-4);
+  max-width: 48rem;
+  color: var(--tq-text-muted);
+  line-height: var(--tq-line-height);
+}
+
 h3 {
-  margin-top: 0;
-  margin-bottom: 0.5rem;
-  font-size: 1.15rem;
-  font-weight: 600;
+  font-size: var(--tq-font-size-lg);
+  font-weight: 500;
+  color: var(--tq-text);
 }
 
 h4 {
-  margin-top: 1.25rem;
-  margin-bottom: 0.375rem;
-  font-size: 1.1rem;
+  font-size: var(--tq-font-size-md);
+  color: var(--tq-text);
+  margin-bottom: var(--tq-space-1);
 }
 
 .section {
-  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-2);
+  padding: var(--tq-space-4);
+  border: 0.0625rem solid var(--tq-border);
+  border-radius: var(--tq-radius-sm);
+  background-color: var(--tq-surface-sunken);
 }

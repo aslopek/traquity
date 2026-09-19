@@ -1,13 +1,14 @@
-<div class="wrapper">
-    <app-data-range-selection class="margin-bottom"></app-data-range-selection>
-    <app-depot-performance-kpis class="margin-bottom"></app-depot-performance-kpis>
-    <div class="container-flex">
-        <div class="left-column">
-            <app-depot-performance-chart class="margin-bottom"></app-depot-performance-chart>
+<div class="depot-performance">
+    <app-data-range-selection></app-data-range-selection>
+    <app-depot-performance-kpis></app-depot-performance-kpis>
+
+    <div class="depot-performance__columns">
+        <div class="depot-performance__main tq-scroll">
+            <app-depot-performance-chart></app-depot-performance-chart>
             <app-benchmark></app-benchmark>
         </div>
         @if (!hideAbsoluteValues()) {
-            <div class="right-column">
+            <div class="depot-performance__side tq-scroll">
                 <app-transaction-overview></app-transaction-overview>
             </div>
         }

@@ -1,20 +1,20 @@
-<div class="wrapper">
-    <div mat-menu-item>
-        <div class="dividend-announcement-container">
-            <div class="dividend-announcement-icon">
-                <tq-icon [src]="dividendAnnouncement().securityId | securityLogoUrl"></tq-icon>
-            </div>
-            <div class="dividend-announcement-text">
-                <div>{{ dividendAnnouncement().securityId | securityName }}</div>
-                <div>{{ dividendAnnouncement().payDate | tqDate }}</div>
-                <div>
-                    {{ dividendAnnouncement().amountPerShare | tqCurrency : dividendAnnouncement().currency : '1.2-5' }}&nbsp;per&nbsp;share
-                </div>
-            </div>
-            <span class="spacer"></span>
-            <app-acknowledge-button class="acknowledge-button"
-                                    (onAcknowledge)="acknowledge($event)">
-            </app-acknowledge-button>
-        </div>
+<div class="notification">
+    <tq-icon class="notification__logo"
+             [src]="dividendAnnouncement().securityId | securityLogoUrl">
+    </tq-icon>
+
+    <div class="notification__text">
+        <span class="notification__name tq-truncate">
+            {{ dividendAnnouncement().securityId | securityName }}
+        </span>
+        <span class="notification__meta tq-numeric">
+            {{ dividendAnnouncement().payDate | tqDate }}
+        </span>
+        <span class="notification__amount tq-numeric">
+            {{ dividendAnnouncement().amountPerShare | tqCurrency : dividendAnnouncement().currency : '1.2-5' }}&nbsp;per&nbsp;share
+        </span>
     </div>
+
+    <app-acknowledge-button (onAcknowledge)="acknowledge($event)">
+    </app-acknowledge-button>
 </div>

@@ -1,13 +1,11 @@
 <app-search-field (clear)="search(undefined)"
                   (search)="search($event)"
                   [searchString]="searchParams().search ?? ''"
-                  class="search-field">
+                  class="security-controls__search">
 </app-search-field>
 
 <button (click)="openAddDialog()"
-        class="add-button"
-        color="primary"
-        mat-flat-button>
+        matButton="filled">
     <mat-icon fontIcon="add"></mat-icon>
     Add
 </button>

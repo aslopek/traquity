@@ -1,7 +1,7 @@
 import {AsyncPipe} from "@angular/common";
 import {Component, inject} from "@angular/core";
 import {FormsModule} from "@angular/forms";
-import {MatCheckbox} from "@angular/material/checkbox";
+import {MatSlideToggle} from "@angular/material/slide-toggle";
 import {MatFormField, MatLabel} from "@angular/material/form-field";
 import {MatOption, MatSelect, MatSelectChange,} from "@angular/material/select";
 import {Store} from "@ngrx/store";
@@ -18,7 +18,7 @@ import {AppState} from "../../store/app.state";
     MatLabel,
     MatSelect,
     MatOption,
-    MatCheckbox,
+    MatSlideToggle,
     FormsModule,
     AsyncPipe,
   ],
