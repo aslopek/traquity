@@ -43,8 +43,7 @@ terms for that one component, so "TraQuity is MIT" describes the source in this 
 
 **Consequences, accepted:**
 
-One list now holds two entries that mean opposite things, which is why removing either of them means reading this file first. Should the
-action ever parse H2's declaration correctly, this entry belongs deleted rather than kept for symmetry with ADR-1.
+H2 is never license-checked again, so an upstream relicensing would pass unnoticed.
 
 ## ADR-3: Fonts are bundled under OFL-1.1, unmodified
 
@@ -65,3 +64,17 @@ Subsetting or otherwise editing a font file would be a modification and would fo
 size that costs is paid — around 9 MB of glyphs, most of it one color-emoji and one icon font. `traquity-client-angular/LLM.md`'s `Fonts`
 section carries that rule where a change to a font would be made. A font may also not be sold on its own, which constrains redistributing
 the packages rather than shipping the app.
+
+## ADR-4: Lombok and build-helper-maven-plugin are exempted as detector artifacts
+
+**Status:** ACCEPTED
+
+**Decision:** `org.projectlombok:lombok` and `org.codehaus.mojo:build-helper-maven-plugin` are named in `ci.yml`'s
+`allow-dependencies-licenses`.
+
+**Rationale:** Both POMs declare `The MIT License`, which `dependency-review` cannot map to the SPDX `MIT` on the `allow-licenses` list,
+so it reports `LicenseRef-bad-non-standard` and fails.
+
+**Consequences, accepted:**
+
+Neither dependency is license-checked again, so an upstream relicensing would pass unnoticed.

@@ -324,6 +324,10 @@ in `dist/` are the ones that ship.
 Electron main-process specs live under `electron/`, with their own jest config and their own conventions on top of the ones below — see
 `electron/LLM.md`.
 
+`ts-jest` caps its optional `@babel/core` peer at `<8` while Angular pulls `@babel/core@8`, so `package.json`'s `overrides` block lifts
+that one range. `ts-jest` is configured without `babelConfig` and never loads babel here; `babel-jest` is the transform that does, and it
+accepts 8. Drop the override once `ts-jest` widens the range.
+
 The focus on testing in the angular app is on logic. Use `jest` to test:
 
 - NgRx global store

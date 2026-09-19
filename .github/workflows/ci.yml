@@ -32,7 +32,9 @@ jobs:
           # Exceptions - see architecture/licensing.md.
           allow-dependencies-licenses: >-
             pkg:maven/com.h2database/h2,
-            pkg:maven/org.liquibase/liquibase-core
+            pkg:maven/org.liquibase/liquibase-core,
+            pkg:maven/org.projectlombok/lombok,
+            pkg:maven/org.codehaus.mojo/build-helper-maven-plugin
 
   api:
     runs-on: ubuntu-latest
