@@ -1,5 +1,4 @@
 import {Component, input, InputSignal,} from "@angular/core";
-import {MatListItemLine, MatListItemTitle} from "@angular/material/list";
 import {TqCurrencyPipe, TqDatePipe, SecurityNamePipe} from "../../../common";
 import {TqIconComponent} from "../../../common/components/tq-icon/tq-icon.component";
 import {SecurityLogoUrlPipe} from "../../../common/pipe/security-logo-url.pipe";
@@ -11,8 +10,6 @@ import {DividendAnnouncementRead} from "../../../gen/api/notification/dividend-a
     TqCurrencyPipe,
     TqDatePipe,
     TqIconComponent,
-    MatListItemLine,
-    MatListItemTitle,
     SecurityLogoUrlPipe,
     SecurityNamePipe,
   ],

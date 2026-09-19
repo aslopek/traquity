@@ -1,11 +1,10 @@
 import {Component} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {MatButtonModule} from "@angular/material/button";
-import {MatButtonToggleModule} from "@angular/material/button-toggle";
 import {MatDialogRef} from "@angular/material/dialog";
-import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
 import {CurrencySelectComponent} from "../../common/components/currency-select/currency-select.component";
+import {TitleToolbarComponent} from "../../common/components/title-toolbar/title-toolbar.component";
 import {Store} from "@ngrx/store";
 import {AppState} from "../../store/app.state";
 import {DepotActions} from "../../store/depot/depot.actions";
@@ -13,12 +12,11 @@ import {DepotActions} from "../../store/depot/depot.actions";
 @Component({
   selector: "app-depot-create",
   imports: [
-    MatButtonToggleModule,
-    MatIconModule,
     MatInputModule,
     FormsModule,
     MatButtonModule,
     CurrencySelectComponent,
+    TitleToolbarComponent,
   ],
   templateUrl: "./depot-create.component.html",
   styleUrl: "./depot-create.component.scss",

@@ -1,0 +1,22 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-3);
+  padding: var(--tq-space-4);
+  border: 0.0625rem solid var(--tq-border);
+  border-radius: var(--tq-radius-md);
+  background-color: var(--tq-surface-sunken);
+  color: var(--tq-text-muted);
+  font-size: var(--tq-font-size-sm);
+  line-height: var(--tq-line-height);
+}
+
+h3 {
+  color: var(--tq-text);
+  font-size: var(--tq-font-size-base);
+}
+
+ul {
+  margin: 0;
+  padding-left: var(--tq-space-5);
+}

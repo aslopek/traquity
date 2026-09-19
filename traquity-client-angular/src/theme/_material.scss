@@ -1,0 +1,437 @@
+@use '@angular/material' as mat;
+
+@mixin overrides() {
+  @include mat.dialog-overrides((
+          container-color: var(--tq-surface-raised),
+          container-shape: var(--tq-radius-md),
+          container-elevation-shadow: var(--tq-shadow-3),
+    // M3 caps a dialog at 560px, which is narrower than the width every dialog here opens with. The cap
+    // applies to the overlay pane, so the content keeps its own width and the surface clips what sticks out.
+          container-max-width: 80vw,
+          content-padding: 0,
+          with-actions-content-padding: 0,
+          headline-padding: 0,
+          actions-padding: 0,
+          subhead-color: var(--tq-text),
+          subhead-size: var(--tq-font-size-lg),
+          subhead-weight: 500,
+          supporting-text-color: var(--tq-text-muted),
+          supporting-text-size: var(--tq-font-size-base),
+  ));
+
+  @include mat.form-field-overrides((
+          filled-container-color: var(--tq-surface-sunken),
+          filled-container-shape: var(--tq-radius-sm),
+          filled-disabled-container-color: var(--tq-surface-sunken),
+          filled-active-indicator-color: transparent,
+          filled-hover-active-indicator-color: transparent,
+          filled-focus-active-indicator-color: transparent,
+          filled-disabled-active-indicator-color: transparent,
+          filled-error-active-indicator-color: transparent,
+          filled-error-hover-active-indicator-color: transparent,
+          filled-error-focus-active-indicator-color: transparent,
+          filled-active-indicator-height: 0,
+          filled-focus-active-indicator-height: 0,
+          filled-label-text-color: var(--tq-text-muted),
+          filled-hover-label-text-color: var(--tq-text),
+          filled-focus-label-text-color: var(--tq-accent-soft),
+          filled-input-text-color: var(--tq-text),
+          filled-input-text-placeholder-color: var(--tq-text-faint),
+          filled-label-text-size: var(--tq-font-size-base),
+          container-text-size: var(--tq-font-size-base),
+          subscript-text-size: var(--tq-font-size-sm),
+          error-text-color: var(--tq-negative-soft),
+          leading-icon-color: var(--tq-text-muted),
+          trailing-icon-color: var(--tq-text-muted),
+          enabled-select-arrow-color: var(--tq-text-muted),
+          focus-select-arrow-color: var(--tq-accent-soft),
+          state-layer-color: transparent,
+          hover-state-layer-opacity: 0,
+          focus-state-layer-opacity: 0,
+  ));
+
+  @include mat.button-overrides((
+          filled-container-shape: var(--tq-radius-sm),
+          filled-container-color: var(--tq-accent),
+          filled-label-text-color: var(--tq-text-on-accent),
+          filled-label-text-weight: 500,
+          filled-label-text-size: var(--tq-font-size-base),
+          filled-horizontal-padding: var(--tq-space-5),
+          filled-disabled-container-color: var(--tq-surface-sunken),
+          filled-disabled-label-text-color: var(--tq-text-faint),
+          tonal-container-shape: var(--tq-radius-sm),
+          tonal-container-color: var(--tq-surface-sunken),
+          tonal-label-text-color: var(--tq-text),
+          tonal-label-text-weight: 500,
+          tonal-label-text-size: var(--tq-font-size-base),
+          tonal-horizontal-padding: var(--tq-space-5),
+          outlined-container-shape: var(--tq-radius-sm),
+          outlined-outline-color: var(--tq-border-strong),
+          outlined-outline-width: 0.0625rem,
+          outlined-label-text-color: var(--tq-text),
+          outlined-label-text-weight: 500,
+          outlined-label-text-size: var(--tq-font-size-base),
+          outlined-horizontal-padding: var(--tq-space-5),
+          text-container-shape: var(--tq-radius-sm),
+          text-label-text-color: var(--tq-text-muted),
+          text-label-text-weight: 500,
+          text-label-text-size: var(--tq-font-size-base),
+          text-horizontal-padding: var(--tq-space-4),
+          text-disabled-label-text-color: var(--tq-text-faint),
+          protected-container-shape: var(--tq-radius-sm),
+          protected-container-color: var(--tq-surface-sunken),
+          protected-label-text-color: var(--tq-text),
+          protected-container-elevation-shadow: var(--tq-shadow-1),
+          protected-hover-container-elevation-shadow: var(--tq-shadow-2),
+  ));
+
+  @include mat.icon-button-overrides((
+          container-shape: var(--tq-radius-sm),
+          icon-color: var(--tq-text-muted),
+          disabled-icon-color: var(--tq-text-faint),
+          state-layer-color: var(--mat-sys-on-surface),
+          hover-state-layer-opacity: 0.08,
+          focus-state-layer-opacity: 0.12,
+          pressed-state-layer-opacity: 0.16,
+  ));
+
+  @include mat.button-toggle-overrides((
+          background-color: var(--tq-surface-sunken),
+          text-color: var(--tq-text-muted),
+          selected-state-background-color: var(--tq-accent-surface),
+          selected-state-text-color: var(--tq-accent-soft),
+          divider-color: transparent,
+          shape: var(--tq-radius-pill),
+          height: 2.25rem,
+          label-text-size: var(--tq-font-size-base),
+          label-text-weight: 500,
+          state-layer-color: var(--mat-sys-on-surface),
+          disabled-state-background-color: var(--tq-surface-sunken),
+          disabled-state-text-color: var(--tq-text-faint),
+  ));
+
+  @include mat.tabs-overrides((
+          background-color: transparent,
+          container-height: 3rem,
+          divider-color: var(--tq-border),
+          divider-height: 0.0625rem,
+          active-indicator-color: var(--tq-accent),
+          active-indicator-height: 0.125rem,
+          active-indicator-shape: var(--tq-radius-pill),
+          active-label-text-color: var(--tq-text),
+          active-hover-label-text-color: var(--tq-text),
+          active-focus-label-text-color: var(--tq-text),
+          inactive-label-text-color: var(--tq-text-muted),
+          inactive-hover-label-text-color: var(--tq-text),
+          inactive-focus-label-text-color: var(--tq-text),
+          label-text-size: var(--tq-font-size-base),
+          label-text-weight: 500,
+          label-text-tracking: 0,
+  ));
+
+  @include mat.table-overrides((
+          background-color: transparent,
+          row-item-outline-color: var(--tq-border),
+          row-item-outline-width: 0.0625rem,
+          row-item-label-text-color: var(--tq-text),
+          row-item-label-text-size: var(--tq-font-size-base),
+          row-item-container-height: 3.75rem,
+          header-container-height: 2.75rem,
+          header-headline-color: var(--tq-text-muted),
+          header-headline-size: var(--tq-font-size-sm),
+          header-headline-weight: 500,
+          header-headline-tracking: var(--tq-tracking-label),
+  ));
+
+  @include mat.menu-overrides((
+          container-color: var(--tq-surface-raised),
+          container-shape: var(--tq-radius-md),
+          container-elevation-shadow: var(--tq-shadow-2),
+          item-label-text-color: var(--tq-text),
+          item-label-text-size: var(--tq-font-size-base),
+          item-icon-color: var(--tq-text-muted),
+          divider-color: var(--tq-border),
+  ));
+
+  @include mat.tooltip-overrides((
+          container-color: var(--tq-surface-sunken),
+          container-shape: var(--tq-radius-xs),
+          supporting-text-color: var(--tq-text),
+          supporting-text-size: var(--tq-font-size-sm),
+  ));
+
+  @include mat.progress-bar-overrides((
+          active-indicator-color: var(--tq-accent),
+          active-indicator-height: 0.25rem,
+          track-color: var(--tq-surface-sunken),
+          track-height: 0.25rem,
+          track-shape: var(--tq-radius-pill),
+  ));
+
+  // Sized against the 0.875rem label beside it instead of M3's touch-first defaults, where a 3.25rem by 2rem track
+  // with a 1.5rem handle dwarfs the text it labels. Three things about the geometry:
+  // - `with-icon-handle-size` is what actually sets the handle in both states. Material renders the icon element
+  //   unless `hideIcon` is set, so its `:has(.mdc-switch__icons)` rule matches always and wins on source order over
+  //   the per-state sizes. Those are set to the same value so the two cannot drift.
+  // - the margins position the handle inside the track, so the three are one geometry: the selected margin is
+  //   track - handle - unselected margin, and the handle lands the same distance from either end.
+  // - the icon is sized to 0 rather than hidden per usage: a checkmark is not legible in a 0.875rem handle, and
+  //   the handle's position is what carries on/off anyway.
+  @include mat.slide-toggle-overrides((
+          track-shape: var(--tq-radius-pill),
+          handle-shape: var(--tq-radius-pill),
+          track-width: 2.25rem,
+          track-height: 1.25rem,
+          with-icon-handle-size: 0.875rem,
+          unselected-with-icon-handle-horizontal-margin: 0 0.1875rem,
+          selected-with-icon-handle-horizontal-margin: 0 1.1875rem,
+          unselected-handle-size: 0.875rem,
+          selected-handle-size: 0.875rem,
+          unselected-handle-horizontal-margin: 0 0.1875rem,
+          selected-handle-horizontal-margin: 0 1.1875rem,
+          pressed-handle-size: 1rem,
+          unselected-pressed-handle-horizontal-margin: 0 0.125rem,
+          selected-pressed-handle-horizontal-margin: 0 1.125rem,
+          selected-icon-size: 0,
+          unselected-icon-size: 0,
+          state-layer-size: 1.75rem,
+          track-outline-width: 0.0625rem,
+          selected-track-outline-width: 0,
+          disabled-unselected-track-outline-width: 0.0625rem,
+          unselected-track-color: var(--tq-surface-sunken),
+          unselected-hover-track-color: var(--tq-surface-sunken),
+          unselected-focus-track-color: var(--tq-surface-sunken),
+          unselected-pressed-track-color: var(--tq-surface-sunken),
+          track-outline-color: var(--tq-border-strong),
+          unselected-handle-color: var(--tq-text-muted),
+          unselected-hover-handle-color: var(--tq-text),
+          unselected-focus-handle-color: var(--tq-text),
+          selected-track-color: var(--tq-accent),
+          selected-hover-track-color: var(--tq-accent),
+          selected-focus-track-color: var(--tq-accent),
+          selected-pressed-track-color: var(--tq-accent),
+          selected-handle-color: var(--tq-text-on-accent),
+          selected-hover-handle-color: var(--tq-text-on-accent),
+          selected-focus-handle-color: var(--tq-text-on-accent),
+          selected-icon-color: var(--tq-accent),
+          label-text-color: var(--tq-text),
+          label-text-size: var(--tq-font-size-base),
+          handle-elevation-shadow: var(--tq-shadow-1),
+  ));
+
+  @include mat.radio-overrides((
+          selected-icon-color: var(--tq-accent),
+          selected-hover-icon-color: var(--tq-accent),
+          selected-focus-icon-color: var(--tq-accent),
+          selected-pressed-icon-color: var(--tq-accent),
+          unselected-icon-color: var(--tq-border-strong),
+          unselected-hover-icon-color: var(--tq-text-muted),
+          label-text-color: var(--tq-text),
+          label-text-size: var(--tq-font-size-base),
+  ));
+
+  @include mat.select-overrides((
+          panel-background-color: var(--tq-surface-raised),
+          container-elevation-shadow: var(--tq-shadow-2),
+          enabled-trigger-text-color: var(--tq-text),
+          disabled-trigger-text-color: var(--tq-text-faint),
+          placeholder-text-color: var(--tq-text-faint),
+          enabled-arrow-color: var(--tq-text-muted),
+          focused-arrow-color: var(--tq-accent-soft),
+          trigger-text-size: var(--tq-font-size-base),
+  ));
+
+  @include mat.autocomplete-overrides((
+          background-color: var(--tq-surface-raised),
+          container-shape: var(--tq-radius-md),
+          container-elevation-shadow: var(--tq-shadow-2),
+  ));
+
+  @include mat.toolbar-overrides((
+          container-background-color: transparent,
+          container-text-color: var(--tq-text),
+          standard-height: var(--tq-header-height),
+          mobile-height: var(--tq-header-height),
+          title-text-size: var(--tq-font-size-md),
+          title-text-weight: 500,
+  ));
+
+  // No `container-width` here. How wide a drawer is, is the layout of whichever component opens it — the app shell
+  // wants a fixed side menu, the database dialog wants one that shrinks to its own content — so each sets
+  // `--mat-sidenav-container-width` on its own container. Only the drawer's look is themed here.
+  @include mat.sidenav-overrides((
+          container-background-color: var(--tq-surface-chrome),
+          container-divider-color: var(--tq-border),
+          container-text-color: var(--tq-text),
+          container-shape: 0,
+          container-elevation-shadow: none,
+          content-background-color: transparent,
+          content-text-color: var(--tq-text),
+          scrim-color: var(--tq-surface-overlay),
+  ));
+
+  @include mat.expansion-overrides((
+          container-background-color: var(--tq-surface-raised),
+          container-shape: var(--tq-radius-md),
+          container-elevation-shadow: none,
+          container-text-color: var(--tq-text),
+          container-text-size: var(--tq-font-size-base),
+          header-text-color: var(--tq-text),
+          header-text-size: var(--tq-font-size-base),
+          header-text-weight: 500,
+          header-description-color: var(--tq-text-muted),
+          header-indicator-color: var(--tq-text-muted),
+          header-collapsed-state-height: 3rem,
+          header-expanded-state-height: 3.5rem,
+          actions-divider-color: var(--tq-border),
+  ));
+
+  @include mat.option-overrides((
+          label-text-color: var(--tq-text),
+          label-text-size: var(--tq-font-size-base),
+          selected-state-label-text-color: var(--tq-accent-soft),
+          selected-state-layer-color: var(--tq-accent-surface),
+          hover-state-layer-color: var(--tq-surface-hover),
+  ));
+
+  @include mat.optgroup-overrides((
+          label-text-color: var(--tq-text-muted),
+          label-text-size: var(--tq-font-size-sm),
+          label-text-weight: 500,
+  ));
+
+  @include mat.stepper-overrides((
+          container-color: transparent,
+          header-height: 3.5rem,
+          header-label-text-color: var(--tq-text-muted),
+          header-label-text-size: var(--tq-font-size-base),
+          header-label-text-weight: 500,
+          header-selected-state-label-text-color: var(--tq-text),
+          header-selected-state-label-text-size: var(--tq-font-size-base),
+          header-selected-state-label-text-weight: 500,
+          header-icon-background-color: var(--tq-surface-sunken),
+          header-icon-foreground-color: var(--tq-text-muted),
+          header-selected-state-icon-background-color: var(--tq-accent),
+          header-selected-state-icon-foreground-color: var(--tq-text-on-accent),
+          header-done-state-icon-background-color: var(--tq-accent-surface),
+          header-done-state-icon-foreground-color: var(--tq-accent-soft),
+          header-edit-state-icon-background-color: var(--tq-accent),
+          header-edit-state-icon-foreground-color: var(--tq-text-on-accent),
+          header-error-state-icon-foreground-color: var(--tq-negative-soft),
+          header-error-state-label-text-color: var(--tq-negative-soft),
+          line-color: var(--tq-border),
+  ));
+
+  @include mat.datepicker-overrides((
+          calendar-container-background-color: var(--tq-surface-raised),
+          calendar-container-shape: var(--tq-radius-md),
+          calendar-container-elevation-shadow: var(--tq-shadow-2),
+          calendar-container-text-color: var(--tq-text),
+          calendar-date-text-color: var(--tq-text),
+          calendar-date-outline-color: transparent,
+          calendar-date-today-outline-color: var(--tq-accent-border),
+          calendar-date-hover-state-background-color: var(--tq-surface-hover),
+          calendar-date-focus-state-background-color: var(--tq-surface-active),
+          calendar-date-selected-state-background-color: var(--tq-accent),
+          calendar-date-selected-state-text-color: var(--tq-text-on-accent),
+          calendar-date-disabled-state-text-color: var(--tq-text-faint),
+          calendar-body-label-text-color: var(--tq-text-muted),
+          calendar-header-text-color: var(--tq-text-muted),
+          calendar-header-divider-color: var(--tq-border),
+          calendar-period-button-text-color: var(--tq-text),
+          calendar-period-button-icon-color: var(--tq-text-muted),
+          calendar-navigation-button-icon-color: var(--tq-text-muted),
+          toggle-icon-color: var(--tq-text-muted),
+          toggle-active-state-icon-color: var(--tq-accent-soft),
+  ));
+
+  @include mat.paginator-overrides((
+          container-background-color: transparent,
+          container-text-color: var(--tq-text-muted),
+          container-text-size: var(--tq-font-size-sm),
+          enabled-icon-color: var(--tq-text-muted),
+          disabled-icon-color: var(--tq-text-faint),
+  ));
+
+  @include mat.chips-overrides((
+          container-shape-radius: var(--tq-radius-pill),
+          elevated-container-color: var(--tq-surface-sunken),
+          label-text-color: var(--tq-text),
+          label-text-size: var(--tq-font-size-sm),
+          outline-color: var(--tq-border),
+          outline-width: 0.0625rem,
+  ));
+}
+
+// The filled form field has no token for an outline, so its border, hover and focus ring are drawn on the
+// MDC wrapper directly. Replacing the active indicator is what makes the field read as a filled box rather
+// than an underlined one.
+.mat-mdc-form-field .mat-mdc-text-field-wrapper {
+  border: 0.0625rem solid var(--tq-border);
+  border-radius: var(--tq-radius-sm);
+  transition: border-color var(--tq-duration-fast) var(--tq-ease),
+  box-shadow var(--tq-duration-fast) var(--tq-ease);
+}
+
+.mat-mdc-form-field:hover .mat-mdc-text-field-wrapper {
+  border-color: var(--tq-border-strong);
+}
+
+.mat-mdc-form-field.mat-focused .mat-mdc-text-field-wrapper {
+  border-color: var(--tq-border-accent);
+  box-shadow: 0 0 0 0.0625rem var(--tq-border-accent);
+}
+
+.mat-mdc-form-field.mat-form-field-invalid .mat-mdc-text-field-wrapper {
+  border-color: var(--tq-negative-border);
+}
+
+.mat-mdc-form-field.mat-form-field-invalid.mat-focused .mat-mdc-text-field-wrapper {
+  box-shadow: 0 0 0 0.0625rem var(--tq-negative);
+}
+
+// The overlay panes are portalled to the body, outside every component's scope, so their outline has to be
+// declared globally.
+.mat-mdc-dialog-surface,
+.mat-mdc-menu-panel,
+.mat-mdc-select-panel,
+.mat-mdc-autocomplete-panel,
+.mat-datepicker-content {
+  border: 0.0625rem solid var(--tq-border);
+}
+
+.mat-mdc-dialog-surface {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+// mat-menu has no token for the panel's width and hard-codes a 280px max-width, which cuts off the right edge of
+// any menu holding more than a label. The panel then sizes to its content, up to this bound. The pane it sits in
+// is part of the selector because Material's own rule is injected after this stylesheet and would otherwise win.
+.cdk-overlay-pane .mat-mdc-menu-panel {
+  max-width: 28rem;
+}
+
+.cdk-overlay-dark-backdrop {
+  background-color: var(--tq-surface-overlay);
+  backdrop-filter: blur(0.125rem);
+}
+
+// mat-sort-header has no token for where its label sits, so a right-aligned numeric column needs its
+// container flipped for the sort arrow to follow the label to the right edge.
+.tq-table__cell--numeric .mat-sort-header-container {
+  justify-content: flex-end;
+}
+
+// mat-tab-group has no token for how its body stretches, and without this a tab whose content owns its own
+// scrolling collapses to zero height.
+.mat-mdc-tab-body-wrapper {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.mat-mdc-tab-body-content {
+  display: flex;
+  flex-direction: column;
+}

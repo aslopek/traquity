@@ -1,12 +1,5 @@
-.wrapper {
-  padding: 2rem;
-}
-
-.button-group {
+:host {
   display: flex;
-  align-content: center;
-}
-
-.button-group button {
-  margin-right: 1rem;
+  flex-direction: column;
+  min-width: 24rem;
 }

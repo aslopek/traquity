@@ -1,23 +1,5 @@
-.wrapper {
-  padding: 2rem;
-  display: grid;
-  place-items: center;
-}
-
-.icon {
-  margin-right: 0.5rem;
-}
-
-.content {
+:host {
   display: flex;
-  flex-direction: row;
-}
-
-.button-group {
-  display: flex;
-  align-content: center;
-}
-
-.button-group button {
-  margin-right: 1rem;
+  flex-direction: column;
+  min-width: 24rem;
 }

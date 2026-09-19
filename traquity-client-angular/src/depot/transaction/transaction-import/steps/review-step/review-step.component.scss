@@ -1,17 +1,38 @@
-.content {
-  padding: 1rem;
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-5);
+  padding: var(--tq-space-4) 0;
 }
 
-.securities-table {
-  border-collapse: collapse;
-  margin-bottom: 1rem;
-
-  th, td {
-    text-align: left;
-    padding: 0.25rem 1rem 0.25rem 0;
-  }
+.step__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-3);
 }
 
-.next-button {
-  cursor: pointer;
+.step__title {
+  font-size: var(--tq-font-size-md);
+  font-weight: 500;
+}
+
+.step__summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-2);
+  padding: var(--tq-space-4);
+  border: 0.0625rem solid var(--tq-border);
+  border-radius: var(--tq-radius-sm);
+  background-color: var(--tq-surface-sunken);
+}
+
+.step__summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--tq-space-4);
+}
+
+.step__actions {
+  display: flex;
+  justify-content: flex-end;
 }

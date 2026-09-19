@@ -1,5 +1,5 @@
-<div class="content">
-    <mat-form-field>
+<div class="step">
+    <mat-form-field class="step__field">
         <mat-label>Separator</mat-label>
         <mat-select [value]="transactionImportStore.separator()"
                     (selectionChange)="transactionImportStore.setSeparator($event.value)">
@@ -9,35 +9,45 @@
         </mat-select>
     </mat-form-field>
 
-    <div [class.disabled]="transactionImportStore.separator() === null">
-        <h3>Column Mapping</h3>
-        @for (config of fieldConfigs; track config.field) {
-            <mat-form-field class="field">
-                <mat-label>{{ config.label }}{{ config.required ? ' *' : '' }}</mat-label>
-                <mat-select [disabled]="transactionImportStore.separator() === null"
-                            [value]="columnMappingValue(config.field)"
-                            (selectionChange)="setColumnMapping(config.field, $event.value)">
-                    <mat-option [value]="null">Not mapped</mat-option>
-                    @for (columnName of transactionImportStore.header(); track $index) {
-                        <mat-option [value]="$index">{{ columnName }}</mat-option>
-                    }
-                </mat-select>
-            </mat-form-field>
-        }
-        <p class="hint">At least one of ISIN, Name or Symbol must be mapped, in order to identify securities.</p>
+    <section class="step__section"
+             [class.step__section--disabled]="transactionImportStore.separator() === null">
+        <h3 class="step__title">Column Mapping</h3>
 
-        <div [class.disabled]="transactionImportStore.columnMapping().transactionType === undefined">
-            <h3>Transaction Type Mapping</h3>
+        <div class="tq-form-grid">
+            @for (config of fieldConfigs; track config.field) {
+                <mat-form-field>
+                    <mat-label>{{ config.label }}{{ config.required ? ' *' : '' }}</mat-label>
+                    <mat-select [disabled]="transactionImportStore.separator() === null"
+                                [value]="columnMappingValue(config.field)"
+                                (selectionChange)="setColumnMapping(config.field, $event.value)">
+                        <mat-option [value]="null">Not mapped</mat-option>
+                        @for (columnName of transactionImportStore.header(); track $index) {
+                            <mat-option [value]="$index">{{ columnName }}</mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+            }
+        </div>
+
+        <p class="tq-field-hint">
+            At least one of ISIN, Name or Symbol must be mapped, in order to identify securities.
+        </p>
+
+        <div class="step__section"
+             [class.step__section--disabled]="transactionImportStore.columnMapping().transactionType === undefined">
+            <h3 class="step__title">Transaction Type Mapping</h3>
             @for (value of transactionImportStore.distinctTypeValues(); track value) {
-                <div class="type-mapping-row">
-                    <span class="type-mapping-value">{{ value }}</span>
-                    <mat-form-field class="field">
+                <div class="step__type-row">
+                    <span class="step__type-value tq-truncate">{{ value }}</span>
+                    <mat-form-field class="step__field">
                         <mat-label>Maps to</mat-label>
                         <mat-select [disabled]="transactionImportStore.columnMapping().transactionType === undefined"
                                     [value]="typeMappingValue(value)"
                                     (selectionChange)="transactionImportStore.setTransactionTypeMapping(value, $event.value)">
                             @for (transactionType of transactionTypes; track transactionType) {
-                                <mat-option [value]="transactionType">{{ transactionType | transactionTypeDisplayName }}</mat-option>
+                                <mat-option [value]="transactionType">
+                                    {{ transactionType | transactionTypeDisplayName }}
+                                </mat-option>
                             }
                             <mat-option [value]="null">Skip these rows</mat-option>
                         </mat-select>
@@ -46,8 +56,8 @@
             }
         </div>
 
-        <h3>Date Format</h3>
-        <mat-form-field class="field">
+        <h3 class="step__title">Date Format</h3>
+        <mat-form-field class="step__field">
             <mat-label>Date Format</mat-label>
             <mat-select [disabled]="transactionImportStore.separator() === null"
                         [value]="transactionImportStore.dateFormat()"
@@ -58,8 +68,8 @@
             </mat-select>
         </mat-form-field>
 
-        <h3>Decimal Separator</h3>
-        <mat-button-toggle-group>
+        <h3 class="step__title">Decimal Separator</h3>
+        <mat-button-toggle-group class="step__toggle-group">
             <mat-button-toggle (click)="transactionImportStore.setDecimalSeparator(',')"
                                [checked]="transactionImportStore.decimalSeparator() === ','">
                 , (comma)
@@ -69,12 +79,13 @@
                 . (dot)
             </mat-button-toggle>
         </mat-button-toggle-group>
-    </div>
+    </section>
 
-    <button [disabled]="!transactionImportStore.mappingOk()"
-            class="next-button"
-            mat-button
-            matStepperNext>
-        Next
-    </button>
+    <div class="step__actions">
+        <button [disabled]="!transactionImportStore.mappingOk()"
+                matButton="filled"
+                matStepperNext>
+            Next
+        </button>
+    </div>
 </div>

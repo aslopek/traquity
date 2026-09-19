@@ -1,12 +1,28 @@
-.wrapper {
-  padding: 2rem;
-}
-
-.button-group {
+:host {
   display: flex;
-  align-content: center;
+  flex-direction: column;
+  min-width: 24rem;
 }
 
-.button-group button {
-  margin-right: 1rem;
+.transaction-delete__summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-2);
+  padding: var(--tq-space-4);
+  border: 0.0625rem solid var(--tq-border);
+  border-radius: var(--tq-radius-sm);
+  background-color: var(--tq-surface-sunken);
+}
+
+.transaction-delete__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--tq-space-4);
+}
+
+.transaction-delete__type {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tq-space-2);
 }

@@ -7,7 +7,6 @@ import {MatIcon} from "@angular/material/icon";
     MatIcon
   ],
   templateUrl: "./ai-icon.component.html",
-  styleUrl: "./ai-icon.component.scss",
 })
 export class AiIconComponent {
 }

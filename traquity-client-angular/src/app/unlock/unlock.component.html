@@ -1,18 +1,19 @@
-<div class="unlock-screen">
-    <app-about-button class="about-button"></app-about-button>
+<div class="unlock">
+    <app-about-button class="unlock__about"></app-about-button>
 
-    <div class="unlock-content">
+    <section class="unlock__card">
         <img alt=""
-             class="app-logo"
+             class="unlock__logo"
              src="./assets/logo.png"/>
-        <h1 class="database-file-name">
+
+        <h1 class="unlock__file-name">
             {{ startupStore.databasePath() | fileName:'.mv.db' }}
         </h1>
-        <p class="database-path">
+        <p class="unlock__path tq-muted">
             {{ startupStore.databasePath() }}
         </p>
 
-        <mat-form-field>
+        <mat-form-field class="unlock__field">
             <mat-label>Password</mat-label>
             <input #passwordInput
                    matInput
@@ -24,34 +25,36 @@
                     mat-icon-button
                     type="button"
                     [attr.aria-label]="unlockStore.passwordVisible() ? 'Hide password' : 'Show password'"
+                    [matTooltip]="unlockStore.passwordVisible() ? 'Hide password' : 'Show password'"
                     (click)="unlockStore.togglePasswordVisibility()">
-                <mat-icon>{{ unlockStore.passwordVisible() ? 'visibility_off' : 'visibility' }}</mat-icon>
+                <mat-icon [fontIcon]="unlockStore.passwordVisible() ? 'visibility_off' : 'visibility'"></mat-icon>
             </button>
         </mat-form-field>
 
         @if (startupStore.startFailed()) {
-            <p class="start-failed">
-                wrong password or corrupted database
-            </p>
+            <div class="tq-notice tq-notice--error">
+                <mat-icon class="tq-notice__icon"
+                          fontIcon="error"></mat-icon>
+                <span>Wrong password or corrupted database.</span>
+            </div>
         }
 
-        <div class="actions">
-            <button mat-stroked-button
+        <div class="unlock__actions">
+            <button matButton="outlined"
                     (click)="unlockStore.cancel()">
                 Cancel
             </button>
-            <button mat-raised-button
-                    color="primary"
+            <button matButton="filled"
                     [disabled]="!unlockStore.canSubmit()"
                     (click)="unlockStore.submit()">
                 OK
             </button>
         </div>
 
-        <button mat-button
-                class="use-different-database"
+        <button matButton
+                class="unlock__alternative"
                 (click)="unlockStore.useDifferentDatabase()">
             Use a different database…
         </button>
-    </div>
+    </section>
 </div>

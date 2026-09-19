@@ -12,7 +12,8 @@ import {takeUntilDestroyed, toObservable} from "@angular/core/rxjs-interop";
 import {disabled, FieldTree, form, FormField, SchemaPathTree,} from "@angular/forms/signals";
 import {MatFormField, MatInput, MatLabel} from "@angular/material/input";
 import {MatOption, MatSelect} from "@angular/material/select";
-import {MatCheckbox} from "@angular/material/checkbox";
+import {MatSlideToggle} from "@angular/material/slide-toggle";
+import {MatIcon} from "@angular/material/icon";
 import {skip, tap} from "rxjs";
 
 export type DividendAnnouncementConfigChangedEvent =
@@ -29,7 +30,8 @@ export type DividendAnnouncementConfigChangedEvent =
     FormField,
     MatOption,
     MatInput,
-    MatCheckbox,
+    MatSlideToggle,
+    MatIcon,
   ],
   providers: [readableDividendAnnouncementConfigStore],
   templateUrl: "./dividend-announcement-config.component.html",

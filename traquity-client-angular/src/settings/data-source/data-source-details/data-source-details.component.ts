@@ -1,11 +1,7 @@
 import {Component, computed, inject, input, InputSignal, signal, Signal, WritableSignal} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {MatCardModule} from '@angular/material/card';
-import {MatDividerModule} from '@angular/material/divider';
-import {MatListModule} from '@angular/material/list';
 import {MatTableModule} from '@angular/material/table';
 import {MatIconModule} from '@angular/material/icon';
-import {MatChipsModule} from '@angular/material/chips';
 import {DataSourceStore, ReadableDataSourceStore} from "../store/data-source.store";
 import {AnyDataSource, DataSourceVariant, MultiUrlDataSource, SingleUrlDataSource} from "../data-source.type";
 import {parseDataSource, ParsedDataSource} from "../parse-data-source.util";
@@ -53,12 +49,8 @@ const emptyDividendAnnouncementDataSource: SingleUrlDataSource = {
   selector: "app-data-source-details",
   imports: [
     CommonModule,
-    MatCardModule,
-    MatDividerModule,
-    MatListModule,
     MatTableModule,
     MatIconModule,
-    MatChipsModule,
     TqDecimalPipe,
     ScriptTokenizerPipe,
     MatButton

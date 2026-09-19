@@ -1,31 +1,31 @@
 @let availableDataSources = dataSources();
 @if (availableDataSources.length > 0) {
-    <form>
+    <form class="tq-form">
         <mat-slide-toggle [formField]="form.isActive"
-                          class="form-field"
-                          color="primary"
                           name="isActive">
             {{ form.isActive().value() ? 'Enabled' : 'Disabled' }}
         </mat-slide-toggle>
 
-        <mat-form-field class="form-field">
+        <mat-form-field>
             <mat-label>Data Source</mat-label>
             <mat-select [formField]="form.dataSourceId">
-                @for (source of dataSources(); track source.id) {
-                    <mat-option [value]="source.id">
-                        {{ source.name }}
-                    </mat-option>
+                @for (source of availableDataSources; track source.id) {
+                    <mat-option [value]="source.id">{{ source.name }}</mat-option>
                 }
             </mat-select>
         </mat-form-field>
 
-        <mat-form-field class="form-field">
+        <mat-form-field>
             <mat-label>External Security ID</mat-label>
             <input [formField]="form.externalSecurityId"
                    matInput>
         </mat-form-field>
     </form>
 } @else {
-    <p>No Data Sources available.</p>
+    <div class="tq-empty">
+        <mat-icon class="tq-empty__icon"
+                  fontIcon="cloud_off"></mat-icon>
+        <span class="tq-empty__title">No data sources available</span>
+        <span class="tq-empty__hint">Add a historical price data source in Settings first.</span>
+    </div>
 }
-

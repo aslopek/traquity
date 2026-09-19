@@ -1,7 +1,7 @@
 import {Component, computed, Signal,} from "@angular/core";
 import {MatButtonModule} from "@angular/material/button";
 import {MatButtonToggleModule} from "@angular/material/button-toggle";
-import {MatCheckboxChange, MatCheckboxModule,} from "@angular/material/checkbox";
+import {MatSlideToggleChange, MatSlideToggleModule,} from "@angular/material/slide-toggle";
 import {MatIconModule} from "@angular/material/icon";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import html2canvas from "html2canvas-pro";
@@ -26,7 +26,7 @@ type SelectedDividendView = "barchart" | "table";
 @Component({
   selector: "app-dividend-page",
   imports: [
-    MatCheckboxModule,
+    MatSlideToggleModule,
     MatIconModule,
     MatButtonModule,
     MatTooltipModule,
@@ -59,13 +59,13 @@ export class DividendPageComponent {
     );
   }
 
-  protected toggleUseGrossValues(event: MatCheckboxChange): void {
+  protected toggleUseGrossValues(event: MatSlideToggleChange): void {
     this.store.dispatch(
       DepotActions.setUseDividendGrossValues({useGrossValues: event.checked}),
     );
   }
 
-  protected toggleIncludeSpecialDividends(event: MatCheckboxChange): void {
+  protected toggleIncludeSpecialDividends(event: MatSlideToggleChange): void {
     this.store.dispatch(
       DepotActions.setIncludeSpecialDividends({
         includeSpecialDividends: event.checked,

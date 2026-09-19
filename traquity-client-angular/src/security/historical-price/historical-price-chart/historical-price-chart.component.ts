@@ -1,6 +1,7 @@
 import {Component, Input, numberAttribute, OnDestroy, OnInit, signal, WritableSignal,} from "@angular/core";
 import {MatButtonToggle, MatButtonToggleGroup} from "@angular/material/button-toggle";
-import {MatCheckboxModule} from "@angular/material/checkbox";
+import {MatSlideToggleModule} from "@angular/material/slide-toggle";
+import {MatIcon} from "@angular/material/icon";
 import {MatProgressBarModule} from "@angular/material/progress-bar";
 import {format} from "date-fns";
 import {ECharts} from "echarts/core";
@@ -18,7 +19,8 @@ import {HistoricalPriceChartPipe} from "./historical-price-chart.pipe";
     NgxEchartsDirective,
     MatButtonToggleGroup,
     MatButtonToggle,
-    MatCheckboxModule,
+    MatSlideToggleModule,
+    MatIcon,
     MatProgressBarModule,
     CurrencySelectComponent,
     HistoricalPriceChartPipe,

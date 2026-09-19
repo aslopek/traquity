@@ -1,79 +1,48 @@
-.title-bar {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-}
-
-.content {
-  padding: 1rem;
-}
-
-.wrapper-column {
+:host {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  width: 100%;
+  min-width: 34rem;
+  max-height: 100%;
 }
 
-.wrapper-row {
+.transaction-create__import {
   display: flex;
-  flex-direction: row;
-  height: 100%;
-  width: 100%;
-}
-
-.clickable {
-  cursor: pointer;
-}
-
-.transaction-type-select {
-  width: 80%;
-  margin-right: 2rem;
-}
-
-.form-button {
-  margin-right: 1rem;
-}
-
-.import-row {
   align-items: center;
-  display: flex;
-  gap: 0.75rem;
-  margin-bottom: 0.5rem;
+  gap: var(--tq-space-3);
 }
 
-.file-input {
+.transaction-create__file-input {
   display: none;
 }
 
-.import-hint {
-  font-size: 0.75rem;
-  opacity: 0.7;
-
-  &.disabled {
-    opacity: 0.38;
-  }
+.transaction-create__type-row {
+  display: flex;
+  align-items: center;
+  gap: var(--tq-space-5);
 }
 
-.import-message {
-  font-size: 0.75rem;
-  margin: 0.25rem 0 0.5rem;
+.transaction-create__type {
+  flex: 1 1 auto;
+  min-width: 0;
+}
 
-  &.info {
-    color: var(--tq-color-primary);
-  }
+.transaction-create__clickable {
+  cursor: pointer;
+}
 
-  &.warning {
-    color: #f9992c;
-  }
-
-  &.error {
-    color: #f44336;
-  }
+.transaction-create__net-value {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-1);
+  padding: var(--tq-space-4);
+  border: 0.0625rem solid var(--tq-border);
+  border-radius: var(--tq-radius-sm);
+  background-color: var(--tq-surface-sunken);
 }
 
 // the class the file drop directive sets while a drag is over the dialog
-:host .content.file-drop-over {
-  outline: 0.125rem dashed #f9992c;
+:host .transaction-create__body.file-drop-over {
+  outline: 0.125rem dashed var(--tq-accent);
   outline-offset: -0.25rem;
+  background-color: var(--tq-accent-surface);
 }

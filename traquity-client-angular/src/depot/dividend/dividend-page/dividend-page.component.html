@@ -1,65 +1,69 @@
-<div class="wrapper">
-    <div class="dividend-page-menu">
-        <mat-button-toggle-group class="dividend-page-menu-item"
-                                 hideSingleSelectionIndicator="true">
+<div class="dividend-page">
+    <div class="dividend-page__toolbar">
+        <mat-button-toggle-group hideSingleSelectionIndicator="true">
             <mat-button-toggle (click)="selectView('barchart')"
                                [checked]="selectedView() === 'barchart'"
+                               aria-label="Bar Chart"
                                matTooltip="Bar Chart">
-                <mat-icon>bar_chart</mat-icon>
+                <mat-icon fontIcon="bar_chart"></mat-icon>
             </mat-button-toggle>
 
             <mat-button-toggle (click)="selectView('table')"
                                [checked]="selectedView() === 'table'"
+                               aria-label="Dividend Yields"
                                matTooltip="Dividend Yields">
-                <mat-icon>table_chart</mat-icon>
+                <mat-icon fontIcon="table_chart"></mat-icon>
             </mat-button-toggle>
         </mat-button-toggle-group>
 
-        <mat-checkbox class="dividend-page-menu-item"
-                      (change)="toggleUseGrossValues($event)"
-                      [checked]="useGrossValues()">
+        <mat-slide-toggle (change)="toggleUseGrossValues($event)"
+                          [checked]="useGrossValues()">
             Use Gross Values
-        </mat-checkbox>
+        </mat-slide-toggle>
 
         @if (showDiagramControls()) {
-            <mat-checkbox class="dividend-page-menu-item"
-                          (change)="toggleIncludeSpecialDividends($event)"
-                          [checked]="includeSpecialDividends()">
+            <mat-slide-toggle (change)="toggleIncludeSpecialDividends($event)"
+                              [checked]="includeSpecialDividends()">
                 Include Special Dividends
-            </mat-checkbox>
+            </mat-slide-toggle>
 
-            <mat-button-toggle-group class="dividend-page-menu-item"
-                                     hideSingleSelectionIndicator="true">
+            <mat-button-toggle-group hideSingleSelectionIndicator="true">
                 <mat-button-toggle (click)="selectAggregationTimespan('month')"
                                    [checked]="aggregationTimespan() === 'month'"
+                                   aria-label="Aggregate by Month"
                                    matTooltip="Aggregate by Month">
                     M
                 </mat-button-toggle>
 
                 <mat-button-toggle (click)="selectAggregationTimespan('quarter')"
                                    [checked]="aggregationTimespan() === 'quarter'"
+                                   aria-label="Aggregate by Quarter"
                                    matTooltip="Aggregate by Quarter">
                     Q
                 </mat-button-toggle>
 
                 <mat-button-toggle (click)="selectAggregationTimespan('year')"
                                    [checked]="aggregationTimespan() === 'year'"
+                                   aria-label="Aggregate by Year"
                                    matTooltip="Aggregate by Year">
                     Y
                 </mat-button-toggle>
             </mat-button-toggle-group>
 
-            <button class="dividend-page-menu-item"
-                    (click)="downloadImage()"
+            <span class="tq-spacer"></span>
+
+            <button (click)="downloadImage()"
                     [disabled]="selectedDepotIds().length === 0"
                     mat-icon-button
+                    aria-label="Download Chart as Image"
                     matTooltip="Download Chart as Image">
-                <mat-icon>file_download</mat-icon>
+                <mat-icon fontIcon="file_download"></mat-icon>
             </button>
         }
     </div>
 
-    <div id="dividend-view-container">
+    <div id="dividend-view-container"
+         class="dividend-page__view">
         @if (selectedView() === 'barchart') {
             <app-dividend-bar-chart></app-dividend-bar-chart>
         } @else if (selectedView() === 'table') {

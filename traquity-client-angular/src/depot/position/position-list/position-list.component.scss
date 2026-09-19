@@ -1,83 +1,75 @@
-@use '../../../styles' as styles;
-
 $group-gutter-width: 2.5rem;
 
-.wrapper {
+.position-list {
   display: flex;
-  align-items: center;
   flex-direction: column;
-  align-content: center;
-  height: 80vh;
+  align-items: center;
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
   overflow-y: auto;
 }
 
-.sticky-header {
+.position-list__header {
   position: sticky;
   top: 0;
   z-index: 2;
-  width: 50%;
-  min-width: 50rem;
+  width: 100%;
+  max-width: 70rem;
   flex-shrink: 0;
-  background-color: var(--mat-app-background-color, #303030);
-  padding-bottom: 0.5rem;
-  border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.08);
+  padding-bottom: var(--tq-space-3);
+  background-color: var(--tq-surface-canvas);
+  border-bottom: 0.0625rem solid var(--tq-border);
 
-  &.grouped {
+  &--grouped {
     padding-left: $group-gutter-width;
   }
 }
 
-.total-row {
+.position-list__total {
   display: flex;
-  flex-direction: row;
   align-items: center;
-  gap: 0.7rem;
+  gap: var(--tq-space-3);
+  padding-top: var(--tq-space-2);
 }
 
-.title {
-  font-weight: 500;
-  margin: 0;
-}
-
-.column-headers {
+.position-list__columns {
   display: flex;
-  flex-direction: row;
-  margin-top: 1rem;
+  margin-top: var(--tq-space-4);
 }
 
-.column-headers-spacer {
+.position-list__columns-spacer {
   width: 30%;
-  margin-right: 2rem;
+  margin-right: var(--tq-space-6);
 }
 
-.column-header {
-  opacity: 0.6;
-  font-size: 0.8rem;
+.position-list__column-label {
+  font-size: var(--tq-font-size-sm);
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.03rem;
-  margin-right: 1rem;
+  letter-spacing: var(--tq-tracking-label);
+  color: var(--tq-text-muted);
+  margin-right: var(--tq-space-4);
   text-align: right;
 }
 
-.position-rows {
-  width: 50%;
-  min-width: 50rem;
+.position-list__rows {
+  width: 100%;
+  max-width: 70rem;
 }
 
-.position-group {
+.position-list__group {
   position: relative;
-  width: 50%;
-  min-width: 50rem;
+  width: 100%;
+  max-width: 70rem;
   padding-left: $group-gutter-width;
 
   &:not(:last-child) {
-    margin-bottom: 0.75rem;
+    margin-bottom: var(--tq-space-3);
   }
 }
 
-.group-gutter {
+.position-list__gutter {
   position: absolute;
   top: 0;
   left: 0;
@@ -88,22 +80,25 @@ $group-gutter-width: 2.5rem;
   overflow: hidden;
 }
 
-.group-brace {
+.position-list__brace {
   align-self: stretch;
-  width: 0.625rem;
-  border: 0.0625rem solid rgba(255, 255, 255, 0.35);
+  width: 0.5rem;
+  border: 0.0625rem solid var(--tq-border-strong);
   border-right: none;
+  border-radius: var(--tq-radius-sm) 0 0 var(--tq-radius-sm);
 }
 
-.group-label {
+.position-list__group-label {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   max-height: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 0.85rem;
+  font-size: var(--tq-font-size-sm);
   font-weight: 500;
-  color: styles.$color-muted-text;
+  letter-spacing: var(--tq-tracking-label);
+  text-transform: uppercase;
+  color: var(--tq-text-muted);
   user-select: none;
 }

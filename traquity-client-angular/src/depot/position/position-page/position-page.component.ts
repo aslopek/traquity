@@ -1,13 +1,14 @@
 import {Component, inject, Signal,} from "@angular/core";
 import {MatButtonModule} from "@angular/material/button";
 import {MatButtonToggleModule} from "@angular/material/button-toggle";
-import {MatCheckboxModule} from "@angular/material/checkbox";
+import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
 import {MatSelectModule} from "@angular/material/select";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import html2canvas from "html2canvas-pro";
 import {DepotRead} from "../../../gen/api/depot";
+import {chartToken} from "../../../common/chart/chart-token";
 import {PositionListComponent} from "../position-list/position-list.component";
 import {PositionPieChartComponent} from "../position-pie-chart/position-pie-chart.component";
 import {Store} from "@ngrx/store";
@@ -28,7 +29,7 @@ type SelectedPositionView = "donut" | "list";
     MatIconModule,
     MatButtonModule,
     MatTooltipModule,
-    MatCheckboxModule,
+    MatSlideToggleModule,
     MatButtonToggleModule,
     MatFormFieldModule,
     MatSelectModule,
@@ -86,7 +87,7 @@ export class PositionPageComponent {
     html2canvas(chart as HTMLElement, {
       useCORS: true,
       height: chart.scrollHeight,
-      backgroundColor: "#303030",
+      backgroundColor: chartToken("--tq-surface-canvas"),
     }).then((canvas) => {
       const link: HTMLAnchorElement = document.createElement("a");
       link.download = `${this.selectedDepots()[0].name} positions.png`;

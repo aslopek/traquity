@@ -1,25 +1,41 @@
-<div class="wrapper">
-    <h2>Do you really want to delete this transaction?</h2>
+<app-title-toolbar (onClose)="cancel()"
+                   title="Delete Transaction">
+</app-title-toolbar>
 
-    <p>{{ securityName }}</p>
-
-    <p>
-        <mat-icon fontIcon="{{transaction.transactionType | transactionTypeDisplayIcon}}"></mat-icon>
-        {{ transaction.transactionType | transactionTypeDisplayName }}
-    </p>
-
-    <p>Transaction Date: {{ transaction.date | tqDate }}</p>
-
-    <div class="button-group">
-        <button (click)="deleteTransaction()"
-                color="warn"
-                mat-flat-button>
-            Delete
-        </button>
-        <button (click)="cancel()"
-                color="primary"
-                mat-stroked-button>
-            Cancel
-        </button>
+<div class="tq-dialog__body">
+    <div class="tq-notice tq-notice--error">
+        <mat-icon class="tq-notice__icon"
+                  fontIcon="warning"></mat-icon>
+        <span>This transaction will be removed permanently.</span>
     </div>
+
+    <div class="transaction-delete__summary">
+        <div class="transaction-delete__row">
+            <span class="tq-muted">Security</span>
+            <span>{{ securityName }}</span>
+        </div>
+        <div class="transaction-delete__row">
+            <span class="tq-muted">Type</span>
+            <span class="transaction-delete__type">
+                <mat-icon [fontIcon]="transaction.transactionType | transactionTypeDisplayIcon"></mat-icon>
+                {{ transaction.transactionType | transactionTypeDisplayName }}
+            </span>
+        </div>
+        <div class="transaction-delete__row">
+            <span class="tq-muted">Date</span>
+            <span class="tq-numeric">{{ transaction.date | tqDate }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="tq-dialog__actions">
+    <button (click)="cancel()"
+            matButton>
+        Cancel
+    </button>
+    <button (click)="deleteTransaction()"
+            class="tq-danger"
+            matButton="filled">
+        Delete
+    </button>
 </div>

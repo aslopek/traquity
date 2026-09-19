@@ -1,29 +1,27 @@
 <app-title-toolbar (onClose)="close()"
-                   class="title-bar"
                    title="Add Transaction">
 </app-title-toolbar>
 
 <div (filesDropped)="importFile($event)"
      [fileDropDisabled]="!importStore.canImport()"
      appFileDrop
-     class="content">
+     class="tq-dialog__body transaction-create__body">
     @if (bridgeAvailable) {
-        <div class="import-row">
+        <div class="transaction-create__import">
             <input #pdfUpload
                    (change)="selectPdf($event)"
                    accept="application/pdf,.pdf"
-                   class="file-input"
+                   class="transaction-create__file-input"
                    type="file">
             <button (click)="pdfUpload.click()"
                     [disabled]="!importStore.canImport()"
-                    color="primary"
-                    mat-stroked-button>
+                    matButton="outlined">
                 Import PDF
             </button>
             @if (importStore.canImport()) {
-                <span class="import-hint">or drop a PDF here</span>
+                <span class="tq-field-hint">or drop a PDF here</span>
             } @else if (!importStore.busy()) {
-                <span class="import-hint disabled">AI is switched off — enable it in Settings</span>
+                <span class="tq-faint">AI is switched off — enable it in Settings</span>
             }
         </div>
 
@@ -32,18 +30,22 @@
         }
 
         @if (importStore.message(); as message) {
-            <p class="import-message {{ message.kind }}">{{ message.text }}</p>
+            <div class="tq-notice tq-notice--{{ message.kind === 'warning' ? 'warn' : message.kind }}">
+                <mat-icon class="tq-notice__icon"
+                          fontIcon="info"></mat-icon>
+                <span>{{ message.text }}</span>
+            </div>
         }
     }
 
-    <form class="wrapper-column">
-        <div class="wrapper-row">
-            <mat-form-field class="transaction-type-select">
+    <form class="tq-form">
+        <div class="transaction-create__type-row">
+            <mat-form-field class="transaction-create__type">
                 <mat-label>Transaction Type</mat-label>
                 <mat-select [formField]="form.transactionType">
                     @for (transactionType of allTransactionTypes; track transactionType) {
                         <mat-option [value]="transactionType">
-                            <mat-icon fontIcon="{{ transactionType | transactionTypeDisplayIcon }}"></mat-icon>
+                            <mat-icon [fontIcon]="transactionType | transactionTypeDisplayIcon"></mat-icon>
                             {{ transactionType | transactionTypeDisplayName }}
                         </mat-option>
                     }
@@ -51,9 +53,9 @@
             </mat-form-field>
 
             @if (form.transactionType().value() === TransactionType.DIVIDEND) {
-                <mat-checkbox [formField]="form.isSpecialDividend">
+                <mat-slide-toggle [formField]="form.isSpecialDividend">
                     {{ TransactionType.SPECIAL_DIVIDEND | transactionTypeDisplayName }}
-                </mat-checkbox>
+                </mat-slide-toggle>
             }
         </div>
 
@@ -62,7 +64,6 @@
             <input [formField]="form.securityName"
                    [matAutocomplete]="autocompleteSecurityName"
                    matInput
-                   placeholder="Security Name"
                    type="text">
             <mat-autocomplete #autocompleteSecurityName="matAutocomplete">
                 @for (securityName of filteredSecurityNames(); track securityName) {
@@ -71,84 +72,83 @@
             </mat-autocomplete>
         </mat-form-field>
 
-        <mat-form-field class="clickable">
-            <mat-label>Date</mat-label>
-            <input (click)="picker.open()"
-                   [formField]="form.date"
-                   [matDatepicker]="picker"
-                   class="clickable"
-                   matInput
-                   readonly>
-            <mat-datepicker-toggle [for]="picker"
-                                   matIconSuffix>
-            </mat-datepicker-toggle>
-            <mat-datepicker #picker></mat-datepicker>
-        </mat-form-field>
-
-        @if (showTimeField()) {
-            <mat-form-field>
-                <mat-label>Time</mat-label>
-                <input [formField]="form.time"
+        <div class="tq-form-grid">
+            <mat-form-field class="transaction-create__clickable">
+                <mat-label>Date</mat-label>
+                <input (click)="picker.open()"
+                       [formField]="form.date"
+                       [matDatepicker]="picker"
+                       class="transaction-create__clickable"
                        matInput
-                       placeholder="Time"
-                       type="time">
+                       readonly>
+                <mat-datepicker-toggle [for]="picker"
+                                       matIconSuffix>
+                </mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
             </mat-form-field>
-        }
 
-        <mat-form-field>
-            <mat-label>Quantity (original)</mat-label>
-            <input [formField]="form.securityCountOriginal"
-                   matInput
-                   placeholder="Quantity (original)"
-                   type="text">
-        </mat-form-field>
+            @if (showTimeField()) {
+                <mat-form-field>
+                    <mat-label>Time</mat-label>
+                    <input [formField]="form.time"
+                           matInput
+                           type="time">
+                </mat-form-field>
+            }
 
-        <mat-form-field>
-            <mat-label>Quantity (split-adjusted)</mat-label>
-            <input [formField]="form.securityCountSplitAdjusted"
-                   matInput
-                   placeholder="Quantity (split-adjusted)"
-                   type="text">
-        </mat-form-field>
+            <mat-form-field>
+                <mat-label>Quantity (original)</mat-label>
+                <input [formField]="form.securityCountOriginal"
+                       matInput
+                       type="text">
+            </mat-form-field>
 
-        <mat-form-field>
-            <mat-label>Gross Value</mat-label>
-            <input [formField]="form.grossValue"
-                   matInput
-                   placeholder="Gross Value"
-                   type="text">
-        </mat-form-field>
+            <mat-form-field>
+                <mat-label>Quantity (split-adjusted)</mat-label>
+                <input [formField]="form.securityCountSplitAdjusted"
+                       matInput
+                       type="text">
+            </mat-form-field>
 
-        <mat-form-field>
-            <mat-label>Tax</mat-label>
-            <input [formField]="form.tax"
-                   matInput
-                   placeholder="Tax"
-                   type="text">
-        </mat-form-field>
+            <mat-form-field>
+                <mat-label>Gross Value</mat-label>
+                <input [formField]="form.grossValue"
+                       matInput
+                       type="text">
+            </mat-form-field>
 
-        <mat-form-field>
-            <mat-label>Fee</mat-label>
-            <input [formField]="form.fee"
-                   matInput
-                   placeholder="Fee"
-                   type="text">
-        </mat-form-field>
+            <mat-form-field>
+                <mat-label>Tax</mat-label>
+                <input [formField]="form.tax"
+                       matInput
+                       type="text">
+            </mat-form-field>
 
-        <p>Net Value: {{ netValueInput() | tqNetValue | tqCurrency: depotCurrency() }}</p>
+            <mat-form-field>
+                <mat-label>Fee</mat-label>
+                <input [formField]="form.fee"
+                       matInput
+                       type="text">
+            </mat-form-field>
+        </div>
+
+        <div class="transaction-create__net-value">
+            <span class="tq-section-label">Net value</span>
+            <span class="tq-value tq-numeric">
+                {{ netValueInput() | tqNetValue | tqCurrency: depotCurrency() }}
+            </span>
+        </div>
     </form>
+</div>
 
+<div class="tq-dialog__actions">
+    <button (click)="close()"
+            matButton>
+        Cancel
+    </button>
     <button (click)="createTransaction()"
             [disabled]="!formValid() || importStore.busy()"
-            class="form-button"
-            color="primary"
-            mat-flat-button>
+            matButton="filled">
         Create
-    </button>
-    <button (click)="close()"
-            class="form-button"
-            color="primary"
-            mat-stroked-button>
-        Cancel
     </button>
 </div>

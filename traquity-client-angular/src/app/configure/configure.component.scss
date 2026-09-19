@@ -1,89 +1,55 @@
-.configure-screen {
+.configure {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   display: flex;
   justify-content: center;
   overflow-y: auto;
-  width: 100%;
-  height: 100%;
+  background-color: var(--tq-surface-canvas);
 }
 
 // pinned to the window rather than to the scrolling column, so it stays reachable while the sections scroll past
-.about-button {
+.configure__about {
   position: fixed;
-  top: 0.5rem;
-  right: 0.5rem;
+  top: var(--tq-space-2);
+  right: var(--tq-space-2);
   z-index: 1;
 }
 
-.configure-content {
+.configure__content {
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  gap: var(--tq-space-5);
   width: 100%;
   max-width: 48rem;
-  padding: 2rem;
-  gap: 1.5rem;
+  padding: var(--tq-space-6);
+  box-sizing: border-box;
 }
 
-.configure-title {
-  margin: 0;
+.configure__title {
+  font-size: var(--tq-font-size-2xl);
+  font-weight: 700;
 }
 
-.notice {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 1rem;
-  border-radius: 0.75rem;
-  border-width: 0.0625rem;
-  border-style: solid;
-}
-
-.notice-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.notice p {
-  margin: 0;
-}
-
-.notice-headline {
-  font-weight: 600;
+.configure__notice-headline {
+  font-weight: 500;
   word-break: break-all;
 }
 
-.notice-directory {
+.configure__notice-path {
   word-break: break-all;
-  color: var(--mat-sys-on-surface-variant);
-}
-
-.notice-error {
-  border-color: var(--mat-sys-error);
-  background-color: var(--mat-sys-error-container);
-  color: var(--mat-sys-on-error-container);
-}
-
-.notice-warning {
-  border-color: var(--mat-sys-outline);
-  background-color: var(--mat-sys-surface-container-high);
-  color: var(--mat-sys-on-surface);
+  font-size: var(--tq-font-size-sm);
 }
 
 // pinned to the bottom of the scrolling frame, so the two finish buttons stay reachable however many sections are
 // stacked above them
-.actions {
+.configure__actions {
   position: sticky;
   bottom: 0;
   display: flex;
   justify-content: flex-end;
-  gap: 1rem;
-  padding: 1rem 0;
-  border-top: 0.0625rem solid var(--mat-sys-outline-variant);
-  background-color: var(--mat-sys-background);
+  gap: var(--tq-space-2);
+  padding: var(--tq-space-4) 0;
+  border-top: 0.0625rem solid var(--tq-border);
+  background-color: var(--tq-surface-canvas);
 }

@@ -4,6 +4,7 @@ import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
 import {MatSelectModule} from "@angular/material/select";
+import {MatTooltipModule} from "@angular/material/tooltip";
 import {FileDirectoryPipe} from "../../../common/pipe/file-directory.pipe";
 import {FileNamePipe} from "../../../common/pipe/file-name.pipe";
 import {ConfigureStore, ReadableConfigureStore} from "../store/configure.store";
@@ -17,7 +18,8 @@ import {ConfigureStore, ReadableConfigureStore} from "../store/configure.store";
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
-    MatSelectModule
+    MatSelectModule,
+    MatTooltipModule
   ],
   templateUrl: "database-section.component.html",
   styleUrls: ["database-section.component.scss"],

@@ -1,11 +1,14 @@
 .download-progress {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--tq-space-1);
 }
 
 .download-progress-line {
   margin: 0;
-  font-size: 0.875rem;
-  color: var(--mat-sys-on-surface-variant);
+  font-size: var(--tq-font-size-sm);
+  line-height: var(--tq-line-height-tight);
+  color: var(--tq-text-muted);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
 }

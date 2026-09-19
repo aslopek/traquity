@@ -1,81 +1,28 @@
 :host {
   display: block;
   width: 100%;
-  max-width: 45rem;
-  font-family: Roboto, "Helvetica Neue", sans-serif;
-  color: #e5e5e5;
 }
 
-.benchmark-container {
+.benchmark-form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  width: 100%;
-
-  .form-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.75rem;
-    align-items: center;
-  }
-
-  .interval-section {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .checkbox-container {
-    mat-checkbox {
-      color: #d4d4d4;
-      font-size: 0.8125rem;
-    }
-  }
-
-  .method-selection {
-    display: flex;
-    align-items: center;
-    height: 100%;
-    padding-left: 0.5rem;
-
-    mat-radio-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.375rem;
-
-      mat-radio-button {
-        color: #a3a3a3;
-        font-size: 0.75rem;
-      }
-    }
-  }
-
-  ::ng-deep {
-    .dark-field {
-      width: 100%;
-
-      --mdc-outlined-text-field-container-color: #1a1a1a;
-      --mdc-outlined-text-field-outline-color: #262626;
-      --mdc-outlined-text-field-focus-outline-color: #404040;
-      --mdc-outlined-text-field-input-text-color: #ffffff;
-      --mdc-outlined-text-field-label-text-color: #a3a3a3;
-      --mdc-outlined-text-field-focus-label-text-color: #ffffff;
-    }
-  }
+  gap: var(--tq-space-4);
 }
 
-::ng-deep .benchmark-dropdown-panel {
-  background-color: #1a1a1a !important;
-  border: 0.0625rem solid #262626;
-  border-radius: 0.25rem;
+.benchmark-form__options {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--tq-space-7);
+  flex-wrap: wrap;
+}
 
-  .mat-mdc-option {
-    color: #e5e5e5 !important;
-    font-size: 0.875rem;
+.benchmark-form__day-count {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-2);
 
-    &:hover:not(.mdc-list-item--disabled),
-    &.mat-mdc-option-active {
-      background-color: #262626 !important;
-    }
+  mat-radio-group {
+    display: flex;
+    gap: var(--tq-space-4);
   }
 }

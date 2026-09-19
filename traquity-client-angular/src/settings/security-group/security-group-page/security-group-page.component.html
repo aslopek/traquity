@@ -1,5 +1,5 @@
-<div class="wrapper">
-    <div class="security-group-list">
+<div class="security-group-page">
+    <div class="security-group-page__list tq-scroll">
         @for (securityGroup of securityGroupStore.securityGroups(); track securityGroup.id) {
             <app-security-group-card [securityGroup]="securityGroup"
                                      (remove)="delete($event)">
@@ -8,7 +8,8 @@
         <app-security-group-card securityGroup="new">
         </app-security-group-card>
     </div>
-    <div class="detail-view">
+
+    <div class="security-group-page__detail">
         <app-security-group-details></app-security-group-details>
     </div>
 </div>

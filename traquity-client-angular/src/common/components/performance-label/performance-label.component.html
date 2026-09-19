@@ -1,14 +1,14 @@
 <div class="performance-label">
-    <h4 [class]="performanceRelativeStyle">
+    <span [class]="performanceRelativeStyle">
         @if (performanceRelative === 'infinity') {
             +&infin;
         } @else {
             {{ performanceIsPositive ? '+' : '' }}{{ performanceRelative | tqPercent }}
         }
-    </h4>
+    </span>
     @if (!this.hideAbsoluteValues) {
-        <h4 [class]="performanceAbsoluteStyle">
+        <span [class]="performanceAbsoluteStyle">
             {{ performanceIsPositive ? '+' : '' }}{{ performanceAbsolute | tqCurrency:currency }}
-        </h4>
+        </span>
     }
 </div>

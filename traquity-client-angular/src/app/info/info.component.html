@@ -2,96 +2,102 @@
                    title="About">
 </app-title-toolbar>
 
-<mat-tab-group class="tabs">
+<mat-tab-group class="info__tabs">
     <mat-tab label="About">
-        <div class="wrapper">
-            <h2>
-                <b>TraQuity {{ feVersion() }}</b>
-            </h2>
+        <div class="info__panel tq-scroll">
+            <section class="info__intro">
+                <h2 class="info__version">TraQuity {{ feVersion() }}</h2>
+                <app-license></app-license>
+            </section>
 
-            <app-license class="license"></app-license>
+            <section class="info__attributions">
+                <h3 class="info__section-title">Third-party software</h3>
+                <p class="tq-muted">Click an entry to read its license text and copyright notice.</p>
 
-            <h3>
-                <b>This software includes the following third-party software:</b>
-            </h3>
-            <p class="attribution-hint">
-                Click an entry to read its license text and copyright notice.
-            </p>
-
-            <h4>Frontend &amp; desktop shell</h4>
-            @if (frontendLicenses().length === 0) {
-                <p class="error-hint">
-                    The frontend license information could not be loaded. Run "npm run licenses:generate" after a build
-                    to create assets/third-party-licenses.json.
-                </p>
-            }
-            @for (entry of frontendLicenses(); track entry.name) {
-                @let frontendKey = entry.name | licenseEntryKey:'frontend';
-                <div class="dependency">
-                    <div (click)="toggleLicenseText('frontend', entry.name)"
-                         class="row clickable">
-                        <mat-icon [fontIcon]="expandedEntry() === frontendKey ? 'expand_more' : 'chevron_right'"
-                                  class="expand-icon">
-                        </mat-icon>
-                        <p>{{ entry.name }}: {{ entry.version }}</p>
-                        @if (entry.license !== null) {
-                            <p class="margin-left license-name">{{ entry.license }}</p>
-                        }
-                        @if (entry.source !== 'runtime-note') {
-                            <mat-icon (click)="openNpm(entry.name, $event)"
-                                      class="open-link-button"
-                                      fontIcon="open_in_new">
+                <h4 class="tq-section-label">Frontend &amp; desktop shell</h4>
+                @if (frontendLicenses().length === 0) {
+                    <div class="tq-notice tq-notice--error">
+                        <mat-icon class="tq-notice__icon"
+                                  fontIcon="error"></mat-icon>
+                        <span>
+                            The frontend license information could not be loaded. Run "npm run licenses:generate"
+                            after a build to create assets/third-party-licenses.json.
+                        </span>
+                    </div>
+                }
+                @for (entry of frontendLicenses(); track entry.name) {
+                    @let frontendKey = entry.name | licenseEntryKey:'frontend';
+                    <div class="info__dependency">
+                        <div (click)="toggleLicenseText('frontend', entry.name)"
+                             class="info__dependency-row">
+                            <mat-icon class="info__expand-icon"
+                                      [fontIcon]="expandedEntry() === frontendKey ? 'expand_more' : 'chevron_right'">
                             </mat-icon>
+                            <span class="info__dependency-name tq-truncate">{{ entry.name }}</span>
+                            <span class="info__dependency-version tq-numeric">{{ entry.version }}</span>
+                            @if (entry.license !== null) {
+                                <span class="tq-pill tq-pill--neutral">{{ entry.license }}</span>
+                            }
+                            <span class="tq-spacer"></span>
+                            @if (entry.source !== 'runtime-note') {
+                                <mat-icon (click)="openNpm(entry.name, $event)"
+                                          class="info__open-link"
+                                          fontIcon="open_in_new">
+                                </mat-icon>
+                            }
+                        </div>
+                        @if (expandedEntry() === frontendKey) {
+                            <pre class="info__license-text tq-scroll">{{ entry.licenseText }}</pre>
+                            @if (entry.noticeText !== null) {
+                                <pre class="info__license-text tq-scroll">{{ entry.noticeText }}</pre>
+                            }
                         }
                     </div>
-                    @if (expandedEntry() === frontendKey) {
-                        <pre class="license-text">{{ entry.licenseText }}</pre>
-                        @if (entry.noticeText !== null) {
-                            <pre class="license-text">{{ entry.noticeText }}</pre>
-                        }
-                    }
-                </div>
-            }
+                }
 
-            <h4>Backend</h4>
-            @if (backendLicenses().length === 0) {
-                <p class="error-hint">
-                    The backend license information could not be loaded from the backend service.
-                </p>
-            }
-            @for (entry of backendLicenses(); track entry.name) {
-                @let backendKey = entry.name | licenseEntryKey:'backend';
-                <div class="dependency">
-                    <div (click)="toggleLicenseText('backend', entry.name)"
-                         class="row clickable">
-                        <mat-icon [fontIcon]="expandedEntry() === backendKey ? 'expand_more' : 'chevron_right'"
-                                  class="expand-icon">
-                        </mat-icon>
-                        <p>{{ entry.name }}: {{ entry.version }}</p>
-                        @if (entry.license != null) {
-                            <p class="margin-left license-name">{{ entry.license }}</p>
+                <h4 class="tq-section-label">Backend</h4>
+                @if (backendLicenses().length === 0) {
+                    <div class="tq-notice tq-notice--error">
+                        <mat-icon class="tq-notice__icon"
+                                  fontIcon="error"></mat-icon>
+                        <span>The backend license information could not be loaded from the backend service.</span>
+                    </div>
+                }
+                @for (entry of backendLicenses(); track entry.name) {
+                    @let backendKey = entry.name | licenseEntryKey:'backend';
+                    <div class="info__dependency">
+                        <div (click)="toggleLicenseText('backend', entry.name)"
+                             class="info__dependency-row">
+                            <mat-icon class="info__expand-icon"
+                                      [fontIcon]="expandedEntry() === backendKey ? 'expand_more' : 'chevron_right'">
+                            </mat-icon>
+                            <span class="info__dependency-name tq-truncate">{{ entry.name }}</span>
+                            <span class="info__dependency-version tq-numeric">{{ entry.version }}</span>
+                            @if (entry.license != null) {
+                                <span class="tq-pill tq-pill--neutral">{{ entry.license }}</span>
+                            }
+                        </div>
+                        @if (expandedEntry() === backendKey) {
+                            @if (entry.licenseText != null) {
+                                <pre class="info__license-text tq-scroll">{{ entry.licenseText }}</pre>
+                            } @else {
+                                <p class="info__license-text">
+                                    This library does not embed its license text in the artifact. Please refer to the
+                                    project's website for the license and copyright notice.
+                                </p>
+                            }
+                            @if (entry.noticeText != null) {
+                                <pre class="info__license-text tq-scroll">{{ entry.noticeText }}</pre>
+                            }
                         }
                     </div>
-                    @if (expandedEntry() === backendKey) {
-                        @if (entry.licenseText != null) {
-                            <pre class="license-text">{{ entry.licenseText }}</pre>
-                        } @else {
-                            <p class="license-text">
-                                This library does not embed its license text in the artifact. Please refer to the
-                                project's website for the license and copyright notice.
-                            </p>
-                        }
-                        @if (entry.noticeText != null) {
-                            <pre class="license-text">{{ entry.noticeText }}</pre>
-                        }
-                    }
-                </div>
-            }
+                }
+            </section>
         </div>
     </mat-tab>
 
     <mat-tab label="Transparency">
-        <div class="wrapper">
+        <div class="info__panel tq-scroll">
             <app-privacy-notice></app-privacy-notice>
         </div>
     </mat-tab>

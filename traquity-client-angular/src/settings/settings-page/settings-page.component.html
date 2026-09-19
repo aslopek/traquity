@@ -1,75 +1,79 @@
-<mat-accordion multi="false">
-    <mat-expansion-panel expanded="true">
-        <mat-expansion-panel-header>
-            <mat-panel-title>
-                <mat-icon fontIcon="brush"
-                          class="icon">
-                </mat-icon>
-                Appearance
-            </mat-panel-title>
-        </mat-expansion-panel-header>
-        <app-appearance></app-appearance>
-    </mat-expansion-panel>
+<div class="tq-page tq-page--scroll">
+    <header class="tq-page__head">
+        <h1 class="tq-page__title">Settings</h1>
+    </header>
 
-    <mat-expansion-panel>
-        <mat-expansion-panel-header>
-            <mat-icon class="icon">
-                dns
-            </mat-icon>
-            Historical Security Prices
-        </mat-expansion-panel-header>
-        <app-data-source-page dataSourceVariant="historical-security-price"
-                              [dataSources]="historicalSecurityPriceDataSources()">
-        </app-data-source-page>
-    </mat-expansion-panel>
-
-    <mat-expansion-panel>
-        <mat-expansion-panel-header>
-            <mat-panel-title>
-                <mat-icon class="icon">
-                    dns
-                </mat-icon>
-                Dividend Announcements
-            </mat-panel-title>
-        </mat-expansion-panel-header>
-        <app-data-source-page dataSourceVariant="dividend-announcement"
-                              [dataSources]="dividendAnnouncementDataSources()">
-        </app-data-source-page>
-    </mat-expansion-panel>
-
-    <mat-expansion-panel>
-        <mat-expansion-panel-header>
-            <mat-panel-title>
-                <mat-icon fontIcon="workspaces"
-                          class="icon">
-                </mat-icon>
-                Security Groups
-            </mat-panel-title>
-        </mat-expansion-panel-header>
-        <app-security-group-page></app-security-group-page>
-    </mat-expansion-panel>
-
-    @if (bridgeAvailable) {
-        <mat-expansion-panel>
+    <mat-accordion multi="false">
+        <mat-expansion-panel class="settings__panel"
+                             expanded="true">
             <mat-expansion-panel-header>
                 <mat-panel-title>
-                    <mat-icon fontIcon="database"
-                              class="icon">
-                    </mat-icon>
-                    Database
+                    <mat-icon class="settings__icon"
+                              fontIcon="brush"></mat-icon>
+                    Appearance
                 </mat-panel-title>
             </mat-expansion-panel-header>
-            <app-restart-configure></app-restart-configure>
+            <app-appearance></app-appearance>
         </mat-expansion-panel>
 
-        <mat-expansion-panel>
+        <mat-expansion-panel class="settings__panel">
             <mat-expansion-panel-header>
                 <mat-panel-title>
-                    <app-ai-icon class="icon"></app-ai-icon>
-                    AI
+                    <mat-icon class="settings__icon"
+                              fontIcon="dns"></mat-icon>
+                    Historical Security Prices
                 </mat-panel-title>
             </mat-expansion-panel-header>
-            <app-ai-page></app-ai-page>
+            <app-data-source-page dataSourceVariant="historical-security-price"
+                                  [dataSources]="historicalSecurityPriceDataSources()">
+            </app-data-source-page>
         </mat-expansion-panel>
-    }
-</mat-accordion>
+
+        <mat-expansion-panel class="settings__panel">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    <mat-icon class="settings__icon"
+                              fontIcon="dns"></mat-icon>
+                    Dividend Announcements
+                </mat-panel-title>
+            </mat-expansion-panel-header>
+            <app-data-source-page dataSourceVariant="dividend-announcement"
+                                  [dataSources]="dividendAnnouncementDataSources()">
+            </app-data-source-page>
+        </mat-expansion-panel>
+
+        <mat-expansion-panel class="settings__panel">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    <mat-icon class="settings__icon"
+                              fontIcon="workspaces"></mat-icon>
+                    Security Groups
+                </mat-panel-title>
+            </mat-expansion-panel-header>
+            <app-security-group-page></app-security-group-page>
+        </mat-expansion-panel>
+
+        @if (bridgeAvailable) {
+            <mat-expansion-panel class="settings__panel">
+                <mat-expansion-panel-header>
+                    <mat-panel-title>
+                        <mat-icon class="settings__icon"
+                                  fontIcon="database"></mat-icon>
+                        Database
+                    </mat-panel-title>
+                </mat-expansion-panel-header>
+                <app-restart-configure></app-restart-configure>
+            </mat-expansion-panel>
+
+            <mat-expansion-panel class="settings__panel">
+                <mat-expansion-panel-header>
+                    <mat-panel-title>
+                        <app-ai-icon class="settings__icon"></app-ai-icon>
+                        AI
+                    </mat-panel-title>
+                </mat-expansion-panel-header>
+                <app-ai-page></app-ai-page>
+            </mat-expansion-panel>
+        }
+    </mat-accordion>
+</div>

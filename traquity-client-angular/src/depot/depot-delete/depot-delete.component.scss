@@ -1,12 +1,11 @@
-.wrapper {
-  padding: 2rem;
-}
-
-.button-group {
+:host {
   display: flex;
-  align-content: center;
+  flex-direction: column;
+  min-width: 26rem;
 }
 
-.button-group button {
-  margin-right: 1rem;
+.depot-delete__name {
+  font-size: var(--tq-font-size-md);
+  font-weight: 500;
+  word-break: break-all;
 }

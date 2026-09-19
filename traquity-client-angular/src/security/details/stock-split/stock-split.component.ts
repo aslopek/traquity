@@ -1,11 +1,9 @@
 import {Component, DestroyRef, effect, inject, input, InputSignal, signal, WritableSignal,} from "@angular/core";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {MatButtonModule} from "@angular/material/button";
-import {MatCheckboxModule} from "@angular/material/checkbox";
+import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatDatepickerModule} from "@angular/material/datepicker";
-import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
-import {MatTooltipModule} from "@angular/material/tooltip";
 import {TqDatePipe, TqDecimalPipe} from "../../../common";
 import {ReadableStockSplitStore, StockSplitParams, stockSplitStore,} from "./store/stock-split.store";
 import {takeUntilDestroyed, toObservable} from "@angular/core/rxjs-interop";
@@ -20,10 +18,8 @@ import {FieldTree, form, FormField} from "@angular/forms/signals";
     MatInputModule,
     ReactiveFormsModule,
     MatDatepickerModule,
-    MatIconModule,
     MatButtonModule,
-    MatTooltipModule,
-    MatCheckboxModule,
+    MatSlideToggleModule,
     FormField,
   ],
   providers: [stockSplitStore],

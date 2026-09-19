@@ -1,32 +1,39 @@
 :host {
   display: flex;
   align-items: center;
+  gap: var(--tq-space-3);
   min-width: 0;
 }
 
-.depot-logo {
+.depot-controls__logo {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 0.0625rem solid var(--tq-border);
+  border-radius: var(--tq-radius-md);
+  background-color: var(--tq-surface-sunken);
+  color: var(--tq-text-muted);
   cursor: pointer;
-  width: 3.5rem;
-  height: 3.5rem;
-  max-height: 3.5rem;
-  max-width: 3.5rem;
-  min-height: 3.5rem;
-  min-width: 3.5rem;
+  overflow: hidden;
+  transition: border-color var(--tq-duration-fast) var(--tq-ease),
+  color var(--tq-duration-fast) var(--tq-ease);
+
+  &:hover {
+    border-color: var(--tq-border-accent);
+    color: var(--tq-accent-soft);
+  }
 }
 
-.depot-select {
+.depot-controls__file-input {
+  display: none;
+}
+
+.depot-controls__select {
   flex: 1 1 auto;
   min-width: 0;
   max-width: 25rem;
-}
-
-.margin-right {
-  margin-right: 1rem;
-}
-
-.hidden-input {
-  display: none;
 }

@@ -1,6 +1,7 @@
 @let depots = selectedDepots();
 @if (depots.length > 0) {
-    <mat-tab-group [selectedIndex]="selectedTab().index"
+    <mat-tab-group class="depot-page__tabs"
+                   [selectedIndex]="selectedTab().index"
                    (selectedIndexChange)="onTabSelect($event)"
                    (animationDone)="onAnimationDone()">
         <mat-tab label="Positions"
@@ -32,5 +33,10 @@
         </mat-tab>
     </mat-tab-group>
 } @else {
-    <h1>Begin by creating a depot!</h1>
+    <div class="tq-empty">
+        <mat-icon class="tq-empty__icon"
+                  fontIcon="account_balance_wallet"></mat-icon>
+        <span class="tq-empty__title">No depot yet</span>
+        <span class="tq-empty__hint">Create a depot in the header to start tracking positions, dividends and performance.</span>
+    </div>
 }

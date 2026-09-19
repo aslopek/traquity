@@ -1,80 +1,93 @@
-<div class="form-field logo-section">
+<div class="master-data">
     <input #fileUpload
            (change)="selectFile($event)"
            accept="image/png"
-           class="file-input"
+           class="master-data__file-input"
            type="file">
+
     @let logoFile = logo();
     @let securityIdValue = securityId();
-    @if (logoFile !== undefined) {
-        <div (click)="fileUpload.click()"
-             class="logo-preview-container">
-            <img [src]="logoFile | filePreview"
-                 class="logo-preview-img"/>
+
+    <div class="master-data__logo">
+        @if (logoFile !== undefined) {
+            <button class="master-data__logo-preview"
+                    type="button"
+                    aria-label="Change logo"
+                    (click)="fileUpload.click()">
+                <img alt=""
+                     [src]="logoFile | filePreview"
+                     class="master-data__logo-img"/>
+            </button>
+        } @else if (hasExistingLogo() && securityIdValue !== undefined) {
+            <button class="master-data__logo-preview"
+                    type="button"
+                    aria-label="Change logo"
+                    (click)="fileUpload.click()">
+                <img alt=""
+                     [src]="securityIdValue | securityLogoUrl"
+                     class="master-data__logo-img"/>
+            </button>
+        } @else {
+            <button (click)="fileUpload.click()"
+                    matButton="outlined">
+                Select Logo
+            </button>
+        }
+        <span class="tq-field-hint">PNG, square works best</span>
+    </div>
+
+    <form class="tq-form">
+        <div class="tq-form-grid">
+            <mat-form-field>
+                <mat-label>Name</mat-label>
+                <input [formField]="form.name"
+                       matInput>
+            </mat-form-field>
+
+            <mat-form-field>
+                <mat-label>ISIN</mat-label>
+                <input [formField]="form.isin"
+                       matInput>
+            </mat-form-field>
+
+            <mat-form-field>
+                <mat-label>WKN</mat-label>
+                <input [formField]="form.wkn"
+                       matInput>
+            </mat-form-field>
+
+            <mat-form-field>
+                <mat-label>Sector</mat-label>
+                <input [formField]="form.sector"
+                       matInput>
+            </mat-form-field>
+
+            <mat-form-field>
+                <mat-label>Type</mat-label>
+                <mat-select [formField]="form.securityType">
+                    @for (securityType of securityTypes; track $index) {
+                        <mat-option [value]="securityType">{{ securityType | securityTypeDisplayName }}</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
         </div>
-    } @else if (hasExistingLogo() && securityIdValue !== undefined) {
-        <div (click)="fileUpload.click()"
-             class="logo-preview-container">
-            <img [src]="securityIdValue | securityLogoUrl"
-                 class="logo-preview-img"/>
-        </div>
-    } @else {
-        <button (click)="fileUpload.click()"
-                color="primary"
-                mat-flat-button>
-            Select Logo
-        </button>
-    }
+
+        <mat-form-field>
+            <mat-label>Symbols</mat-label>
+            <mat-chip-grid #symbolChipGrid>
+                @for (symbol of form.symbols().value(); track $index) {
+                    <mat-chip-row (removed)="removeSymbol(symbol)">
+                        {{ symbol }}
+                        <button matChipRemove
+                                aria-label="Remove symbol">
+                            <mat-icon fontIcon="cancel"></mat-icon>
+                        </button>
+                    </mat-chip-row>
+                }
+            </mat-chip-grid>
+            <input matInput
+                   [matChipInputFor]="symbolChipGrid"
+                   (matChipInputTokenEnd)="addSymbol($event)">
+        </mat-form-field>
+    </form>
 </div>
-
-<form>
-    <mat-form-field class="form-field">
-        <mat-label>Name</mat-label>
-        <input [formField]="form.name"
-               matInput>
-    </mat-form-field>
-
-    <mat-form-field class="form-field">
-        <mat-label>ISIN</mat-label>
-        <input [formField]="form.isin"
-               matInput>
-    </mat-form-field>
-
-    <mat-form-field class="form-field">
-        <mat-label>Symbols</mat-label>
-        <mat-chip-grid #symbolChipGrid>
-            @for (symbol of form.symbols().value(); track $index) {
-                <mat-chip-row (removed)="removeSymbol(symbol)">
-                    {{ symbol }}
-                    <button matChipRemove>
-                        <mat-icon fontIcon="cancel"></mat-icon>
-                    </button>
-                </mat-chip-row>
-            }
-        </mat-chip-grid>
-        <input matInput
-               [matChipInputFor]="symbolChipGrid"
-               (matChipInputTokenEnd)="addSymbol($event)">
-    </mat-form-field>
-
-    <mat-form-field class="form-field">
-        <mat-label>WKN</mat-label>
-        <input [formField]="form.wkn"
-               matInput>
-    </mat-form-field>
-
-    <mat-form-field class="form-field">
-        <mat-label>Sector</mat-label>
-        <input [formField]="form.sector"
-               matInput>
-    </mat-form-field>
-
-    <mat-form-field class="form-field">
-        <mat-label>Type</mat-label>
-        <mat-select [formField]="form.securityType">
-            @for (securityType of securityTypes; track $index) {
-            <mat-option [value]="securityType">{{ securityType | securityTypeDisplayName }}</mat-option>
-            }
-        </mat-select>
-    </mat-form-field>
-</form>

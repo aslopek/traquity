@@ -4,7 +4,6 @@ import {MatButtonModule} from "@angular/material/button";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
 import {MatIconModule} from "@angular/material/icon";
 import {MatSidenavModule} from "@angular/material/sidenav";
-import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {DomSanitizer, SafeUrl} from "@angular/platform-browser";
 import {TitleToolbarComponent} from "../../common";
@@ -26,7 +25,6 @@ function isTrustedLocalH2ConsoleUrl(url: string): boolean {
 @Component({
   selector: "app-database",
   imports: [
-    MatToolbarModule,
     MatButtonModule,
     TitleToolbarComponent,
     MatSidenavModule,

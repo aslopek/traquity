@@ -1,31 +1,30 @@
-<div class="wrapper">
-    @if (dataSources().length === 0) {
-        <p>No Dividend Announcement Data Sources available!</p>
-    } @else {
-        <div>
-            <mat-form-field class="full-width">
-                <mat-label>Data Source</mat-label>
-                <mat-select [formField]="dividendAnnouncementConfigForm.dataSourceId">
-                    @for (ds of dataSources(); track ds.id) {
-                        <mat-option [value]="ds.id">
-                            {{ ds.name }}
-                        </mat-option>
-                    }
-                </mat-select>
-            </mat-form-field>
+@if (dataSources().length === 0) {
+    <div class="tq-empty">
+        <mat-icon class="tq-empty__icon"
+                  fontIcon="cloud_off"></mat-icon>
+        <span class="tq-empty__title">No data sources available</span>
+        <span class="tq-empty__hint">Add a dividend announcement data source in Settings first.</span>
+    </div>
+} @else {
+    <form class="tq-form">
+        <mat-slide-toggle [formField]="dividendAnnouncementConfigForm.isActive">
+            {{ dividendAnnouncementConfigForm.isActive().value() ? 'Enabled' : 'Disabled' }}
+        </mat-slide-toggle>
 
-            <mat-form-field class="full-width">
-                <mat-label>External Security ID</mat-label>
-                <input [formField]="dividendAnnouncementConfigForm.externalSecurityId"
-                       matInput
-                       type="text">
-            </mat-form-field>
+        <mat-form-field>
+            <mat-label>Data Source</mat-label>
+            <mat-select [formField]="dividendAnnouncementConfigForm.dataSourceId">
+                @for (ds of dataSources(); track ds.id) {
+                    <mat-option [value]="ds.id">{{ ds.name }}</mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
 
-            <div class="checkbox-row">
-                <mat-checkbox [formField]="dividendAnnouncementConfigForm.isActive">
-                    Active
-                </mat-checkbox>
-            </div>
-        </div>
-    }
-</div>
+        <mat-form-field>
+            <mat-label>External Security ID</mat-label>
+            <input [formField]="dividendAnnouncementConfigForm.externalSecurityId"
+                   matInput
+                   type="text">
+        </mat-form-field>
+    </form>
+}

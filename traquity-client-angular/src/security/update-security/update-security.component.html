@@ -1,84 +1,84 @@
 <app-title-toolbar (onClose)="close()"
-                   class="title-bar"
                    title="Edit Security">
 </app-title-toolbar>
 
-<div class="content">
-    <mat-tab-group>
-        <mat-tab>
-            <ng-template mat-tab-label>
-                Master Data
-                @if (updateSecurityStore.masterDataTouched() || updateSecurityStore.logoTouched()) {
-                    @if (updateSecurityStore.masterDataTouched() && !updateSecurityStore.masterDataValid()) {
-                        <mat-icon>warning</mat-icon>
-                    } @else {
-                        <mat-icon>fiber_manual_record</mat-icon>
-                    }
+<mat-tab-group class="update-security__tabs">
+    <mat-tab>
+        <ng-template mat-tab-label>
+            Master Data
+            @if (updateSecurityStore.masterDataTouched() || updateSecurityStore.logoTouched()) {
+                @if (updateSecurityStore.masterDataTouched() && !updateSecurityStore.masterDataValid()) {
+                    <mat-icon class="update-security__tab-flag update-security__tab-flag--invalid"
+                              fontIcon="warning"></mat-icon>
+                } @else {
+                    <mat-icon class="update-security__tab-flag"
+                              fontIcon="fiber_manual_record"></mat-icon>
                 }
-            </ng-template>
+            }
+        </ng-template>
 
-            <app-security-master-data [securityId]="securityId"
-                                      (masterDataChanged)="updateSecurityStore.setMasterData($event)"
-                                      (logoChanged)="updateSecurityStore.setLogo($event)">
-            </app-security-master-data>
-        </mat-tab>
+        <app-security-master-data [securityId]="securityId"
+                                  (masterDataChanged)="updateSecurityStore.setMasterData($event)"
+                                  (logoChanged)="updateSecurityStore.setLogo($event)">
+        </app-security-master-data>
+    </mat-tab>
 
-        <mat-tab>
-            <ng-template mat-tab-label>
-                Historical Prices
-                @if (updateSecurityStore.historicalSecurityPriceConfigTouched()) {
-                    @if (updateSecurityStore.historicalSecurityPriceConfigValid()) {
-                        <mat-icon>fiber_manual_record</mat-icon>
-                    } @else {
-                        <mat-icon>warning</mat-icon>
-                    }
+    <mat-tab>
+        <ng-template mat-tab-label>
+            Historical Prices
+            @if (updateSecurityStore.historicalSecurityPriceConfigTouched()) {
+                @if (updateSecurityStore.historicalSecurityPriceConfigValid()) {
+                    <mat-icon class="update-security__tab-flag"
+                              fontIcon="fiber_manual_record"></mat-icon>
+                } @else {
+                    <mat-icon class="update-security__tab-flag update-security__tab-flag--invalid"
+                              fontIcon="warning"></mat-icon>
                 }
-            </ng-template>
+            }
+        </ng-template>
 
-            <app-historical-price-config [securityId]="securityId"
-                                         (configChanged)="updateSecurityStore.setHistoricalSecurityPriceConfig($event)">
-            </app-historical-price-config>
-        </mat-tab>
+        <app-historical-price-config [securityId]="securityId"
+                                     (configChanged)="updateSecurityStore.setHistoricalSecurityPriceConfig($event)">
+        </app-historical-price-config>
+    </mat-tab>
 
-        <mat-tab>
-            <ng-template mat-tab-label>
-                Dividend Announcements
-                @if (updateSecurityStore.dividendAnnouncementConfigTouched()) {
-                    @if (updateSecurityStore.dividendAnnouncementConfigValid()) {
-                        <mat-icon>fiber_manual_record</mat-icon>
-                    } @else {
-                        <mat-icon>warning</mat-icon>
-                    }
+    <mat-tab>
+        <ng-template mat-tab-label>
+            Dividend Announcements
+            @if (updateSecurityStore.dividendAnnouncementConfigTouched()) {
+                @if (updateSecurityStore.dividendAnnouncementConfigValid()) {
+                    <mat-icon class="update-security__tab-flag"
+                              fontIcon="fiber_manual_record"></mat-icon>
+                } @else {
+                    <mat-icon class="update-security__tab-flag update-security__tab-flag--invalid"
+                              fontIcon="warning"></mat-icon>
                 }
-            </ng-template>
-            <app-dividend-announcement-config [securityId]="securityId"
-                                              (configChanged)="updateSecurityStore.setDividendAnnouncementConfig($event)">
-            </app-dividend-announcement-config>
-        </mat-tab>
+            }
+        </ng-template>
 
-        <mat-tab label="Stock Splits">
-            <app-stock-split [securityId]="securityId"></app-stock-split>
-        </mat-tab>
-    </mat-tab-group>
+        <app-dividend-announcement-config [securityId]="securityId"
+                                          (configChanged)="updateSecurityStore.setDividendAnnouncementConfig($event)">
+        </app-dividend-announcement-config>
+    </mat-tab>
 
-    <button (click)="ok()"
-            [disabled]="!updateSecurityStore.enableOkAndApply()"
-            class="form-button"
-            color="primary"
-            mat-flat-button>
-        OK
+    <mat-tab label="Stock Splits">
+        <app-stock-split [securityId]="securityId"></app-stock-split>
+    </mat-tab>
+</mat-tab-group>
+
+<div class="tq-dialog__actions">
+    <button (click)="close()"
+            matButton>
+        Cancel
     </button>
     <button (click)="apply()"
             [disabled]="!updateSecurityStore.enableOkAndApply()"
-            class="form-button"
-            color="primary"
-            mat-stroked-button>
+            matButton="outlined">
         Apply
     </button>
-    <button (click)="close()"
-            class="form-button"
-            color="primary"
-            mat-stroked-button>
-        Cancel
+    <button (click)="ok()"
+            [disabled]="!updateSecurityStore.enableOkAndApply()"
+            matButton="filled">
+        OK
     </button>
 </div>

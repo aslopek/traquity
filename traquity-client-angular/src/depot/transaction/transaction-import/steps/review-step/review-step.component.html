@@ -1,53 +1,75 @@
-<div class="content">
-    <h3>New Securities</h3>
-    @if (transactionImportStore.unknownSecurities().length === 0) {
-        <p>No new securities will be created.</p>
-    } @else {
-        <table class="securities-table">
-            <tr>
-                <th>Name</th>
-                <th>ISIN</th>
-                <th>Symbol</th>
-            </tr>
-            @for (security of transactionImportStore.unknownSecurities(); track security.isin) {
-                <tr>
-                    <td>{{ security.name }}</td>
-                    <td>{{ security.isin }}</td>
-                    <td>{{ security.symbols[0] ?? '' }}</td>
-                </tr>
-            }
-        </table>
-    }
-
-    <h3>Transactions</h3>
-    @let preview = transactionImportStore.importPreview();
-    @if (preview.countsByType.length === 0) {
-        <p>No importable transactions found.</p>
-    } @else {
-        <ul>
-            @for (item of preview.countsByType; track item.transactionType) {
-                <li>{{ item.transactionType | transactionTypeDisplayName }}: {{ item.count }}</li>
-            }
-        </ul>
-        @if (preview.minDate !== null && preview.maxDate !== null) {
-            <p>Date range: {{ preview.minDate | tqDate }} - {{ preview.maxDate | tqDate }}</p>
+<div class="step">
+    <section class="step__section">
+        <h3 class="step__title">New Securities</h3>
+        @if (transactionImportStore.unknownSecurities().length === 0) {
+            <p class="tq-muted">No new securities will be created.</p>
+        } @else {
+            <div class="tq-card tq-card--flush">
+                <table class="tq-table">
+                    <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>ISIN</th>
+                        <th>Symbol</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        @for (security of transactionImportStore.unknownSecurities(); track security.isin) {
+                            <tr>
+                                <td>{{ security.name }}</td>
+                                <td class="tq-numeric">{{ security.isin }}</td>
+                                <td>{{ security.symbols[0] ?? '' }}</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         }
-    }
+    </section>
+
+    @let preview = transactionImportStore.importPreview();
+
+    <section class="step__section">
+        <h3 class="step__title">Transactions</h3>
+        @if (preview.countsByType.length === 0) {
+            <p class="tq-muted">No importable transactions found.</p>
+        } @else {
+            <div class="step__summary">
+                @for (item of preview.countsByType; track item.transactionType) {
+                    <div class="step__summary-row">
+                        <span class="tq-muted">{{ item.transactionType | transactionTypeDisplayName }}</span>
+                        <span class="tq-numeric">{{ item.count }}</span>
+                    </div>
+                }
+                @if (preview.minDate !== null && preview.maxDate !== null) {
+                    <div class="step__summary-row">
+                        <span class="tq-muted">Date range</span>
+                        <span class="tq-numeric">{{ preview.minDate | tqDate }} – {{ preview.maxDate | tqDate }}</span>
+                    </div>
+                }
+            </div>
+        }
+    </section>
 
     @if (preview.skipped.length > 0) {
-        <h3>Skipped Rows</h3>
-        <ul>
-            @for (skipped of preview.skipped; track skipped.reason) {
-                <li>{{ skipped.reason }}: {{ skipped.count }}</li>
-            }
-        </ul>
+        <section class="step__section">
+            <h3 class="step__title">Skipped Rows</h3>
+            <div class="step__summary">
+                @for (skipped of preview.skipped; track skipped.reason) {
+                    <div class="step__summary-row">
+                        <span class="tq-muted">{{ skipped.reason }}</span>
+                        <span class="tq-numeric">{{ skipped.count }}</span>
+                    </div>
+                }
+            </div>
+        </section>
     }
 
-    <button (click)="startImport()"
-            class="next-button"
-            color="primary"
-            mat-flat-button
-            matStepperNext>
-        Start Import
-    </button>
+    <div class="step__actions">
+        <button (click)="startImport()"
+                matButton="filled"
+                matStepperNext>
+            Start Import
+        </button>
+    </div>
 </div>

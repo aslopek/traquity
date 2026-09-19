@@ -1,36 +1,50 @@
-.edit-button {
-  cursor: pointer
-}
-
-.edit-button-column {
-  width: 4rem;
-}
-
-.logo-column {
-  width: 4.5rem;
-}
-
-.price-column {
-  text-align: center;
-}
-
-.row {
-  display: flex;
-  flex-direction: row;
-  // the flag and the ISIN are one line of content, so they share a centre line rather than each filling the cell
-  align-items: center;
+:host {
+  display: block;
 }
 
 .security-table {
-  float: left;
   width: 100%;
+  overflow-x: auto;
+}
 
-  tr[mat-row] {
-    cursor: pointer;
-    transition: background-color 0.15s ease;
+table {
+  width: 100%;
+}
 
-    &:hover {
-      background-color: rgba(255, 255, 255, 0.04);
-    }
+tr[mat-row] {
+  cursor: pointer;
+  transition: background-color var(--tq-duration-fast) var(--tq-ease);
+
+  &:hover {
+    background-color: var(--tq-surface-hover);
+  }
+}
+
+.security-table__logo-column {
+  width: 4.5rem;
+}
+
+.security-table__isin {
+  display: flex;
+  // the flag and the ISIN are one line of content, so they share a centre line rather than each filling the cell
+  align-items: center;
+  gap: var(--tq-space-2);
+}
+
+.security-table__price-column {
+  width: 12rem;
+}
+
+.security-table__edit-column {
+  width: 4rem;
+}
+
+.security-table__edit {
+  cursor: pointer;
+  color: var(--tq-text-muted);
+  transition: color var(--tq-duration-fast) var(--tq-ease);
+
+  &:hover {
+    color: var(--tq-accent-soft);
   }
 }

@@ -1,129 +1,85 @@
 @if (kpis(); as data) {
-    <div class="kpi-grid">
-        <mat-card class="kpi-card">
-            <mat-card-header>
-                <mat-card-subtitle>INVESTED CAPITAL</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-                @if (hideAbsoluteValues()) {
-                    <app-obfuscated-kpi></app-obfuscated-kpi>
+    <div class="tq-kpi-grid">
+        <article class="kpi">
+            <span class="tq-section-label">Invested capital</span>
+            @if (hideAbsoluteValues()) {
+                <app-obfuscated-kpi></app-obfuscated-kpi>
+            } @else {
+                <span class="tq-value">{{ data.investedCapital | tqCurrency:currency() }}</span>
+            }
+            <span class="kpi__caption tq-numeric">
+                Since {{ dataRanges().firstDateInDataRange | tqDate }}
+            </span>
+        </article>
+
+        <article class="kpi">
+            <span class="tq-section-label">Absolute depot value</span>
+            @if (hideAbsoluteValues()) {
+                <app-obfuscated-kpi></app-obfuscated-kpi>
+            } @else {
+                <span class="tq-value">{{ data.absoluteValue | tqCurrency:currency() }}</span>
+            }
+            <span class="kpi__caption tq-numeric">
+                On {{ dataRanges().lastDateInDataRange | tqDate }}
+            </span>
+        </article>
+
+        <article class="kpi"
+                 [class.kpi--positive]="data.dateRange.growthAbsolute > 0"
+                 [class.kpi--negative]="data.dateRange.growthAbsolute < 0">
+            <span class="tq-section-label">Growth abs.</span>
+            @if (hideAbsoluteValues()) {
+                <app-obfuscated-kpi></app-obfuscated-kpi>
+            } @else {
+                <span class="tq-value">
+                    {{ data.dateRange.growthAbsolute > 0 ? '+' : '' }}{{ data.dateRange.growthAbsolute | tqCurrency:currency() }}
+                </span>
+            }
+            <span class="kpi__caption tq-numeric">
+                Since {{ dataRanges().firstDateInDataRange | tqDate }}
+            </span>
+        </article>
+
+        <article class="kpi"
+                 [class.kpi--positive]="data.dateRange.growthRelative === 'infinity' || data.dateRange.growthRelative >= 0"
+                 [class.kpi--negative]="data.dateRange.growthRelative !== 'infinity' && data.dateRange.growthRelative < 0">
+            <span class="tq-section-label">Growth rel.</span>
+            <span class="tq-value">
+                @if (data.dateRange.growthRelative === 'infinity') {
+                    ∞
                 } @else {
-                    <div class="kpi-value-container">
-                        <span class="kpi-value">{{ data.investedCapital | tqCurrency:currency() }}</span>
-
-                        <span class="kpi-sub-value">
-                            SINCE {{ dataRanges().firstDateInDataRange | tqDate }}
-                        </span>
-                    </div>
+                    {{ data.dateRange.growthRelative >= 0 ? '+' : '' }}{{ data.dateRange.growthRelative | tqPercent }}
                 }
-            </mat-card-content>
-        </mat-card>
+            </span>
+            <span class="kpi__caption tq-numeric">
+                Since {{ dataRanges().firstDateInDataRange | tqDate }}
+            </span>
+        </article>
 
-        <mat-card class="kpi-card">
-            <mat-card-header>
-                <mat-card-subtitle>ABSOLUTE DEPOT VALUE</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-                @if (hideAbsoluteValues()) {
-                    <app-obfuscated-kpi></app-obfuscated-kpi>
+        <article class="kpi"
+                 [class.kpi--positive]="xirr() >= 0"
+                 [class.kpi--negative]="xirr() < 0">
+            <span class="tq-section-label">XIRR</span>
+            <span class="tq-value">{{ xirr() | tqPercent:'1.2-2':true }}</span>
+            <span class="kpi__caption tq-numeric">
+                Since {{ dataRanges().firstDate | tqDate }}
+            </span>
+        </article>
+
+        <article class="kpi">
+            <span class="tq-section-label">Cash position</span>
+            @if (hideAbsoluteValues()) {
+                <app-obfuscated-kpi></app-obfuscated-kpi>
+            } @else {
+                <span class="tq-value">{{ data.cashPosition | tqCurrency:currency() }}</span>
+            }
+            <span class="kpi__caption tq-numeric">
+                @if (data.cashPositionRelativeToAbsoluteValue === 'infinity') {
+                    ∞
                 } @else {
-                    <div class="kpi-value-container">
-                        <span class="kpi-value">{{ data.absoluteValue | tqCurrency:currency() }}</span>
-
-                        <span class="kpi-sub-value">
-                            ON {{ dataRanges().lastDateInDataRange | tqDate }}
-                        </span>
-                    </div>
+                    {{ data.cashPositionRelativeToAbsoluteValue | tqPercent }} of depot value
                 }
-            </mat-card-content>
-        </mat-card>
-
-        <mat-card class="kpi-card"
-                  [class.positive]="data.dateRange.growthAbsolute > 0"
-                  [class.negative]="data.dateRange.growthAbsolute < 0">
-            <mat-card-header>
-                <mat-card-subtitle>GROWTH ABS.</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-                @if (hideAbsoluteValues()) {
-                    <app-obfuscated-kpi></app-obfuscated-kpi>
-                } @else {
-                    <div class="kpi-value-container">
-                        <span class="kpi-value">
-                            {{ data.dateRange.growthAbsolute > 0 ? '+' : '' }}{{ data.dateRange.growthAbsolute | tqCurrency:currency() }}
-                        </span>
-
-                        <span class="kpi-sub-value">
-                            SINCE {{ dataRanges().firstDateInDataRange | tqDate }}
-                        </span>
-                    </div>
-                }
-            </mat-card-content>
-        </mat-card>
-
-        <mat-card class="kpi-card"
-                  [class.positive]="data.dateRange.growthRelative === 'infinity' || data.dateRange.growthRelative >= 0"
-                  [class.negative]="data.dateRange.growthRelative !== 'infinity' && data.dateRange.growthRelative < 0">
-            <mat-card-header>
-                <mat-card-subtitle>GROWTH REL.</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-                <div class="kpi-value-container">
-                    <span class="kpi-value">
-                      @if (data.dateRange.growthRelative === 'infinity') {
-                          ∞
-                      } @else {
-                          {{ data.dateRange.growthRelative >= 0 ? '+' : '' }}{{ data.dateRange.growthRelative | tqPercent }}
-                      }
-                    </span>
-
-                    <span class="kpi-sub-value">
-                        SINCE {{ dataRanges().firstDateInDataRange | tqDate }}
-                    </span>
-                </div>
-            </mat-card-content>
-        </mat-card>
-
-        <mat-card class="kpi-card"
-                  [class.positive]="xirr() >= 0"
-                  [class.negative]="xirr() < 0">
-            <mat-card-header>
-                <mat-card-subtitle>XIRR</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-                <div class="kpi-value-container">
-                    <span class="kpi-value">
-                        {{ xirr() | tqPercent:'1.2-2':true }}
-                    </span>
-
-                    <span class="kpi-sub-value">
-                        SINCE {{ dataRanges().firstDate | tqDate }}
-                    </span>
-                </div>
-            </mat-card-content>
-        </mat-card>
-
-        <mat-card class="kpi-card">
-            <mat-card-header>
-                <mat-card-subtitle>CASH POSITION</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-                <div class="kpi-value-container">
-                    @if (hideAbsoluteValues()) {
-                        <app-obfuscated-kpi></app-obfuscated-kpi>
-                    } @else {
-                        <span class="kpi-value">{{ data.cashPosition | tqCurrency:currency() }}</span>
-                    }
-
-                    <span class="kpi-sub-value">
-                        @if (data.cashPositionRelativeToAbsoluteValue === 'infinity') {
-                            ∞
-                        } @else {
-                            {{ data.cashPositionRelativeToAbsoluteValue | tqPercent }}
-                        }
-                    </span>
-                </div>
-            </mat-card-content>
-        </mat-card>
+            </span>
+        </article>
     </div>
 }

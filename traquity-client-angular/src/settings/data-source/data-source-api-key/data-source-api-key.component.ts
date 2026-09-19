@@ -1,5 +1,4 @@
 import {Component, computed, effect, inject, Signal, signal, WritableSignal} from "@angular/core";
-import {MatCardModule} from "@angular/material/card";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatInputModule} from "@angular/material/input";
 import {MatButtonModule} from "@angular/material/button";
@@ -17,7 +16,6 @@ function isMultiUrlDataSource(dataSource: DataSourceWithId): dataSource is DataS
 @Component({
   selector: "app-data-source-api-key",
   imports: [
-    MatCardModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule

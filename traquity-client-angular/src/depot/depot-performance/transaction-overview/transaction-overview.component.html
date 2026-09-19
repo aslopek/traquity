@@ -1,5 +1,10 @@
-<div>
-    @for (transactionGroup of transactionGroups(); track transactionGroup.date) {
-        <app-transaction-group [transactions]="transactionGroup.transactions"></app-transaction-group>
-    }
-</div>
+@for (transactionGroup of transactionGroups(); track transactionGroup.date) {
+    <app-transaction-group [transactions]="transactionGroup.transactions"></app-transaction-group>
+} @empty {
+    <div class="tq-empty">
+        <mat-icon class="tq-empty__icon"
+                  fontIcon="receipt_long"></mat-icon>
+        <span class="tq-empty__title">No transactions</span>
+        <span class="tq-empty__hint">Nothing was booked in the selected range.</span>
+    </div>
+}

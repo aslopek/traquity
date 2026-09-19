@@ -11,7 +11,7 @@
 
                 <td mat-cell
                     *matCellDef="let row"
-                    class="logo-column">
+                    class="security-table__logo-column">
                     <security-logo [securityId]="row.id"></security-logo>
                 </td>
             </ng-container>
@@ -24,7 +24,7 @@
 
                 <td mat-cell
                     *matCellDef="let row">
-                    <div class="row">
+                    <div class="security-table__isin tq-numeric">
                         <app-flag-icon [countryCode]="row.isin"></app-flag-icon>
                         {{ row.isin }}
                     </div>
@@ -75,13 +75,12 @@
 
                 <td mat-cell
                     *matCellDef="let row"
-                    class="price-column">
+                    class="security-table__price-column">
                     @if (row.priceMetaInfo != null) {
                         @let icon = row.priceMetaInfo | priceIcon;
 
                         @if (icon) {
                             <mat-icon [fontIcon]="icon"
-                                      color="warn"
                                       matTooltip="Latest price from {{row.priceMetaInfo.latestPriceDate | tqDate}}">
                             </mat-icon>
                         } @else {
@@ -104,10 +103,10 @@
 
                 <td mat-cell
                     *matCellDef="let row"
-                    class="edit-button-column">
+                    class="security-table__edit-column">
                     @if (securityPageStore.hoveredSecurityId() === row.id) {
                         <mat-icon (click)="openEditDialog(row.id)"
-                                  class="edit-button"
+                                  class="security-table__edit"
                                   fontIcon="edit">
                         </mat-icon>
                     }

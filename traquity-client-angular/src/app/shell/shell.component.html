@@ -1,49 +1,47 @@
 @if (backendAvailable()) {
-    <app-header class="app-header"></app-header>
-    <mat-drawer-container class="app-body">
+    <app-header class="shell__header"></app-header>
+    <mat-drawer-container class="shell__body">
         <mat-drawer [opened]="sideMenuOpen()"
                     mode="side">
-            <div class="menu-item"
-                 [class.selected]="openPage() === 'securities'"
-                 (click)="selectPage('securities')"
-                 routerLink="/securities">
-                <mat-icon fontIcon="description"
-                          class="menu-item-icon">
-                </mat-icon>
-                Securities
-            </div>
+            <nav class="shell__nav">
+                <button class="shell__nav-item"
+                        type="button"
+                        [class.shell__nav-item--selected]="openPage() === 'securities'"
+                        (click)="selectPage('securities')"
+                        routerLink="/securities">
+                    <mat-icon fontIcon="description"></mat-icon>
+                    Securities
+                </button>
 
-            <div class="menu-item"
-                 [class.selected]="openPage() === 'dividends'"
-                 (click)="selectPage('dividends')"
-                 routerLink="/dividends">
-                <mat-icon fontIcon="payments"
-                          class="menu-item-icon">
-                </mat-icon>
-                Dividends
-            </div>
+                <button class="shell__nav-item"
+                        type="button"
+                        [class.shell__nav-item--selected]="openPage() === 'dividends'"
+                        (click)="selectPage('dividends')"
+                        routerLink="/dividends">
+                    <mat-icon fontIcon="payments"></mat-icon>
+                    Dividends
+                </button>
 
-            <div class="menu-item"
-                 [class.selected]="openPage() === 'depots'"
-                 (click)="selectPage('depots')"
-                 routerLink="/depots">
-                <mat-icon fontIcon="trending_up"
-                          class="menu-item-icon">
-                </mat-icon>
-                Depots
-            </div>
+                <button class="shell__nav-item"
+                        type="button"
+                        [class.shell__nav-item--selected]="openPage() === 'depots'"
+                        (click)="selectPage('depots')"
+                        routerLink="/depots">
+                    <mat-icon fontIcon="trending_up"></mat-icon>
+                    Depots
+                </button>
 
-            <div class="menu-item"
-                 [class.selected]="openPage() === 'settings'"
-                 (click)="selectPage('settings')"
-                 routerLink="settings">
-                <mat-icon fontIcon="settings"
-                          class="menu-item-icon">
-                </mat-icon>
-                Settings
-            </div>
+                <button class="shell__nav-item"
+                        type="button"
+                        [class.shell__nav-item--selected]="openPage() === 'settings'"
+                        (click)="selectPage('settings')"
+                        routerLink="settings">
+                    <mat-icon fontIcon="settings"></mat-icon>
+                    Settings
+                </button>
+            </nav>
         </mat-drawer>
-        <mat-drawer-content class="page-content">
+        <mat-drawer-content class="shell__content">
             <router-outlet></router-outlet>
         </mat-drawer-content>
     </mat-drawer-container>

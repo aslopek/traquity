@@ -1,42 +1,45 @@
-@use '../../../styles' as styles;
-
 .performance-label {
-  display: flex;
-  flex-direction: row;
-  align-content: center;
+  display: inline-flex;
   align-items: center;
 }
 
-// use em instead of rem: border-radius/padding below are in em so the pill shape scales with this element's own font-size
-h4 {
-  font-weight: 500;
+// em throughout: the pill keeps its proportions relative to the font-size it inherits at the call site
+.performance-label > span {
   font-size: 0.95em;
-  margin: 0;
-}
-
-.performance-positive {
-  background-color: styles.$color-positive-tint;
-  color: styles.$color-positive;
-}
-
-.performance-negative {
-  background-color: styles.$color-negative-tint;
-  color: styles.$color-negative;
+  font-weight: 500;
+  line-height: 1.6;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  white-space: nowrap;
+  border: 0.0625rem solid transparent;
 }
 
 .padding {
-  padding: 0.15em 0.7em;
+  padding: 0.1em 0.65em;
+}
+
+.performance-positive {
+  background-color: var(--tq-positive-surface);
+  border-color: var(--tq-positive-border);
+  color: var(--tq-positive-soft);
+}
+
+.performance-negative {
+  background-color: var(--tq-negative-surface);
+  border-color: var(--tq-negative-border);
+  color: var(--tq-negative-soft);
 }
 
 .absolute-performance-hidden {
-  border-radius: 1em;
+  border-radius: var(--tq-radius-pill);
 }
 
 .relative-performance {
-  border-radius: 1em 0 0 1em;
-  border-right: 0.0625rem solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--tq-radius-pill) 0 0 var(--tq-radius-pill);
+  border-right-color: transparent;
 }
 
 .absolute-performance {
-  border-radius: 0 1em 1em 0;
+  border-radius: 0 var(--tq-radius-pill) var(--tq-radius-pill) 0;
+  border-left-color: var(--tq-border-strong);
 }

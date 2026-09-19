@@ -1,6 +1,5 @@
 import {Component, computed, EventEmitter, inject, input, InputSignal, Output, Signal} from "@angular/core";
 import {SecurityGroupRead} from "../../../gen/api/configuration-security-group";
-import {MatRipple} from "@angular/material/core";
 import {MatIcon} from "@angular/material/icon";
 import {ReadableSecurityGroupStore, SecurityGroupStore} from "../store/security-group.store";
 import {SecurityLogoComponent} from "../../../common/components/security-logo/security-logo.component";
@@ -8,7 +7,6 @@ import {SecurityLogoComponent} from "../../../common/components/security-logo/se
 @Component({
   selector: "app-security-group-card",
   imports: [
-    MatRipple,
     MatIcon,
     SecurityLogoComponent
   ],

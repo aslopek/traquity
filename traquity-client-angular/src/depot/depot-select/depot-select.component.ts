@@ -1,6 +1,5 @@
 import {Component, computed, Signal,} from "@angular/core";
 import {MatButtonModule} from "@angular/material/button";
-import {MatCheckboxModule} from "@angular/material/checkbox";
 import {MatDialog} from "@angular/material/dialog";
 import {MatIconModule} from "@angular/material/icon";
 import {MatSelectModule} from "@angular/material/select";
@@ -21,7 +20,6 @@ import {DepotLogoUrlPipe} from "../../common/pipe/depot-logo-url.pipe";
   imports: [
     MatSelectModule,
     MatButtonModule,
-    MatCheckboxModule,
     MatIconModule,
     MatTooltipModule,
     TqCurrencySymbolPipe,

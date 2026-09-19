@@ -9,7 +9,7 @@ import {ECharts} from "echarts/core";
 import {NgxEchartsDirective} from "ngx-echarts";
 import {DepotPerformanceChartPipe} from "./depot-performance-chart.pipe";
 import {TqCurrencyPipe, TqDatePipe, TqPercentPipe} from "../../../common";
-import {MatCheckbox} from "@angular/material/checkbox";
+import {MatSlideToggle} from "@angular/material/slide-toggle";
 import {BenchmarkResult} from "../store/benchmark/benchmark.type";
 
 @Component({
@@ -17,7 +17,7 @@ import {BenchmarkResult} from "../store/benchmark/benchmark.type";
   imports: [
     NgxEchartsDirective,
     DepotPerformanceChartPipe,
-    MatCheckbox
+    MatSlideToggle
   ],
   providers: [
     TqCurrencyPipe,

@@ -1,11 +1,9 @@
-<div class="container">
-    <app-title-toolbar (onClose)="close()"
-                       title="Lots"
-                       class="title-bar">
-    </app-title-toolbar>
+<app-title-toolbar (onClose)="close()"
+                   title="Lots">
+</app-title-toolbar>
 
+<div class="tq-dialog__body">
     <app-lot-view [depotIds]="dialogData.depotIds"
-                      [securityIds]="dialogData.securityIds"
-                  class="lots">
+                  [securityIds]="dialogData.securityIds">
     </app-lot-view>
 </div>
