@@ -1,22 +1,15 @@
-<div class="benchmark-container">
-    <div class="form-grid">
-        <mat-form-field appearance="outline"
-                        class="dark-field">
-            <mat-label>
-                Initial Investment
-            </mat-label>
+<div class="benchmark-form">
+    <div class="tq-form-grid">
+        <mat-form-field>
+            <mat-label>Initial Investment</mat-label>
             <input matInput
                    type="number"
                    [value]="formModel().initialInvestment"
                    (input)="updateFormValue('initialInvestment', $any($event.target).value ? parseFloat($any($event.target).value) : null)">
         </mat-form-field>
 
-        <mat-form-field
-                appearance="outline"
-                class="dark-field">
-            <mat-label>
-                Interest Rate (% p.a.)
-            </mat-label>
+        <mat-form-field>
+            <mat-label>Interest Rate (% p.a.)</mat-label>
             <input matInput
                    type="number"
                    step="1.0"
@@ -24,29 +17,42 @@
                    (input)="updateFormValue('interestPerYear', $any($event.target).value ? parseFloat($any($event.target).value) : null)">
         </mat-form-field>
 
-        <mat-form-field appearance="outline"
-                        class="dark-field">
-            <mat-label>
-                Yield Interval
-            </mat-label>
-            <mat-select panelClass="benchmark-dropdown-panel"
-                        [value]="formModel().yieldInterval"
+        <mat-form-field>
+            <mat-label>Yield Interval</mat-label>
+            <mat-select [value]="formModel().yieldInterval"
                         (selectionChange)="updateFormValue('yieldInterval', $event.value)">
-                <mat-option value="monthly">
-                    Monthly
-                </mat-option>
-                <mat-option value="quarterly">
-                    Quarterly
-                </mat-option>
-                <mat-option value="annually">
-                    Annually
-                </mat-option>
+                <mat-option value="monthly">Monthly</mat-option>
+                <mat-option value="quarterly">Quarterly</mat-option>
+                <mat-option value="annually">Annually</mat-option>
             </mat-select>
         </mat-form-field>
+
+        @if (mode() === 'fixedInterest.intervalBased') {
+            <mat-form-field>
+                <mat-label>Deposit Day (1 - 28)</mat-label>
+                <input matInput
+                       type="number"
+                       min="1"
+                       max="28"
+                       [value]="formModel().depositDay"
+                       (input)="updateFormValue('depositDay', $any($event.target).value ? parseInt($any($event.target).value, 10) : 1)">
+            </mat-form-field>
+
+            @if (!formModel().isReinvestCashflow) {
+                <mat-form-field>
+                    <mat-label>Investment Amount</mat-label>
+                    <input matInput
+                           type="number"
+                           [value]="formModel().investmentAmount"
+                           (input)="updateFormValue('investmentAmount', $any($event.target).value ? parseFloat($any($event.target).value) : null)">
+                </mat-form-field>
+            }
+        }
     </div>
 
-    <div class="form-grid">
-        <div class="method-selection">
+    <div class="benchmark-form__options">
+        <div class="benchmark-form__day-count">
+            <span class="tq-section-label">Day count</span>
             <mat-radio-group [value]="formModel().daysPerYear"
                              (change)="updateFormValue('daysPerYear', $event.value)">
                 <mat-radio-button [value]="365"
@@ -61,41 +67,10 @@
         </div>
 
         @if (mode() === 'fixedInterest.intervalBased') {
-            <mat-form-field appearance="outline"
-                            class="dark-field">
-                <mat-label>
-                    Deposit Day (1 - 28)
-                </mat-label>
-                <input matInput
-                       type="number"
-                       min="1"
-                       max="28"
-                       [value]="formModel().depositDay"
-                       (input)="updateFormValue('depositDay', $any($event.target).value ? parseInt($any($event.target).value, 10) : 1)">
-            </mat-form-field>
-
-            @if (!formModel().isReinvestCashflow) {
-                <mat-form-field appearance="outline"
-                                class="dark-field">
-                    <mat-label>
-                        Investment Amount
-                    </mat-label>
-                    <input matInput
-                           type="number"
-                           [value]="formModel().investmentAmount"
-                           (input)="updateFormValue('investmentAmount', $any($event.target).value ? parseFloat($any($event.target).value) : null)">
-                </mat-form-field>
-            }
+            <mat-slide-toggle [checked]="formModel().isReinvestCashflow"
+                              (change)="updateFormValue('isReinvestCashflow', $event.checked)">
+                Automatically reinvest real cashflows
+            </mat-slide-toggle>
         }
     </div>
-
-    @if (mode() === 'fixedInterest.intervalBased') {
-        <div class="checkbox-container">
-            <mat-checkbox [checked]="formModel().isReinvestCashflow"
-                          (change)="updateFormValue('isReinvestCashflow', $event.checked)">
-                Automatically reinvest real cashflows
-            </mat-checkbox>
-        </div>
-    }
-
 </div>

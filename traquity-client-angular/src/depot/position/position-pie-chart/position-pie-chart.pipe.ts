@@ -4,12 +4,21 @@ import {DepotPosition} from "../../../gen/api/depot-position";
 import {SecurityLogoUrlPipe} from "../../../common/pipe/security-logo-url.pipe";
 import {EChartsOption} from "echarts";
 import {positionPieChartGeometry} from "./position-pie-chart-geometry";
+import {chartToken} from "../../../common/chart/chart-token";
 
 @Pipe({
   name: 'positionPieChart',
   pure: true
 })
 export class PositionPieChartPipe implements PipeTransform {
+
+  private readonly surfaceColor: string = chartToken('--tq-surface-raised');
+  private readonly sunkenColor: string = chartToken('--tq-surface-sunken');
+  private readonly canvasColor: string = chartToken('--tq-surface-canvas');
+  private readonly borderColor: string = chartToken('--tq-border-strong');
+  private readonly shadowColor: string = chartToken('--tq-shadow-color');
+  private readonly textColor: string = chartToken('--tq-text');
+  private readonly mutedTextColor: string = chartToken('--tq-text-muted');
 
   constructor(private readonly tqCurrencyPipe: TqCurrencyPipe, private readonly tqPercentPipe: TqPercentPipe,
               private readonly tqDecimalPipe: TqDecimalPipe, private readonly securityLogoUrlPipe: SecurityLogoUrlPipe) {
@@ -65,11 +74,11 @@ export class PositionPieChartPipe implements PipeTransform {
 
     const label = {
       formatter: labelFormatter,
-      backgroundColor: '#1E1E1E',
-      borderColor: '#5A5F66',
-      borderWidth: 2,
-      borderRadius: 4,
-      shadowColor: 'rgba(0, 0, 0, 0.5)',
+      backgroundColor: this.surfaceColor,
+      borderColor: this.borderColor,
+      borderWidth: 1,
+      borderRadius: 8,
+      shadowColor: this.shadowColor,
       shadowBlur: 8,
       padding: [6, 10],
       rich: {
@@ -81,26 +90,26 @@ export class PositionPieChartPipe implements PipeTransform {
           verticalAlign: 'middle' as const
         },
         name: {
-          color: '#ffffff',
+          color: this.textColor,
           align: 'center' as const,
           fontSize: 14,
           fontWeight: 500,
           lineHeight: 33
         },
         size: {
-          color: '#ffffff',
+          color: this.mutedTextColor,
           align: 'center' as const
         },
         relativeSize: {
           align: 'center' as const,
-          color: '#fff',
-          backgroundColor: '#4C5058',
+          color: this.textColor,
+          backgroundColor: this.sunkenColor,
           padding: [4, 4, 4, 4],
           borderRadius: 4
         }
       }
     };
-    const labelLine = {length: 100};
+    const labelLine = {length: positionPieChartGeometry.labelLineLength};
 
     return {
       series: [
@@ -127,8 +136,8 @@ export class PositionPieChartPipe implements PipeTransform {
               labelLine
             }),
           itemStyle: {
-            borderRadius: 0,
-            borderColor: '#fff',
+            borderRadius: 2,
+            borderColor: this.canvasColor,
             borderWidth: 2
           }
         }

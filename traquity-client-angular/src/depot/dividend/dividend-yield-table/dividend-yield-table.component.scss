@@ -1,54 +1,53 @@
-.wrapper {
-  margin-bottom: 1rem;
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
-.search-bar {
+.yield-table {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-4);
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.yield-table__toolbar {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.5rem;
+  gap: var(--tq-space-3);
 }
 
-.search-field {
+.yield-table__search {
   width: 20rem;
   max-width: 100%;
 }
 
-.search-result-count {
-  opacity: 0.6;
-  font-size: 0.85rem;
+.yield-table__surface {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
 }
 
 table {
   width: 100%;
 }
 
-th[mat-header-cell] {
-  font-weight: 500;
-  opacity: 0.7;
-  text-transform: uppercase;
-  font-size: 0.8rem;
-  letter-spacing: 0.03rem;
-}
-
-.numeric-column {
-  text-align: right;
-
-  ::ng-deep .mat-sort-header-container {
-    justify-content: flex-end;
-  }
-}
-
 tr[mat-row] {
-  transition: background-color 0.15s ease;
+  transition: background-color var(--tq-duration-fast) var(--tq-ease);
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--tq-surface-hover);
   }
 }
 
-.no-data-row td {
+.yield-table__numeric {
+  text-align: right;
+}
+
+.yield-table__no-data td {
   text-align: center;
-  padding: 1.5rem 0;
-  opacity: 0.6;
+  padding: var(--tq-space-5) 0;
+  color: var(--tq-text-muted);
 }

@@ -1,6 +1,5 @@
 import {Component, inject, Signal} from "@angular/core";
 import {MatButton} from "@angular/material/button";
-import {MatCard, MatCardContent} from "@angular/material/card";
 import {MatDialog} from "@angular/material/dialog";
 import {MatIcon} from "@angular/material/icon";
 import {Store} from "@ngrx/store";
@@ -19,8 +18,6 @@ import {AiVerdictLabelPipe} from "./ai-verdict-label.pipe";
     AiNoticeComponent,
     AiVerdictLabelPipe,
     MatButton,
-    MatCard,
-    MatCardContent,
     MatIcon,
     TqByteSizePipe,
   ],

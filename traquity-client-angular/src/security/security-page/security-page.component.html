@@ -1,13 +1,19 @@
-<div class="security-table">
-    <app-security-table (securitySelected)="selectSecurityId($event)">
-    </app-security-table>
-</div>
+<div class="tq-page tq-page--scroll">
+    <header class="tq-page__head">
+        <h1 class="tq-page__title">Securities</h1>
+    </header>
 
-@let securityId = selectedSecurityId();
-
-@if (securityId != null) {
-    <div class="security-chart">
-        <app-historical-price [securityId]="securityId">
-        </app-historical-price>
+    <div class="tq-card tq-card--flush">
+        <app-security-table (securitySelected)="selectSecurityId($event)">
+        </app-security-table>
     </div>
-}
+
+    @let securityId = selectedSecurityId();
+
+    @if (securityId != null) {
+        <section class="tq-card">
+            <app-historical-price [securityId]="securityId">
+            </app-historical-price>
+        </section>
+    }
+</div>

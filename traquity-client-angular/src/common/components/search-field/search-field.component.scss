@@ -1,8 +1,10 @@
-.search-field-container {
+.search-field {
   display: flex;
+  align-items: center;
+  gap: var(--tq-space-2);
 }
 
-.search-field {
-  margin-right: 1rem;
-  width: 100%;
+.search-field__input {
+  flex: 1 1 auto;
+  min-width: 0;
 }

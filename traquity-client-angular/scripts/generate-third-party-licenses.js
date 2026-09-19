@@ -311,16 +311,44 @@ function collectShellPackages(packagesByName) {
 }
 
 /**
- * The package a stylesheet specifier refers to, or null when it refers to something that is not a package: a relative
- * or absolute path, a data/remote URL, or one of this project's own files (angular.json lists those workspace-
- * relative, e.g. `src/styles.scss`, which is spelled exactly like a package subpath and is told apart from one by
- * being there).
+ * Every file Sass would try for a specifier, in no particular order: the path as written, with each stylesheet
+ * extension, as a partial (`_name.scss`), and as a directory index. A specifier resolving to any of them is a file of
+ * this project rather than a package.
+ * @param {string} resolvedPath
+ * @returns {string[]}
  */
-function packageNameOf(specifier) {
+function sassCandidatePaths(resolvedPath) {
+  const directory = path.dirname(resolvedPath);
+  const fileName = path.basename(resolvedPath);
+  return [
+    resolvedPath,
+    ...stylesheetExtensions.flatMap(extension => [
+      `${resolvedPath}${extension}`,
+      path.join(directory, `_${fileName}${extension}`),
+      path.join(resolvedPath, `index${extension}`),
+      path.join(resolvedPath, `_index${extension}`)
+    ])
+  ];
+}
+
+/**
+ * The package a stylesheet specifier refers to, or null when it refers to something that is not a package: a relative
+ * or absolute path, a data/remote URL, or one of this project's own files.
+ *
+ * `baseDirectory` is what the specifier is resolved against, which is how the project's own files are told apart from
+ * packages: they are spelled exactly like a package subpath and differ only by being there. Sass resolves a specifier
+ * relative to the importing stylesheet before it consults a load path, and it does so whether or not the specifier
+ * starts with `./` — so `@use 'theme/tokens'` in `src/styles.scss` means `src/theme/_tokens.scss`, not a package named
+ * `theme`.
+ * @param {string} specifier
+ * @param {string} baseDirectory
+ * @returns {string | null}
+ */
+function packageNameOf(specifier, baseDirectory) {
   if (isLocalPathOrReference(specifier) || isUrlOrProtocol(specifier)) {
     return null;
   }
-  if (fs.existsSync(path.join(projectRoot, specifier))) {
+  if (sassCandidatePaths(path.resolve(baseDirectory, specifier)).some(candidate => fs.existsSync(candidate))) {
     return null;
   }
   const segments = specifier.split('/');
@@ -340,14 +368,22 @@ function isUrlOrProtocol(specifier) {
   return urlProtocolRegex.test(specifier);
 }
 
-function stylesheetSpecifiers() {
-  const specifiers = new Set();
+/** @typedef {{specifier: string, baseDirectory: string}} StylesheetReference */
 
-  // angular.json's `styles` - a global stylesheet is listed there rather than imported from anywhere in src/
+/**
+ * Every specifier a stylesheet of this build names, each with the directory it is written relative to.
+ * @returns {StylesheetReference[]}
+ */
+function stylesheetReferences() {
+  /** @type {StylesheetReference[]} */
+  const references = [];
+
+  // angular.json's `styles` - a global stylesheet is listed there rather than imported from anywhere in src/, and
+  // spelled relative to the workspace
   const angularJson = JSON.parse(fs.readFileSync(angularJsonPath, 'utf-8'));
   for (const project of Object.values(angularJson.projects ?? {})) {
     for (const style of project.architect?.build?.options?.styles ?? []) {
-      specifiers.add(typeof style === 'string' ? style : style.input);
+      references.push({specifier: typeof style === 'string' ? style : style.input, baseDirectory: projectRoot});
     }
   }
 
@@ -360,18 +396,18 @@ function stylesheetSpecifiers() {
     const content = fs.readFileSync(path.join(entry.parentPath, entry.name), 'utf-8');
     for (const pattern of stylesheetReferencePatterns) {
       for (const match of content.matchAll(pattern)) {
-        specifiers.add(match[1]);
+        references.push({specifier: match[1], baseDirectory: entry.parentPath});
       }
     }
   }
 
-  return specifiers;
+  return references;
 }
 
 function collectStylesheetPackages(packagesByName) {
   const names = new Set();
-  for (const specifier of stylesheetSpecifiers()) {
-    const name = packageNameOf(specifier);
+  for (const {specifier, baseDirectory} of stylesheetReferences()) {
+    const name = packageNameOf(specifier, baseDirectory);
     if (name !== null) {
       names.add(name);
     }

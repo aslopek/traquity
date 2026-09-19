@@ -1,155 +1,131 @@
-<div class="wrapper">
+<div class="summary">
     @let security = masterData();
     @if (security !== null) {
-        <mat-card appearance="outlined"
-                  class="summary-card">
-            <mat-card-header>
-                <mat-icon mat-card-avatar
-                          color="primary"
-                          class="grid-icon">
-                    info
-                </mat-icon>
-                <mat-card-title>Master Data</mat-card-title>
-                <mat-card-subtitle></mat-card-subtitle>
-            </mat-card-header>
+        <section class="tq-card">
+            <header class="tq-card__head">
+                <h3 class="summary__title">
+                    <mat-icon fontIcon="info"></mat-icon>
+                    Master Data
+                </h3>
+            </header>
 
-            <mat-card-content>
-                <dl class="summary-grid">
-                    <div class="grid-item">
-                        <dt>Name</dt>
-                        <dd>{{ security.name }}</dd>
-                    </div>
+            <dl class="summary__grid">
+                <div class="summary__item">
+                    <dt class="tq-section-label">Name</dt>
+                    <dd>{{ security.name }}</dd>
+                </div>
 
-                    <div class="grid-item">
-                        <dt>ISIN</dt>
-                        <dd class="monospaced">{{ security.isin }}</dd>
-                    </div>
+                <div class="summary__item">
+                    <dt class="tq-section-label">ISIN</dt>
+                    <dd class="tq-numeric">{{ security.isin }}</dd>
+                </div>
 
-                    <div class="grid-item">
-                        <dt>WKN</dt>
-                        <dd class="monospaced">{{ security.wkn ?? '' }}</dd>
-                    </div>
+                <div class="summary__item">
+                    <dt class="tq-section-label">WKN</dt>
+                    <dd class="tq-numeric">{{ security.wkn ?? '' }}</dd>
+                </div>
 
-                    <div class="grid-item">
-                        <dt>Sector</dt>
-                        <dd>{{ security.sector ?? '' }}</dd>
-                    </div>
+                <div class="summary__item">
+                    <dt class="tq-section-label">Sector</dt>
+                    <dd>{{ security.sector ?? '' }}</dd>
+                </div>
 
-                    <div class="grid-item">
-                        <dt>Security Type</dt>
-                        <dd>{{ security.securityType | securityTypeDisplayName }}</dd>
-                    </div>
+                <div class="summary__item">
+                    <dt class="tq-section-label">Security Type</dt>
+                    <dd>{{ security.securityType | securityTypeDisplayName }}</dd>
+                </div>
 
-                    <div class="grid-item full-width">
-                        <dt>Symbols</dt>
-                        <dd>
-                            <mat-chip-set>
-                                @for (symbol of security.symbols; track symbol) {
-                                    <mat-chip-row>{{ symbol }}</mat-chip-row>
-                                }
-                            </mat-chip-set>
-                        </dd>
-                    </div>
-                </dl>
-            </mat-card-content>
-        </mat-card>
+                <div class="summary__item summary__item--full">
+                    <dt class="tq-section-label">Symbols</dt>
+                    <dd>
+                        <mat-chip-set>
+                            @for (symbol of security.symbols; track symbol) {
+                                <mat-chip-row>{{ symbol }}</mat-chip-row>
+                            }
+                        </mat-chip-set>
+                    </dd>
+                </div>
+            </dl>
+        </section>
     }
 
     @let priceConfig = historicalSecurityPriceConfig();
-    <mat-card appearance="outlined"
-              class="summary-card">
-        <mat-card-header>
-            <mat-icon mat-card-avatar
-                      color="primary"
-                      class="grid-icon">
-                show_chart
-            </mat-icon>
-            <mat-card-title>Historical Prices</mat-card-title>
-            <mat-card-subtitle></mat-card-subtitle>
-        </mat-card-header>
+    <section class="tq-card">
+        <header class="tq-card__head">
+            <h3 class="summary__title">
+                <mat-icon fontIcon="show_chart"></mat-icon>
+                Historical Prices
+            </h3>
+        </header>
 
-        <mat-card-content>
-            <dl class="summary-grid">
-                @if (priceConfig === undefined) {
-                    <div class="grid-item">
-                        <dt>No configuration provided</dt>
-                    </div>
-                } @else {
-                    <div class="grid-item">
-                        <dt>Status</dt>
-                        <dd>
-                            <span class="status-badge"
-                                  [class.active]="priceConfig.isActive">
-                                <mat-icon>
-                                    {{ priceConfig.isActive ? 'check_circle' : 'cancel' }}
-                                </mat-icon>
-                                {{ priceConfig.isActive ? 'Active' : 'Disabled' }}
-                          </span>
-                        </dd>
-                    </div>
+        <dl class="summary__grid">
+            @if (priceConfig === undefined) {
+                <div class="summary__item summary__item--full">
+                    <dd class="tq-muted">No configuration provided</dd>
+                </div>
+            } @else {
+                <div class="summary__item">
+                    <dt class="tq-section-label">Status</dt>
+                    <dd>
+                        <span class="tq-pill"
+                              [class.tq-pill--positive]="priceConfig.isActive"
+                              [class.tq-pill--neutral]="!priceConfig.isActive">
+                            <mat-icon [fontIcon]="priceConfig.isActive ? 'check_circle' : 'cancel'"></mat-icon>
+                            {{ priceConfig.isActive ? 'Active' : 'Disabled' }}
+                        </span>
+                    </dd>
+                </div>
 
-                    <div class="grid-item">
-                        <dt>Data Source</dt>
-                        <dd>{{ historicalSecurityPriceDataSource()?.name ?? '' }}</dd>
-                    </div>
+                <div class="summary__item">
+                    <dt class="tq-section-label">Data Source</dt>
+                    <dd>{{ historicalSecurityPriceDataSource()?.name ?? '' }}</dd>
+                </div>
 
-                    <div class="grid-item">
-                        <dt>External Security ID</dt>
-                        <dd class="monospaced">
-                            {{ priceConfig.externalSecurityId }}
-                        </dd>
-                    </div>
-                }
-            </dl>
-        </mat-card-content>
-    </mat-card>
+                <div class="summary__item">
+                    <dt class="tq-section-label">External Security ID</dt>
+                    <dd class="tq-numeric">{{ priceConfig.externalSecurityId }}</dd>
+                </div>
+            }
+        </dl>
+    </section>
 
     @let dividendConfig = dividendAnnouncementConfig();
-    <mat-card appearance="outlined"
-              class="summary-card">
-        <mat-card-header>
-            <mat-icon mat-card-avatar
-                      color="primary"
-                      class="grid-icon">
-                payments
-            </mat-icon>
-            <mat-card-title>Dividend Announcements</mat-card-title>
-            <mat-card-subtitle></mat-card-subtitle>
-        </mat-card-header>
+    <section class="tq-card">
+        <header class="tq-card__head">
+            <h3 class="summary__title">
+                <mat-icon fontIcon="payments"></mat-icon>
+                Dividend Announcements
+            </h3>
+        </header>
 
-        <mat-card-content>
-            <dl class="summary-grid">
-                @if (dividendConfig === undefined) {
-                    <div class="grid-item">
-                        <dt>No configuration provided</dt>
-                    </div>
-                } @else {
-                    <div class="grid-item">
-                        <dt>Status</dt>
-                        <dd>
-                              <span class="status-badge"
-                                    [class.active]="dividendConfig.isActive">
-                                <mat-icon>
-                                    {{ dividendConfig.isActive ? 'check_circle' : 'cancel' }}
-                                </mat-icon>
-                                  {{ dividendConfig.isActive ? 'Active' : 'Disabled' }}
-                              </span>
-                        </dd>
-                    </div>
+        <dl class="summary__grid">
+            @if (dividendConfig === undefined) {
+                <div class="summary__item summary__item--full">
+                    <dd class="tq-muted">No configuration provided</dd>
+                </div>
+            } @else {
+                <div class="summary__item">
+                    <dt class="tq-section-label">Status</dt>
+                    <dd>
+                        <span class="tq-pill"
+                              [class.tq-pill--positive]="dividendConfig.isActive"
+                              [class.tq-pill--neutral]="!dividendConfig.isActive">
+                            <mat-icon [fontIcon]="dividendConfig.isActive ? 'check_circle' : 'cancel'"></mat-icon>
+                            {{ dividendConfig.isActive ? 'Active' : 'Disabled' }}
+                        </span>
+                    </dd>
+                </div>
 
-                    <div class="grid-item">
-                        <dt>Data Source</dt>
-                        <dd>{{ dividendAnnouncementDataSources()[dividendConfig.dataSourceId].name }}</dd>
-                    </div>
+                <div class="summary__item">
+                    <dt class="tq-section-label">Data Source</dt>
+                    <dd>{{ dividendAnnouncementDataSources()[dividendConfig.dataSourceId].name }}</dd>
+                </div>
 
-                    <div class="grid-item">
-                        <dt>External Security ID</dt>
-                        <dd class="monospaced">
-                            {{ dividendConfig.externalSecurityId }}
-                        </dd>
-                    </div>
-                }
-            </dl>
-        </mat-card-content>
-    </mat-card>
+                <div class="summary__item">
+                    <dt class="tq-section-label">External Security ID</dt>
+                    <dd class="tq-numeric">{{ dividendConfig.externalSecurityId }}</dd>
+                </div>
+            }
+        </dl>
+    </section>
 </div>

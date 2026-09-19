@@ -5,14 +5,17 @@ import {TqCurrencyPipe, TqDecimalPipe, TqPercentPipe} from '../../../common';
 import {SecurityLogoUrlPipe} from '../../../common/pipe/security-logo-url.pipe';
 import {DepotPosition} from '../../../gen/api/depot-position';
 import {depotPositionFactory} from '../../../testing';
+import {positionPieChartGeometry} from './position-pie-chart-geometry';
 
 type LabelState = {
   show?: boolean
   length?: number
+  alignTo?: string
 };
 
 type PieSeries = {
   data: { name: string }[]
+  radius: [string, string]
   label: LabelState
   labelLine: LabelState
   emphasis?: { label: LabelState, labelLine: LabelState }
@@ -43,7 +46,12 @@ describe('PositionPieChartPipe', (): void => {
   it('shows the per-position labels and their leader lines while grouping is inactive', (): void => {
     const series: PieSeries = seriesOf(pipe.transform(positions, false, 'USD', false, false));
     expect(series.label.show).toBeUndefined();
-    expect(series.labelLine.length).toBe(100);
+    expect(series.labelLine.length).toBe(positionPieChartGeometry.labelLineLength);
+  });
+
+  it('leaves each label on the ray of its own slice instead of pinning it to the canvas edge', (): void => {
+    const series: PieSeries = seriesOf(pipe.transform(positions, false, 'USD', false, false));
+    expect(series.label.alignTo).toBeUndefined();
   });
 
   it('hides the per-position labels and their leader lines while grouping is active', (): void => {
@@ -52,6 +60,14 @@ describe('PositionPieChartPipe', (): void => {
     expect(series.labelLine.show).toBe(false);
     expect(series.emphasis?.label.show).toBe(false);
     expect(series.emphasis?.labelLine.show).toBe(false);
+  });
+
+  it('draws the donut the group ring is measured against', (): void => {
+    const series: PieSeries = seriesOf(pipe.transform(positions, false, 'USD', false, true));
+    expect(series.radius).toEqual([
+      `${positionPieChartGeometry.doughnutInnerRadius * 2}%`,
+      `${positionPieChartGeometry.doughnutOuterRadius * 2}%`
+    ]);
   });
 
   it('keeps the incoming position order, so a group\'s segments stay contiguous', (): void => {

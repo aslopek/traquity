@@ -1,56 +1,77 @@
-<div class="wrapper">
-    @for (stockSplit of stockSplitStore.stockSplits(); track stockSplit) {
-        <div class="row stock-split-item">
-            <p style="width: 40%;">{{ stockSplit.exDate | tqDate }}</p>
-            <p style="width: 40%;">{{ stockSplit.quantityNew | tqDecimal:'1.0-3' }}&nbsp;for&nbsp;{{ stockSplit.quantityOld | tqDecimal:'1.0-3' }}</p>
-            <p style="width: 20%;">x{{ stockSplit.multiplier | tqDecimal:'1.0-3' }}</p>
+<div class="stock-split">
+    @if (stockSplitStore.stockSplits().length > 0) {
+        <div class="tq-card tq-card--flush">
+            <table class="tq-table">
+                <thead>
+                <tr>
+                    <th>Ex Date</th>
+                    <th>Ratio</th>
+                    <th class="tq-table__cell--numeric">Multiplier</th>
+                </tr>
+                </thead>
+                <tbody>
+                    @for (stockSplit of stockSplitStore.stockSplits(); track stockSplit) {
+                        <tr>
+                            <td class="tq-numeric">{{ stockSplit.exDate | tqDate }}</td>
+                            <td class="tq-numeric">
+                                {{ stockSplit.quantityNew | tqDecimal:'1.0-3' }}&nbsp;for&nbsp;{{ stockSplit.quantityOld | tqDecimal:'1.0-3' }}
+                            </td>
+                            <td class="tq-table__cell--numeric">
+                                ×{{ stockSplit.multiplier | tqDecimal:'1.0-3' }}
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     }
-    <div class="row">
-        <mat-form-field class="margin-right clickable"
-                        style="width: 40%">
-            <mat-label>Date</mat-label>
-            <input (click)="picker.open()"
-                   [matDatepicker]="picker"
-                   [formField]="stockSplitForm.exDate"
-                   class="clickable"
-                   matInput
-                   readonly>
-            <mat-datepicker-toggle [for]="picker"
-                                   matIconSuffix></mat-datepicker-toggle>
-            <mat-datepicker #picker></mat-datepicker>
-        </mat-form-field>
 
-        <mat-form-field class="margin-right"
-                        style="width: 20%;">
-            <mat-label>Quantity old</mat-label>
-            <input matInput
-                   type="number"
-                   [formField]="stockSplitForm.quantityOld">
-        </mat-form-field>
+    <section class="stock-split__form">
+        <h3 class="tq-section-label">Add a split</h3>
 
-        <mat-form-field class="margin-right"
-                        style="width: 20%;">
-            <mat-label>Quantity new</mat-label>
-            <input matInput
-                   type="number"
-                   [formField]="stockSplitForm.quantityNew">
-        </mat-form-field>
+        <div class="stock-split__inputs">
+            <mat-form-field class="stock-split__date">
+                <mat-label>Date</mat-label>
+                <input (click)="picker.open()"
+                       [matDatepicker]="picker"
+                       [formField]="stockSplitForm.exDate"
+                       class="stock-split__clickable"
+                       matInput
+                       readonly>
+                <mat-datepicker-toggle [for]="picker"
+                                       matIconSuffix></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+            </mat-form-field>
 
-        <h2 style="width: 10%;">
-            x{{ stockSplitStore.multiplier() | tqDecimal:'1.0-3' }}
-        </h2>
+            <mat-form-field class="stock-split__quantity">
+                <mat-label>Quantity old</mat-label>
+                <input matInput
+                       type="number"
+                       [formField]="stockSplitForm.quantityOld">
+            </mat-form-field>
 
-        <mat-checkbox [formField]="stockSplitForm.updateRelatedData">
-            Update transactions and historical prices
-        </mat-checkbox>
+            <mat-form-field class="stock-split__quantity">
+                <mat-label>Quantity new</mat-label>
+                <input matInput
+                       type="number"
+                       [formField]="stockSplitForm.quantityNew">
+            </mat-form-field>
 
-        <button mat-icon-button
-                class="margin-right"
-                matTooltip="Create"
-                [disabled]="!stockSplitStore.creationParamsValid()"
-                (click)="stockSplitStore.addStockSplit()">
-            <mat-icon>save</mat-icon>
-        </button>
-    </div>
+            <span class="stock-split__multiplier tq-numeric">
+                ×{{ stockSplitStore.multiplier() | tqDecimal:'1.0-3' }}
+            </span>
+        </div>
+
+        <div class="stock-split__actions">
+            <mat-slide-toggle [formField]="stockSplitForm.updateRelatedData">
+                Update transactions and historical prices
+            </mat-slide-toggle>
+
+            <button matButton="filled"
+                    [disabled]="!stockSplitStore.creationParamsValid()"
+                    (click)="stockSplitStore.addStockSplit()">
+                Add Split
+            </button>
+        </div>
+    </section>
 </div>

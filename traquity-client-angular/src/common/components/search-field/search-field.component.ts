@@ -3,10 +3,11 @@ import {FormsModule} from "@angular/forms";
 import {MatButtonModule} from "@angular/material/button";
 import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
+import {MatTooltipModule} from "@angular/material/tooltip";
 
 @Component({
   selector: "app-search-field",
-  imports: [MatInputModule, FormsModule, MatIconModule, MatButtonModule],
+  imports: [MatInputModule, FormsModule, MatIconModule, MatButtonModule, MatTooltipModule],
   templateUrl: "search-field.component.html",
   styleUrls: ["search-field.component.scss"],
 })

@@ -1,4 +1,5 @@
 import {Component, Signal, signal, WritableSignal,} from "@angular/core";
+import {MatIcon} from "@angular/material/icon";
 import {MatTabsModule} from "@angular/material/tabs";
 import {DepotRead} from "../../gen/api/depot";
 import {DividendPageComponent} from "../dividend/dividend-page/dividend-page.component";
@@ -16,6 +17,7 @@ import {DepotPerformanceComponent} from "../depot-performance/depot-performance.
   selector: "app-depot-page",
   imports: [
     MatTabsModule,
+    MatIcon,
     TransactionPageComponent,
     PositionPageComponent,
     DividendPageComponent,

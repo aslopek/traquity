@@ -2,7 +2,6 @@ import {Component, computed, DestroyRef, input, InputSignal, Signal, signal, Wri
 import {SecurityCreate} from "../../../gen/api/security";
 import {HistoricalSecurityPriceConfigCreate} from "../../../gen/api/historical-security-price";
 import {DividendAnnouncementConfigCreate, DividendAnnouncementDataSourceRead,} from "../../../gen/api/notification/dividend-announcement";
-import {MatCard, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle,} from "@angular/material/card";
 import {MatIcon} from "@angular/material/icon";
 import {MatChipRow, MatChipSet} from "@angular/material/chips";
 import {Store} from "@ngrx/store";
@@ -16,12 +15,7 @@ import {SecurityTypeDisplayNamePipe} from "../../../common/pipe/security-type-di
 @Component({
   selector: "app-summary",
   imports: [
-    MatCard,
-    MatCardHeader,
     MatIcon,
-    MatCardTitle,
-    MatCardSubtitle,
-    MatCardContent,
     MatChipSet,
     MatChipRow,
     SecurityTypeDisplayNamePipe,

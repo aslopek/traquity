@@ -1,32 +1,31 @@
 @let composition = depotComposition();
 @let grouped = grouping();
 
-<div class="wrapper">
-    <div class="sticky-header"
-         [class.grouped]="grouped.groups.length > 0">
-        <div class="total-row">
+<div class="position-list tq-scroll">
+    <div class="position-list__header"
+         [class.position-list__header--grouped]="grouped.groups.length > 0">
+        <div class="position-list__total">
             @if (!hideAbsoluteValues()) {
                 @let total = useBuyIn() ? composition.buyInAbsolute : composition.currentSizeAbsolute;
-                <h1 class="title">
+                <span class="tq-value tq-numeric">
                     {{ total | tqCurrency:depotCurrency() }}
-                </h1>
+                </span>
             }
 
-            <app-performance-label
-                    [performanceAbsolute]="composition.performanceAbsolute"
-                    [performanceRelative]="composition.performanceRelative ?? 'infinity'"
-                    [currency]="depotCurrency()">
+            <app-performance-label [performanceAbsolute]="composition.performanceAbsolute"
+                                   [performanceRelative]="composition.performanceRelative ?? 'infinity'"
+                                   [currency]="depotCurrency()">
             </app-performance-label>
         </div>
 
-        <div class="column-headers">
-            <div class="column-headers-spacer"></div>
-            <div class="column-header" style="width: 20%;">Size (%)</div>
+        <div class="position-list__columns">
+            <div class="position-list__columns-spacer"></div>
+            <div class="position-list__column-label" style="width: 20%;">Size (%)</div>
             @if (!hideAbsoluteValues()) {
-                <div class="column-header" style="width: 20%;">Size</div>
+                <div class="position-list__column-label" style="width: 20%;">Size</div>
             }
-            <div class="column-header" style="width: 15%;">Performance</div>
-            <div class="column-header" style="width: 15%;">Income</div>
+            <div class="position-list__column-label" style="width: 15%;">Performance</div>
+            <div class="position-list__column-label" style="width: 15%;">Income</div>
         </div>
     </div>
 
@@ -34,15 +33,15 @@
         @for (group of grouped.groups; track $index) {
             @let label = group | positionGroupText : useBuyIn() : hideAbsoluteValues() : false : depotCurrency();
             @let tooltip = group | positionGroupText : useBuyIn() : hideAbsoluteValues() : true : depotCurrency();
-            <div class="position-group">
-                <div class="group-gutter">
-                    <span class="group-label"
+            <div class="position-list__group">
+                <div class="position-list__gutter">
+                    <span class="position-list__group-label"
                           [matTooltip]="tooltip">
                         {{ label }}
                     </span>
-                    <div class="group-brace"></div>
+                    <div class="position-list__brace"></div>
                 </div>
-                <div class="group-rows">
+                <div class="position-list__group-rows">
                     @for (position of group.positions; track position) {
                         <app-position-list-row [position]="position"></app-position-list-row>
                     }
@@ -50,7 +49,7 @@
             </div>
         }
     } @else {
-        <div class="position-rows">
+        <div class="position-list__rows">
             @for (position of grouped.positions; track position) {
                 <app-position-list-row [position]="position"></app-position-list-row>
             }

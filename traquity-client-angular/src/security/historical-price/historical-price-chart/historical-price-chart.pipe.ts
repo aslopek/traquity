@@ -2,6 +2,8 @@ import {inject, Pipe, PipeTransform} from "@angular/core";
 import {EChartsOption} from "echarts";
 import {TqCurrencyPipe, TqDatePipe, TqPercentPipe} from "../../../common";
 import {HistoricalSecurityPrice} from "../../../gen/api/historical-security-price";
+import {chartToken, chartTokenAlpha} from "../../../common/chart/chart-token";
+import {escapeHtml} from "../../../common/chart/escape-html";
 
 @Pipe({
   name: "historicalPriceChart",
@@ -11,6 +13,19 @@ export class HistoricalPriceChartPipe implements PipeTransform {
   private readonly tqCurrencyPipe: TqCurrencyPipe = inject(TqCurrencyPipe);
   private readonly tqDatePipe: TqDatePipe = inject(TqDatePipe);
   private readonly tqPercentPipe: TqPercentPipe = inject(TqPercentPipe);
+  private readonly borderColor: string = chartToken("--tq-border");
+  private readonly axisLabelColor: string = chartToken("--tq-text-faint");
+  private readonly tooltipColor: string = chartToken("--tq-glass-bg");
+  private readonly tooltipCss: string = `box-shadow: ${chartToken("--tq-shadow-2")};`
+    + ` border-radius: ${chartToken("--tq-radius-md")}; backdrop-filter: ${chartToken("--tq-glass-blur")};`;
+  private readonly textColor: string = chartToken("--tq-text");
+  private readonly mutedTextColor: string = chartToken("--tq-text-muted");
+  private readonly positiveColor: string = chartToken("--tq-positive-soft");
+  private readonly negativeColor: string = chartToken("--tq-negative-soft");
+  private readonly positiveFillTop: string = chartTokenAlpha("--tq-positive", 0.18);
+  private readonly positiveFillBottom: string = chartTokenAlpha("--tq-positive", 0);
+  private readonly negativeFillTop: string = chartTokenAlpha("--tq-negative", 0.18);
+  private readonly negativeFillBottom: string = chartTokenAlpha("--tq-negative", 0);
 
   transform(prices: HistoricalSecurityPrice[], percent: boolean): EChartsOption {
     if (!prices || prices.length === 0) {
@@ -20,8 +35,9 @@ export class HistoricalPriceChartPipe implements PipeTransform {
     const currency: string = prices[0].currency;
     const basePrice: number = prices[0].price;
     const hasPositiveDirection: boolean = prices[prices.length - 1].price >= basePrice;
-    const lineColor: string = hasPositiveDirection ? '#22c55e' : '#ef4444';
-    const areaColor: string = hasPositiveDirection ? 'rgba(34, 197, 94,' : 'rgba(239, 68, 68,';
+    const lineColor: string = hasPositiveDirection ? this.positiveColor : this.negativeColor;
+    const areaFillTop: string = hasPositiveDirection ? this.positiveFillTop : this.negativeFillTop;
+    const areaFillBottom: string = hasPositiveDirection ? this.positiveFillBottom : this.negativeFillBottom;
 
     const dates: string[] = [];
     const values: number[] = [];
@@ -43,35 +59,41 @@ export class HistoricalPriceChartPipe implements PipeTransform {
       backgroundColor: 'transparent',
       tooltip: {
         trigger: 'axis',
-        backgroundColor: 'rgba(28, 28, 30, 0.95)',
-        borderColor: 'rgba(255, 255, 255, 0.08)',
+        backgroundColor: this.tooltipColor,
+        borderColor: this.borderColor,
         borderWidth: 1,
         textStyle: {
-          color: '#ffffff',
+          color: this.textColor,
           fontSize: 13
         },
         padding: [10, 14],
-        extraCssText: 'box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3); border-radius: 8px;',
+        extraCssText: this.tooltipCss,
+        // echarts takes this as an HTML string, so nothing escapes it for us. The date is a formatted value today, but
+        // goes through escapeHtml anyway so the configured date format cannot inject markup.
         formatter: (params: unknown): string => {
           if (!Array.isArray(params) || params.length === 0) return '';
 
           const date: string = (params[0] as { name: string }).name;
           const rawChange: number = absoluteChange[date] ?? 0;
-          const changeColor: string = rawChange >= 0 ? '#22c55e' : '#ef4444';
+          const changeColor: string = rawChange >= 0 ? this.positiveColor : this.negativeColor;
 
           const absoluteLabel: string = `${rawChange >= 0 ? '+' : ''}${this.formatCurrency(rawChange, currency)}`;
           const relativeLabel: string = `${rawChange >= 0 ? '+' : ''}${this.formatPercent(relativeChange[date] ?? 0)}`;
 
           return `
-            <div style="font-weight: 600; margin-bottom: 6px; color: rgba(255, 255, 255, 0.5); font-size: 11px;">${this.escapeHtml(date)}</div>
+            <div style="font-weight: 500; margin-bottom: 6px; font-size: 11px;
+                        color: ${this.axisLabelColor};">${escapeHtml(date)}</div>
 
             <div style="display: flex; justify-content: space-between; gap: 24px; margin-bottom: 4px;">
-              <span style="color: rgba(255, 255, 255, 0.7);">Price:</span>
-              <strong style="font-variant-numeric: tabular-nums; color: #ffffff;">${this.formatCurrency(rawPrices[date] ?? 0, currency)}</strong>
+              <span style="color: ${this.mutedTextColor};">Price:</span>
+              <strong style="font-variant-numeric: tabular-nums; color: ${this.textColor};">
+                ${this.formatCurrency(rawPrices[date] ?? 0, currency)}
+              </strong>
             </div>
 
-            <div style="display: flex; justify-content: space-between; gap: 24px; margin-top: 6px; border-top: 1px dashed rgba(255, 255, 255, 0.1); padding-top: 4px;">
-              <span style="color: rgba(255, 255, 255, 0.7);">${rawChange >= 0 ? 'Growth' : 'Decline'}:</span>
+            <div style="display: flex; justify-content: space-between; gap: 24px; margin-top: 6px;
+                        border-top: 1px dashed ${this.borderColor}; padding-top: 4px;">
+              <span style="color: ${this.mutedTextColor};">${rawChange >= 0 ? 'Growth' : 'Decline'}:</span>
               <strong style="color: ${changeColor}; font-variant-numeric: tabular-nums;">${absoluteLabel}</strong>
             </div>
             <div style="display: flex; justify-content: space-between; gap: 24px;">
@@ -94,10 +116,10 @@ export class HistoricalPriceChartPipe implements PipeTransform {
         type: 'category',
         data: dates,
         boundaryGap: false,
-        axisLine: {lineStyle: {color: 'rgba(255, 255, 255, 0.08)'}},
+        axisLine: {lineStyle: {color: this.borderColor}},
         axisTick: {show: false},
         axisLabel: {
-          color: 'rgba(255, 255, 255, 0.4)',
+          color: this.axisLabelColor,
           fontSize: 11,
           margin: 12
         }
@@ -108,9 +130,9 @@ export class HistoricalPriceChartPipe implements PipeTransform {
         scale: true,
         axisLine: {show: false},
         axisTick: {show: false},
-        splitLine: {lineStyle: {color: 'rgba(255, 255, 255, 0.04)'}},
+        splitLine: {lineStyle: {color: this.borderColor}},
         axisLabel: {
-          color: 'rgba(255, 255, 255, 0.4)',
+          color: this.axisLabelColor,
           fontSize: 11,
           formatter: (value: number): string => percent ? `${value.toFixed(0)}%` : this.formatCurrency(value, currency)
         }
@@ -128,8 +150,8 @@ export class HistoricalPriceChartPipe implements PipeTransform {
             color: {
               type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
               colorStops: [
-                {offset: 0, color: `${areaColor} 0.16)`},
-                {offset: 1, color: `${areaColor} 0)`}
+                {offset: 0, color: areaFillTop},
+                {offset: 1, color: areaFillBottom}
               ]
             }
           }
@@ -148,14 +170,5 @@ export class HistoricalPriceChartPipe implements PipeTransform {
 
   private formatPercent(value: number): string {
     return this.tqPercentPipe.transform(value);
-  }
-
-  private escapeHtml(value: string): string {
-    return value
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
   }
 }

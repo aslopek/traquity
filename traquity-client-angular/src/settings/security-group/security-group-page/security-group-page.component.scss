@@ -1,16 +1,21 @@
-.security-group-list {
-  width: 15%;
+.security-group-page {
+  display: flex;
+  gap: var(--tq-space-5);
+  align-items: flex-start;
+  padding: var(--tq-space-4) 0;
+  min-width: 0;
+}
+
+.security-group-page__list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--tq-space-3);
+  flex: 0 0 18rem;
+  max-height: 32rem;
+  padding-right: var(--tq-space-1);
 }
 
-.detail-view {
-  margin-left: 1rem;
-  width: 100%;
-}
-
-.wrapper {
-  display: flex;
-  flex-direction: row;
+.security-group-page__detail {
+  flex: 1 1 auto;
+  min-width: 0;
 }

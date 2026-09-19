@@ -3,20 +3,22 @@
 
     <div class="status-line">
         @if (configureStore.javaVerifying()) {
-            <mat-icon>hourglass_empty</mat-icon>
+            <mat-icon fontIcon="hourglass_empty"></mat-icon>
             <div class="status-text">
                 <p>Verifying the configured runtime…</p>
                 <mat-progress-bar mode="indeterminate"/>
             </div>
         } @else if (configureStore.javaVerification(); as verification) {
             @if (verification.status === 'ok') {
-                <mat-icon class="status-icon-ok">check_circle</mat-icon>
+                <mat-icon class="status-icon-ok"
+                          fontIcon="check_circle"></mat-icon>
                 <div class="status-text">
                     <p class="status-version">{{ verification.versionOutput }}</p>
                     <p class="status-path">{{ verification.javaPath }}</p>
                 </div>
             } @else {
-                <mat-icon class="status-icon-error">error</mat-icon>
+                <mat-icon class="status-icon-error"
+                          fontIcon="error"></mat-icon>
                 <p class="status-message">{{ verification.message }}</p>
             }
         }
@@ -37,10 +39,11 @@
                 <p class="option-detail">{{ selectedJavaPath }}</p>
             }
             @if (configureStore.javaPickError(); as pickError) {
-                <p class="option-error">
-                    <mat-icon class="message-icon">error</mat-icon>
+                <div class="tq-notice tq-notice--error option-error">
+                    <mat-icon class="tq-notice__icon"
+                              fontIcon="error"></mat-icon>
                     <span>{{ pickError.setting }} — {{ pickError.message }}</span>
-                </p>
+                </div>
             }
         </mat-radio-button>
 
@@ -48,10 +51,11 @@
             Download Corretto
             <span class="option-hint">≈ 200 MiB</span>
             @if (configureStore.javaDownloadError(); as downloadError) {
-                <p class="option-error">
-                    <mat-icon class="message-icon">error</mat-icon>
+                <div class="tq-notice tq-notice--error option-error">
+                    <mat-icon class="tq-notice__icon"
+                              fontIcon="error"></mat-icon>
                     <span>{{ downloadError }}</span>
-                </p>
+                </div>
             }
         </mat-radio-button>
     </mat-radio-group>
@@ -68,12 +72,12 @@
                 https://aws.amazon.com/corretto/faqs/
             </a>
             <div class="license-actions">
-                <button mat-stroked-button
+                <button matButton="outlined"
                         (click)="configureStore.dismissJavaLicenseNote()">
                     Cancel
                 </button>
-                <button mat-raised-button
-                        color="primary"
+                <button matButton="filled"
+
                         (click)="configureStore.confirmJavaDownload()">
                     Download
                 </button>

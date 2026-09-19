@@ -1,15 +1,26 @@
 <mat-accordion multi="true">
     @for (week of weeks; track week) {
-        <mat-expansion-panel [expanded]="week === weeks[0]"
-                             class="week">
+        <mat-expansion-panel class="announcements__week"
+                             [expanded]="week === weeks[0]">
             <mat-expansion-panel-header>
                 <mat-panel-title *ngrxLet="dividendAnnouncementsByWeek[week].length as announcements">
-                    Week of {{ week | tqDate }} ({{ announcements }} Dividend
-                    Announcement{{ announcements === 1 ? '' : 's' }})
+                    <span class="announcements__week-title">
+                        Week of <span class="tq-numeric">{{ week | tqDate }}</span>
+                    </span>
+                    <span class="tq-pill tq-pill--neutral">
+                        {{ announcements }} announcement{{ announcements === 1 ? '' : 's' }}
+                    </span>
                 </mat-panel-title>
             </mat-expansion-panel-header>
             <app-dividend-announcements-week [dividendAnnouncements]="dividendAnnouncementsByWeek[week]">
             </app-dividend-announcements-week>
         </mat-expansion-panel>
+    } @empty {
+        <div class="tq-empty">
+            <mat-icon class="tq-empty__icon"
+                      fontIcon="payments"></mat-icon>
+            <span class="tq-empty__title">No dividend announcements</span>
+            <span class="tq-empty__hint">Announcements appear here once a configured data source reports them.</span>
+        </div>
     }
 </mat-accordion>

@@ -1,27 +1,44 @@
-<div class="content">
+<div class="step">
     <input #fileUpload
            (change)="selectFile($event)"
            accept=".csv,text/csv"
-           class="file-input"
+           class="step__file-input"
            type="file">
-    <button (click)="fileUpload.click()"
-            color="primary"
-            mat-flat-button>
-        Select File
-    </button>
+
+    <div class="step__row">
+        <button (click)="fileUpload.click()"
+                matButton="filled">
+            Select File
+        </button>
+        <span class="tq-field-hint">A CSV export from your broker</span>
+    </div>
 
     @if (transactionImportStore.fileName(); as fileName) {
-        <p>File: {{ fileName }}</p>
-        <p>Parsed Rows: {{ transactionImportStore.rows().length }}</p>
+        <div class="step__summary">
+            <div class="step__summary-row">
+                <span class="tq-muted">File</span>
+                <span class="tq-truncate">{{ fileName }}</span>
+            </div>
+            <div class="step__summary-row">
+                <span class="tq-muted">Parsed rows</span>
+                <span class="tq-numeric">{{ transactionImportStore.rows().length }}</span>
+            </div>
+        </div>
+
         @if (transactionImportStore.separator() === null) {
-            <p class="error">Could not detect a column separator. Please check the file format.</p>
+            <div class="tq-notice tq-notice--error">
+                <mat-icon class="tq-notice__icon"
+                          fontIcon="error"></mat-icon>
+                <span>Could not detect a column separator. Please check the file format.</span>
+            </div>
         }
     }
 
-    <button [disabled]="!canProceed()"
-            class="next-button"
-            mat-button
-            matStepperNext>
-        Next
-    </button>
+    <div class="step__actions">
+        <button [disabled]="!canProceed()"
+                matButton="filled"
+                matStepperNext>
+            Next
+        </button>
+    </div>
 </div>

@@ -1,34 +1,29 @@
-<mat-card class="dashboard-transaction-card">
-    <mat-card-header class="card-header-compact">
-        <mat-card-title class="date-title">
-            {{ groupedTransactions()[0]?.date | tqDate }}
-        </mat-card-title>
-    </mat-card-header>
+<section class="transaction-group tq-card tq-card--flush">
+    <header class="transaction-group__head">
+        <span class="tq-section-label">{{ groupedTransactions()[0]?.date | tqDate }}</span>
+    </header>
 
-    <mat-card-content class="card-content-compact">
+    <div class="transaction-group__rows">
         @for (transaction of groupedTransactions(); track transaction.id) {
-            <div class="transaction-row">
-                <span class="transaction-type" [ngClass]="transaction.transactionType.toLowerCase()">
-                    <mat-icon [matTooltip]="transaction.transactionType | transactionTypeDisplayName">
-                        {{ transaction.transactionType | transactionTypeDisplayIcon }}
-                    </mat-icon>
-                </span>
+            <div class="transaction-group__row">
+                <mat-icon class="transaction-group__icon"
+                          [class]="'transaction-group__icon--' + transaction.transactionType.toLowerCase()"
+                          [matTooltip]="transaction.transactionType | transactionTypeDisplayName"
+                          [fontIcon]="transaction.transactionType | transactionTypeDisplayIcon">
+                </mat-icon>
 
-                <span>
-                    <security-logo [securityId]="transaction.securityId"
-                                   size="small">
-                    </security-logo>
-                </span>
+                <security-logo [securityId]="transaction.securityId"
+                               size="small">
+                </security-logo>
 
-                <span class="security-id">
+                <span class="transaction-group__name tq-truncate">
                     {{ transaction.securityId | securityName }}
                 </span>
 
-                <span>
+                <span class="transaction-group__value tq-numeric">
                     {{ transaction.cashFlow | tqCurrency:currency() }}
                 </span>
             </div>
         }
-    </mat-card-content>
-</mat-card>
-
+    </div>
+</section>

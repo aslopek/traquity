@@ -1,15 +1,24 @@
+// Raised, not sunken: the progress bar's track is --tq-surface-sunken, so on a sunken panel the unfilled part of
+// the bar disappears and what is left reads as a stub floating in space rather than a bar that is 3% along.
+// The whole panel also has to stay inside --tq-header-height, which is what the tight padding and line heights buy.
 .ai-download-indicator {
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
-  width: 28rem;
+  gap: var(--tq-space-1);
+  width: 22rem;
   min-width: 0;
-  margin-left: 1.5rem;
+  margin-left: var(--tq-space-5);
+  padding: var(--tq-space-1) var(--tq-space-3);
+  border: 0.0625rem solid var(--tq-border);
+  border-radius: var(--tq-radius-sm);
+  background-color: var(--tq-surface-raised);
 }
 
 .ai-download-indicator-label {
   display: block;
-  font-size: 0.75rem;
+  font-size: var(--tq-font-size-xs);
+  line-height: var(--tq-line-height-tight);
+  color: var(--tq-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

@@ -1,5 +1,4 @@
 import {Component, inject, input, InputSignal,} from "@angular/core";
-import {MatMenuItem} from "@angular/material/menu";
 import {Store} from "@ngrx/store";
 import {TqCurrencyPipe, TqDatePipe, SecurityNamePipe,} from "../../../../common";
 import {TqIconComponent} from "../../../../common/components/tq-icon/tq-icon.component";
@@ -13,7 +12,6 @@ import {AppState} from "../../../../store/app.state";
   selector: "app-dividend-announcement-notification",
   imports: [
     SecurityNamePipe,
-    MatMenuItem,
     TqIconComponent,
     SecurityLogoUrlPipe,
     TqDatePipe,

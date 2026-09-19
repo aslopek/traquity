@@ -1,17 +1,14 @@
-<div class="dividend-announcement-container">
-    <div class="dividend-announcement-icon">
-        <tq-icon [src]="dividendAnnouncement().securityId | securityLogoUrl">
-        </tq-icon>
-    </div>
+<div class="announcement">
+    <tq-icon [src]="dividendAnnouncement().securityId | securityLogoUrl"></tq-icon>
 
-    <div>
-        <span matListItemTitle>
+    <div class="announcement__text">
+        <span class="announcement__name tq-truncate">
             {{ dividendAnnouncement().securityId | securityName }}
         </span>
-        <span matListItemLine>
+        <span class="announcement__meta tq-numeric">
             {{ dividendAnnouncement().payDate | tqDate }}
         </span>
-        <span matListItemLine>
+        <span class="announcement__amount tq-numeric">
             {{ dividendAnnouncement().amountPerShare | tqCurrency : dividendAnnouncement().currency : '1.2-5' }}&nbsp;per&nbsp;share
         </span>
     </div>

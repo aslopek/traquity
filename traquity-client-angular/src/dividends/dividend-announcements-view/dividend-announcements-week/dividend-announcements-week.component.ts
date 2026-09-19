@@ -1,11 +1,10 @@
 import {Component, input, InputSignal, OnChanges, SimpleChanges,} from "@angular/core";
-import {MatList} from "@angular/material/list";
 import {DividendAnnouncementRead} from "../../../gen/api/notification/dividend-announcement";
 import {DividendAnnouncementComponent} from "../dividend-announcement/dividend-announcement.component";
 
 @Component({
   selector: "app-dividend-announcements-week",
-  imports: [DividendAnnouncementComponent, MatList],
+  imports: [DividendAnnouncementComponent],
   templateUrl: "./dividend-announcements-week.component.html",
   styleUrl: "./dividend-announcements-week.component.scss",
 })

@@ -1,21 +1,21 @@
-<div class="insecure-screen">
-    <div class="insecure-content">
-        <mat-icon class="insecure-icon">gpp_bad</mat-icon>
-        <h1 class="insecure-title">TLS verification is disabled</h1>
-        <p>
+<div class="insecure">
+    <section class="insecure__card">
+        <mat-icon class="insecure__icon"
+                  fontIcon="gpp_bad"></mat-icon>
+        <h1 class="insecure__title">TLS verification is disabled</h1>
+        <p class="tq-muted">
             The environment variable <code>NODE_TLS_REJECT_UNAUTHORIZED</code> is set to a value other than
             <code>1</code>. TraQuity downloads files over HTTPS and relies on certificate verification to do so
             safely, so it will not start like this.
         </p>
-        <p>
+        <p class="tq-muted">
             Unset <code>NODE_TLS_REJECT_UNAUTHORIZED</code>, or set it to <code>1</code>, then start the app again.
         </p>
-        <div class="actions">
-            <button mat-raised-button
-                    color="primary"
+        <div class="insecure__actions">
+            <button matButton="filled"
                     (click)="close()">
                 Close
             </button>
         </div>
-    </div>
+    </section>
 </div>

@@ -1,5 +1,5 @@
 @if (dataAvailable()) {
-    <mat-button-toggle-group class="range-toggle-group">
+    <mat-button-toggle-group class="price-chart__ranges">
         <mat-button-toggle (click)="changeDataRange('max')"
                            [checked]="dataRange() === 'max'">
             Max
@@ -57,30 +57,29 @@
     </mat-button-toggle-group>
 
     @if (isLoading()) {
-        <mat-progress-bar mode="query"
-                          color="accent"
-                          class="progress-bar">
-        </mat-progress-bar>
+        <mat-progress-bar mode="query"></mat-progress-bar>
     }
 
     <div (chartInit)="onChartInit($event)"
          [options]="prices() | historicalPriceChart : percent()"
-         class="chart"
+         class="price-chart__canvas"
          echarts>
     </div>
 
-    <div class="chart-footer">
-        <div class="chart-footer__inner">
-            <app-currency-select (onCurrencySelect)="changeCurrency($event)">
-            </app-currency-select>
+    <div class="price-chart__options">
+        <app-currency-select (onCurrencySelect)="changeCurrency($event)">
+        </app-currency-select>
 
-            <mat-checkbox class="chart-footer__checkbox"
-                          [checked]="percent()"
+        <mat-slide-toggle [checked]="percent()"
                           (change)="usePercent($event.checked)">
-                Show as Percent Change
-            </mat-checkbox>
-        </div>
+            Show as Percent Change
+        </mat-slide-toggle>
     </div>
 } @else {
-    <p class="no-data">No price data available</p>
+    <div class="tq-empty">
+        <mat-icon class="tq-empty__icon"
+                  fontIcon="show_chart"></mat-icon>
+        <span class="tq-empty__title">No price data available</span>
+        <span class="tq-empty__hint">Configure a historical price data source for this security.</span>
+    </div>
 }

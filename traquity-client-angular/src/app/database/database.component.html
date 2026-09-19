@@ -1,81 +1,90 @@
-<div class="flex-column">
-    <app-title-toolbar (onClose)="close()"
-                       title="Database"
-                       class="title-bar">
-    </app-title-toolbar>
-    <mat-drawer-container class="drawer">
-        <mat-drawer mode="side"
-                    opened>
+<app-title-toolbar (onClose)="close()"
+                   title="Database">
+</app-title-toolbar>
+
+<mat-drawer-container class="database__body"
+                      autosize>
+    <mat-drawer mode="side"
+                opened>
+        <div class="database__panel"
+             [class.database__panel--open]="showConnectionData()">
             @if (showConnectionData()) {
-                <div class="side-panel side-panel-toggle-button">
+                <div class="database__panel-head">
+                    <span class="tq-section-label">Connection</span>
                     <button mat-icon-button
+                            aria-label="Hide Connection Data"
                             matTooltip="Hide Connection Data"
                             (click)="toggleHideConnectionData()">
-                        <mat-icon>chevron_left</mat-icon>
+                        <mat-icon fontIcon="chevron_left"></mat-icon>
                     </button>
                 </div>
-                <div class="side-panel mat-typography">
-                    <h3 class="side-panel-text">JDBC URL</h3>
-                    <p class="side-panel-text">
-                        {{ databaseConfig().connectionString }}
-                        <mat-icon class="copy-button"
+
+                <div class="database__entry">
+                    <span class="tq-section-label">JDBC URL</span>
+                    <div class="database__value">
+                        <span class="database__value-text">{{ databaseConfig().connectionString }}</span>
+                        <mat-icon class="database__copy"
                                   fontIcon="content_copy"
                                   matTooltip="Copy"
                                   (click)="toggleHideConnectionData()"
                                   [cdkCopyToClipboard]="databaseConfig().connectionString">
                         </mat-icon>
-                    </p>
+                    </div>
                 </div>
-                <div class="side-panel">
-                    <h3 class="side-panel-text">Username</h3>
-                    <p class="side-panel-text">
-                        {{ databaseConfig().username }}
-                        <mat-icon class="copy-button"
+
+                <div class="database__entry">
+                    <span class="tq-section-label">Username</span>
+                    <div class="database__value">
+                        <span class="database__value-text">{{ databaseConfig().username }}</span>
+                        <mat-icon class="database__copy"
                                   fontIcon="content_copy"
                                   matTooltip="Copy"
                                   (click)="toggleHideConnectionData()"
                                   [cdkCopyToClipboard]="databaseConfig().username">
                         </mat-icon>
-                    </p>
+                    </div>
                 </div>
-                <div class="side-panel">
-                    <h3 class="side-panel-text">Password</h3>
-                    <p class="side-panel-text">
-                        {{ databaseConfig().password }}
-                        <mat-icon class="copy-button"
+
+                <div class="database__entry">
+                    <span class="tq-section-label">Password</span>
+                    <div class="database__value">
+                        <span class="database__value-text">{{ databaseConfig().password }}</span>
+                        <mat-icon class="database__copy"
                                   fontIcon="content_copy"
                                   matTooltip="Copy"
                                   (click)="toggleHideConnectionData()"
                                   [cdkCopyToClipboard]="databaseConfig().password">
                         </mat-icon>
-                    </p>
+                    </div>
                 </div>
+
                 @if (databaseConfig().fileLocation != null) {
-                    <div class="side-panel">
-                        <h3 class="side-panel-text">File Location</h3>
-                        <p class="side-panel-text">
-                            {{ databaseConfig().fileLocation }}
-                            <mat-icon class="copy-button"
+                    <div class="database__entry">
+                        <span class="tq-section-label">File Location</span>
+                        <div class="database__value">
+                            <span class="database__value-text">{{ databaseConfig().fileLocation }}</span>
+                            <mat-icon class="database__copy"
                                       fontIcon="content_copy"
                                       matTooltip="Copy"
                                       (click)="toggleHideConnectionData()"
                                       [cdkCopyToClipboard]="databaseConfig().fileLocation ?? ''">
                             </mat-icon>
-                        </p>
+                        </div>
                     </div>
                 }
             } @else {
-                <div>
-                    <button mat-icon-button
-                            matTooltip="Show Connection Data"
-                            (click)="toggleHideConnectionData()">
-                        <mat-icon>chevron_right</mat-icon>
-                    </button>
-                </div>
+                <button mat-icon-button
+                        aria-label="Show Connection Data"
+                        matTooltip="Show Connection Data"
+                        (click)="toggleHideConnectionData()">
+                    <mat-icon fontIcon="chevron_right"></mat-icon>
+                </button>
             }
-        </mat-drawer>
-        <iframe class="database-content"
-                [src]="databaseWebInterfaceUrl()">
-        </iframe>
-    </mat-drawer-container>
-</div>
+        </div>
+    </mat-drawer>
+
+    <iframe class="database__console"
+            title="H2 console"
+            [src]="databaseWebInterfaceUrl()">
+    </iframe>
+</mat-drawer-container>

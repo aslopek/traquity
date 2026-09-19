@@ -1,23 +1,26 @@
 @let ds = dataSource();
-<div class="data-source-entry"
-     [class.selected]="isSelected()"
+<div class="data-source-card"
+     [class.data-source-card--selected]="isSelected()"
+     [class.data-source-card--new]="ds === 'new'"
      (click)="clickDataSource()">
-    <div class="data-source-name">
+    <span class="data-source-card__name tq-truncate">
         @if (ds === 'new') {
-            Add new Data Source
+            Add new data source
         } @else {
             {{ ds.name }}
         }
-    </div>
-    <div class="side-button"
-         [class.disabled]="sideButtonDisabled()"
-         (click)="clickSideButton($event)"
-         mat-ripple
-         [matRippleDisabled]="sideButtonDisabled()">
+    </span>
+
+    <button class="data-source-card__action"
+            type="button"
+            [class.data-source-card__action--disabled]="sideButtonDisabled()"
+            [disabled]="sideButtonDisabled()"
+            [attr.aria-label]="ds === 'new' ? 'Add data source' : 'Delete data source'"
+            (click)="clickSideButton($event)">
         @if (ds === 'new') {
             <mat-icon fontIcon="add"></mat-icon>
         } @else {
             <mat-icon fontIcon="delete"></mat-icon>
         }
-    </div>
+    </button>
 </div>

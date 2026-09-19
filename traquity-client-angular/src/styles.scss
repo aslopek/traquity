@@ -1,135 +1,43 @@
-/* You can add global styles to this file, and also import other style files */
 @use '@angular/material' as mat;
+@use 'theme/palettes';
+@use 'theme/material';
+@use 'theme/tokens';
+@use 'theme/base';
+@use 'theme/utilities';
 
-@include mat.elevation-classes();
-@include mat.app-background();
+html {
+  color-scheme: dark;
 
-$primary-palette: (
-        50: #e2f3fe,
-        100: #b9e0fe,
-        200: #8bcdff,
-        300: #57b9ff,
-        400: #22aaff,
-        500: #009bff,
-        600: #008df1,
-        700: #007ade,
-        800: #0069cb,
-        900: #004bac,
-        A100: #e2f3ff,
-        A200: #b9e0ff,
-        A400: #8cd0ff,
-        A700: #6fc3ff,
-        contrast: (
-                50: rgba(black, 0.87),
-                100: rgba(black, 0.87),
-                200: rgba(black, 0.87),
-                300: rgba(black, 0.87),
-                400: rgba(black, 0.87),
-                500: white,
-                600: white,
-                700: white,
-                800: white,
-                900: white
-        )
-);
+  @include mat.theme((
+          color: (
+                  primary: palettes.$primary-palette,
+                  tertiary: palettes.$tertiary-palette,
+                  theme-type: dark,
+          ),
+          typography: (
+                  plain-family: (Roboto, "Helvetica Neue", sans-serif),
+                  brand-family: (Roboto, "Helvetica Neue", sans-serif),
+                  bold-weight: 700,
+                  medium-weight: 500,
+                  regular-weight: 400,
+          ),
+          density: (scale: -1),
+  ));
 
-$accent-palette: (
-        50: #fef3e7,
-        100: #fde0c3,
-        200: #fccc9b,
-        300: #fbb870,
-        400: #faa84f,
-        500: #f9992c,
-        600: #f89126,
-        700: #f6871f,
-        800: #f47e18,
-        900: #f16e0d,
-        A100: #ffffff,
-        A200: #fff8f2,
-        A400: #ffdfbf,
-        A700: #ffc6a6,
-        contrast: (
-                50: rgba(black, 0.87),
-                100: rgba(black, 0.87),
-                200: rgba(black, 0.87),
-                300: rgba(black, 0.87),
-                400: rgba(black, 0.87),
-                500: white,
-                600: white,
-                700: white,
-                800: white,
-                900: white
-        )
-);
+  @include mat.theme-overrides((
+          surface: var(--tq-surface-canvas),
+          surface-container: var(--tq-surface-raised),
+          surface-container-low: var(--tq-surface-chrome),
+          surface-container-high: var(--tq-surface-sunken),
+          surface-container-highest: var(--tq-surface-sunken),
+          background: var(--tq-surface-canvas),
+          outline-variant: var(--tq-border),
+          level1: var(--tq-shadow-1),
+          level2: var(--tq-shadow-2),
+          level3: var(--tq-shadow-3),
+          level4: var(--tq-shadow-3),
+          level5: var(--tq-shadow-3),
+  ));
 
-$traquity-primary: mat.m2-define-palette($primary-palette);
-$traquity-accent: mat.m2-define-palette($accent-palette);
-// The warn palette is optional (defaults to red).
-$traquity-warn: mat.m2-define-palette(mat.$m2-red-palette);
-$traquity-typography: mat.m2-define-typography-config(
-        $font-family: 'Roboto, "Helvetica Neue", sans-serif',
-);
-// Create the theme object. A theme consists of configurations for individual
-// theming systems such as "color" or "typography".
-$traquity-theme: mat.m2-define-dark-theme((
-        color: (
-                primary: $traquity-primary,
-                accent: $traquity-accent,
-                warn: $traquity-warn,
-        ),
-        typography: $traquity-typography,
-));
-
-@include mat.all-component-themes($traquity-theme);
-
-// Exposes the theme's primary color as a plain CSS custom property so TypeScript code that
-// builds inline/canvas styles (e.g. echarts option objects) can read it via getComputedStyle
-// instead of hardcoding a copy of the color.
-:root {
-  --tq-color-primary: #{mat.get-theme-color($traquity-theme, primary)};
-}
-
-$app-header-height: 5rem;
-
-// Semantic colors shared across components (kept here to avoid re-declaring the same
-// literals in every component that needs a positive/negative/muted/surface color).
-$color-positive: #22c55e;
-$color-positive-light: #4ade80;
-$color-positive-tint: rgba(34, 197, 94, 0.15);
-$color-negative: #ef4444;
-$color-negative-light: #f87171;
-$color-negative-tint: rgba(239, 68, 68, 0.15);
-$color-error: #f44336;
-$color-warning: mat.get-theme-color($traquity-theme, accent);
-$color-surface-card: #373737;
-$color-muted-text: #b0b0b0;
-$color-button-grey: #6e6e6e;
-
-html, body {
-  height: calc(100vh - $app-header-height);
-}
-
-body {
-  margin: 0;
-  font-family: Roboto, "Helvetica Neue", sans-serif;
-}
-
-.material-symbols-outlined {
-  font-family: 'Material Symbols Outlined';
-  font-weight: normal;
-  font-style: normal;
-  font-size: 1.5rem;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  display: inline-block;
-  white-space: nowrap;
-  word-wrap: normal;
-  direction: ltr;
-  -webkit-font-feature-settings: 'liga';
-  -webkit-font-smoothing: antialiased;
-  font-variation-settings: 'FILL' 0,
-  'wght' 400,
-  'GRAD' 0,
-  'opsz' 24
+  @include material.overrides();
 }

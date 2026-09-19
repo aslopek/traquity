@@ -1,41 +1,41 @@
-<div class="lots-container">
-    @for (lot of lotStore.lots(); track $index) {
-        <div class="lot">
-            <div class="lot-header">
-                {{ lot.securityId | securityName }}
-            </div>
+@for (lot of lotStore.lots(); track $index) {
+    <article class="lot tq-card tq-card--quiet">
+        <h3 class="lot__title">{{ lot.securityId | securityName }}</h3>
 
-            <div class="row">
-                <span class="row-label">Buy Date/Time</span>
-                <span class="row-value">{{ lot.date | tqDate }} {{ lot.time }}</span>
-            </div>
-
-            <div class="row">
-                <span class="row-label">Holding Period</span>
-                <span class="row-value">{{ (lot.holdingPeriodInDays / 365.25) | tqDecimal }}
-                    years ({{ (lot.holdingPeriodInDays | tqDecimal : '1.0-0') }} days)</span>
-            </div>
-
-            @if (!hideAbsoluteValues()) {
-                <div class="row">
-                    <span class="row-label">Current size</span>
-                    <span class="row-value">{{ lot.currentSizeAbsolute | tqCurrency : lot.currency }}
-                        ({{ lot.count | tqDecimal : '1.0-10' }})</span>
-                </div>
-            }
-
-            <div class="row">
-                <span class="row-label">CAGR</span>
-                <span class="row-value">{{ lot.cagr | tqPercent : '1.2-2' : true }}</span>
-            </div>
-
-            <div class="row">
-                <span class="row-label">Performance</span>
-                <app-performance-label [performanceAbsolute]="lot.performanceAbsolute"
-                                       [performanceRelative]="lot.performanceRelative"
-                                       [currency]="lot.currency">
-                </app-performance-label>
-            </div>
+        <div class="lot__row">
+            <span class="lot__label">Buy Date/Time</span>
+            <span class="lot__value tq-numeric">{{ lot.date | tqDate }} {{ lot.time }}</span>
         </div>
-    }
-</div>
+
+        <div class="lot__row">
+            <span class="lot__label">Holding Period</span>
+            <span class="lot__value tq-numeric">
+                {{ (lot.holdingPeriodInDays / 365.25) | tqDecimal }} years
+                ({{ lot.holdingPeriodInDays | tqDecimal : '1.0-0' }} days)
+            </span>
+        </div>
+
+        @if (!hideAbsoluteValues()) {
+            <div class="lot__row">
+                <span class="lot__label">Current size</span>
+                <span class="lot__value tq-numeric">
+                    {{ lot.currentSizeAbsolute | tqCurrency : lot.currency }}
+                    ({{ lot.count | tqDecimal : '1.0-10' }})
+                </span>
+            </div>
+        }
+
+        <div class="lot__row">
+            <span class="lot__label">CAGR</span>
+            <span class="lot__value tq-numeric">{{ lot.cagr | tqPercent : '1.2-2' : true }}</span>
+        </div>
+
+        <div class="lot__row">
+            <span class="lot__label">Performance</span>
+            <app-performance-label [performanceAbsolute]="lot.performanceAbsolute"
+                                   [performanceRelative]="lot.performanceRelative"
+                                   [currency]="lot.currency">
+            </app-performance-label>
+        </div>
+    </article>
+}

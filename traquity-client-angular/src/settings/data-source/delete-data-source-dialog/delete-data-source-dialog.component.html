@@ -1,19 +1,22 @@
-<div class="wrapper">
-    <div class="content">
-        <app-warn-icon class="icon"></app-warn-icon>
-        <p>Are you sure you want to delete {{ dataSource.name }}?</p>
-    </div>
+<app-title-toolbar (onClose)="cancel()"
+                   title="Delete Data Source">
+</app-title-toolbar>
 
-    <div class="button-group">
-        <button (click)="delete()"
-                mat-flat-button
-                color="warn">
-            Delete
-        </button>
-        <button (click)="cancel()"
-                mat-stroked-button
-                color="primary">
-            Cancel
-        </button>
+<div class="tq-dialog__body">
+    <div class="tq-notice tq-notice--warn">
+        <app-warn-icon class="tq-notice__icon"></app-warn-icon>
+        <span>Are you sure you want to delete {{ dataSource.name }}?</span>
     </div>
+</div>
+
+<div class="tq-dialog__actions">
+    <button (click)="cancel()"
+            matButton>
+        Cancel
+    </button>
+    <button (click)="delete()"
+            class="tq-danger"
+            matButton="filled">
+        Delete
+    </button>
 </div>

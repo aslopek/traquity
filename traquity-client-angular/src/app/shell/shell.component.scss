@@ -1,34 +1,65 @@
-@use '@angular/material' as mat;
-@use '../../styles' as styles;
-
-.app-header {
-  position: fixed;
-  width: 100%;
-  height: styles.$app-header-height;
-  top: 0;
-  z-index: 1000;
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
 }
 
-.app-body {
-  margin-top: styles.$app-header-height;
-  height: 100%;
+.shell__header {
+  flex: 0 0 auto;
+  z-index: 10;
 }
 
-.page-content {
-  padding: 1rem;
+.shell__body {
+  --mat-sidenav-container-width: var(--tq-side-menu-width);
+
+  flex: 1 1 auto;
+  min-height: 0;
+  background-color: var(--tq-surface-canvas);
 }
 
-.menu-item-icon {
-  margin-right: 0.5rem;
+.shell__nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-1);
+  padding: var(--tq-space-3);
 }
 
-.menu-item {
-  cursor: pointer;
-  margin: 1rem;
+.shell__nav-item {
   display: flex;
   align-items: center;
+  gap: var(--tq-space-3);
+  padding: var(--tq-space-3) var(--tq-space-4);
+  border: none;
+  border-radius: var(--tq-radius-sm);
+  background-color: transparent;
+  color: var(--tq-text-muted);
+  font-family: inherit;
+  font-size: var(--tq-font-size-base);
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--tq-duration-fast) var(--tq-ease),
+  color var(--tq-duration-fast) var(--tq-ease);
+
+  &:hover {
+    background-color: var(--tq-surface-hover);
+    color: var(--tq-text);
+  }
 }
 
-.menu-item.selected {
-  color: mat.get-theme-color(styles.$traquity-theme, primary);
+.shell__nav-item--selected {
+  background-color: var(--tq-accent-surface);
+  color: var(--tq-accent-soft);
+
+  &:hover {
+    background-color: var(--tq-accent-surface);
+    color: var(--tq-accent-soft);
+  }
+}
+
+.shell__content {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }

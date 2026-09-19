@@ -1,55 +1,48 @@
-@use '../../styles' as styles;
-
-$tab-bar-height: 3rem;
-
 :host {
-  display: block;
-  height: 100%;
-}
-
-.wrapper {
-  overflow-x: hidden;
-  height: calc(100vh - #{styles.$app-header-height} - #{$tab-bar-height});
-  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-}
-
-.container-flex {
-  display: flex;
-  gap: 1rem;
-  align-items: stretch;
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
-  height: 0;
+}
 
-  .left-column {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    flex: 0 0 calc(80% - 0.5rem);
-    overflow-y: auto;
-    min-height: 0;
+.depot-performance {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-4);
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: var(--tq-space-4) 0;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
 
-    &:only-child {
-      flex: 1 1 100%;
-    }
-  }
+.depot-performance__columns {
+  display: flex;
+  gap: var(--tq-space-4);
+  align-items: stretch;
+  flex: 1 1 auto;
+  min-height: 0;
+}
 
-  .right-column {
-    flex: 1;
-    overflow-y: auto;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
+.depot-performance__main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-4);
+  flex: 0 0 calc(75% - var(--tq-space-4));
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: var(--tq-space-2);
+
+  &:only-child {
+    flex: 1 1 100%;
   }
 }
 
-app-transaction-overview {
-  display: block;
-  margin-bottom: 2rem !important;
-}
-
-.margin-bottom {
-  margin-bottom: 1rem;
+.depot-performance__side {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-right: var(--tq-space-2);
 }

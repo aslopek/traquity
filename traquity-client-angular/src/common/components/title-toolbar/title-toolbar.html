@@ -1,9 +1,9 @@
-<mat-toolbar>
-    <span>{{ title }}</span>
-    <span class="spacer"></span>
+<header class="title-toolbar">
+    <h2 class="title-toolbar__title tq-truncate">{{ title }}</h2>
     <button (click)="close()"
             matTooltip="Close"
+            aria-label="Close"
             mat-icon-button>
         <mat-icon fontIcon="close"></mat-icon>
     </button>
-</mat-toolbar>
+</header>

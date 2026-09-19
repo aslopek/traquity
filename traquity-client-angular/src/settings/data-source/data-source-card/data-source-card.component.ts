@@ -1,13 +1,11 @@
 import {Component, computed, EventEmitter, inject, input, InputSignal, Output, Signal} from "@angular/core";
 import {DataSourceWithId} from "../data-source.type";
-import {MatRipple} from "@angular/material/core";
 import {MatIcon} from "@angular/material/icon";
 import {DataSourceStore, ReadableDataSourceStore} from "../store/data-source.store";
 
 @Component({
   selector: "app-data-source-card",
   imports: [
-    MatRipple,
     MatIcon
   ],
   templateUrl: "./data-source-card.component.html",

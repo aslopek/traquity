@@ -3,8 +3,7 @@ import {CommonModule} from '@angular/common';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
-import {MatButtonToggleModule} from '@angular/material/button-toggle';
-import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
 import {MatRadioModule} from '@angular/material/radio';
 import {FixedInterestBenchmark} from "../../store/benchmark/benchmark.type";
 import {FieldTree, form, max, min, required, SchemaPathTree,} from "@angular/forms/signals";
@@ -32,8 +31,7 @@ type BenchmarkFormModel = {
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatButtonToggleModule,
-    MatCheckboxModule,
+    MatSlideToggleModule,
     MatRadioModule,
     MatTooltip
   ],

@@ -1,4 +1,5 @@
 import {Component, DestroyRef, inject,} from "@angular/core";
+import {MatIcon} from "@angular/material/icon";
 import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
 import {MatAccordion, MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle,} from "@angular/material/expansion";
 import {LetDirective} from "@ngrx/component";
@@ -20,6 +21,7 @@ import {AppState} from "../../store/app.state";
     MatExpansionPanelTitle,
     TqDatePipe,
     LetDirective,
+    MatIcon,
   ],
   templateUrl: "./dividend-announcements-view.component.html",
   styleUrl: "./dividend-announcements-view.component.scss",

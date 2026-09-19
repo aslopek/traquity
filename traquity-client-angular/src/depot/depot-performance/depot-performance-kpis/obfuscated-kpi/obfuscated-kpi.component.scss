@@ -1,15 +1,12 @@
 .obfuscated {
-  letter-spacing: 0.1875rem;
-  color: rgba(255, 255, 255, 0.4);
-
-  font-size: 1.625rem;
+  display: inline-block;
+  font-size: var(--tq-font-size-2xl);
   font-weight: 700;
-  color: #ffffff;
-  font-variant-numeric: tabular-nums;
-
+  line-height: var(--tq-line-height-tight);
+  letter-spacing: 0.1875rem;
+  color: var(--tq-text);
   filter: blur(0.3125rem);
   opacity: 0.8;
-  display: inline-block;
 
   // security (in case real values are being blurred)
   pointer-events: none; // prevent mouse-over events

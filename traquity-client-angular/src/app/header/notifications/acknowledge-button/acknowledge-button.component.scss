@@ -1,3 +1,22 @@
-.acknowledge-button {
+.acknowledge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0.0625rem solid var(--tq-border);
+  border-radius: var(--tq-radius-sm);
+  background-color: transparent;
+  color: var(--tq-text-muted);
   cursor: pointer;
+  transition: background-color var(--tq-duration-fast) var(--tq-ease),
+  border-color var(--tq-duration-fast) var(--tq-ease),
+  color var(--tq-duration-fast) var(--tq-ease);
+
+  &:hover {
+    background-color: var(--tq-positive-surface);
+    border-color: var(--tq-positive-border);
+    color: var(--tq-positive-soft);
+  }
 }

@@ -6,6 +6,7 @@ import {firstValueFrom} from "rxjs";
 import {TqDatePipe, SecurityNamePipe, TransactionTypeDisplayIconPipe, TransactionTypeDisplayNamePipe,} from "../../../common";
 import {TransactionApi, TransactionRead,} from "../../../gen/api/depot-transaction";
 import {SecurityApi} from "../../../gen/api/security";
+import {TitleToolbarComponent} from "../../../common/components/title-toolbar/title-toolbar.component";
 import {Store} from "@ngrx/store";
 import {AppState} from "../../../store/app.state";
 
@@ -17,6 +18,7 @@ import {AppState} from "../../../store/app.state";
     MatButtonModule,
     MatIconModule,
     TransactionTypeDisplayIconPipe,
+    TitleToolbarComponent,
   ],
   templateUrl: "./transaction-delete.component.html",
   styleUrl: "./transaction-delete.component.scss",

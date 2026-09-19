@@ -1,0 +1,101 @@
+:root {
+  --tq-header-height: 4rem;
+  --tq-side-menu-width: 15rem;
+
+  --tq-surface-canvas: #181c20;
+  --tq-surface-chrome: #1c2024;
+  --tq-surface-raised: #252a2f;
+  --tq-surface-sunken: #2d3135;
+  --tq-surface-hover: rgba(255, 255, 255, 0.05);
+  --tq-surface-active: rgba(255, 255, 255, 0.09);
+  --tq-surface-overlay: rgba(0, 0, 0, 0.6);
+
+  --tq-border: rgba(255, 255, 255, 0.08);
+  --tq-border-strong: rgba(255, 255, 255, 0.16);
+  --tq-border-accent: var(--mat-sys-primary);
+
+  --tq-text: var(--mat-sys-on-surface);
+  --tq-text-muted: #a1a8b2;
+  --tq-text-faint: rgba(255, 255, 255, 0.42);
+  --tq-text-on-accent: var(--mat-sys-on-primary);
+
+  --tq-accent: var(--mat-sys-primary);
+  --tq-accent-soft: #62b0ff;
+  --tq-accent-surface: rgba(0, 155, 255, 0.14);
+  --tq-accent-border: rgba(0, 155, 255, 0.38);
+
+  --tq-positive: #22c55e;
+  --tq-positive-soft: #4ade80;
+  --tq-positive-surface: rgba(34, 197, 94, 0.14);
+  --tq-positive-border: rgba(34, 197, 94, 0.32);
+
+  --tq-negative: #ef4444;
+  --tq-negative-soft: #f87171;
+  --tq-negative-surface: rgba(239, 68, 68, 0.14);
+  --tq-negative-border: rgba(239, 68, 68, 0.32);
+  --tq-text-on-negative: #ffffff;
+
+  --tq-warning: #f9992c;
+  --tq-warning-soft: #ffb874;
+  --tq-warning-surface: rgba(249, 153, 44, 0.14);
+  --tq-warning-border: rgba(249, 153, 44, 0.32);
+
+  --tq-flat: #8b93a0;
+
+  --tq-space-1: 0.25rem;
+  --tq-space-2: 0.5rem;
+  --tq-space-3: 0.75rem;
+  --tq-space-4: 1rem;
+  --tq-space-5: 1.5rem;
+  --tq-space-6: 2rem;
+  --tq-space-7: 3rem;
+  --tq-space-8: 4rem;
+
+  --tq-radius-xs: 0.25rem;
+  --tq-radius-sm: 0.5rem;
+  --tq-radius-md: 0.75rem;
+  --tq-radius-lg: 1rem;
+  --tq-radius-pill: 999rem;
+
+  // The color of --tq-shadow-2 on its own, for a canvas-rendered shadow that takes color and blur separately
+  --tq-shadow-color: rgba(0, 0, 0, 0.45);
+  --tq-shadow-1: 0 0.0625rem 0.125rem rgba(0, 0, 0, 0.5);
+  --tq-shadow-2: 0 0.5rem 1.5rem var(--tq-shadow-color);
+  --tq-shadow-3: 0 1.5rem 3rem rgba(0, 0, 0, 0.6);
+
+  --tq-duration-fast: 120ms;
+  --tq-duration: 180ms;
+  --tq-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  // Glass, for a surface floating directly over a chart and nothing else — see the styleguide. The color is
+  // --tq-surface-raised at 72%, so the two stay one shade.
+  --tq-glass-bg: rgba(37, 42, 47, 0.72);
+  --tq-glass-blur: blur(0.75rem) saturate(1.4);
+
+  --tq-font: Roboto, "Helvetica Neue", sans-serif;
+  // Only for literal code (JSON paths, URL patterns, headers). Resolves to a font already on the machine,
+  // so it fetches nothing and needs no bundled file.
+  --tq-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --tq-font-size-xs: 0.6875rem;
+  --tq-font-size-sm: 0.75rem;
+  --tq-font-size-base: 0.875rem;
+  --tq-font-size-md: 1rem;
+  --tq-font-size-lg: 1.25rem;
+  --tq-font-size-xl: 1.5rem;
+  --tq-font-size-2xl: 1.75rem;
+  --tq-font-size-3xl: 2.25rem;
+  --tq-line-height-tight: 1.2;
+  --tq-line-height: 1.5;
+  // em, not rem: a label's letter-spacing has to scale with that label's own font-size
+  --tq-tracking-label: 0.06em;
+
+  // Six hue families, one per slot, spread around the color wheel and stepped so that any two
+  // neighbouring slots stay apart under protanopia and deuteranopia as well. Slots land side by side
+  // as bars, so a replacement value is only safe once the pair it joins has been re-measured.
+  --tq-series-1: #4fb3ff;
+  --tq-series-2: #da720d;
+  --tq-series-3: #03aa8e;
+  --tq-series-4: #a278e4;
+  --tq-series-5: #e0c931;
+  --tq-series-6: #f57eba;
+}

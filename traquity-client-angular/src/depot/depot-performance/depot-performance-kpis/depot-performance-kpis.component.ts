@@ -1,6 +1,5 @@
 import {Component, inject, Signal} from "@angular/core";
 import {DepotPerformanceStore, ReadableDepotPerformanceStore} from "../store/depot-performance.store";
-import {MatCard, MatCardContent, MatCardHeader, MatCardSubtitle} from "@angular/material/card";
 import {TqCurrencyPipe, TqDatePipe, TqPercentPipe} from "../../../common";
 import {Store} from "@ngrx/store";
 import {AppState} from "../../../store/app.state";
@@ -13,10 +12,6 @@ import {DepotPerformanceKpis} from "../store/computed/depot-performance-kpis";
 @Component({
   selector: "app-depot-performance-kpis",
   imports: [
-    MatCard,
-    MatCardContent,
-    MatCardSubtitle,
-    MatCardHeader,
     TqCurrencyPipe,
     TqPercentPipe,
     ObfuscatedKpiComponent,

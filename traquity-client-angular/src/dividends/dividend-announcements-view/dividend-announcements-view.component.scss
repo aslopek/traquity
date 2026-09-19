@@ -1,3 +1,19 @@
-.week {
-  margin-bottom: 0.5rem;
+:host {
+  display: block;
+}
+
+.announcements__week {
+  margin-bottom: var(--tq-space-3);
+  border: 0.0625rem solid var(--tq-border);
+}
+
+.announcements__week-title {
+  flex: 1 1 auto;
+  font-weight: 500;
+}
+
+mat-panel-title {
+  display: flex;
+  align-items: center;
+  gap: var(--tq-space-3);
 }

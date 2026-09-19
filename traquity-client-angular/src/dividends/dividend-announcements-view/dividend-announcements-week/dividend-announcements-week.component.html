@@ -1,54 +1,41 @@
-<div class="row">
-    <!-- Workaround: Having an invisible <mat-list> allows the <mat-list-item>s to be rendered correctly. -->
-    <mat-list class="hidden-list"></mat-list>
-
-    <!-- Monday -->
-    <div class="column margin-right">
-        <p>Monday</p>
-
+<div class="week">
+    <section class="week__day">
+        <h3 class="tq-section-label">Monday</h3>
         @for (dividendAnnouncement of monday; track dividendAnnouncement) {
             <app-dividend-announcement [dividendAnnouncement]="dividendAnnouncement">
             </app-dividend-announcement>
         }
-    </div>
+    </section>
 
-    <!-- Tuesday -->
-    <div class="column margin-right">
-        <p>Tuesday</p>
-
+    <section class="week__day">
+        <h3 class="tq-section-label">Tuesday</h3>
         @for (dividendAnnouncement of tuesday; track dividendAnnouncement) {
             <app-dividend-announcement [dividendAnnouncement]="dividendAnnouncement">
             </app-dividend-announcement>
         }
-    </div>
+    </section>
 
-    <!-- Wednesday -->
-    <div class="column margin-right">
-        <p>Wednesday</p>
-
+    <section class="week__day">
+        <h3 class="tq-section-label">Wednesday</h3>
         @for (dividendAnnouncement of wednesday; track dividendAnnouncement) {
             <app-dividend-announcement [dividendAnnouncement]="dividendAnnouncement">
             </app-dividend-announcement>
         }
-    </div>
+    </section>
 
-    <!-- Thursday -->
-    <div class="column margin-right">
-        <p>Thursday</p>
-
+    <section class="week__day">
+        <h3 class="tq-section-label">Thursday</h3>
         @for (dividendAnnouncement of thursday; track dividendAnnouncement) {
             <app-dividend-announcement [dividendAnnouncement]="dividendAnnouncement">
             </app-dividend-announcement>
         }
-    </div>
+    </section>
 
-    <!-- Friday -->
-    <div class="column">
-        <p>Friday</p>
-
+    <section class="week__day">
+        <h3 class="tq-section-label">Friday</h3>
         @for (dividendAnnouncement of friday; track dividendAnnouncement) {
             <app-dividend-announcement [dividendAnnouncement]="dividendAnnouncement">
             </app-dividend-announcement>
         }
-    </div>
+    </section>
 </div>

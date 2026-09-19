@@ -1,28 +1,21 @@
-<div>
-    @if (depotValues().length > 0) {
-        <div (chartInit)="onChartInit($event)"
+@if (depotValues().length > 0) {
+    <section class="tq-card performance-chart">
+        <div class="performance-chart__canvas"
+             (chartInit)="onChartInit($event)"
              [options]="depotValues() | depotPerformanceChart : hideAbsoluteValues() : currency() : showInvestedCapital() : filteredDepotValues() : benchmark()"
              echarts>
         </div>
 
-        <div class="chart-footer">
-            <div class="chart-footer__inner">
-                <div>
-                    <mat-checkbox class="chart-footer__checkbox"
-                                  [checked]="addCashToAbsoluteValue()"
-                                  (change)="setAddCashToAbsoluteValue($event.checked)">
-                        Add Cash to Absolute Value
-                    </mat-checkbox>
-                </div>
+        <div class="performance-chart__options">
+            <mat-slide-toggle [checked]="addCashToAbsoluteValue()"
+                              (change)="setAddCashToAbsoluteValue($event.checked)">
+                Add Cash to Absolute Value
+            </mat-slide-toggle>
 
-                <div>
-                    <mat-checkbox class="chart-footer__checkbox"
-                                  [checked]="showInvestedCapital()"
-                                  (change)="setShowInvestedCapital($event.checked)">
-                        Show Invested Capital
-                    </mat-checkbox>
-                </div>
-            </div>
+            <mat-slide-toggle [checked]="showInvestedCapital()"
+                              (change)="setShowInvestedCapital($event.checked)">
+                Show Invested Capital
+            </mat-slide-toggle>
         </div>
-    }
-</div>
+    </section>
+}

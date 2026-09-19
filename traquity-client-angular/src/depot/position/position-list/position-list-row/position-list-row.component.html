@@ -1,92 +1,100 @@
 @let pos = position();
 @let income = positionIncome();
 
-<div class="position-item"
+<div class="position-row"
      (click)="openLotsDialog()">
-    <tq-icon class="margin-right"
-             [src]="pos.securityIds[0] | securityLogoUrl">
-    </tq-icon>
+    <tq-icon [src]="pos.securityIds[0] | securityLogoUrl"></tq-icon>
 
-    <h3 class="margin-right"
-        style="width: calc(30% - 4rem);">
+    <span class="position-row__name tq-truncate"
+          style="width: calc(30% - 4rem);">
         {{ pos.displayName }}
-    </h3>
+    </span>
 
-    <div class="position-item-column margin-right"
+    <div class="position-row__column"
          style="width: 20%;">
-        <h4>
+        <span class="position-row__value tq-numeric">
             {{ (useBuyIn() ? pos.buyInRelative : pos.currentSizeRelative) | tqPercent }}
-        </h4>
+        </span>
     </div>
 
     @if (!hideAbsoluteValues()) {
         @let absolute = useBuyIn() ? pos.buyInAbsolute : pos.currentSizeAbsolute;
-        <div class="position-item-column margin-right"
+        <div class="position-row__column"
              style="width: 20%;">
-            <h4>
+            <span class="position-row__value tq-numeric">
                 {{ absolute | tqCurrency:depotCurrency() }}
-            </h4>
-            <h5 class="sub-value">
-                {{ pos.count | tqDecimal:'1.0-10' }} x {{ absolute / pos.count | tqCurrency:depotCurrency() }}
-            </h5>
+            </span>
+            <span class="position-row__sub-value tq-numeric">
+                {{ pos.count | tqDecimal:'1.0-10' }} × {{ absolute / pos.count | tqCurrency:depotCurrency() }}
+            </span>
         </div>
     }
 
-    <div class="position-item-column margin-right"
+    <div class="position-row__column"
          style="width: 15%;">
         @if (hideAbsoluteValues()) {
-            <h4 [class]="pos.performanceRelative >= 0 ? 'performance-positive' : 'performance-negative'">
+            <span class="tq-pill"
+                  [class.tq-pill--positive]="pos.performanceRelative >= 0"
+                  [class.tq-pill--negative]="pos.performanceRelative < 0">
                 @if (pos.buyInAbsolute === 0) {
                     +&infin;
                 } @else {
                     {{ pos.performanceRelative >= 0 ? '+' : '' }}{{ pos.performanceRelative | tqPercent }}
                 }
-            </h4>
+            </span>
         } @else {
-            <h4 [class]="pos.performanceAbsolute >= 0 ? 'performance-positive' : 'performance-negative'">
+            <span class="tq-pill"
+                  [class.tq-pill--positive]="pos.performanceAbsolute >= 0"
+                  [class.tq-pill--negative]="pos.performanceAbsolute < 0">
                 {{ pos.performanceAbsolute >= 0 ? '+' : '' }}{{ pos.performanceAbsolute | tqCurrency:depotCurrency() }}
-            </h4>
-            <h5 [class]="pos.performanceRelative >= 0 ? 'performance-positive' : 'performance-negative'">
+            </span>
+            <span class="position-row__sub-pill"
+                  [class.position-row__sub-pill--positive]="pos.performanceRelative >= 0"
+                  [class.position-row__sub-pill--negative]="pos.performanceRelative < 0">
                 @if (pos.buyInAbsolute === 0) {
                     +&infin;
                 } @else {
                     {{ pos.performanceRelative >= 0 ? '+' : '' }}{{ pos.performanceRelative | tqPercent }}
                 }
-            </h5>
+            </span>
         }
     </div>
 
     @if (income != null) {
         @let netIncome = income.absoluteValueNet;
-        @let netIncomeClass = netIncome >= 0 ? 'performance-positive' : 'performance-negative';
         @let transactionCount = income.transactions.length;
-        <div class="position-item-column margin-right"
+        <div class="position-row__column"
              style="width: 15%"
              [matTooltip]="'Net Income (' + (transactionCount | tqDecimal:'1.0')
                            + ' transaction' + (transactionCount === 1 ? '' : 's') + ')'">
             @if (hideAbsoluteValues()) {
-                <h4 [class]="netIncomeClass">
+                <span class="tq-pill"
+                      [class.tq-pill--positive]="netIncome >= 0"
+                      [class.tq-pill--negative]="netIncome < 0">
                     @if (pos.buyInAbsolute === 0) {
                         +&infin;
                     } @else {
                         {{ netIncome >= 0 ? '+' : '' }}{{ (netIncome / pos.buyInAbsolute) | tqPercent }}
                     }
-                </h4>
+                </span>
             } @else {
-                <h4 [class]="netIncomeClass">
+                <span class="tq-pill"
+                      [class.tq-pill--positive]="netIncome >= 0"
+                      [class.tq-pill--negative]="netIncome < 0">
                     {{ netIncome >= 0 ? '+' : '' }}{{ netIncome | tqCurrency:depotCurrency() }}
-                </h4>
-                <h5 [class]="netIncomeClass">
+                </span>
+                <span class="position-row__sub-pill"
+                      [class.position-row__sub-pill--positive]="netIncome >= 0"
+                      [class.position-row__sub-pill--negative]="netIncome < 0">
                     @if (pos.buyInAbsolute === 0) {
                         +&infin;
                     } @else {
                         {{ netIncome >= 0 ? '+' : '' }}{{ (netIncome / pos.buyInAbsolute) | tqPercent }}
                     }
-                </h5>
+                </span>
             }
         </div>
     } @else {
-        <div style="width:15%">
-        </div>
+        <div style="width:15%"></div>
     }
 </div>

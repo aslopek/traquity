@@ -2,7 +2,7 @@ import {Component, computed, effect, EffectRef, inject, Signal, signal, Writable
 import {MatProgressBarModule} from "@angular/material/progress-bar";
 import {MatAutocompleteModule} from "@angular/material/autocomplete";
 import {MatButtonModule} from "@angular/material/button";
-import {MatCheckboxModule} from "@angular/material/checkbox";
+import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatDatepickerModule} from "@angular/material/datepicker";
 import {MatDialogRef} from "@angular/material/dialog";
 import {MatIconModule} from "@angular/material/icon";
@@ -63,7 +63,7 @@ const timeRegex: RegExp = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
     MatSelectModule,
     MatIconModule,
     TransactionTypeDisplayIconPipe,
-    MatCheckboxModule,
+    MatSlideToggleModule,
     TqNetValuePipe,
     TqCurrencyPipe,
     FormField,

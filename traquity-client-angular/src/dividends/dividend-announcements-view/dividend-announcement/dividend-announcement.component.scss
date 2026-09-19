@@ -1,10 +1,35 @@
-.dividend-announcement-container {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  margin-bottom: 1rem;
+:host {
+  display: block;
 }
 
-.dividend-announcement-icon {
-  margin-right: 1rem;
+.announcement {
+  display: flex;
+  align-items: center;
+  gap: var(--tq-space-3);
+  padding: var(--tq-space-2);
+  border-radius: var(--tq-radius-sm);
+  transition: background-color var(--tq-duration-fast) var(--tq-ease);
+  min-width: 0;
+
+  &:hover {
+    background-color: var(--tq-surface-hover);
+  }
+}
+
+.announcement__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.announcement__name {
+  font-weight: 500;
+  font-size: var(--tq-font-size-base);
+}
+
+.announcement__meta,
+.announcement__amount {
+  font-size: var(--tq-font-size-sm);
+  color: var(--tq-text-muted);
 }
