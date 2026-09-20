@@ -7,8 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- An `AI` section in the settings for downloading and configuring local LLMs to enable AI-driven features.
+- **Import PDF** in the *Add Transaction* dialog: AI-driven feature for importing transactions from PDF files.
+
 ### Changed
 
+- A new, consistent design across the whole app.
+- The side menu starts out open on the first run of the app.
 - Dependency updates.
 
 ## [1.1.1] - 2026-08-22

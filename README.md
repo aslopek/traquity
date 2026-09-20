@@ -245,11 +245,12 @@ certificate verification for the whole process. The app treats that as a state i
 rather than as a setting: it starts into a dead end that explains the variable, spawns no JVM, and
 registers two IPC channels — read the startup state, and quit.
 
-**What the app sends out.** Four recipients, and the app names all of them itself, in the About
+**What the app sends out.** Five recipients, and the app names all of them itself, in the About
 dialog's `Transparency` tab:
 GitHub for the update check (once per start), the ECB for exchange rates (once per backend start),
 whichever market data provider you configured (once per backend start, carrying the security
-identifier and your API key), and Amazon Corretto if you ask for a JDK download. There is no telemetry, no
+identifier and your API key), Amazon Corretto if you ask for a JDK download, and Hugging Face if
+you ask for an AI model download. There is no telemetry, no
 analytics and no crash reporting, and nothing about your portfolio leaves the machine other than
 the security identifier a data source you configured is asked about. That notice is a claim about
 the code, so adding a request to a new recipient means updating it in the same change — see the

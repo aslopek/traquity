@@ -135,8 +135,8 @@ Explain things short, crisp, and straight to the point.
 The app tells the user, in the About dialog's `Transparency` tab, every server it contacts that this project does not run itself — who
 receives the request, when it happens, and what it carries. That text is
 `traquity-client-angular/src/app/privacy/privacy-notice/privacy-notice.component.html`, and it is a claim about the code in all three
-parts: the renderer's update check, the Electron main process's JDK download, and the backend's exchange-rate and market-data fetches are
-all listed there.
+parts: the renderer's update check, the Electron main process's JDK download and AI model download, and the backend's exchange-rate and
+market-data fetches are all listed there.
 
 **A change that makes the app contact a recipient the notice does not name updates the notice in the same change**, in whichever part the
 request lives. The same goes for a change to *when* an existing request happens (a poll where there was one request per start, say). A

@@ -10,6 +10,24 @@ Actions tab.
 It bumps the version, commits and tags on `main`, builds the three OS distributions, and publishes the GitHub Release with the notes
 `scripts/prepare-release.js` cut from `CHANGELOG.md`.
 
+From the Actions tab, or from a terminal:
+
+```shell
+gh workflow run release.yml -f bump=patch
+gh run watch
+```
+
+`bump` is `patch`, `minor` or `none`:
+
+| Value   | When                                                                                    |
+|---------|-----------------------------------------------------------------------------------------|
+| `patch` | Dependency updates, fixes, an edited packaged prompt — see `architecture/ai.md` ADR-012 |
+| `minor` | Anything new a user can see: a feature, a screen                                        |
+| `none`  | Releases the current version as-is, leaving `package.json` and the POM untouched        |
+
+The dispatch runs against `main`, so merge `next-release` first. Everything else is the workflow's: nothing in the working tree needs a
+version edited by hand.
+
 ### Tokens
 
 The workflow runs on the default `GITHUB_TOKEN`. There is no Personal Access Token in this repository.

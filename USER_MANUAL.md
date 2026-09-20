@@ -3,7 +3,7 @@
 TraQuity is a local-first desktop application for tracking investment portfolios. It records depots, transactions, dividends and
 securities in a single encrypted database file on your own machine. There is no account and no cloud storage. The only outgoing network
 traffic is the market data you configure yourself, the European Central Bank exchange rates, an update check against GitHub, and — if you
-ask for it — a Java runtime download.
+ask for them — a Java runtime download and an AI model download.
 
 This manual is written to be read both by people and by language models answering questions about TraQuity. Every section states facts in
 short sentences, names buttons and screens exactly as the app labels them, and avoids relying on context from other sections.
@@ -24,6 +24,7 @@ short sentences, names buttons and screens exactly as the app labels them, and a
 - [Recording transactions](#recording-transactions)
 - [Managing securities](#managing-securities)
 - [Market data sources](#market-data-sources)
+- [AI features](#ai-features)
 - [A tour of the screens](#a-tour-of-the-screens)
 - [Understanding your depot performance numbers](#understanding-your-depot-performance-numbers)
 - [Dev mode and direct database access](#dev-mode-and-direct-database-access)
@@ -38,6 +39,8 @@ short sentences, names buttons and screens exactly as the app labels them, and a
 | Configuration file      | `traquity.config.json` in a `traquity` folder in your home directory, e.g. `C:\Users\<you>\traquity\traquity.config.json` |
 | Log file                | `traquity.log` next to it, deleted and rewritten on every start                                                           |
 | Downloaded Java runtime | `java/` in the app's working directory (only if you choose the download)                                                  |
+| Downloaded AI model     | A folder you pick per download (only if you choose to download one)                                                       |
+| AI prompt overrides     | `ai/prompts/` in the same `traquity` folder (only if you create them)                                                     |
 | Backend port            | `127.0.0.1:23726`                                                                                                         |
 | H2 console port         | `127.0.0.1:29232` (reachable through the app's dev mode)                                                                  |
 | Required runtime        | Java 25 (any distribution) — configured, found on the `PATH`, or downloaded by the app                                    |
@@ -90,6 +93,7 @@ What the app sends, and when:
 | European Central Bank                 | automatically, on every backend start          | nothing of yours; the daily rates file        |
 | the market data sources you configure | on every backend start, and on a manual update | the symbol/ISIN and the API key in your URL   |
 | Amazon Corretto (`corretto.aws`)      | only when you start the Java download          | nothing of yours                              |
+| Hugging Face (`huggingface.co`)       | only when you start an AI model download       | nothing of yours; the model file              |
 
 Links you click — the GitHub button, the package links in the About dialog, the Corretto FAQ link — open in your default browser, which
 makes those requests instead of the app.
@@ -97,6 +101,8 @@ makes those requests instead of the app.
 The market data row is the only one that says anything about your portfolio, and it is the one you control: no request is made until you
 enter an API key and assign a source to a security, and deleting or deactivating a source stops it. The provider's own terms and privacy
 policy apply to what it does with what it receives.
+
+Hugging Face is only contacted for downloading GGUF files. The AI features themselves run on your computer. See [AI features](#ai-features).
 
 ## The configuration screen
 
@@ -106,7 +112,7 @@ Nothing is written until a finish button is pressed, except where noted below.
 ![The configuration screen with its Database and Java sections](./doc-assets/configuration-screen.png)
 
 You reach it in five ways: on a first run, after an unreadable configuration file, when the configuration names no database, when Java
-cannot be resolved, and through **Settings → Database Configuration → Restart & configure database…**.
+cannot be resolved, and through **Settings → Database → Restart & configure database…**.
 
 ### Notices at the top
 
@@ -226,7 +232,7 @@ You can keep any number of databases, for example a real portfolio and a playgro
 **Known databases** dropdown lists the ones the app has a password record for, and **Use existing…** reaches any other file. **Create new…**
 starts an empty one, encrypted with the password you define there.
 
-To switch databases while the app is running, use **Settings → Database Configuration → Restart & configure database…**. The app restarts
+To switch databases while the app is running, use **Settings → Database → Restart & configure database…**. The app restarts
 into the configuration screen.
 
 ### Backups
@@ -277,6 +283,15 @@ next write. `traquity.log` (see [Troubleshooting](#troubleshooting)) lives in th
   "java": {
     "path": null,
     "signature": null
+  },
+  "ai": {
+    "confirmedNotice": "<base64>",
+    "models": {
+      "qwen-4b": {
+        "path": "D:\\models\\Qwen_Qwen3.5-4B-Q4_K_M.gguf",
+        "active": true
+      }
+    }
   }
 }
 ```
@@ -289,6 +304,8 @@ next write. `traquity.log` (see [Troubleshooting](#troubleshooting)) lives in th
 | `java.path`            | Absolute path of a `java` binary to use, or `null` to resolve `java` from the `PATH`                    |
 | `java.signature`       | Set by the app for a runtime it downloaded itself; `null` for a picked or automatically resolved one    |
 | `configureOnNextStart` | Written by the Settings action, consumed and removed at the next start                                  |
+| `ai.confirmedNotice`   | Records that you confirmed the AI notice                                                                |
+| `ai.models`            | One entry per downloaded model: where its file is, and whether it is the active one                     |
 
 Notes:
 
@@ -296,6 +313,7 @@ Notes:
 - A database with no `auth` entry is treated as "password state unknown": the unlock screen asks, and the entry is written once a start
   succeeds.
 - A single malformed `auth` entry only makes *that* database ask again. It does not invalidate the rest of the file.
+- The same holds for `ai.models`: each entry is checked on its own, and one whose file is no longer on disk reads as "not downloaded".
 - Setting `TQ_DB_FILE_PASSWORD` in the `env` block has no effect. That variable, along with a handful of JVM and dynamic-linker variables,
   is stripped from the environment of every Java process the app spawns.
 - If the file cannot be read at all, it is left untouched and the app starts into the configuration screen. The reason is written to
@@ -457,6 +475,21 @@ The dialog shows the resulting net value while you type:
 
 - `Buy` and `Tax`: **net = gross + tax + fee**. Both add to what the transaction costs you.
 - `Sell`, `Dividend` and `Special Dividend`: **net = gross − tax − fee**. Both reduce what arrives in the depot.
+
+### Filling the form from a PDF
+
+If an AI model is active (see [AI features](#ai-features)), the **Add Transaction** dialog carries an **Import PDF** button, and you can
+also drop a PDF anywhere on the dialog. The model then reads one transaction out of that document and fills the form with it.
+
+1. Press **Import PDF** and pick the broker's PDF, or drop the file on the dialog.
+2. Wait for the progress bar. This takes seconds to minutes, depending on the model and your hardware.
+3. Check every filled field against the document, correct what is wrong, and press **Create**.
+
+Hints:
+
+- Nothing is created until you press Create.
+- The PDF needs a text layer.
+- The security is matched by ISIN, so documents that don't provide exactly one ISIN are not compatible with this feature.
 
 ### Importing transactions from a CSV file
 
@@ -830,6 +863,66 @@ URL patterns and header values are templates. A function is written `#name(argum
 Put an API key into `#mask(...)` rather than writing it plainly: it is what keeps the key out of `traquity.log`, and for the two
 preconfigured sources it is also the place the **API Key** field writes to.
 
+## AI features
+
+TraQuity can run a language model on your own computer. It is switched off until you turn it on, and it currently serves exactly one
+feature: [filling the transaction form from a PDF](#filling-the-form-from-a-pdf). A model is downloaded once; running it afterwards makes
+no network request at all. Everything below lives under **Settings → AI**.
+
+### Turning it on
+
+The section starts with a notice: the model weights come from third parties, the download is large in size, answers can be wrong, and none
+of this is financial advice. Press **Confirm** to get past it. Confirming downloads nothing — it only opens the section.
+
+### Choosing a model
+
+The section lists the models TraQuity offers, each with its size, its license and a status:
+
+| Status          | Meaning                                            |
+|-----------------|----------------------------------------------------|
+| **Active**      | This is the model the app uses                     |
+| **On disk**     | Downloaded, but another model is active or none is |
+| **Not on disk** | Not downloaded                                     |
+
+Next to it, TraQuity states what it makes of that model on this machine. It probes the GPU once per start:
+
+| Label                       | Meaning                                                                     |
+|-----------------------------|-----------------------------------------------------------------------------|
+| no label                    | Your GPU has enough free memory for this model                              |
+| **Needs X, Y available**    | The GPU was found, but has less free memory than recommended for this model |
+| **No supported GPU**        | No GPU TraQuity can use was found                                           |
+| **GPU backend unsupported** | A GPU was found, but not one that is recommended                            |
+| **Not probed**              | The probe itself failed; a warning at the top of the section says so too    |
+
+A label is a recommendation, not a lock: any listed model can be downloaded and activated. A model that fits into the GPU answers in
+seconds; one that does not runs partly or fully on the CPU, which works but can take minutes to produce a result. In this case, it may
+feel like the application hangs.
+
+![Settings — AI: the offered models with their size, status and this machine's verdict](./doc-assets/settings-ai.png)
+
+### Downloading, activating and removing
+
+**Download** asks for a folder to put the model file in and then runs in the background — the progress, speed and remaining time appear in
+the app header, so you can keep using the app while it downloads. TraQuity checks that the folder's disk has room before it starts Only one
+download runs at a time.
+
+**Activate** makes a downloaded model the one the app uses. At most one model is active at any given time, so activating one deactivates any
+other.
+
+**Remove** asks for confirmation and then deletes the model file from disk.
+
+### Adjusting the PDF import prompt
+
+The instructions the model gets for the PDF import are a file that ships with the app, and you can override them when the results on your
+own broker's documents are poor. The packaged file is `prompts/transaction-extraction/default.md` in the app's `resources` directory
+(`TraQuity.app/Contents/Resources/` on macOS); copy it to `ai/prompts/transaction-extraction/default.md` inside the `traquity` folder in
+your home directory and edit that copy. TraQuity prefers your copy over the packaged one on every import, so nothing has to be rebuilt and
+deleting the copy restores the shipped instructions. `traquity.log` records which file was used for each import, which is the quickest way
+to tell whether your copy is in effect.
+
+Hint: At the cost of providing your documents to an online LLM, you can have a stronger LLM figure out a good prompt for your broker's PDF
+files.
+
 ## A tour of the screens
 
 ### Dividends
@@ -845,19 +938,21 @@ Upcoming dividend announcements, grouped by week. New announcements also appear 
   [Dev mode and direct database access](#dev-mode-and-direct-database-access).
 - **Historical Security Prices** / **Dividend Announcements** — manage your data sources and their API keys.
 - **Security Groups** — organize securities into named groups.
-- **Database Configuration** — **Restart & configure database…** restarts the app into the configuration screen, where the database file
-  and the Java runtime can be changed. This section is only shown in the desktop app.
+- **Database** — **Restart & configure database…** restarts the app into the configuration screen, where the database file and the Java
+  runtime can be changed.
+- **AI** — download, activate and remove the local model used by the PDF import. See[AI features](#ai-features).
 
 ![Settings — Appearance: formats, Hide Absolute Values, Dev Mode](./doc-assets/settings-appearance.png)
 
-![Settings — Database Configuration with the restart action](./doc-assets/settings-database-java-config.png)
+![Settings — Database with the restart action](./doc-assets/settings-database-java-config.png)
 
 ### The header
 
 Besides the page controls, the header holds the notification bell for new dividend announcements, an indicator that appears when a newer
 TraQuity release exists on GitHub, a link to the GitHub repository, an **About** dialog with version and third-party license information on
-its `About` tab and the [transparency note](#privacy-what-leaves-your-computer) on its `Transparency` tab, and — while dev mode is active
-— the database button.
+its `About` tab and the [transparency note](#privacy-what-leaves-your-computer) on its `Transparency` tab, and — while dev mode is active —
+the database button. A running
+[AI model download](#ai-features) shows its progress here too.
 
 ## Understanding your depot performance numbers
 
@@ -957,6 +1052,14 @@ The file is not valid JSON, misses a required field, or carries a key the app do
 **Prices or dividend announcements do not update**
 Check the API key under **Settings**, the provider's plan limits, and whether the security's price configuration is enabled in its detail
 view.
+
+**The Add Transaction dialog says *AI is switched off — enable it in Settings***
+No model is active. Download one and press **Activate** under **Settings → AI**, see [AI features](#ai-features).
+
+**A PDF import fails or fills the form with wrong values**
+The message names what went wrong; `traquity.log` carries the document text, the model's answer and the prompt file that was used. A
+larger model usually reads a difficult document better, and the instructions themselves can be replaced — see
+[Adjusting the PDF import prompt](#adjusting-the-pdf-import-prompt).
 
 **Java verification fails in the configuration screen**
 The configured path does not point at a runnable `java`. Pick another one with **Custom path…**, switch to **Automatic**, or use **Download
