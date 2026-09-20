@@ -289,6 +289,10 @@ TestBed.
 
 ## Styling (SCSS units)
 
+**`styleguide.md` is the binding reference for how this app looks** — which file a value belongs in, the `--tq-*` tokens, the `.tq-*`
+utility classes, the Material overrides, and what a component's own `.scss` may hold. Read it before writing any styling. The unit rules
+below apply on top of it:
+
 - Use `rem` for CSS lengths (font-size, padding, margin, gap, width/height, border-radius, border-width, letter-spacing, etc.) in every
   `.scss` file and inline template style. Never write `px` or `em` — use `rem` from the start rather than authoring in `px`/`em` and
   converting later.
