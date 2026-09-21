@@ -59,7 +59,7 @@ electron/
     free-space.js              whether a directory's disk has a required number of free bytes, should be cecked before
                                starting a download
   app/
-    restart-into-configuration.js sets `configureOnNextStart`, kills the backend, relaunches and exits, in that order
+    restart-into-configuration.js sets `configureOnNextStart`, stops the backend, relaunches and exits, in that order
   config/
     config-schema.js           zod schemas + inferred types for traquity.config.json
     config-file.js             read/write traquity.config.json
@@ -70,7 +70,7 @@ electron/
     configure-on-next-start.js sets the one-shot `configureOnNextStart` flag and saves the loaded config
   backend/
     backend-reachable.js       poll GET /admin/pid until reachable or child exit
-    backend-process.js         spawn, stdin password handover, log piping, single-instance guard, proven-start recording
+    backend-process.js         spawn, stdin password/shutdown channel, log piping, single-instance guard, proven-start recording
   java/
     java-path.js               resolve `java` on `PATH`; normalize a picked path to a binary
     java-version.js            async, timeout- and byte-bounded `java -version` run of one absolute path
@@ -249,12 +249,16 @@ resolves to `insecure` before the auth registry is consulted or `configureOnNext
 `Promise.resolve(null)` so no JVM is ever spawned, `ipc/startup-bridge.js` registers only `startup:getState` and `app:quit`, and
 `ipc/ai-bridge.js` registers nothing at all - two channels only across both bridges, so "nothing can be done" is enforced.
 
-The spawn passes the database password as the entire content of the child's stdin, closed right after, rather than through the child's
-environment: the environment carries `TQ_DB_FILE_PASSWORD_STDIN=true` as a marker and no password at all. A few rules govern
-that handover, worth knowing before touching `backend-process.js` again: `write`'s boolean return is flow control, not a success/failure
-signal; a `drain` wait is registered only after a write returned `false`, never unconditionally; the password buffer is zeroed inside the
-write callback, because Node queues the chunk by reference rather than copying it; and the handover never blocks `start` — a child that
-never reads its stdin surfaces as a failed start through the existing reachability poll instead of hanging the IPC call.
+The spawn passes the database password as the first line of the child's stdin instead of through the child's environment: the
+environment carries `TQ_DB_FILE_PASSWORD_STDIN=true` as a marker and no password at all. The stream then stays open for the rest of the
+run — closing it is what asks the backend to shut down, not part of the handover (`architecture/configuration.md` ADR-012). A few rules
+are worth knowing before touching `backend-process.js` again: the password buffer is zeroed inside the write callback, because Node
+queues the chunk by reference instead of copying it; the handover never blocks `start` — a child that never reads its stdin surfaces as a
+failed start through the existing reachability poll instead of hanging the IPC call; and `stop()` closes stdin, waits for the child's
+`exit`, and force-kills it after `SHUTDOWN_TIMEOUT_MILLISECONDS` if it never answers. Both quit paths — `window-all-closed` and
+`app:restartAndConfigure` — await `stop()` before continuing. A main process that dies without quitting, or a child orphaned by a start
+that raced a quit, still goes down: the OS closes the pipe's write end as it reclaims the parent's handles, and EOF on the backend's side
+is what triggers its own shutdown.
 
 The preload (`preload.js`) runs in Electron's sandboxed preload context, where `require` is a limited polyfill resolving only `electron`
 and a handful of Node built-ins — it cannot `require` a module of this app. That is why the IPC channel names listed above are literals

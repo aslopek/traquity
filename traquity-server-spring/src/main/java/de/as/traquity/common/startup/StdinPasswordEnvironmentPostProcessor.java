@@ -2,7 +2,6 @@ package de.as.traquity.common.startup;
 
 import static lombok.AccessLevel.PACKAGE;
 
-import java.time.Duration;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.logging.Log;
@@ -15,9 +14,10 @@ import org.springframework.util.StringUtils;
 
 /**
  * <p>
- * Contributes the database password handed over on stdin as the {@code TQ_DB_FILE_PASSWORD} property,
- * ahead of the system environment, whenever the packaged Electron spawn set the {@code TQ_DB_FILE_PASSWORD_STDIN}
- * marker. Without that marker - every standalone dev start - this is a no-op and {@code System.in} is never touched.
+ * Contributes the database password handed over as the first line of stdin as the {@code TQ_DB_FILE_PASSWORD}
+ * property, ahead of the system environment, whenever the packaged Electron spawn set the
+ * {@code TQ_DB_FILE_PASSWORD_STDIN} marker. Without that marker - every standalone dev start - this is a no-op and
+ * {@code System.in} is never touched.
  * </p>
  *
  * <p>
@@ -31,20 +31,12 @@ public class StdinPasswordEnvironmentPostProcessor implements EnvironmentPostPro
   private static final String MARKER = "TQ_DB_FILE_PASSWORD_STDIN";
   private static final String PROPERTY = "TQ_DB_FILE_PASSWORD";
   private static final String PROPERTY_SOURCE_NAME = "traquityStdinPassword";
-  private static final Duration TIMEOUT = Duration.ofSeconds(5);
-  private static final int LIMIT_IN_BYTES = 4096;
-
-  /**
-   * static because the handover is one-shot per JVM: System.in reaches EOF exactly once, so a second post-processor
-   * instance holding its own handover would read that EOF and contribute an empty password over a good one
-   */
-  private static final StdinPasswordHandover SYSTEM_IN = new StdinPasswordHandover(System.in, TIMEOUT, LIMIT_IN_BYTES);
 
   private final Log log;
-  private final StdinPasswordHandover handover;
+  private final StdinChannel channel;
 
   public StdinPasswordEnvironmentPostProcessor(DeferredLogFactory logFactory) {
-    this(logFactory.getLog(StdinPasswordEnvironmentPostProcessor.class), SYSTEM_IN);
+    this(logFactory.getLog(StdinPasswordEnvironmentPostProcessor.class), SystemInChannel.channel());
   }
 
   @Override
@@ -52,7 +44,7 @@ public class StdinPasswordEnvironmentPostProcessor implements EnvironmentPostPro
     if (!StringUtils.hasText(environment.getProperty(MARKER))) {
       return;
     }
-    handover.read(log).ifPresent(password -> environment.getPropertySources()
+    channel.readPassword(log).ifPresent(password -> environment.getPropertySources()
         .addFirst(new MapPropertySource(PROPERTY_SOURCE_NAME, Map.of(PROPERTY, password))));
   }
 }

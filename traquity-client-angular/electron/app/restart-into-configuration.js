@@ -4,11 +4,11 @@
 /**
  * @typedef {Object} RestartIntoConfigurationOptions
  * @property {Pick<ConfigureOnNextStart, 'request'>} configureOnNextStart
- * @property {Pick<BackendProcess, 'kill'>} backendProcess
+ * @property {Pick<BackendProcess, 'stop'>} backendProcess
  * @property {Pick<import('electron').App, 'relaunch' | 'exit'>} app
  */
 
-/** @typedef {{restart: () => void}} RestartIntoConfiguration */
+/** @typedef {{restart: () => Promise<void>}} RestartIntoConfiguration */
 
 /**
  * @param {RestartIntoConfigurationOptions} options
@@ -18,14 +18,15 @@ function createRestartIntoConfiguration(options) {
   const {configureOnNextStart, backendProcess, app} = options;
 
   /**
-   * `app.exit(0)` does not fire `window-all-closed`, so the backend has to be killed here, before it, or the
-   * relaunched instance finds the old one still holding the port and the H2 file.
+   * `app.exit(0)` does not fire `window-all-closed`, so the backend is stopped here, before it, or the relaunched
+   * instance finds the old one still holding the port and the H2 file. The relaunch waits for that shutdown: a
+   * backend killed mid-write loses what MVStore had not flushed.
    *
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  function restart() {
+  async function restart() {
     configureOnNextStart.request();
-    backendProcess.kill();
+    await backendProcess.stop();
     app.relaunch();
     app.exit(0);
   }

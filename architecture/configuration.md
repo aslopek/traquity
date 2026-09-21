@@ -151,7 +151,8 @@ password input is a first-class app screen.
 
 ## ADR-008: The password is handed to the backend via stdin; the env variable becomes a dev-mode-only channel
 
-**Status:** ACCEPTED
+**Status:** ACCEPTED — the wire format (EOF-terminated, no delimiter) is superseded by ADR-012. The channel choice itself (stdin over the
+environment) still stands.
 
 **Context:** `TQ_DB_FILE_PASSWORD` in the child-process environment is readable by every same-user process for the backend's whole
 lifetime (Linux `/proc/<pid>/environ`, Windows PEB reads, macOS `ps -wwE`) and is routinely captured by crash/heap dumps and support
@@ -270,3 +271,36 @@ they later run.
 `recursive: true`) once at startup, before anything else in `main.js` touches either path. A failure to create it is logged rather than
 thrown - the write it would have enabled (`config-file.js`'s `save()`, or the backend's log stream) then fails on its own terms right
 after, through error handling that already exists for a missing/unwritable file and needs no change here.
+
+## ADR-012: The first line of stdin is the password
+
+**Status:** ACCEPTED
+
+**Context:** Windows maps every signal to `TerminateProcess`, so a `SIGTERM` sent to the backend skips Spring's shutdown hook and H2's
+file close — and both callers (`window-all-closed`, `app:restartAndConfigure`) exited the main process right after sending it anyway,
+giving the child no chance to catch up. Measured effect: identity blocks of 32 lost per run (JPA's sequence allocator), and MVStore
+writes not yet flushed to the H2 file.
+
+**Decision:** The child's stdin receives the password and the signal to shut down the application and database. It partially supersedes
+ADR-008
+
+|                           | ADR-008                                  | Now                       |
+|---------------------------|------------------------------------------|---------------------------|
+| Password                  | entire stream content, EOF-terminated    | first line, LF-terminated |
+| Stream after the handover | closed by the parent right after writing | stays open for the run    |
+| Closing the stream        | is the handover completing               | is a shutdown request     |
+
+On the Electron side, the child's stdin is closed, it waits for its `exit`, and force-kills it after a bounded timeout if it doesn't answer.
+Both quit paths — `window-all-closed` and `app:restartAndConfigure` — await it. On the backend, upon reaching `EOF` on `System.in`,
+`context.close()` followed by `System.exit(0)` are executed.
+
+**Consequences:**
+
+- ADR-008 chose EOF-termination specifically so no delimiter had to be excluded from the password. That
+protection is gone — a password containing a line feed can no longer be handed over. Nothing produces one today: the renderer's
+password inputs are single-line. No trimming is introduced on either side; the bytes before the first line feed are the password
+  verbatim, `\r` included. This is why the app does not need a major release with this change.
+- A main process that dies without quitting closes the pipe as the OS reclaims its handles, so the backend goes down with it.
+- A child orphaned by a start that raced a quit dies the same way — something the old `kill()` could never reach.
+
+The force-kill timeout is the bound on a backend that ignores the closed stream and never exits on its own.
