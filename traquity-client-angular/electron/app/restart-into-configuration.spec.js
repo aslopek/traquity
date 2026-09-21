@@ -12,7 +12,7 @@ describe('restartIntoConfiguration', () => {
   /** @type {Pick<ConfigureOnNextStart, 'request'>} */
   let configureOnNextStart;
 
-  /** @type {Pick<BackendProcess, 'kill'>} */
+  /** @type {Pick<BackendProcess, 'stop'>} */
   let backendProcess;
 
   /** @type {Pick<import('electron').App, 'relaunch' | 'exit'>} */
@@ -24,9 +24,9 @@ describe('restartIntoConfiguration', () => {
   const request = jest.fn(() => {
     calls.push('request()');
   });
-  const kill = jest.fn(() => {
-    calls.push('kill()');
-  });
+  const stop = jest.fn(/** @type {() => Promise<void>} */ (async () => {
+    calls.push('stop()');
+  }));
   const relaunch = jest.fn(() => {
     calls.push('relaunch()');
   });
@@ -39,43 +39,53 @@ describe('restartIntoConfiguration', () => {
     calls = [];
 
     configureOnNextStart = {request};
-    backendProcess = {kill};
+    backendProcess = {stop};
     app = {relaunch, exit};
 
     restartIntoConfiguration = createRestartIntoConfiguration({configureOnNextStart, backendProcess, app});
   });
 
-  it('sets the flag, kills the backend, relaunches and exits, in that order', () => {
-    restartIntoConfiguration.restart();
+  it('sets the flag, stops the backend, relaunches and exits, in that order', async () => {
+    await restartIntoConfiguration.restart();
 
-    expect(calls).toEqual(['request()', 'kill()', 'relaunch()', 'exit(0)']);
+    expect(calls).toEqual(['request()', 'stop()', 'relaunch()', 'exit(0)']);
   });
 
-  it('calls request with no arguments', () => {
-    restartIntoConfiguration.restart();
+  it('calls request with no arguments', async () => {
+    await restartIntoConfiguration.restart();
 
     expect(request).toHaveBeenCalledTimes(1);
     expect(request).toHaveBeenCalledWith();
   });
 
-  it('calls kill with no arguments', () => {
-    restartIntoConfiguration.restart();
+  it('calls stop with no arguments', async () => {
+    await restartIntoConfiguration.restart();
 
-    expect(kill).toHaveBeenCalledTimes(1);
-    expect(kill).toHaveBeenCalledWith();
+    expect(stop).toHaveBeenCalledTimes(1);
+    expect(stop).toHaveBeenCalledWith();
   });
 
-  it('calls relaunch with no arguments', () => {
-    restartIntoConfiguration.restart();
+  it('calls relaunch with no arguments', async () => {
+    await restartIntoConfiguration.restart();
 
     expect(relaunch).toHaveBeenCalledTimes(1);
     expect(relaunch).toHaveBeenCalledWith();
   });
 
-  it('exits with code 0', () => {
-    restartIntoConfiguration.restart();
+  it('exits with code 0', async () => {
+    await restartIntoConfiguration.restart();
 
     expect(exit).toHaveBeenCalledTimes(1);
     expect(exit).toHaveBeenCalledWith(0);
+  });
+
+  it('waits for the shutdown before relaunching', async () => {
+    stop.mockImplementation(() => new Promise(() => undefined));
+
+    void restartIntoConfiguration.restart();
+    await Promise.resolve();
+
+    expect(relaunch).not.toHaveBeenCalled();
+    expect(exit).not.toHaveBeenCalled();
   });
 });

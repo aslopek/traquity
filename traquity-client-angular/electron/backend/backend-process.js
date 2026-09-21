@@ -38,13 +38,20 @@ const {jvmEnvironment} = require('../java/jvm-environment.js');
 const LOG_FILE_MODE = 0o600;
 
 /**
- * The subset of the child's stdin this module writes the password through - a one-shot, parent-to-child-private pipe.
+ * How long a backend gets to shut down after its stdin was closed, before it is killed.
+ *
+ * @type {number}
+ */
+const SHUTDOWN_TIMEOUT_MILLISECONDS = 10_000;
+
+/**
+ * The subset of the child's stdin this module writes through: the password's line, kept open for the rest of the run
+ * and closed only to ask the backend to shut down.
  *
  * @typedef {Object} BackendStdin
  * @property {(chunk: Buffer, callback: () => void) => boolean} write false signals backpressure, never a failed write
  * @property {() => void} end
  * @property {(event: 'error', listener: (error: Error) => void) => void} on
- * @property {(event: 'drain', listener: () => void) => void} once
  */
 
 /**
@@ -70,13 +77,14 @@ const LOG_FILE_MODE = 0o600;
  * @property {BackendReachability} backendReachability
  * @property {BackendLogFileSystem} logFileSystem
  * @property {string} logPath
+ * @property {(milliseconds: number) => Promise<void>} delay
  * @property {Pick<Console, 'error'>} [logger]
  */
 
 /**
  * @typedef {Object} BackendProcess
  * @property {(password: string) => Promise<BackendStartOutcome>} start
- * @property {() => void} kill
+ * @property {() => Promise<void>} stop
  */
 
 /**
@@ -84,7 +92,7 @@ const LOG_FILE_MODE = 0o600;
  * @returns {BackendProcess}
  */
 function createBackendProcess(options) {
-  const {spawn, resolveJava, backendPath, config, authRegistry, backendReachability, logFileSystem, logPath} = options;
+  const {spawn, resolveJava, backendPath, config, authRegistry, backendReachability, logFileSystem, logPath, delay} = options;
   const logger = options.logger ?? console;
 
   /** @type {SpawnedBackendProcess | null} */
@@ -92,7 +100,7 @@ function createBackendProcess(options) {
 
   // set synchronously by `start`, before its first `await`. Java resolution is itself a spawned process, so a guard
   // reading `child` alone would let two overlapping calls through and spawn twice - and the first child would then be
-  // orphaned, with nothing holding a reference `kill()` could reach.
+  // orphaned, with nothing holding a reference `stop()` could reach.
   let starting = false;
 
   /**
@@ -121,12 +129,12 @@ function createBackendProcess(options) {
   }
 
   /**
-   * Hands the password to the child as the entire content of its stdin: UTF-8 bytes, no delimiter, terminated by closing
-   * the stream. A passwordless database writes nothing and only closes - zero bytes followed by EOF is the
-   * explicit passwordless handover.
+   * Writes the password as the first line of the child's stdin: its UTF-8 bytes followed by one line feed. A
+   * passwordless database writes the bare line feed, which is the explicit passwordless handover. The stream is left
+   * open - closing it is a shutdown request, not part of the handover.
    *
-   * Returns synchronously, and the start deliberately does not await it: a child that never drains would otherwise stall
-   * `start` before the reachability poll - the one place a failed start is decided - ever gets to run.
+   * Returns synchronously, and the start deliberately does not await the write: a child that never drains would
+   * otherwise stall `start` before the reachability poll - the one place a failed start is decided - ever gets to run.
    *
    * @param {Pick<SpawnedBackendProcess, 'stdin'>} spawnedProcess
    * @param {string} password
@@ -139,22 +147,10 @@ function createBackendProcess(options) {
     // event on the stream would take the main process down with it. The message never carries the payload.
     stdin.on('error', (error) => logger.error('Failed to hand the database password to the backend:', error.message));
 
-    if (password.length === 0) {
-      stdin.end();
-      return;
-    }
-
     /** @type {Buffer<ArrayBuffer>} */
-    const passwordBytes = Buffer.from(password, 'utf8');
-    // only end the stream after the password bytes have been flushed
-    const flushed = stdin.write(passwordBytes, () => passwordBytes.fill(0));
-    if (flushed) {
-      stdin.end();
-      return;
-    }
-
-    // if not flushed immediately, wait for the drain signal to end the stream
-    stdin.once('drain', () => stdin.end());
+    const lineBytes = Buffer.from(`${password}\n`, 'utf8');
+    // Node queues the chunk by reference, so the buffer is zeroed only after the write calls back
+    stdin.write(lineBytes, () => lineBytes.fill(0));
   }
 
   /**
@@ -241,16 +237,31 @@ function createBackendProcess(options) {
   }
 
   /**
-   * @returns {void}
+   * Asks the running backend to shut down and resolves once it exited or was killed for taking longer than `SHUTDOWN_TIMEOUT_MILLISECONDS`.
+   * Resolves immediately when no child is running. The child is forgotten up front, so a later start spawns a new one either way.
+   *
+   * @returns {Promise<void>}
    */
-  function kill() {
-    if (child != null) {
-      child.kill('SIGTERM');
-      child = null;
+  async function stop() {
+    /** @type {SpawnedBackendProcess | null} */
+    const runningChild = child;
+    if (runningChild == null) {
+      return;
+    }
+    child = null;
+
+    /** @type {Promise<'exited'>} */
+    const exited = new Promise(resolve => runningChild.on('exit', () => resolve('exited')));
+    runningChild.stdin.end();
+
+    /** @type {'exited' | 'timeout'} */
+    const outcome = await Promise.race([exited, delay(SHUTDOWN_TIMEOUT_MILLISECONDS).then(() => /** @type {'timeout'} */ ('timeout'))]);
+    if (outcome === 'timeout') {
+      runningChild.kill('SIGKILL');
     }
   }
 
-  return {start, kill};
+  return {start, stop};
 }
 
 module.exports = {createBackendProcess};

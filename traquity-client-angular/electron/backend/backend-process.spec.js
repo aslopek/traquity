@@ -29,6 +29,8 @@ describe('backendProcess', () => {
   const createWriteStream = jest.fn(/** @type {(path: string, options: {flags: string, mode: number}) => import('node:fs').WriteStream} */
     (() => logStream));
   const error = jest.fn(/** @type {(message: string, cause: unknown) => void} */ (() => undefined));
+  // a stub for something asynchronous models waiting: a delay that resolves immediately would starve `stop`'s race
+  const delay = jest.fn(/** @type {(milliseconds: number) => Promise<void>} */ (() => new Promise(() => undefined)));
   // a minimal stand-in for `WriteStream` - only the members this module actually calls on it
   const logStream = /** @type {import('node:fs').WriteStream} */ (/** @type {unknown} */ ({on: jest.fn(), end: jest.fn()}));
   const childOn = jest.fn(/** @type {SpawnedBackendProcess['on']} */ (() => undefined));
@@ -38,7 +40,6 @@ describe('backendProcess', () => {
   const childStdinWrite = jest.fn(/** @type {BackendStdin['write']} */ (() => true));
   const childStdinEnd = jest.fn(/** @type {BackendStdin['end']} */ (() => undefined));
   const childStdinOn = jest.fn(/** @type {BackendStdin['on']} */ (() => undefined));
-  const childStdinOnce = jest.fn(/** @type {BackendStdin['once']} */ (() => undefined));
 
   /** @type {BackendProcess} */
   let backendProcess;
@@ -50,6 +51,7 @@ describe('backendProcess', () => {
     waitUntilReachable.mockResolvedValue(true);
     createWriteStream.mockReturnValue(logStream);
     childStdinWrite.mockReturnValue(true);
+    delay.mockImplementation(() => new Promise(() => undefined));
 
     config = {
       env: {TQ_DB_FILE_PATH: databasePath},
@@ -64,8 +66,7 @@ describe('backendProcess', () => {
       stdin: {
         write: childStdinWrite,
         end: childStdinEnd,
-        on: childStdinOn,
-        once: childStdinOnce
+        on: childStdinOn
       }
     };
     spawn.mockImplementation(() => child);
@@ -88,6 +89,7 @@ describe('backendProcess', () => {
       backendReachability,
       logFileSystem,
       logPath,
+      delay,
       logger: {error}
     });
   });
@@ -99,6 +101,20 @@ describe('backendProcess', () => {
     delete process.env['JDK_JAVA_OPTIONS'];
     delete process.env['_JAVA_OPTIONS'];
   });
+
+  /**
+   * Fires every `exit` listener registered on the child so far - `start` registers one to forget the child, and
+   * `stop` registers its own to learn the child exited.
+   *
+   * @returns {void}
+   */
+  function fireExit() {
+    for (const [event, listener] of childOn.mock.calls) {
+      if (event === 'exit') {
+        /** @type {() => void} */ (listener)();
+      }
+    }
+  }
 
   it('spawns the resolved java binary with the jar and the stdin marker', async () => {
     await backendProcess.start(password);
@@ -220,10 +236,10 @@ describe('backendProcess', () => {
     expect(childStderrPipe).toHaveBeenCalledWith(logStream, {end: false});
   });
 
-  it('writes the password to stdin as UTF-8 bytes with no delimiter', async () => {
+  it('writes the password and one line feed as UTF-8 bytes to stdin', async () => {
     await backendProcess.start(password);
 
-    expect(childStdinWrite.mock.calls).toEqual([[Buffer.from(password, 'utf8'), expect.any(Function)]]);
+    expect(childStdinWrite.mock.calls).toEqual([[Buffer.from(`${password}\n`, 'utf8'), expect.any(Function)]]);
   });
 
   it('writes a non-ASCII password as UTF-8', async () => {
@@ -231,17 +247,25 @@ describe('backendProcess', () => {
 
     await backendProcess.start(nonAsciiPassword);
 
-    expect(childStdinWrite.mock.calls[0]?.[0]).toEqual(Buffer.from(nonAsciiPassword, 'utf8'));
+    expect(childStdinWrite.mock.calls[0]?.[0]).toEqual(Buffer.from(`${nonAsciiPassword}\n`, 'utf8'));
   });
 
-  it("ends the child's stdin right after the write", async () => {
+  it('writes a bare line feed for a passwordless database', async () => {
+    await backendProcess.start('');
+
+    expect(childStdinWrite.mock.calls).toEqual([[Buffer.from('\n', 'utf8'), expect.any(Function)]]);
+  });
+
+  it("leaves the child's stdin open", async () => {
     await backendProcess.start(password);
 
-    expect(childStdinEnd).toHaveBeenCalledTimes(1);
-    expect(childStdinEnd).toHaveBeenCalledWith();
-    const writeOrder = childStdinWrite.mock.invocationCallOrder[0] ?? -1;
-    const endOrder = childStdinEnd.mock.invocationCallOrder[0] ?? -1;
-    expect(endOrder).toBeGreaterThan(writeOrder);
+    expect(childStdinEnd).not.toHaveBeenCalled();
+  });
+
+  it("leaves the child's stdin open for a passwordless database", async () => {
+    await backendProcess.start('');
+
+    expect(childStdinEnd).not.toHaveBeenCalled();
   });
 
   it('zeroes the password buffer once the write drained', async () => {
@@ -251,20 +275,10 @@ describe('backendProcess', () => {
     const writeCallback = /** @type {() => void} */ (childStdinWrite.mock.calls[0]?.[1]);
     writeCallback();
 
-    expect(writtenBuffer).toEqual(Buffer.alloc(password.length));
-  });
-
-  it('writes nothing for a passwordless database', async () => {
-    await backendProcess.start('');
-
-    expect(childStdinWrite).not.toHaveBeenCalled();
-  });
-
-  it("ends the child's stdin for a passwordless database", async () => {
-    await backendProcess.start('');
-
-    expect(childStdinEnd).toHaveBeenCalledTimes(1);
-    expect(childStdinEnd).toHaveBeenCalledWith();
+    expect(writtenBuffer).toHaveLength(Buffer.byteLength(`${password}\n`, 'utf8'));
+    for (const byte of writtenBuffer) {
+      expect(byte).toBe(0);
+    }
   });
 
   it('survives a failed write to a child that died before reading', async () => {
@@ -294,61 +308,11 @@ describe('backendProcess', () => {
     }
   });
 
-  it('does not wait for a drain when the write flushed straight through', async () => {
-    await backendProcess.start(password);
-
-    expect(childStdinOnce).not.toHaveBeenCalled();
-  });
-
   it('leaves the password buffer intact until the write callback runs', async () => {
     await backendProcess.start(password);
 
     const writtenBuffer = /** @type {Buffer} */ (childStdinWrite.mock.calls[0]?.[0]);
-    expect(writtenBuffer).toEqual(Buffer.from(password, 'utf8'));
-  });
-
-  describe('when the write is backpressured', () => {
-    beforeEach(() => {
-      childStdinWrite.mockReturnValue(false);
-    });
-
-    it('waits for the drain before ending the stream', async () => {
-      await backendProcess.start(password);
-
-      expect(childStdinEnd).not.toHaveBeenCalled();
-      expect(childStdinOnce.mock.calls).toEqual([['drain', expect.any(Function)]]);
-    });
-
-    it('ends the stream once the drain arrives', async () => {
-      await backendProcess.start(password);
-
-      const drainListener = /** @type {() => void} */ (
-        childStdinOnce.mock.calls.find(([event]) => event === 'drain')?.[1]
-      );
-      drainListener();
-
-      expect(childStdinEnd).toHaveBeenCalledTimes(1);
-      expect(childStdinEnd).toHaveBeenCalledWith();
-    });
-
-    it('resolves the start without waiting for a drain that never comes', async () => {
-      const outcome = await backendProcess.start(password);
-
-      expect(outcome).toEqual({reachable: true, startedFrom: 'pending'});
-      expect(childStdinOnce.mock.calls).toEqual([['drain', expect.any(Function)]]);
-      expect(childStdinEnd).not.toHaveBeenCalled();
-    });
-
-    it('leaves the stream unended when the child dies instead of draining', async () => {
-      await backendProcess.start(password);
-
-      const errorListener = /** @type {(error: Error) => void} */ (
-        childStdinOn.mock.calls.find(([event]) => event === 'error')?.[1]
-      );
-
-      expect(() => errorListener(new Error('write EPIPE'))).not.toThrow();
-      expect(childStdinEnd).not.toHaveBeenCalled();
-    });
+    expect(writtenBuffer).toEqual(Buffer.from(`${password}\n`, 'utf8'));
   });
 
   describe('when Java does not resolve', () => {
@@ -434,28 +398,58 @@ describe('backendProcess', () => {
       expect(spawn).toHaveBeenCalledWith(java, ['-jar', backendPath], {
         env: expect.objectContaining({TQ_DB_FILE_PASSWORD_STDIN: 'true'})
       });
-      expect(childStdinWrite.mock.calls[0]?.[0]).toEqual(Buffer.from(retryPassword, 'utf8'));
+      expect(childStdinWrite.mock.calls[0]?.[0]).toEqual(Buffer.from(`${retryPassword}\n`, 'utf8'));
     });
   });
 
-  describe('kill', () => {
-    it('does nothing when no backend has been started', () => {
-      expect(() => backendProcess.kill()).not.toThrow();
+  describe('stop', () => {
+    it("closes the child's stdin and does not kill it", async () => {
+      await backendProcess.start(password);
+
+      const stopped = backendProcess.stop();
+      fireExit();
+      await stopped;
+
+      expect(childStdinEnd).toHaveBeenCalledTimes(1);
+      expect(childStdinEnd).toHaveBeenCalledWith();
       expect(childKill).not.toHaveBeenCalled();
     });
 
-    it('sends SIGTERM to the running child', async () => {
+    it('does nothing when no backend has been started', async () => {
+      await expect(backendProcess.stop()).resolves.toBeUndefined();
+
+      expect(childStdinEnd).not.toHaveBeenCalled();
+      expect(childKill).not.toHaveBeenCalled();
+    });
+
+    it('waits for the child to exit before resolving', async () => {
       await backendProcess.start(password);
 
-      backendProcess.kill();
+      const stopped = backendProcess.stop();
+      const outcome = await Promise.race([stopped.then(() => 'stopped'), Promise.resolve('still waiting')]);
+      expect(outcome).toBe('still waiting');
+
+      fireExit();
+      await stopped;
+    });
+
+    it('kills a child that outlives the timeout', async () => {
+      delay.mockResolvedValue(undefined);
+      await backendProcess.start(password);
+
+      await backendProcess.stop();
 
       expect(childKill).toHaveBeenCalledTimes(1);
-      expect(childKill).toHaveBeenCalledWith('SIGTERM');
+      expect(childKill).toHaveBeenCalledWith('SIGKILL');
+      expect(delay).toHaveBeenCalledTimes(1);
+      expect(delay).toHaveBeenCalledWith(10_000);
     });
 
     it('forgets the child, so a later start spawns again', async () => {
       await backendProcess.start(password);
-      backendProcess.kill();
+      const stopped = backendProcess.stop();
+      fireExit();
+      await stopped;
       // clears the first start's spawn call, so the assertion below can only be satisfied by the second one
       jest.clearAllMocks();
 

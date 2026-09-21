@@ -138,7 +138,8 @@ const backendProcess = createBackendProcess({
   authRegistry,
   backendReachability,
   logFileSystem: fs,
-  logPath
+  logPath,
+  delay
 });
 
 const restartIntoConfiguration = createRestartIntoConfiguration({configureOnNextStart, backendProcess, app});
@@ -359,8 +360,8 @@ app.on('ready', () => {
   createMainWindow();
 });
 
-app.on('window-all-closed', () => {
-  backendProcess.kill();
+app.on('window-all-closed', async () => {
+  await backendProcess.stop();
   app.quit();
   process.exit(0);
 });

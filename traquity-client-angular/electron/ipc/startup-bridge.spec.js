@@ -40,7 +40,7 @@ describe('startupBridge', () => {
   const knownDatabases = jest.fn(/** @type {() => KnownDatabase[]} */ (() => known));
   const forget = jest.fn(/** @type {(databasePath: string) => void} */ (() => undefined));
   const apply = jest.fn(/** @type {(changes: ConfigurationChanges) => AuthState} */ (() => 'passwordless'));
-  const restart = jest.fn();
+  const restart = jest.fn(/** @type {() => Promise<void>} */ (() => Promise.resolve()));
   const pickExisting = jest.fn(/** @type {DatabaseDialogs['pickExisting']} */
     (() => Promise.resolve(otherDatabasePath)));
   const pickNew = jest.fn(/** @type {DatabaseDialogs['pickNew']} */
