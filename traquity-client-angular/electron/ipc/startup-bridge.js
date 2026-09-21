@@ -287,7 +287,7 @@ function createStartupBridge(options) {
       }
     });
 
-    on('app:restartAndConfigure', () => restartIntoConfiguration.restart());
+    on('app:restartAndConfigure', () => void restartIntoConfiguration.restart());
     on('app:quit', () => quit());
   }
 

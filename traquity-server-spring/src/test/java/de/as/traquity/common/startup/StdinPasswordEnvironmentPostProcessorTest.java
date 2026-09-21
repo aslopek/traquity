@@ -26,7 +26,7 @@ class StdinPasswordEnvironmentPostProcessorTest {
   private static final String STDIN_SOURCE_NAME = "traquityStdinPassword";
 
   private Log log;
-  private StdinPasswordHandover handover;
+  private StdinChannel channel;
   private ConfigurableEnvironment environment;
   private MutablePropertySources sources;
   private SpringApplication application;
@@ -36,7 +36,7 @@ class StdinPasswordEnvironmentPostProcessorTest {
   @BeforeEach
   void beforeEach() {
     log = mock(Log.class);
-    handover = mock(StdinPasswordHandover.class);
+    channel = mock(StdinChannel.class);
     environment = mock(ConfigurableEnvironment.class);
     sources = mock(MutablePropertySources.class);
     application = mock(SpringApplication.class);
@@ -44,13 +44,13 @@ class StdinPasswordEnvironmentPostProcessorTest {
 
     when(environment.getProperty(MARKER)).thenReturn("true");
     when(environment.getPropertySources()).thenReturn(sources);
-    when(handover.read(log)).thenReturn(Optional.of("hunter2"));
+    when(channel.readPassword(log)).thenReturn(Optional.of("hunter2"));
 
-    subject = new StdinPasswordEnvironmentPostProcessor(log, handover);
+    subject = new StdinPasswordEnvironmentPostProcessor(log, channel);
   }
 
   @Test
-  void contributesTheStreamsContentAsThePasswordProperty() {
+  void postProcessEnvironment_ok() {
     subject.postProcessEnvironment(environment, application);
 
     verify(sources).addFirst(contribution.capture());
@@ -60,7 +60,7 @@ class StdinPasswordEnvironmentPostProcessorTest {
   }
 
   @Test
-  void contributesItAtTheHighestPrecedenceAndLeavesItThere() {
+  void postProcessEnvironment_addsThePropertySourceFirstAndNowhereElse() {
     subject.postProcessEnvironment(environment, application);
 
     verify(sources).addFirst(any());
@@ -68,15 +68,15 @@ class StdinPasswordEnvironmentPostProcessorTest {
   }
 
   @Test
-  void logsNothingOnASuccessfulContribution() {
+  void postProcessEnvironment_logsNothing() {
     subject.postProcessEnvironment(environment, application);
 
     verifyNoInteractions(log);
   }
 
   @Test
-  void contributesAnEmptyPasswordForAnEmptyStream() {
-    when(handover.read(log)).thenReturn(Optional.of(""));
+  void postProcessEnvironment_emptyPasswordLine_ok() {
+    when(channel.readPassword(log)).thenReturn(Optional.of(""));
 
     subject.postProcessEnvironment(environment, application);
 
@@ -87,8 +87,8 @@ class StdinPasswordEnvironmentPostProcessorTest {
   }
 
   @Test
-  void contributesNothingWhenNoHandoverCompleted() {
-    when(handover.read(log)).thenReturn(Optional.empty());
+  void postProcessEnvironment_noPasswordLine_contributesNothing() {
+    when(channel.readPassword(log)).thenReturn(Optional.empty());
 
     subject.postProcessEnvironment(environment, application);
 
@@ -96,20 +96,20 @@ class StdinPasswordEnvironmentPostProcessorTest {
   }
 
   @Test
-  void neverReadsStdinWithoutTheMarker() {
+  void postProcessEnvironment_noMarker_doesNotTouchStdin() {
     when(environment.getProperty(MARKER)).thenReturn(null);
 
     subject.postProcessEnvironment(environment, application);
 
-    verifyNoInteractions(handover, sources);
+    verifyNoInteractions(channel, sources);
   }
 
   @Test
-  void neverReadsStdinForABlankMarker() {
+  void postProcessEnvironment_blankMarker_doesNotTouchStdin() {
     when(environment.getProperty(MARKER)).thenReturn("");
 
     subject.postProcessEnvironment(environment, application);
 
-    verifyNoInteractions(handover, sources);
+    verifyNoInteractions(channel, sources);
   }
 }

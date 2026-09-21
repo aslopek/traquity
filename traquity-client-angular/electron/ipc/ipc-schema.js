@@ -17,8 +17,13 @@ const {MAXIMUM_SIGNATURE_LENGTH} = require('../security/signature-bounds.js');
 const MAXIMUM_PASSWORD_LENGTH = 1024;
 const MAXIMUM_PATH_LENGTH = 4096;
 
-const backendStartPasswordSchema = z.string().max(MAXIMUM_PASSWORD_LENGTH).optional();
-const authVerifyPasswordSchema = z.string().max(MAXIMUM_PASSWORD_LENGTH);
+/**
+ * A password reaches the backend as the first line of its stdin, so a line feed in one would end that line early.
+ */
+const passwordSchema = z.string().max(MAXIMUM_PASSWORD_LENGTH).refine((password) => !password.includes('\n'));
+
+const backendStartPasswordSchema = passwordSchema.optional();
+const authVerifyPasswordSchema = passwordSchema;
 
 const databasePathSchema = z.string().min(1).max(MAXIMUM_PATH_LENGTH);
 

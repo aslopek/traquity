@@ -202,11 +202,11 @@ sole authority on what its password is — and the config file is written with m
 database you choose to leave unprotected is recorded as an explicit `passwordless` marker rather
 than as an empty password.
 
-**The password handover.** The password reaches the backend as the entire content of the spawned
-process's standard input, closed immediately afterwards, with the buffer zeroed once written. The
-child's environment carries a marker telling it to read stdin, and no password at all: a process's
-environment block is readable from outside it on common systems, a pipe between parent and child
-is not.
+**The password handover.** The password reaches the backend as the first line of the spawned
+process's standard input, with the buffer zeroed once written. The stream then stays open for the
+run; closing it asks the backend to shut down. The child's environment carries a marker telling
+it to read the password from `stdin`, and no password at all. A process's environment block is
+readable from outside it on common systems, a pipe between parent and child is not.
 
 **The backend.** It binds to `127.0.0.1` only, so the port is never on a network, and CORS is
 restricted to two origins: the literal `null` Chromium sends for the packaged app's `file://`

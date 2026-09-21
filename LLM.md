@@ -158,9 +158,10 @@ computed startup mode over an IPC bridge and, once past any unlock/configure scr
 In `configure` mode the shell renders the configuration screen, where the user picks or creates the database file and, for a newly created
 one, defines its password; finishing there continues the very same startup flow in the same window, without a relaunch. `electron/main.js`
 then spawns a bundled Java process running the Spring Boot backend (`backend.jar`) as a child process and reports back whether it became
-reachable. The database password reaches that child over its stdin — the entire content of the stream, closed right after — rather than
-through its environment. The backend listens on port `23726` (H2 console on `29232`), backed by a local encrypted H2 file database whose
-path is configurable via `TQ_DB_FILE_PATH`. See `traquity-client-angular/electron/LLM.md` for the boot order in full.
+reachable. The database password reaches that child over its stdin — as the first line — instead of through its environment; the stream
+then stays open for the run, and closing it is the shutdown request. The backend listens on port `23726` (H2 console on `29232`), backed
+by a local encrypted H2 file database whose path is configurable via `TQ_DB_FILE_PATH`. See `traquity-client-angular/electron/LLM.md` for
+the boot order in full.
 
 `forge.config.js` copies `traquity-server-spring/target/traquity-server-spring-<version>.jar` into
 `traquity-client-angular/resources/backend.jar` during electron-forge packaging — the Spring backend must be built (`mvn package`) before
