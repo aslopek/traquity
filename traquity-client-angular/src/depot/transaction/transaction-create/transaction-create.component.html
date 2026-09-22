@@ -61,15 +61,21 @@
 
         <mat-form-field>
             <mat-label>Security</mat-label>
-            <input [formField]="form.securityName"
-                   [matAutocomplete]="autocompleteSecurityName"
+            <input (input)="filterSecurities($event)"
+                   [matAutocomplete]="autocompleteSecurity"
+                   [value]="securityText()"
                    matInput
                    type="text">
-            <mat-autocomplete #autocompleteSecurityName="matAutocomplete">
-                @for (securityName of filteredSecurityNames(); track securityName) {
-                    <mat-option [value]="securityName">{{ securityName }}</mat-option>
+            <mat-autocomplete #autocompleteSecurity="matAutocomplete"
+                              (optionSelected)="selectSecurity($event)"
+                              [displayWith]="displaySecurityName">
+                @for (securityId of securityOptions(); track securityId) {
+                <mat-option [value]="securityId">{{ securityId | securityName }}</mat-option>
                 }
             </mat-autocomplete>
+            @if (securityText().trim().length > 0 && form.securityId().value() === null) {
+            <mat-hint>Pick a security</mat-hint>
+            }
         </mat-form-field>
 
         <div class="tq-form-grid">
