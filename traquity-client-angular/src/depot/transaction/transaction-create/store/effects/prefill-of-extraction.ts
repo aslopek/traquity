@@ -10,13 +10,13 @@ export type PrefillResult = {
 
 export function prefillOfExtraction(transaction: ExtractedTransaction, isin: string | undefined,
                                     securitiesByIsin: SecuritiesByIsin, fileName: string): PrefillResult {
-  const securityName: string = isin == null ? "" : securitiesByIsin[isin]?.name ?? "";
+  const securityId: number | null = isin == null ? null : securitiesByIsin[isin]?.id ?? null;
 
   return {
     prefill: {
       transactionType: transactionTypeOf(transaction.transactionType),
       isSpecialDividend: false,
-      securityName,
+      securityId,
       date: dateOf(transaction.date),
       time: transaction.time == null ? "" : transaction.time.slice(0, 5),
       securityCountOriginal: numberOf(transaction.securityCountOriginal),
@@ -24,15 +24,15 @@ export function prefillOfExtraction(transaction: ExtractedTransaction, isin: str
       tax: numberOf(transaction.tax),
       fee: numberOf(transaction.fee),
     },
-    message: messageOf(isin, securityName, fileName),
+    message: messageOf(isin, securityId, fileName),
   };
 }
 
-function messageOf(isin: string | undefined, securityName: string, fileName: string): ImportMessage {
+function messageOf(isin: string | undefined, securityId: number | null, fileName: string): ImportMessage {
   if (isin == null) {
     return {kind: "warning", text: `${fileName} named no ISIN that could be read. Please pick the security yourself.`};
   }
-  if (securityName === "") {
+  if (securityId == null) {
     return {
       kind: "warning",
       text: `No security with ISIN ${isin} is known. Please pick the security yourself.`,

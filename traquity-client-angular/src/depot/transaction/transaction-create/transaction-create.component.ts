@@ -1,6 +1,6 @@
 import {Component, computed, effect, EffectRef, inject, Signal, signal, WritableSignal} from "@angular/core";
 import {MatProgressBarModule} from "@angular/material/progress-bar";
-import {MatAutocompleteModule} from "@angular/material/autocomplete";
+import {MatAutocompleteModule, MatAutocompleteSelectedEvent} from "@angular/material/autocomplete";
 import {MatButtonModule} from "@angular/material/button";
 import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatDatepickerModule} from "@angular/material/datepicker";
@@ -11,7 +11,13 @@ import {MatSelectModule} from "@angular/material/select";
 import {FieldTree, form, FormField, pattern, required, SchemaPathTree} from "@angular/forms/signals";
 import {Store} from "@ngrx/store";
 import {firstValueFrom} from "rxjs";
-import {TqCurrencyPipe, TitleToolbarComponent, TransactionTypeDisplayIconPipe, TransactionTypeDisplayNamePipe} from "../../../common";
+import {
+  SecurityNamePipe,
+  TqCurrencyPipe,
+  TitleToolbarComponent,
+  TransactionTypeDisplayIconPipe,
+  TransactionTypeDisplayNamePipe,
+} from "../../../common";
 import {TqNetValuePipe} from "../../../common/pipe/tq-net-value.pipe";
 import {TransactionApi, TransactionCreate, TransactionType} from "../../../gen/api/depot-transaction";
 import {AppState} from "../../../store/app.state";
@@ -22,7 +28,7 @@ import {AiBridgeService} from "../../../bridge/ai-bridge.service";
 import {FileDropDirective} from "../../../common/file-drop/file-drop.directive";
 import {getActiveModel} from "../../../store/ai/ai.selector";
 import {ActiveModel} from "../../../store/ai/selectors/get-active-model.selector";
-import {securitiesByIsin} from "../../../store/security/security.selector";
+import {securitiesByIsin, securityIdsMatchingName} from "../../../store/security/security.selector";
 import {SecuritiesByIsin} from "../../../store/security/selectors/get-securities-by-isin.selector";
 import {ReadableTransactionImportStore, TransactionImportStore} from "./store/transaction-import.store";
 import {TransactionPrefill} from "./store/transaction-import.type";
@@ -30,7 +36,7 @@ import {TransactionPrefill} from "./store/transaction-import.type";
 type TransactionFormModel = {
   transactionType: TransactionType | null;
   isSpecialDividend: boolean;
-  securityName: string;
+  securityId: number | null;
   date: Date;
   time: string;
   securityCountOriginal: string;
@@ -69,8 +75,9 @@ const timeRegex: RegExp = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
     FormField,
     FileDropDirective,
     MatProgressBarModule,
+    SecurityNamePipe,
   ],
-  providers: [TransactionImportStore],
+  providers: [TransactionImportStore, SecurityNamePipe],
   templateUrl: "./transaction-create.component.html",
   styleUrl: "./transaction-create.component.scss",
 })
@@ -82,21 +89,28 @@ export class TransactionCreateComponent {
   private readonly store: Store<AppState> = inject(Store);
   private readonly transactionApi: TransactionApi = inject(TransactionApi);
   private readonly dialogRef: MatDialogRef<TransactionCreateComponent> = inject(MatDialogRef);
-  protected readonly transactionPageStore: ReadableTransactionPageStore = inject(transactionPageStore);
+  private readonly transactionPageStore: ReadableTransactionPageStore = inject(transactionPageStore);
   protected readonly importStore: ReadableTransactionImportStore = inject(TransactionImportStore);
 
   protected readonly bridgeAvailable: boolean = inject(AiBridgeService).available;
 
   private readonly activeModel: Signal<ActiveModel | null> = this.store.selectSignal(getActiveModel);
   private readonly knownSecurities: Signal<SecuritiesByIsin> = this.store.selectSignal(securitiesByIsin);
+  private readonly securityNamePipe: SecurityNamePipe = inject(SecurityNamePipe);
 
   protected readonly depotId: Signal<number> = computed((): number => this.store.selectSignal(selectedDepotIds)()[0]);
   protected readonly depotCurrency: Signal<string> = this.store.selectSignal(selectedDepotCurrency);
 
+  /** User-typed content of the security field. The form model references the security ID instead. */
+  protected readonly securityText: WritableSignal<string> = signal<string>("");
+
+  protected readonly securityOptions: Signal<number[]> = computed((): number[] =>
+    this.store.selectSignal(securityIdsMatchingName(this.securityText()))());
+
   private readonly formModel: WritableSignal<TransactionFormModel> = signal<TransactionFormModel>({
     transactionType: null,
     isSpecialDividend: false,
-    securityName: "",
+    securityId: null,
     date: new Date(),
     time: "",
     securityCountOriginal: "",
@@ -111,11 +125,7 @@ export class TransactionCreateComponent {
     (schemaPath: SchemaPathTree<TransactionFormModel>): void => {
       required(schemaPath.transactionType);
 
-      required(schemaPath.securityName);
-      pattern(schemaPath.securityName, (): RegExp => {
-        const names: string[] = this.transactionPageStore.allSecurityNames();
-        return new RegExp(`^(${names.join("|")})$`);
-      });
+      required(schemaPath.securityId);
 
       required(schemaPath.date);
 
@@ -147,12 +157,6 @@ export class TransactionCreateComponent {
     return transactionType === TransactionType.BUY || transactionType === TransactionType.SELL;
   });
 
-  protected readonly filteredSecurityNames: Signal<string[]> = computed((): string[] => {
-    const filterValue: string = this.form.securityName().value().trim().toLowerCase();
-    return this.transactionPageStore.allSecurityNames()
-      .filter((name: string): boolean => name.toLowerCase().includes(filterValue));
-  });
-
   protected readonly netValueInput: Signal<NetValueInput> = computed((): NetValueInput => {
     const values: TransactionFormModel = this.formModel();
     return {
@@ -172,7 +176,7 @@ export class TransactionCreateComponent {
       ...values,
       transactionType: prefill.transactionType,
       isSpecialDividend: prefill.isSpecialDividend,
-      securityName: prefill.securityName,
+      securityId: prefill.securityId,
       date: prefill.date ?? values.date,
       time: prefill.time,
       securityCountOriginal: prefill.securityCountOriginal,
@@ -181,8 +185,23 @@ export class TransactionCreateComponent {
       tax: prefill.tax,
       fee: prefill.fee,
     }));
+    this.securityText.set(this.displaySecurityName(prefill.securityId));
     this.importStore.clearPrefill();
   });
+
+  protected readonly displaySecurityName: (securityId: number | null) => string = (securityId: number | null): string =>
+    securityId == null ? "" : this.securityNamePipe.transform(securityId);
+
+  protected filterSecurities(event: Event): void {
+    this.securityText.set((event.target as HTMLInputElement).value);
+    this.formModel.update((values: TransactionFormModel): TransactionFormModel => ({...values, securityId: null}));
+  }
+
+  protected selectSecurity(event: MatAutocompleteSelectedEvent): void {
+    const securityId: number = event.option.value as number;
+    this.formModel.update((values: TransactionFormModel): TransactionFormModel => ({...values, securityId}));
+    this.securityText.set(this.displaySecurityName(securityId));
+  }
 
   protected importFile(files: File[]): void {
     const file: File | undefined = files[0];
@@ -237,7 +256,7 @@ export class TransactionCreateComponent {
 
     const payload: TransactionCreate = {
       transactionType,
-      securityId: this.transactionPageStore.securityIdsByName()[values.securityName],
+      securityId: values.securityId!,
       date: dateString,
       time,
       securityCountOriginal,

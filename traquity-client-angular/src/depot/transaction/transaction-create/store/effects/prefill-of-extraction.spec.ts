@@ -39,7 +39,7 @@ describe("prefillOfExtraction", (): void => {
     expect(prefillOfExtraction(transaction, isin, securitiesByIsin, FILE_NAME).prefill).toEqual({
       transactionType: TransactionType.SELL,
       isSpecialDividend: false,
-      securityName: apple.name,
+      securityId: apple.id,
       date: new Date(2024, 1, 2),
       time: "14:05",
       securityCountOriginal: "10",
@@ -64,7 +64,7 @@ describe("prefillOfExtraction", (): void => {
     expect(result.prefill).toEqual({
       transactionType: TransactionType.SELL,
       isSpecialDividend: false,
-      securityName: apple.name,
+      securityId: apple.id,
       date: new Date(2024, 1, 2),
       time: "",
       securityCountOriginal: "10",
@@ -101,7 +101,7 @@ describe("prefillOfExtraction", (): void => {
     });
 
     it("fills no security", (): void => {
-      expect(prefillOfExtraction(transaction, isin, securitiesByIsin, FILE_NAME).prefill.securityName).toBe("");
+      expect(prefillOfExtraction(transaction, isin, securitiesByIsin, FILE_NAME).prefill.securityId).toBeNull();
     });
 
     it("says which ISIN was not found", (): void => {
@@ -115,7 +115,7 @@ describe("prefillOfExtraction", (): void => {
       expect(prefillOfExtraction(transaction, isin, securitiesByIsin, FILE_NAME).prefill).toEqual({
         transactionType: TransactionType.SELL,
         isSpecialDividend: false,
-        securityName: "",
+        securityId: null,
         date: new Date(2024, 1, 2),
         time: "14:05",
         securityCountOriginal: "10",
@@ -132,7 +132,7 @@ describe("prefillOfExtraction", (): void => {
     });
 
     it("fills no security", (): void => {
-      expect(prefillOfExtraction(transaction, isin, securitiesByIsin, FILE_NAME).prefill.securityName).toBe("");
+      expect(prefillOfExtraction(transaction, isin, securitiesByIsin, FILE_NAME).prefill.securityId).toBeNull();
     });
 
     it("says the document named none", (): void => {
