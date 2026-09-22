@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed a bug where a security name containing characters like `( ) [ ] + * ? | ^ $ \ { }` could not be selected in the *Add Transaction*
+  dialog.
+
 ## [1.2.0] - 2026-09-20
 
 ### Added

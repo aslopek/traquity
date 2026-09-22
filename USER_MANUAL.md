@@ -454,17 +454,17 @@ There is no withdrawal type. See [There are no withdrawals](#there-are-no-withdr
 2. Press **Add Transaction**.
 3. Fill the form and press **Create**.
 
-| Field                         | Required | Notes                                                                  |
-|-------------------------------|----------|------------------------------------------------------------------------|
-| **Transaction Type**          | yes      | Choosing `Dividend` reveals a **Special Dividend** checkbox            |
-| **Security**                  | yes      | Autocomplete; the value must match an existing security's name exactly |
-| **Date**                      | yes      | Date picker, formatted as configured under **Settings → Appearance**   |
-| **Time**                      | no       | Only shown for `Buy` and `Sell`                                        |
-| **Quantity (original)**       | yes      | The number of shares as printed on the broker's document               |
-| **Quantity (split-adjusted)** | no       | The quantity in today's shares; leave empty when no split applies      |
-| **Gross Value**               | yes      | The amount before tax and fee, in the depot's currency                 |
-| **Tax**                       | no       | Withholding or capital gains tax booked with this transaction          |
-| **Fee**                       | no       | Broker fee booked with this transaction                                |
+| Field                         | Required | Notes                                                                              |
+|-------------------------------|----------|------------------------------------------------------------------------------------|
+| **Transaction Type**          | yes      | Choosing `Dividend` reveals a **Special Dividend** checkbox                        |
+| **Security**                  | yes      | Autocomplete; pick one of the offered securities, typing alone does not select one |
+| **Date**                      | yes      | Date picker, formatted as configured under **Settings → Appearance**               |
+| **Time**                      | no       | Only shown for `Buy` and `Sell`                                                    |
+| **Quantity (original)**       | yes      | The number of shares as printed on the broker's document                           |
+| **Quantity (split-adjusted)** | no       | The quantity in today's shares; leave empty when no split applies                  |
+| **Gross Value**               | yes      | The amount before tax and fee, in the depot's currency                             |
+| **Tax**                       | no       | Withholding or capital gains tax booked with this transaction                      |
+| **Fee**                       | no       | Broker fee booked with this transaction                                            |
 
 **Create** stays disabled until every required field is filled and every filled field is valid. A security that does not exist yet has to be
 created first — see [Managing securities](#managing-securities).

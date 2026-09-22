@@ -11,7 +11,8 @@ export type ImportMessage = {
 export type TransactionPrefill = {
   transactionType: TransactionType | null
   isSpecialDividend: boolean
-  securityName: string
+  /** The security the document's ISIN resolved to, or `null` when it named none or named an unknown one. */
+  securityId: number | null
   date: Date | null
   time: string
   securityCountOriginal: string
