@@ -1,6 +1,6 @@
 import {Component, inject, Signal} from "@angular/core";
 import {DepotPerformanceStore, ReadableDepotPerformanceStore} from "../store/depot-performance.store";
-import {DataRange} from "../../../common";
+import {DataRange} from "../../../common/types/data-range";
 import {MatButtonToggle, MatButtonToggleGroup} from "@angular/material/button-toggle";
 
 @Component({

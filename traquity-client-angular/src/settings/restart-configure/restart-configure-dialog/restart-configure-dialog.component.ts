@@ -1,7 +1,7 @@
 import {Component, inject} from "@angular/core";
 import {MatButton} from "@angular/material/button";
 import {MatDialogRef} from "@angular/material/dialog";
-import {TitleToolbarComponent} from "../../../common";
+import {TitleToolbarComponent} from "../../../common/components/title-toolbar/title-toolbar.component";
 import {StartupBridgeService} from "../../../bridge/startup-bridge.service";
 
 @Component({

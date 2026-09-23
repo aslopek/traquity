@@ -2,7 +2,7 @@ import {beforeEach, describe, expect, it} from '@jest/globals';
 import {getPositionGroupAttribute, positionGroupAttributes, positionGroupByValues} from './position-group-attributes';
 import {PositionGroupAttribute} from './position-group-attribute.type';
 import {SecurityRead} from '../../../gen/api/security';
-import {securityReadFactory} from '../../../testing';
+import {securityReadFactory} from '../../../testing/security-read.factory';
 
 describe('positionGroupAttributes', (): void => {
   describe('sector attribute', (): void => {

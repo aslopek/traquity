@@ -5,7 +5,8 @@ import {LoadDividendsPositionsSuccessActionArgs} from '../depot.actions';
 import {Performance} from '../../../gen/api/depot-performance';
 import {Dividends} from '../../../gen/api/depot-dividend';
 import {DepotComposition} from '../../../gen/api/depot-position';
-import {depotPositionFactory, performanceFactory} from '../../../testing';
+import {depotPositionFactory} from '../../../testing/depot-position.factory';
+import {performanceFactory} from '../../../testing/performance.factory';
 import {initialState} from "../depot.reducer";
 
 describe('setPerformanceDataReducer', (): void => {

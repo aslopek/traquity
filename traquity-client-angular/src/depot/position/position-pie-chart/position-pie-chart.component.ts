@@ -1,9 +1,11 @@
 import {Component, OnDestroy, Signal, signal, WritableSignal,} from "@angular/core";
 import {Store} from "@ngrx/store";
 import {NgxEchartsDirective} from "ngx-echarts";
-import {TqCurrencyPipe, TqDecimalPipe, TqPercentPipe} from "../../../common";
 import {TqIconComponent} from "../../../common/components/tq-icon/tq-icon.component";
 import {SecurityLogoUrlPipe} from "../../../common/pipe/security-logo-url.pipe";
+import {TqCurrencyPipe} from "../../../common/pipe/tq-currency.pipe";
+import {TqDecimalPipe} from "../../../common/pipe/tq-decimal.pipe";
+import {TqPercentPipe} from "../../../common/pipe/tq-percent.pipe";
 import {hideAbsoluteValues} from "../../../store/app-config/app-config.selector";
 import {ECElementEvent, ECharts} from "echarts/core";
 import {AppState} from "../../../store/app.state";

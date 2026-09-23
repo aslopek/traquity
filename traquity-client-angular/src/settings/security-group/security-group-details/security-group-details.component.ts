@@ -12,7 +12,7 @@ import {SecurityGroupRead} from "../../../gen/api/configuration-security-group";
 import {AppState} from "../../../store/app.state";
 import {securitiesById as securitiesByIdSelector} from "../../../store/security/security.selector";
 import {SecuritiesById} from "../../../store/security/security.state";
-import {SecurityNamePipe} from "../../../common";
+import {SecurityNamePipe} from "../../../common/pipe/security-name.pipe";
 
 type MemberOption = {
   id: number

@@ -3,7 +3,7 @@ import {ExtractedTransaction} from "../../../../../bridge/ai-bridge.type";
 import {TransactionType} from "../../../../../gen/api/depot-transaction";
 import {SecurityRead} from "../../../../../gen/api/security";
 import {SecuritiesByIsin} from "../../../../../store/security/selectors/get-securities-by-isin.selector";
-import {securityReadFactory} from "../../../../../testing";
+import {securityReadFactory} from "../../../../../testing/security-read.factory";
 import {prefillOfExtraction, PrefillResult} from "./prefill-of-extraction";
 import {TransactionPrefill} from "../transaction-import.type";
 

@@ -5,7 +5,7 @@ import {DepotTab} from "./depot-tabs";
 import {DepotConfigKey} from "./depot-config-keys";
 import {Dividends} from "../../gen/api/depot-dividend";
 import {DepotComposition} from "../../gen/api/depot-position";
-import {Timespan} from "../../common";
+import {Timespan} from "../../common/types/timespan";
 import {DepotPerformance, Performance} from "../../gen/api/depot-performance";
 import {PositionGroupBy} from "./position-grouping/position-group.type";
 

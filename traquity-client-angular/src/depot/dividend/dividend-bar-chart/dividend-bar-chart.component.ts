@@ -8,7 +8,7 @@ import {AppState} from "../../../store/app.state";
 import {selectedDepotCurrency} from "../../../store/depot/depot.selector";
 import {hideAbsoluteValues} from "../../../store/app-config/app-config.selector";
 import {dividendStore, ReadableDividendStore} from "../store/dividend.store";
-import {TqCurrencyPipe} from "../../../common";
+import {TqCurrencyPipe} from "../../../common/pipe/tq-currency.pipe";
 
 @Component({
   selector: "app-dividend-bar-chart",

@@ -1,5 +1,5 @@
 import {beforeEach, describe, expect, it} from '@jest/globals';
-import {securityReadFactory} from '../../../testing';
+import {securityReadFactory} from '../../../testing/security-read.factory';
 import {SecurityRead} from '../../../gen/api/security';
 import {SecurityState} from '../security.state';
 import {getSecurityIdsMatchingNameSelector} from './get-security-ids-matching-name.selector';

@@ -1,5 +1,7 @@
 import {Pipe, PipeTransform} from "@angular/core";
-import {TqCurrencyPipe, TqDecimalPipe, TqPercentPipe} from "../../../common";
+import {TqCurrencyPipe} from "../../../common/pipe/tq-currency.pipe";
+import {TqDecimalPipe} from "../../../common/pipe/tq-decimal.pipe";
+import {TqPercentPipe} from "../../../common/pipe/tq-percent.pipe";
 import {DepotPosition} from "../../../gen/api/depot-position";
 import {SecurityLogoUrlPipe} from "../../../common/pipe/security-logo-url.pipe";
 import {EChartsOption} from "echarts";

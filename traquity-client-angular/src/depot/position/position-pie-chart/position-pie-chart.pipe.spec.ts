@@ -1,10 +1,12 @@
 import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 import {EChartsOption} from 'echarts';
 import {PositionPieChartPipe} from './position-pie-chart.pipe';
-import {TqCurrencyPipe, TqDecimalPipe, TqPercentPipe} from '../../../common';
 import {SecurityLogoUrlPipe} from '../../../common/pipe/security-logo-url.pipe';
+import {TqCurrencyPipe} from '../../../common/pipe/tq-currency.pipe';
+import {TqDecimalPipe} from '../../../common/pipe/tq-decimal.pipe';
+import {TqPercentPipe} from '../../../common/pipe/tq-percent.pipe';
 import {DepotPosition} from '../../../gen/api/depot-position';
-import {depotPositionFactory} from '../../../testing';
+import {depotPositionFactory} from '../../../testing/depot-position.factory';
 import {positionPieChartGeometry} from './position-pie-chart-geometry';
 
 type LabelState = {

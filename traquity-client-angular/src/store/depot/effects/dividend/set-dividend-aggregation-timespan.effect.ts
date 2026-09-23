@@ -5,7 +5,7 @@ import {AppState} from "../../../app.state";
 import {catchError, map, Observable, of, switchMap} from "rxjs";
 import {DepotActions, SetDividendAggregationTimespanActionArgs} from "../../depot.actions";
 import {concatLatestFrom} from "@ngrx/operators";
-import {Timespan} from "../../../../common";
+import {Timespan} from "../../../../common/types/timespan";
 import {dividendAggregationTimespan as dividendAggregationTimespanSelector} from "../../depot.selector";
 import {dividendAggregationTimespan as dividendAggregationTimespanConfigKey} from "../../depot-config-keys";
 import {clientId} from "../../../client-id";

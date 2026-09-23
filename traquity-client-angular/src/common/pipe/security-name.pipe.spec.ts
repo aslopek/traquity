@@ -5,7 +5,7 @@ import {SecurityRead} from '../../gen/api/security';
 import {securitiesById} from '../../store/security/security.selector';
 import {SecuritiesById} from '../../store/security/security.state';
 import {AppState} from '../../store/app.state';
-import {securityReadFactory} from '../../testing';
+import {securityReadFactory} from '../../testing/security-read.factory';
 
 type MockedStore = Pick<Store<AppState>, 'selectSignal'>;
 

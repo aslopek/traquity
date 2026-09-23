@@ -1,6 +1,6 @@
 import {WritableSignalStore} from "../../../../common/types/signal-store.type";
 import {DepotPerformanceComputed, DepotPerformanceState} from "../depot-performance.store";
-import {DataRange} from "../../../../common";
+import {DataRange} from "../../../../common/types/data-range";
 import {patchState} from "@ngrx/signals";
 
 export function setDataRange(signalStore: WritableSignalStore<DepotPerformanceState, DepotPerformanceComputed>, dataRange: DataRange): void {

@@ -6,7 +6,7 @@ import {MatIconModule} from "@angular/material/icon";
 import {MatSidenavModule} from "@angular/material/sidenav";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {DomSanitizer, SafeUrl} from "@angular/platform-browser";
-import {TitleToolbarComponent} from "../../common";
+import {TitleToolbarComponent} from "../../common/components/title-toolbar/title-toolbar.component";
 import {DatabaseConfig} from "../../gen/api/admin";
 
 /**

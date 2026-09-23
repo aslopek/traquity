@@ -1,6 +1,8 @@
 import {inject, Pipe, PipeTransform} from "@angular/core";
 import {EChartsOption} from "echarts";
-import {TqCurrencyPipe, TqDatePipe, TqPercentPipe} from "../../../common";
+import {TqCurrencyPipe} from "../../../common/pipe/tq-currency.pipe";
+import {TqDatePipe} from "../../../common/pipe/tq-date.pipe";
+import {TqPercentPipe} from "../../../common/pipe/tq-percent.pipe";
 import {HistoricalSecurityPrice} from "../../../gen/api/historical-security-price";
 import {chartToken, chartTokenAlpha} from "../../../common/chart/chart-token";
 import {escapeHtml} from "../../../common/chart/escape-html";

@@ -4,7 +4,7 @@ import {
   GetHistoricalSecurityPriceConfigState
 } from './get-historical-security-price-config.selector';
 import {HistoricalSecurityPriceConfigRead} from '../../../gen/api/historical-security-price';
-import {historicalSecurityPriceConfigFactory} from '../../../testing';
+import {historicalSecurityPriceConfigFactory} from '../../../testing/historical-security-price-config.factory';
 
 describe('getHistoricalSecurityPriceConfigSelector', (): void => {
   let state: GetHistoricalSecurityPriceConfigState;

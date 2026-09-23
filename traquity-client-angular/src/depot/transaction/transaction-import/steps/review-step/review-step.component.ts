@@ -1,7 +1,8 @@
 import {Component, inject} from '@angular/core';
 import {MatButtonModule} from '@angular/material/button';
 import {MatStepperNext} from '@angular/material/stepper';
-import {TqDatePipe, TransactionTypeDisplayNamePipe} from '../../../../../common';
+import {TqDatePipe} from '../../../../../common/pipe/tq-date.pipe';
+import {TransactionTypeDisplayNamePipe} from '../../../../../common/pipe/transaction-type-display-name.pipe';
 import {ReadableTransactionImportStore, TransactionImportStore} from '../../store/transaction-import.store';
 
 @Component({

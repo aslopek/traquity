@@ -1,6 +1,6 @@
 import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 import {ModelVerdict} from '../../../bridge/ai-bridge.type';
-import {TqByteSizePipe} from '../../../common';
+import {TqByteSizePipe} from '../../../common/pipe/tq-byte-size.pipe';
 import {AiVerdictLabelPipe} from './ai-verdict-label.pipe';
 
 describe('AiVerdictLabelPipe', (): void => {

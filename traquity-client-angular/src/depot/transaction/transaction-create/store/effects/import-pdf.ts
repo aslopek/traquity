@@ -3,13 +3,8 @@ import {RxMethod, rxMethod} from "@ngrx/signals/rxjs-interop";
 import {catchError, EMPTY, from, map, Observable, OperatorFunction, pipe, switchMap, tap} from "rxjs";
 import {AiBridgeService} from "../../../../../bridge/ai-bridge.service";
 import {AiExtractionOutcome} from "../../../../../bridge/ai-bridge.type";
-import {
-  extractPdf,
-  PdfExtractionFailure,
-  PdfExtractionResult,
-  PdfTransactionReading,
-  transactionReadingOfDocument
-} from "../../../../../common";
+import {extractPdf, PdfExtractionFailure, PdfExtractionResult} from "../../../../../common/pdf/extract-pdf";
+import {PdfTransactionReading, transactionReadingOfDocument} from "../../../../../common/pdf/transaction-reading-of-document";
 import {WritableSignalStore} from "../../../../../common/types/signal-store.type";
 import {SecuritiesByIsin} from "../../../../../store/security/selectors/get-securities-by-isin.selector";
 import {prefillOfExtraction, PrefillResult} from "./prefill-of-extraction";

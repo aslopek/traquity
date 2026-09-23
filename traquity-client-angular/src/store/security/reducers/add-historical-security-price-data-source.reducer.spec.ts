@@ -4,7 +4,8 @@ import {SecurityState} from '../security.state';
 import {SetHistoricalSecurityPriceDataSourceDoneActionArgs} from '../security.actions';
 import {DataSourceWithId} from '../../../settings/data-source/data-source.type';
 import {HistoricalSecurityPriceDataSourceRead} from '../../../gen/api/historical-security-price';
-import {dataSourceWithIdFactory, historicalSecurityPriceDataSourceReadFactory} from '../../../testing';
+import {dataSourceWithIdFactory} from '../../../testing/data-source-with-id.factory';
+import {historicalSecurityPriceDataSourceReadFactory} from '../../../testing/historical-security-price-data-source-read.factory';
 
 describe('setHistoricalSecurityPriceDataSource', (): void => {
   let state: Readonly<SecurityState>;

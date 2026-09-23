@@ -6,7 +6,7 @@ import {loadSecurity, LoadSecurityEffectArgs} from './load-security.effect';
 import {SecurityActions} from '../security.actions';
 import {SecurityApi, SecurityRead} from '../../../gen/api/security';
 import {AppState} from '../../app.state';
-import {securityReadFactory} from '../../../testing';
+import {securityReadFactory} from '../../../testing/security-read.factory';
 
 type MockedStore = Pick<Store<AppState>, 'selectSignal'>;
 type MockedSecurityApi = Pick<SecurityApi, 'getSecurity'>;

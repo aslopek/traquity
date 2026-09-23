@@ -1,7 +1,9 @@
 import {Component, computed, input, InputSignal, Signal} from "@angular/core";
-import {
-  SecurityNamePipe, TqCurrencyPipe, TqDatePipe, TransactionTypeDisplayIconPipe, TransactionTypeDisplayNamePipe
-} from "../../../../common";
+import {SecurityNamePipe} from "../../../../common/pipe/security-name.pipe";
+import {TqCurrencyPipe} from "../../../../common/pipe/tq-currency.pipe";
+import {TqDatePipe} from "../../../../common/pipe/tq-date.pipe";
+import {TransactionTypeDisplayIconPipe} from "../../../../common/pipe/transaction-type-display-icon.pipe";
+import {TransactionTypeDisplayNamePipe} from "../../../../common/pipe/transaction-type-display-name.pipe";
 import {Store} from "@ngrx/store";
 import {AppState} from "../../../../store/app.state";
 import {selectedDepotCurrency} from "../../../../store/depot/depot.selector";

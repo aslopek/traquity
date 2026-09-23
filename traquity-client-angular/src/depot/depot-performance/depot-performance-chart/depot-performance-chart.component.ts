@@ -8,7 +8,9 @@ import {hideAbsoluteValues} from "../../../store/app-config/app-config.selector"
 import {ECharts} from "echarts/core";
 import {NgxEchartsDirective} from "ngx-echarts";
 import {DepotPerformanceChartPipe} from "./depot-performance-chart.pipe";
-import {TqCurrencyPipe, TqDatePipe, TqPercentPipe} from "../../../common";
+import {TqCurrencyPipe} from "../../../common/pipe/tq-currency.pipe";
+import {TqDatePipe} from "../../../common/pipe/tq-date.pipe";
+import {TqPercentPipe} from "../../../common/pipe/tq-percent.pipe";
 import {MatSlideToggle} from "@angular/material/slide-toggle";
 import {BenchmarkResult} from "../store/benchmark/benchmark.type";
 
