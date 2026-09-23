@@ -1,5 +1,5 @@
 import {DepotRead} from '../../gen/api/depot';
-import {Timespan} from "../../common";
+import {Timespan} from "../../common/types/timespan";
 import {Dividends} from "../../gen/api/depot-dividend";
 import {DepotComposition} from "../../gen/api/depot-position";
 import {DepotPerformance, Performance} from "../../gen/api/depot-performance";

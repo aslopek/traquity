@@ -3,17 +3,13 @@ import {patchState} from "@ngrx/signals";
 import {Observable, of, throwError} from "rxjs";
 import {AiBridgeService} from "../../../../../bridge/ai-bridge.service";
 import {AiExtractionOutcome, AiExtractionRequest, ExtractedTransaction} from "../../../../../bridge/ai-bridge.type";
-import {
-  DocumentToken,
-  extractPdf,
-  PdfDocument,
-  PdfExtractionResult,
-  PdfTransactionReading,
-  transactionReadingOfDocument
-} from "../../../../../common";
+import {extractPdf, PdfExtractionResult} from "../../../../../common/pdf/extract-pdf";
+import {PdfDocument} from "../../../../../common/pdf/pdf-document.type";
+import {DocumentToken} from "../../../../../common/pdf/tokens-of-document";
+import {PdfTransactionReading, transactionReadingOfDocument} from "../../../../../common/pdf/transaction-reading-of-document";
 import {WritableSignalStore} from "../../../../../common/types/signal-store.type";
 import {SecuritiesByIsin} from "../../../../../store/security/selectors/get-securities-by-isin.selector";
-import {securityReadFactory} from "../../../../../testing";
+import {securityReadFactory} from "../../../../../testing/security-read.factory";
 import {prefillOfExtraction} from "./prefill-of-extraction";
 import {TransactionImportComputed, TransactionImportState} from "../transaction-import.store";
 import {ImportedFile, ImportPdfArgs, importPdfPipeline} from "./import-pdf";

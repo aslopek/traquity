@@ -1,6 +1,6 @@
 import {Pipe, PipeTransform} from "@angular/core";
 import {ModelVerdict} from "../../../bridge/ai-bridge.type";
-import {TqByteSizePipe} from "../../../common";
+import {TqByteSizePipe} from "../../../common/pipe/tq-byte-size.pipe";
 
 @Pipe({name: "aiVerdictLabel"})
 export class AiVerdictLabelPipe implements PipeTransform {

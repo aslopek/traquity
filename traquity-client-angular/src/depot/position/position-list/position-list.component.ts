@@ -1,8 +1,9 @@
 import {Component, Signal,} from "@angular/core";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {Store} from "@ngrx/store";
-import {TqCurrencyPipe, TqPercentPipe} from "../../../common";
 import {PerformanceLabelComponent} from "../../../common/components/performance-label/performance-label.component";
+import {TqCurrencyPipe} from "../../../common/pipe/tq-currency.pipe";
+import {TqPercentPipe} from "../../../common/pipe/tq-percent.pipe";
 import {hideAbsoluteValues} from "../../../store/app-config/app-config.selector";
 import {AppState} from "../../../store/app.state";
 import {Positions} from "../../../store/depot/depot.state";

@@ -1,6 +1,6 @@
 import {Component, inject} from "@angular/core";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
-import {TitleToolbarComponent} from "../../../common";
+import {TitleToolbarComponent} from "../../../common/components/title-toolbar/title-toolbar.component";
 import {LotViewComponent} from "../lot-view/lot-view.component";
 
 export type LotsDialogData = {

@@ -5,7 +5,7 @@ import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatSelectModule} from '@angular/material/select';
 import {MatStepperNext} from '@angular/material/stepper';
 import {TransactionType} from '../../../../../gen/api/depot-transaction';
-import {TransactionTypeDisplayNamePipe} from '../../../../../common';
+import {TransactionTypeDisplayNamePipe} from '../../../../../common/pipe/transaction-type-display-name.pipe';
 import {ReadableTransactionImportStore, TransactionImportStore} from '../../store/transaction-import.store';
 import {MappableField} from '../../store/csv/csv.type';
 import {lookupTransactionType} from '../../store/csv/lookup-transaction-type';

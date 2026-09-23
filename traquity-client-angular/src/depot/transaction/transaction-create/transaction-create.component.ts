@@ -11,14 +11,12 @@ import {MatSelectModule} from "@angular/material/select";
 import {FieldTree, form, FormField, pattern, required, SchemaPathTree} from "@angular/forms/signals";
 import {Store} from "@ngrx/store";
 import {firstValueFrom} from "rxjs";
-import {
-  SecurityNamePipe,
-  TqCurrencyPipe,
-  TitleToolbarComponent,
-  TransactionTypeDisplayIconPipe,
-  TransactionTypeDisplayNamePipe,
-} from "../../../common";
+import {TitleToolbarComponent} from "../../../common/components/title-toolbar/title-toolbar.component";
+import {SecurityNamePipe} from "../../../common/pipe/security-name.pipe";
+import {TqCurrencyPipe} from "../../../common/pipe/tq-currency.pipe";
 import {TqNetValuePipe} from "../../../common/pipe/tq-net-value.pipe";
+import {TransactionTypeDisplayIconPipe} from "../../../common/pipe/transaction-type-display-icon.pipe";
+import {TransactionTypeDisplayNamePipe} from "../../../common/pipe/transaction-type-display-name.pipe";
 import {TransactionApi, TransactionCreate, TransactionType} from "../../../gen/api/depot-transaction";
 import {AppState} from "../../../store/app.state";
 import {DepotActions} from "../../../store/depot/depot.actions";

@@ -1,5 +1,5 @@
 import {beforeEach, describe, expect, it} from '@jest/globals';
-import {securityReadFactory} from '../../../testing';
+import {securityReadFactory} from '../../../testing/security-read.factory';
 import {SecurityRead} from '../../../gen/api/security';
 import {SecurityState} from '../security.state';
 import {getSecuritiesByIsinSelector} from './get-securities-by-isin.selector';

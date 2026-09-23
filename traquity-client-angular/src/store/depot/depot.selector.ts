@@ -14,7 +14,7 @@ import {getSelectedDepots} from "./selectors/get-selected-depots.selector";
 import {getIncludeSpecialDividends} from "./selectors/dividend/get-include-special-dividends.selector";
 import {Dividends} from "../../gen/api/depot-dividend";
 import {getDividends} from "./selectors/dividend/get-dividends.selector";
-import {Timespan} from "../../common";
+import {Timespan} from "../../common/types/timespan";
 import {getDividendAggregationTimespan} from "./selectors/dividend/get-dividend-aggregation-timespan.selector";
 import {getUseDividendGrossValues} from "./selectors/dividend/get-use-dividend-gross-values.selector";
 import {getSelectedDividendView} from "./selectors/dividend/get-selected-dividend-view.selector";

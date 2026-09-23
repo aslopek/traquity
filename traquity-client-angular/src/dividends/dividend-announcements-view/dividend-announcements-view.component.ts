@@ -5,7 +5,7 @@ import {MatAccordion, MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPa
 import {LetDirective} from "@ngrx/component";
 import {select, Store} from "@ngrx/store";
 import {Observable} from "rxjs";
-import {TqDatePipe} from "../../common";
+import {TqDatePipe} from "../../common/pipe/tq-date.pipe";
 import {DividendAnnouncementRead} from "../../gen/api/notification/dividend-announcement";
 import {getAllDividendAnnouncements} from "../../store/dividend-announcement/dividend-announcement.selector";
 import {DividendAnnouncementsWeekComponent} from "./dividend-announcements-week/dividend-announcements-week.component";

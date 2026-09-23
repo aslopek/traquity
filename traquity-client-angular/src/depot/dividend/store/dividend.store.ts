@@ -6,7 +6,7 @@ import {AppState} from "../../../store/app.state";
 import {computed, inject, Signal} from "@angular/core";
 import {Dividends} from "../../../gen/api/depot-dividend";
 import {dividendAggregationTimespan, dividends, useDividendGrossValues} from "../../../store/depot/depot.selector";
-import {Timespan} from "../../../common";
+import {Timespan} from "../../../common/types/timespan";
 
 export type DividendStoreComputed = {
   aggregatedDividends: Signal<AggregatedDividends>

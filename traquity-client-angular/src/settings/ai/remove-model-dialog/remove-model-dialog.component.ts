@@ -3,7 +3,7 @@ import {MatIcon} from "@angular/material/icon";
 import {MatButton} from "@angular/material/button";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
 import {Store} from "@ngrx/store";
-import {TitleToolbarComponent} from "../../../common";
+import {TitleToolbarComponent} from "../../../common/components/title-toolbar/title-toolbar.component";
 import {AiActions} from "../../../store/ai/ai.actions";
 import {AppState} from "../../../store/app.state";
 

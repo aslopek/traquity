@@ -1,9 +1,11 @@
 import {Component, computed, inject, input, InputSignal, Signal,} from "@angular/core";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {Store} from "@ngrx/store";
-import {TqCurrencyPipe, TqDecimalPipe, TqPercentPipe} from "../../../../common";
 import {TqIconComponent} from "../../../../common/components/tq-icon/tq-icon.component";
 import {SecurityLogoUrlPipe} from "../../../../common/pipe/security-logo-url.pipe";
+import {TqCurrencyPipe} from "../../../../common/pipe/tq-currency.pipe";
+import {TqDecimalPipe} from "../../../../common/pipe/tq-decimal.pipe";
+import {TqPercentPipe} from "../../../../common/pipe/tq-percent.pipe";
 import {DepotPosition} from "../../../../gen/api/depot-position";
 import {hideAbsoluteValues} from "../../../../store/app-config/app-config.selector";
 import {AppState} from "../../../../store/app.state";

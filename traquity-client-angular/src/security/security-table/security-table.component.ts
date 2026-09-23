@@ -13,10 +13,12 @@ import {
   MatRowDef,
   MatTable,
 } from "@angular/material/table";
-import {SecurityLogoComponent} from "../../common/components/security-logo/security-logo.component";
 import {FlagIconComponent} from "../../common/components/flag-icon/flag-icon.component";
-import {TqCurrencyPipe, TqDatePipe, SecurityNamePipe} from "../../common";
+import {SecurityLogoComponent} from "../../common/components/security-logo/security-logo.component";
+import {SecurityNamePipe} from "../../common/pipe/security-name.pipe";
 import {SecuritySymbolsPipe} from "../../common/pipe/security-symbols.pipe";
+import {TqCurrencyPipe} from "../../common/pipe/tq-currency.pipe";
+import {TqDatePipe} from "../../common/pipe/tq-date.pipe";
 import {PriceIconPipePipe} from "./price-icon.pipe";
 import {MatIcon} from "@angular/material/icon";
 import {MatTooltip} from "@angular/material/tooltip";

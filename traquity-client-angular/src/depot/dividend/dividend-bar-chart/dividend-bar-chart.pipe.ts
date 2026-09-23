@@ -2,8 +2,8 @@ import {inject, Pipe, PipeTransform} from "@angular/core";
 import {AggregatedDividends} from "../store/computed/get-aggregated-dividends";
 import type {BarSeriesOption} from 'echarts';
 import {EChartsOption} from "echarts";
-import {TqCurrencyPipe} from "../../../common";
 import {chartToken} from "../../../common/chart/chart-token";
+import {TqCurrencyPipe} from "../../../common/pipe/tq-currency.pipe";
 
 @Pipe({
   name: "dividendBarChart",
