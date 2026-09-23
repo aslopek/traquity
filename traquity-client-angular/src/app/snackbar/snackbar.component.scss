@@ -1,0 +1,31 @@
+:host {
+  display: contents;
+}
+
+.snackbar {
+  position: fixed;
+  top: var(--tq-header-height);
+  right: 0;
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--tq-space-3);
+  padding: var(--tq-space-4);
+  // the stack covers the corner even while it is empty, so only the notices themselves take clicks
+  pointer-events: none;
+}
+
+.snackbar__item {
+  align-items: center;
+  max-width: 28rem;
+  // opaque surface with depth from border and shadow, like every other floating surface
+  background-color: var(--tq-surface-raised);
+  box-shadow: var(--tq-shadow-2);
+  pointer-events: auto;
+}
+
+.snackbar__message {
+  flex: 1 1 auto;
+  min-width: 0;
+}

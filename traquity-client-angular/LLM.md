@@ -80,16 +80,21 @@ The Angular + NgRx frontend, packaged as the Electron desktop app that ships to 
     (e.g. `src/depot/depot-performance/store/`, `src/security/update-security/store/`), hold everything else: form drafts, wizard/tab
     progress, UI toggles, derived view state. A Signal Store can be shared by several components at once.
 - **Feature folders** under `src/` (`depot`, `dividends`, `security`, `settings`) hold routed page/feature components and consume the global
-  store + generated API clients directly, or a local Signal Store where one exists; `src/common` holds cross-feature building blocks
-  (re-exported via `src/common/index.ts`: shared components, `tq-*` pipes for currency/date/decimal/percent formatting, the
-  `ReadableSignalStore`/ `WritableSignalStore` types, `pdf/`, `file-drop/`); `src/app` holds app-shell chrome (header incl. notifications,
-  database connection dialog, splash screen, license, info, privacy).
+  store + generated API clients directly, or a local Signal Store where one exists; `src/common` holds cross-feature building blocks (shared
+  components, `tq-*` pipes for currency/date/decimal/percent formatting, the `ReadableSignalStore`/ `WritableSignalStore` types,
+  `pdf/`, `file-drop/`); `src/app` holds app-shell chrome (header incl. the dividend-announcement bell, the error snackbar, database
+  connection dialog, splash screen, license, info, privacy).
 - **The About dialog and the transparency note**: `src/app/info/` is the About dialog, two `mat-tab`s — `About` (version, license,
   third-party software; the tab that opens) and `Transparency`, which renders `PrivacyNoticeComponent` from `src/app/privacy/`. That
   component is static text and renders before a backend exists, which is what lets the note be read from every screen.
   `src/app/info/about-button/` is the icon that opens the dialog, which is why the header, `/unlock` and `/configure` all open the same
   dialog with the same size; `/insecure` deliberately offers none. The note is a disclosure, not a consent: nothing gates on it, and the
   root `LLM.md` states the rule that keeps its text true.
+- **Telling the user that something failed**: dispatch `NotificationActions.addError({message})` from the `notification` slice
+  (`src/store/notification/`). `src/app/snackbar/` renders the notifications as a stack inside the shell, each dismissable, which dispatches
+  `removeNotification`. The message is the finished user-facing sentence and is authored where the failure is caught; the  slice stores it
+  unchanged. Putting the screen back into a state that matches what it shows is the dispatcher's own job on top of the notification (if 
+  applicable)
 - **Custom Pipes**: Use the aforementioned custom pipes instead of angular default pipes. In addition, there are pipes for specific purposes
   which must be used instead of accessing raw properties:
   - `country.pipe.ts`: displaying country flag emojis

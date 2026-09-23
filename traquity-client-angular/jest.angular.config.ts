@@ -11,7 +11,7 @@ const config: Config = {
       // merged onto tsconfig.json by ts-jest; only `module` needs overriding for jest's CJS loader
       tsconfig: {module: 'commonjs'}
     }],
-    // @ngrx packages ship ESM-only (Angular Package Format); transpile their import/export
+    // @ngrx and ngx-echarts ship ESM-only (Angular Package Format); transpile their import/export
     // syntax to CommonJS so jest's CJS module loader can require() them like everything else.
     '^.+\\.m?js$': ['babel-jest', {
       presets: [
@@ -24,7 +24,7 @@ const config: Config = {
       ]
     }]
   },
-  transformIgnorePatterns: ['node_modules/(?!(@ngrx|@angular)/)']
+  transformIgnorePatterns: ['node_modules/(?!(@ngrx|@angular|ngx-echarts)/)']
 };
 
 export default config;

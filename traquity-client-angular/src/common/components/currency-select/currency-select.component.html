@@ -1,6 +1,6 @@
 <mat-form-field>
     <mat-label>Currency</mat-label>
-    <mat-select [value]="undefined"
+    <mat-select [value]="currency()"
                 (selectionChange)="changeCurrency($event.value)">
         <mat-option [value]="undefined">No Currency Selected</mat-option>
         @for (currency of currencies; track currency) {
