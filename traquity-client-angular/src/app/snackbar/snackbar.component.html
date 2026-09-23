@@ -1,0 +1,16 @@
+<div class="snackbar">
+    @for (notification of notifications(); track notification.id) {
+        <div class="snackbar__item tq-notice tq-notice--error"
+             role="alert">
+            <mat-icon class="tq-notice__icon"
+                      fontIcon="error"></mat-icon>
+            <span class="snackbar__message">{{ notification.message }}</span>
+            <button (click)="dismiss(notification.id)"
+                    mat-icon-button
+                    aria-label="Dismiss"
+                    matTooltip="Dismiss">
+                <mat-icon fontIcon="close"></mat-icon>
+            </button>
+        </div>
+    }
+</div>

@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed a bug where a security name containing characters like `( ) [ ] + * ? | ^ $ \ { }` could not be selected in the *Add Transaction*
   dialog.
+- Fixed a bug where a security's price chart silently kept its old contents when the prices of a newly picked data range or currency could
+  not be loaded. The chart now selects the range and currency it was showing before, and an error notification states that the historical
+  prices could not be loaded.
 
 ## [1.2.0] - 2026-09-20
 

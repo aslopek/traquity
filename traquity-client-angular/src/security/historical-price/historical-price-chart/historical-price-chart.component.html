@@ -67,7 +67,8 @@
     </div>
 
     <div class="price-chart__options">
-        <app-currency-select (onCurrencySelect)="changeCurrency($event)">
+        <app-currency-select (onCurrencySelect)="changeCurrency($event)"
+                             [currency]="selectedCurrency()">
         </app-currency-select>
 
         <mat-slide-toggle [checked]="percent()"

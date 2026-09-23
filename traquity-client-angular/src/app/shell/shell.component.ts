@@ -14,6 +14,7 @@ import {AppState} from "../../store/app.state";
 import {DividendAnnouncementActions} from "../../store/dividend-announcement/dividend-announcement.actions";
 import {HeaderComponent} from "../header/header.component";
 import {Page} from "../page.type";
+import {SnackbarComponent} from "../snackbar/snackbar.component";
 import {SplashScreenComponent} from "../splash-screen/splash-screen.component";
 
 @Component({
@@ -22,6 +23,7 @@ import {SplashScreenComponent} from "../splash-screen/splash-screen.component";
     RouterOutlet,
     MatSidenavModule,
     HeaderComponent,
+    SnackbarComponent,
     SplashScreenComponent,
     MatIconModule,
     RouterLink,

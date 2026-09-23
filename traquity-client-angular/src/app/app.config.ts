@@ -16,6 +16,7 @@ import {AppConfigEffects} from "../store/app-config/app-config.effects";
 import {appConfigReducer} from "../store/app-config/app-config.reducer";
 import {DividendAnnouncementEffects} from "../store/dividend-announcement/dividend-announcement.effects";
 import {dividendAnnouncementReducer} from "../store/dividend-announcement/dividend-announcement.reducer";
+import {notificationReducer} from "../store/notification/notification.reducer";
 import {routes} from "./app.routes";
 import {initializeStartup} from "./startup/startup.initializer";
 import {BarChart, LineChart, PieChart} from "echarts/charts";
@@ -23,7 +24,14 @@ import * as echarts from "echarts/core";
 import {provideEchartsCore} from "ngx-echarts";
 import {SVGRenderer} from "echarts/renderers";
 import {GridComponent, LegendComponent, TooltipComponent,} from "echarts/components";
-import {aiSlice, appConfigSlice, depotSlice, dividendAnnouncementSlice, securitySlice,} from "../store/app.state";
+import {
+  aiSlice,
+  appConfigSlice,
+  depotSlice,
+  dividendAnnouncementSlice,
+  notificationSlice,
+  securitySlice,
+} from "../store/app.state";
 import {securityReducer} from "../store/security/security.reducer";
 import {SecurityEffects} from "../store/security/security.effects";
 import {depotReducer} from "../store/depot/depot.reducer";
@@ -61,6 +69,7 @@ export const appConfig: ApplicationConfig = {
       [appConfigSlice]: appConfigReducer,
       [depotSlice]: depotReducer,
       [dividendAnnouncementSlice]: dividendAnnouncementReducer,
+      [notificationSlice]: notificationReducer,
       [securitySlice]: securityReducer,
     }),
     provideEffects(
