@@ -6,11 +6,14 @@ import {MatProgressBarModule} from "@angular/material/progress-bar";
 import {format} from "date-fns";
 import {ECharts} from "echarts/core";
 import {NgxEchartsDirective} from "ngx-echarts";
+import {Store} from "@ngrx/store";
 import {firstValueFrom} from "rxjs";
 import {DataRange, fromDateRange, TqCurrencyPipe, TqDatePipe, TqPercentPipe} from "../../../common";
 import {CurrencySelectComponent} from "../../../common/components/currency-select/currency-select.component";
 import {ConfigApi} from "../../../gen/api/configuration";
 import {HistoricalSecurityPrice, HistoricalSecurityPriceApi,} from "../../../gen/api/historical-security-price";
+import {AppState} from "../../../store/app.state";
+import {NotificationActions} from "../../../store/notification/notification.actions";
 import {HistoricalPriceChartPipe} from "./historical-price-chart.pipe";
 
 @Component({
@@ -37,9 +40,9 @@ export class HistoricalPriceChartComponent implements OnDestroy, OnInit {
   protected currencies: string[] = [];
 
   selectedSecurityId: number = 0;
-  selectedCurrency: string | undefined;
 
   protected chartInstance: ECharts | null = null;
+  protected readonly selectedCurrency: WritableSignal<string | undefined> = signal(undefined);
   protected readonly isLoading: WritableSignal<boolean> = signal(false);
   protected readonly dataAvailable: WritableSignal<boolean> = signal(true);
   protected readonly dataRange: WritableSignal<DataRange> = signal("1y");
@@ -49,6 +52,7 @@ export class HistoricalPriceChartComponent implements OnDestroy, OnInit {
   constructor(
     private readonly historicalSecurityPriceApi: HistoricalSecurityPriceApi,
     private readonly configApi: ConfigApi,
+    private readonly store: Store<AppState>
   ) {
   }
 
@@ -76,8 +80,13 @@ export class HistoricalPriceChartComponent implements OnDestroy, OnInit {
   }
 
   async changeDataRange(newRange: DataRange): Promise<void> {
+    const previousRange: DataRange = this.dataRange();
     this.dataRange.set(newRange);
-    await this.loadPrices();
+
+    // the chart keeps showing the previous range's prices when the new one cannot be loaded, so the selection follows
+    if (!(await this.loadPrices())) {
+      this.dataRange.set(previousRange);
+    }
   }
 
   usePercent(percent: boolean): void {
@@ -85,11 +94,17 @@ export class HistoricalPriceChartComponent implements OnDestroy, OnInit {
   }
 
   async changeCurrency(currency: string | undefined): Promise<void> {
-    this.selectedCurrency = currency;
-    await this.loadPrices();
+    const previousCurrency: string | undefined = this.selectedCurrency();
+    this.selectedCurrency.set(currency);
+
+    // the chart keeps showing the previous currency's prices when the new one cannot be loaded, so the selection follows
+    if (!(await this.loadPrices())) {
+      this.selectedCurrency.set(previousCurrency);
+    }
   }
 
-  private async loadPrices(): Promise<void> {
+  /** Loads the prices for the current range and currency into `prices`, and reports whether they arrived. */
+  private async loadPrices(): Promise<boolean> {
     this.isLoading.set(true);
     const startDate: string = format(fromDateRange(this.dataRange()), "yyyy-MM-dd");
 
@@ -100,16 +115,18 @@ export class HistoricalPriceChartComponent implements OnDestroy, OnInit {
         this.historicalSecurityPriceApi.getHistoricalSecurityPrices(
           this.selectedSecurityId,
           startDate,
-          this.selectedCurrency,
+          this.selectedCurrency(),
         ),
       );
-    } catch (e) {
+    } catch {
+      this.store.dispatch(NotificationActions.addError({message: "The historical prices could not be loaded."}));
       this.isLoading.set(false);
-      return;
+      return false;
     }
 
     this.dataAvailable.set(prices.length > 0);
     this.prices.set(prices);
     this.isLoading.set(false);
+    return true;
   }
 }
