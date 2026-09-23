@@ -13,15 +13,13 @@ import {MatTooltipModule} from "@angular/material/tooltip";
 import {LetDirective} from "@ngrx/component";
 import {Store} from "@ngrx/store";
 import {filter, firstValueFrom, Observable, switchMap} from "rxjs";
-import {
-  TqCurrencyPipe,
-  TqDatePipe,
-  TqPercentPipe,
-  SecurityNamePipe,
-  TransactionTypeDisplayIconPipe,
-  TransactionTypeDisplayNamePipe,
-} from "../../../common";
+import {SecurityNamePipe} from "../../../common/pipe/security-name.pipe";
+import {TqCurrencyPipe} from "../../../common/pipe/tq-currency.pipe";
+import {TqDatePipe} from "../../../common/pipe/tq-date.pipe";
 import {TqNetValuePipe} from "../../../common/pipe/tq-net-value.pipe";
+import {TqPercentPipe} from "../../../common/pipe/tq-percent.pipe";
+import {TransactionTypeDisplayIconPipe} from "../../../common/pipe/transaction-type-display-icon.pipe";
+import {TransactionTypeDisplayNamePipe} from "../../../common/pipe/transaction-type-display-name.pipe";
 import {TransactionApi, TransactionRead, TransactionType, TransactionUpdate,} from "../../../gen/api/depot-transaction";
 import {hideAbsoluteValues} from "../../../store/app-config/app-config.selector";
 import {DepotActions} from "../../../store/depot/depot.actions";

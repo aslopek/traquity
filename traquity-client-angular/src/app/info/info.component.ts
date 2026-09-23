@@ -5,7 +5,7 @@ import {MatIconModule} from "@angular/material/icon";
 import {MatTabsModule} from "@angular/material/tabs";
 import {firstValueFrom} from "rxjs";
 import * as packageJson from "../../../package.json";
-import {TitleToolbarComponent} from "../../common";
+import {TitleToolbarComponent} from "../../common/components/title-toolbar/title-toolbar.component";
 import {AdminApi, ThirdPartyLicense} from "../../gen/api/admin";
 import {LicenseComponent} from "../license/license.component";
 import {PrivacyNoticeComponent} from "../privacy/privacy-notice/privacy-notice.component";

@@ -5,7 +5,7 @@ import {MatSlideToggleChange, MatSlideToggleModule,} from "@angular/material/sli
 import {MatIconModule} from "@angular/material/icon";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import html2canvas from "html2canvas-pro";
-import {Timespan} from "../../../common";
+import {Timespan} from "../../../common/types/timespan";
 import {Store} from "@ngrx/store";
 import {AppState} from "../../../store/app.state";
 import {

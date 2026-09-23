@@ -1,7 +1,7 @@
 import {Component, inject} from '@angular/core';
 import {MatDialogRef} from '@angular/material/dialog';
 import {MatStep, MatStepper} from '@angular/material/stepper';
-import {TitleToolbarComponent} from '../../../common';
+import {TitleToolbarComponent} from '../../../common/components/title-toolbar/title-toolbar.component';
 import {ReadableTransactionImportStore, TransactionImportStore} from './store/transaction-import.store';
 import {FileStepComponent} from './steps/file-step/file-step.component';
 import {MappingStepComponent} from './steps/mapping-step/mapping-step.component';

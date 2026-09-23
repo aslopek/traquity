@@ -1,6 +1,7 @@
 import {Component, inject, Signal} from "@angular/core";
 import {Store} from "@ngrx/store";
-import {AiDownloadPhaseLabelPipe, DownloadProgressComponent} from "../../../common";
+import {DownloadProgressComponent} from "../../../common/components/download-progress/download-progress.component";
+import {AiDownloadPhaseLabelPipe} from "../../../common/pipe/ai-download-phase-label.pipe";
 import {getActiveAiDownload} from "../../../store/ai/ai.selector";
 import {ActiveAiDownload} from "../../../store/ai/selectors/get-active-ai-download.selector";
 

@@ -5,7 +5,7 @@ import {MatIconModule} from '@angular/material/icon';
 import {DataSourceStore, ReadableDataSourceStore} from "../store/data-source.store";
 import {AnyDataSource, DataSourceVariant, MultiUrlDataSource, SingleUrlDataSource} from "../data-source.type";
 import {parseDataSource, ParsedDataSource} from "../parse-data-source.util";
-import {TqDecimalPipe} from "../../../common";
+import {TqDecimalPipe} from "../../../common/pipe/tq-decimal.pipe";
 import {ScriptTokenizerPipe} from "./tokenize-script.pipe";
 import {MatButton} from "@angular/material/button";
 import {Store} from "@ngrx/store";

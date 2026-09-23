@@ -2,7 +2,7 @@ import {AfterViewInit, Component, inject, Inject,} from "@angular/core";
 import {MatButtonModule} from "@angular/material/button";
 import {MatIconModule} from "@angular/material/icon";
 import {MatTabsModule} from "@angular/material/tabs";
-import {TitleToolbarComponent} from "../../common";
+import {TitleToolbarComponent} from "../../common/components/title-toolbar/title-toolbar.component";
 import {SecurityMasterDataComponent} from "../details/security-master-data/security-master-data.component";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
 import {ReadableUpdateSecurityStore, updateSecurityStore,} from "./store/update-security.store";

@@ -82,8 +82,8 @@ The Angular + NgRx frontend, packaged as the Electron desktop app that ships to 
 - **Feature folders** under `src/` (`depot`, `dividends`, `security`, `settings`) hold routed page/feature components and consume the global
   store + generated API clients directly, or a local Signal Store where one exists; `src/common` holds cross-feature building blocks (shared
   components, `tq-*` pipes for currency/date/decimal/percent formatting, the `ReadableSignalStore`/ `WritableSignalStore` types,
-  `pdf/`, `file-drop/`); `src/app` holds app-shell chrome (header incl. the dividend-announcement bell, the error snackbar, database
-  connection dialog, splash screen, license, info, privacy).
+  `pdf/`, `file-drop/`); `src/app` holds app-shell chrome (header incl. notifications, database connection dialog, splash screen, license,
+  info, privacy).
 - **The About dialog and the transparency note**: `src/app/info/` is the About dialog, two `mat-tab`s — `About` (version, license,
   third-party software; the tab that opens) and `Transparency`, which renders `PrivacyNoticeComponent` from `src/app/privacy/`. That
   component is static text and renders before a backend exists, which is what lets the note be read from every screen.
@@ -92,9 +92,9 @@ The Angular + NgRx frontend, packaged as the Electron desktop app that ships to 
   root `LLM.md` states the rule that keeps its text true.
 - **Telling the user that something failed**: dispatch `NotificationActions.addError({message})` from the `notification` slice
   (`src/store/notification/`). `src/app/snackbar/` renders the notifications as a stack inside the shell, each dismissable, which dispatches
-  `removeNotification`. The message is the finished user-facing sentence and is authored where the failure is caught; the  slice stores it
-  unchanged. Putting the screen back into a state that matches what it shows is the dispatcher's own job on top of the notification (if 
-  applicable)
+  `removeNotification`. The message is the finished user-facing sentence and is authored where the failure is caught; the slice stores it
+  unchanged. Putting the screen back into a state that matches what it shows is the dispatcher's own job on top of the notification (if
+  applicable).
 - **Custom Pipes**: Use the aforementioned custom pipes instead of angular default pipes. In addition, there are pipes for specific purposes
   which must be used instead of accessing raw properties:
   - `country.pipe.ts`: displaying country flag emojis
@@ -218,6 +218,8 @@ container component's `providers: [XStore]`, then have descendant components
 - When no existing type fits exactly, define a new, narrowly-scoped one (e.g. a `Get<X>State` selector input, an
   `<X>ActionArgs`/`<X>EffectArgs` type) rather than widening an existing type or leaving it inferred.
 - Use `type` over `interface`. Use `interface` if and only if there is a class implementing the interface.
+- **Barrel files are forbidden.** Never add an `index.ts` that re-exports a folder's modules; import every symbol from the module that
+  declares it. (`src/gen/api/*` is generated code and exempt.)
 - **Doc comments obey dependency inversion** (root `LLM.md`, "Dependency inversion binds the docs too"): a selector, computed, method,
   effect or store helper documents its own contract, never which component or screen calls it, in which order the callers run, or what
   another slice/screen does with the result afterwards.
@@ -415,9 +417,9 @@ The focus on testing in the angular app is on logic. Use `jest` to test:
   - TypeScript conventions set forth in this file (line length, strong type safety etc.) also apply for tests.
   - use `toBe(...)` whenever referential equality is important - e.g. when a reducer returns the input state
   - Prefer test data factories over verbose inline object initializers. Once a generated/domain type is used by more than one spec, add a
-    `<name>Factory(overrides?: Partial<Type>): Type` function for it in `src/testing/` (one file per type, e.g. `security-read.factory.ts`,
-    re-exported via `src/testing/index.ts`), returning a fresh object with sensible defaults and spreading `overrides` last so individual
-    tests only specify the fields they care about.
+    `<name>Factory(overrides?: Partial<Type>): Type` function for it in `src/testing/` (one file per type, e.g. `security-read.factory.ts`),
+    returning a fresh object with sensible defaults and spreading `overrides` last so individual tests only specify the fields they care
+    about.
   - Prefer the tightest true invariant over a type-only check (`expect.any(String)` passes for any string, including a wrong one) whenever
     the domain gives you something cheap to check. When no built-in matcher expresses it, write a custom asymmetric matcher: a class
     extending `expect`'s exported `AsymmetricMatcher<T>` (`@extends {AsymmetricMatcher<T>}`), implementing `asymmetricMatch(other)`,

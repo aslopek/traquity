@@ -3,7 +3,7 @@ import {signalStore, withComputed, withHooks, withMethods, withState} from "@ngr
 import {Store} from "@ngrx/store";
 import {AppState} from "../../../store/app.state";
 import {computed, inject, Signal} from "@angular/core";
-import {DataRange} from "../../../common";
+import {DataRange} from "../../../common/types/data-range";
 import {setDataRange} from "./methods/set-data-range";
 import {extendedInternalRateOfReturn} from "./computed/extended-internal-rate-of-return";
 import {depotValues, DepotValuesResult} from "./computed/depot-values";

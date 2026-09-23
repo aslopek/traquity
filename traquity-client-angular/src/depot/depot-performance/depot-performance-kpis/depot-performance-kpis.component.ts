@@ -1,6 +1,8 @@
 import {Component, inject, Signal} from "@angular/core";
 import {DepotPerformanceStore, ReadableDepotPerformanceStore} from "../store/depot-performance.store";
-import {TqCurrencyPipe, TqDatePipe, TqPercentPipe} from "../../../common";
+import {TqCurrencyPipe} from "../../../common/pipe/tq-currency.pipe";
+import {TqDatePipe} from "../../../common/pipe/tq-date.pipe";
+import {TqPercentPipe} from "../../../common/pipe/tq-percent.pipe";
 import {Store} from "@ngrx/store";
 import {AppState} from "../../../store/app.state";
 import {selectedDepotCurrency} from "../../../store/depot/depot.selector";

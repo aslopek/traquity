@@ -7,9 +7,6 @@ import {AppState} from "../../../store/app.state";
 import {NotificationActions} from "../../../store/notification/notification.actions";
 import {HistoricalPriceChartComponent} from "./historical-price-chart.component";
 
-// `src/common`'s barrel reaches pdfjs-dist, which this component never touches and which jest cannot require as CJS.
-jest.mock("pdfjs-dist", () => ({}));
-
 type GetHistoricalSecurityPrices =
   (securityId: number, startDate?: string, currency?: string) => Observable<HistoricalSecurityPrice[]>;
 

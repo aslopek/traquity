@@ -19,7 +19,7 @@ import {
   selectedTabIndex
 } from "../depot-config-keys";
 import {DepotState, DividendView, PositionView} from "../depot.state";
-import {Timespan} from "../../../common";
+import {Timespan} from "../../../common/types/timespan";
 import {positionGroupByValues} from "../position-grouping/position-group-attributes";
 import {PositionGroupBy} from "../position-grouping/position-group.type";
 

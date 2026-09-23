@@ -4,8 +4,12 @@ import {Store} from "@ngrx/store";
 import {AppState} from "../../../store/app.state";
 import {combineLatest, Observable} from "rxjs";
 import {takeUntilDestroyed, toObservable} from "@angular/core/rxjs-interop";
-import {TqCurrencyPipe, TqDatePipe, TqDecimalPipe, TqPercentPipe, SecurityNamePipe,} from "../../../common";
 import {PerformanceLabelComponent} from "../../../common/components/performance-label/performance-label.component";
+import {SecurityNamePipe} from "../../../common/pipe/security-name.pipe";
+import {TqCurrencyPipe} from "../../../common/pipe/tq-currency.pipe";
+import {TqDatePipe} from "../../../common/pipe/tq-date.pipe";
+import {TqDecimalPipe} from "../../../common/pipe/tq-decimal.pipe";
+import {TqPercentPipe} from "../../../common/pipe/tq-percent.pipe";
 import {hideAbsoluteValues} from "../../../store/app-config/app-config.selector";
 
 @Component({

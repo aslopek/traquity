@@ -1,9 +1,11 @@
 import {inject, Pipe, PipeTransform} from "@angular/core";
 import {EChartsOption} from "echarts";
 import {RebasedDepotValue} from "../store/computed/rebased-depot-value.type";
-import {TqCurrencyPipe, TqDatePipe, TqPercentPipe} from "../../../common";
 import {chartToken, chartTokenAlpha} from "../../../common/chart/chart-token";
 import {escapeHtml} from "../../../common/chart/escape-html";
+import {TqCurrencyPipe} from "../../../common/pipe/tq-currency.pipe";
+import {TqDatePipe} from "../../../common/pipe/tq-date.pipe";
+import {TqPercentPipe} from "../../../common/pipe/tq-percent.pipe";
 import {BenchmarkResult} from "../store/benchmark/benchmark.type";
 
 @Pipe({

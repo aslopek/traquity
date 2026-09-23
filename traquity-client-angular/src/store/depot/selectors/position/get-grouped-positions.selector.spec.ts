@@ -5,7 +5,8 @@ import {SecuritiesById} from '../../../security/security.state';
 import {GroupedPositions, PositionGroup, PositionGroupBy} from '../../position-grouping/position-group.type';
 import {PositionGroupAttribute} from '../../position-grouping/position-group-attribute.type';
 import {getPositionGroupAttribute} from '../../position-grouping/position-group-attributes';
-import {depotPositionFactory, securityReadFactory} from '../../../../testing';
+import {depotPositionFactory} from '../../../../testing/depot-position.factory';
+import {securityReadFactory} from '../../../../testing/security-read.factory';
 import {DepotPosition} from '../../../../gen/api/depot-position';
 import {SecurityRead} from '../../../../gen/api/security';
 
