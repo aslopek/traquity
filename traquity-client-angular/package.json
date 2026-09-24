@@ -2,7 +2,7 @@
   "name": "traquity",
   "productName": "TraQuity",
   "private": true,
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Angular client for the TraQuity API",
   "author": "Armin Slopek",
   "license": "MIT",
