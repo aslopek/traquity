@@ -493,7 +493,8 @@ Hints:
 
 ### Importing transactions from a CSV file
 
-Press **Import Transactions** on the **Transactions** tab. The import is a four-step wizard, and nothing is written before step 4.
+Press **Import Transactions** on the **Transactions** tab and pick **CSV**. The import is a four-step wizard. Nothing is written before
+step 4.
 
 **Step 1 — File.** Press **Select File** and pick the CSV exported from your broker. The wizard shows the file name, the number of parsed
 rows, and an error if it could not detect a column separator. The first row is read as the header.
@@ -543,6 +544,40 @@ transactions were created out of how many attempted. If any row failed, a **Down
 rows as a CSV — fix them there and import that file again. Press **Close** to return to the transaction list.
 
 ![The Transactions tab with the full transaction history](./doc-assets/depot-transactions.png)
+
+### Importing transactions from a folder of PDF files
+
+Press **Import Transactions** on the **Transactions** tab and pick **PDF**. This needs an active AI model (see [AI features](#ai-features));
+the entry is disabled otherwise. The import is a five-step wizard. Nothing is written before the last step.
+
+**Step 1 — Folder.** Press **Select Folder** and pick a folder of broker PDFs. The wizard shows the folder's path
+and how many PDF files it found, including all PDFs from all subdirectories.
+
+**Step 2 — Extract.** Press **Next** to start. The wizard reads the files one at a time, same as [Filling the form from a
+PDF](#filling-the-form-from-a-pdf), and shows a progress bar and the file currently being read. A document that cannot be read, names no
+ISIN, or states an incomplete transaction, does not stop the run — it is counted as faulty and listed in step 4. Nothing is written yet;
+the collected transactions sit in the wizard only.
+
+**Step 3 — Securities.** One row per ISIN the extraction found that the database does not know yet, with an optional **Name** field. An
+empty name falls back to the ISIN. The step is optional: when every ISIN is already known it shows no rows and says that no security will be
+created.
+
+**Step 4 — Review.** A summary of what the import would do: the new securities from step 3, the transaction counts per type with the date
+range, and the faulty files from step 2, each with its full path and why it produced nothing. Press **Start Import** to run it.
+
+**Step 5 — Import.** A progress bar runs while the new securities and the collected transactions are created. When it finishes, the step
+reports how many securities and how many transactions were created out of how many were collected. If a security could not be created, a
+warning names it and how many of its transactions were skipped along with it — a transaction is never created for a security that does not
+exist. Press **Close** to return to the transaction list.
+
+Hints:
+
+- This is an AI feature and as such has limited reliability.
+- Depending on how many transactions you create, what AI model you picked and the capability of your machine it may take very long to do the
+  import.
+- If possible, use the CSV import instead of the bulk PDF import; it is faster and more reliable. You may consider using a third-party AI
+  service to transform your PDFs into one CSV; but note that this is not a service offered by TraQuity and subject to the service provider's
+  privacy statement, terms of service and other applicable conditions.
 
 ### Filtering, editing and deleting
 

@@ -34,15 +34,17 @@ The Angular + NgRx frontend, packaged as the Electron desktop app that ships to 
   built Angular app. The backend is spawned only on an IPC call the renderer makes after opening, never before the window exists — see
   `electron/LLM.md` for its architecture, typing regime, testing and the boot order.
 - **The bridge to the main process**: `src/bridge/` is the renderer's only door to the main process, over the `contextBridge` globals
-  `electron/preload.js` exposes: `window.traquity` for the startup/configuration/java channels and `window.traquityAi` for the `ai:*`
-  channels. One service per global — `StartupBridgeService`, `AiBridgeService` — each shaped the same way: an `available` flag plus one
-  wrapper per channel, deferring the bridge call until subscription so a channel reads as an observable like everything else in the app.
-  Both reach their global through the shared `BRIDGE_HOST` injection token, which resolves `globalThis` and never `window` directly, so the
-  node-environment jest suite can inject a stub. The folder sits beside `src/store/` and `src/gen/` instead of under `src/app/`, because a
-  bridge is consumed wherever its channels belong: `AiBridgeService` serves the global `ai` slice (`src/store/ai/`) and the AI settings
-  section (`src/settings/ai/`), neither of which is app-shell chrome. A further channel on an existing global becomes another wrapper on
-  that global's service, never a reach into `window.traquity` from somewhere else; a new `contextBridge` global gets its own service and its
-  own type file here.
+  `electron/preload.js` exposes: `window.traquity` for the startup/configuration/java channels, `window.traquityAi` for the `ai:*`
+  channels, and `window.traquityFiles` for resolving a picked `File`'s fully qualified path. One service per global —
+  `StartupBridgeService`, `AiBridgeService`, `FileBridgeService` — each shaped the same way: an `available` flag plus one wrapper per
+  channel, deferring the bridge call until subscription so a channel reads as an observable like everything else in the app.
+  `FileBridgeService.pathForFile` is the one exception: it is synchronous and returns a value, since `traquityFiles` answers it inside the
+  preload itself and registers no IPC channel at all. All three reach their global through the shared `BRIDGE_HOST` injection token, which
+  resolves `globalThis` and never `window` directly, so the node-environment jest suite can inject a stub. The folder sits beside
+  `src/store/` and `src/gen/` instead of under `src/app/`, because a bridge is consumed wherever its channels belong: `AiBridgeService`
+  serves the global `ai` slice (`src/store/ai/`) and the AI settings section (`src/settings/ai/`), neither of which is app-shell chrome. A
+  further channel on an existing global becomes another wrapper on that global's service, never a reach into `window.traquity` from
+  somewhere else; a new `contextBridge` global gets its own service and its own type file here.
 - **Startup screens and the app shell**: `AppComponent` is just a `<router-outlet>` plus the trigger that starts the backend immediately
   for a passwordless database (`boot` mode). The chrome (header, side menu, splash gate, the initial global-store loads) lives in
   `ShellComponent` (`src/app/shell/`), mounted under the root route behind `startupPhaseGuard`. `/unlock` (`src/app/unlock/`) is the real
@@ -267,6 +269,10 @@ a chunk of this build (`pdf.worker.ts` plus a relative `new URL(..., import.meta
 `index.html`'s CSP needs no directive added.
 
 `pdfjs-dist` is a **devDependency**, where every UI library sits.
+
+**`src/depot/transaction/transaction-pdf/` is the shared one-document pipeline both PDF importers call** (the *Add Transaction* dialog's
+single-file import and the folder-import wizard): it reaches the AI bridge, which is why it sits beside `transaction-create/` and
+`transaction-pdf-import/` instead of in `src/common/pdf/`. `src/common/pdf/` stays parse-only — nothing in it knows AI or a bridge exists.
 
 ## Directives
 

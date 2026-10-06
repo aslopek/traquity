@@ -1,18 +1,15 @@
 import {patchState} from "@ngrx/signals";
 import {RxMethod, rxMethod} from "@ngrx/signals/rxjs-interop";
-import {catchError, EMPTY, from, map, Observable, OperatorFunction, pipe, switchMap, tap} from "rxjs";
+import {EMPTY, Observable, OperatorFunction, pipe, switchMap} from "rxjs";
 import {AiBridgeService} from "../../../../../bridge/ai-bridge.service";
-import {AiExtractionOutcome} from "../../../../../bridge/ai-bridge.type";
-import {extractPdf, PdfExtractionFailure, PdfExtractionResult} from "../../../../../common/pdf/extract-pdf";
-import {PdfTransactionReading, transactionReadingOfDocument} from "../../../../../common/pdf/transaction-reading-of-document";
+import {PdfExtractionFailure} from "../../../../../common/pdf/extract-pdf";
 import {WritableSignalStore} from "../../../../../common/types/signal-store.type";
 import {SecuritiesByIsin} from "../../../../../store/security/selectors/get-securities-by-isin.selector";
+import {extractTransactionOfPdf, PdfTransactionOutcome} from "../../../transaction-pdf/extract-transaction-of-pdf";
+import {ImportedFile, isPdf} from "../../../transaction-pdf/imported-file";
 import {prefillOfExtraction, PrefillResult} from "./prefill-of-extraction";
 import {TransactionImportComputed, TransactionImportState} from "../transaction-import.store";
 import {ImportMessage} from "../transaction-import.type";
-
-/** The parts of a file an import reads: the name it carries, the type it states of itself, and its bytes. */
-export type ImportedFile = Pick<File, "name" | "type" | "arrayBuffer">;
 
 export type ImportPdfArgs = {
   file: ImportedFile
@@ -22,8 +19,6 @@ export type ImportPdfArgs = {
   modelKey: string | null
   securitiesByIsin: SecuritiesByIsin
 };
-
-const PDF_TYPE: string = "application/pdf";
 
 /**
  * What a bridge call that reached no outcome at all is answered with. Such a call carries no message of its own,
@@ -53,45 +48,31 @@ export function importPdfPipeline(signalStore: WritableSignalStore<TransactionIm
       }
 
       patchState(signalStore, {busy: true, message: null, prefill: null});
-      return from(args.file.arrayBuffer()).pipe(
-        switchMap((bytes: ArrayBuffer): Observable<void> => extracted(signalStore, aiBridge, args, modelKey, bytes)),
-        catchError((): Observable<void> =>
-          finish(signalStore, {kind: "error", text: `${args.file.name} could not be read.`}))
+      return extractTransactionOfPdf({file: args.file, currency: args.currency, modelKey}, aiBridge).pipe(
+        switchMap((outcome: PdfTransactionOutcome): Observable<void> => apply(signalStore, outcome, args))
       );
     })
   );
 }
 
-function extracted(signalStore: WritableSignalStore<TransactionImportState, TransactionImportComputed>,
-                   aiBridge: AiBridgeService, args: ImportPdfArgs, modelKey: string, bytes: ArrayBuffer): Observable<void> {
-  return from(extractPdf(bytes, args.currency)).pipe(
-    switchMap((result: PdfExtractionResult): Observable<void> => {
-      if (result.status === "failed") {
-        return finish(signalStore, {kind: "error", text: messageOfFailure(result.failure, args.file.name)});
-      }
-      const reading: PdfTransactionReading = transactionReadingOfDocument(result.document);
-      return aiBridge.extractTransaction({
-        document: reading.text,
-        tokens: reading.tokens,
-        currency: args.currency,
-        modelKey
-      }).pipe(
-        tap((outcome: AiExtractionOutcome): void => applied(signalStore, outcome, reading.isin, args)),
-        map((): void => undefined),
-        catchError((): Observable<void> => finish(signalStore, {kind: "error", text: EXTRACTION_REFUSED}))
-      );
-    })
-  );
-}
-
-function applied(signalStore: WritableSignalStore<TransactionImportState, TransactionImportComputed>,
-                 outcome: AiExtractionOutcome, isin: string | undefined, args: ImportPdfArgs): void {
-  if (outcome.status === "failed") {
-    patchState(signalStore, {busy: false, message: {kind: "error", text: outcome.message}, prefill: null});
-    return;
+/** Turns an extraction outcome into an error message or a form prefill, and patches the store with the result. */
+function apply(signalStore: WritableSignalStore<TransactionImportState, TransactionImportComputed>,
+               outcome: PdfTransactionOutcome, args: ImportPdfArgs): Observable<void> {
+  switch (outcome.status) {
+    case "unread":
+      return finish(signalStore, {kind: "error", text: `${args.file.name} could not be read.`});
+    case "parseFailed":
+      return finish(signalStore, {kind: "error", text: messageOfFailure(outcome.failure, args.file.name)});
+    case "refused":
+      return finish(signalStore, {kind: "error", text: EXTRACTION_REFUSED});
+    case "failed":
+      return finish(signalStore, {kind: "error", text: outcome.message});
+    case "extracted": {
+      const result: PrefillResult = prefillOfExtraction(outcome.transaction, outcome.isin, args.securitiesByIsin, args.file.name);
+      patchState(signalStore, {busy: false, message: result.message, prefill: result.prefill});
+      return EMPTY;
+    }
   }
-  const result: PrefillResult = prefillOfExtraction(outcome.transaction, isin, args.securitiesByIsin, args.file.name);
-  patchState(signalStore, {busy: false, message: result.message, prefill: result.prefill});
 }
 
 /** @returns an observable that completes, so a refusal ends the run without emitting anything downstream */
@@ -99,11 +80,6 @@ function finish(signalStore: WritableSignalStore<TransactionImportState, Transac
                 message: ImportMessage): Observable<void> {
   patchState(signalStore, {busy: false, message, prefill: null});
   return EMPTY;
-}
-
-/** A dropped file states its own type, and a `.pdf` name is what a chooser leaves where the type is empty. */
-function isPdf(file: ImportedFile): boolean {
-  return file.type === PDF_TYPE || file.name.toLowerCase().endsWith(".pdf");
 }
 
 function messageOfFailure(failure: PdfExtractionFailure, fileName: string): string {

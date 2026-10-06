@@ -1,8 +1,13 @@
 import {InjectionToken} from "@angular/core";
 import {TraQuityAiBridge} from "./ai-bridge.type";
+import {TraQuityFileBridge} from "./file-bridge.type";
 import {TraQuityStartupBridge} from "./startup-bridge.type";
 
-export type BridgeHost = { traquity?: TraQuityStartupBridge, traquityAi?: TraQuityAiBridge };
+export type BridgeHost = {
+  traquity?: TraQuityStartupBridge
+  traquityAi?: TraQuityAiBridge
+  traquityFiles?: TraQuityFileBridge
+};
 
 // read through `globalThis`, not `window` directly - the Angular suite runs with `testEnvironment: 'node'`, where a
 // bare `window` reference throws

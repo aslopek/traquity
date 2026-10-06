@@ -1,0 +1,41 @@
+<div class="step">
+    @if (store.phase() === "importing") {
+        <div class="step__progress">
+            <span class="tq-section-label">Importing</span>
+            <mat-progress-bar mode="determinate"
+                              [value]="store.importProgress()">
+            </mat-progress-bar>
+            <span class="tq-field-hint tq-numeric">
+                {{ store.importDone() }} / {{ store.importTotal() }}
+            </span>
+        </div>
+    }
+
+    @if (store.phase() === "imported") {
+        <div class="step__summary">
+            <div class="step__summary-row">
+                <span class="tq-muted">Securities created</span>
+                <span class="tq-numeric">{{ store.securitiesCreated() }} / {{ store.newSecurities().length }}</span>
+            </div>
+            <div class="step__summary-row">
+                <span class="tq-muted">Transactions created</span>
+                <span class="tq-numeric">{{ store.transactionsCreated() }} / {{ store.collected().length }}</span>
+            </div>
+        </div>
+
+        @for (isin of store.failedIsins(); track isin) {
+            <div class="tq-notice tq-notice--warn">
+                <mat-icon class="tq-notice__icon"
+                          fontIcon="warning"></mat-icon>
+                <span>{{ isin }} could not be created — its {{ store.transactionCountByIsin()[isin] }} transaction(s) were skipped.</span>
+            </div>
+        }
+
+        <div class="step__actions">
+            <button (click)="closeDialog()"
+                    matButton="filled">
+                Close
+            </button>
+        </div>
+    }
+</div>

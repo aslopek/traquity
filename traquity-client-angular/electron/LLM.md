@@ -22,7 +22,7 @@ See the parent `LLM.md` for the Angular renderer, and the root `LLM.md` for how 
 ```
 electron/
   main.js                      entry point; wiring only, no logic worth testing
-  preload.js                   the two contextBridge surfaces shared with the renderer
+  preload.js                   the three contextBridge surfaces shared with the renderer
   ai/
     catalogue.js                the curated models, pinned to a Hugging Face revision each; projects the
                                 public `CatalogueEntry` shape out of the full internal one
@@ -133,7 +133,9 @@ The channels `ipc/ai-bridge.js` registers — six request/response via `ipcMain.
 - `ai:activate`
 - `ai:downloadProgress` (push, main → renderer)
 
-`preload.js` exposes these two channel sets as separate `contextBridge` globals, `window.traquity` and `window.traquityAi`.
+`preload.js` exposes these two channel sets as separate `contextBridge` globals, `window.traquity` and `window.traquityAi`, plus a third,
+`window.traquityFiles`, with one member (`pathForFile`) that registers no IPC channel at all — `webUtils.getPathForFile` is answered
+inside the preload itself, so the duplicated-literal checklist above does not extend to it.
 
 Keep this map current as new channels land — it is what a reader starts from.
 
