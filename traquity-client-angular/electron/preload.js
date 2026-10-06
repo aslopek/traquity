@@ -1,4 +1,4 @@
-const {contextBridge, ipcRenderer} = require('electron');
+const {contextBridge, ipcRenderer, webUtils} = require('electron');
 
 /** @import {BackendStartOutcome} from './backend/backend-process.js' */
 /** @import {ConfigurationChanges} from './config/configuration-writer.js' */
@@ -158,4 +158,14 @@ contextBridge.exposeInMainWorld('traquityAi', {
     ipcRenderer.on('ai:downloadProgress', wrapped);
     return () => ipcRenderer.removeListener('ai:downloadProgress', wrapped);
   }
+});
+
+// `traquityFiles` registers no IPC channel: `webUtils.getPathForFile` is answered inside the preload itself, so
+// there is no channel-name literal here that `ipc/` has to be kept in step with.
+contextBridge.exposeInMainWorld('traquityFiles', {
+  /**
+   * @param {File} file
+   * @returns {string} the file's fully qualified path, or an empty string for a file no path backs
+   */
+  pathForFile: (file) => webUtils.getPathForFile(file)
 });

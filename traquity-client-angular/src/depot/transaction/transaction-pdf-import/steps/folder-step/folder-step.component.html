@@ -1,0 +1,47 @@
+<div class="step">
+    <input #folderInput
+           (change)="selectFolder($event)"
+           class="step__file-input"
+           type="file"
+           webkitdirectory>
+
+    <div class="step__row">
+        <button (click)="folderInput.click()"
+                matButton="filled">
+            Select Folder
+        </button>
+        <span class="tq-field-hint">
+            A folder of broker PDFs, subfolders included
+        </span>
+    </div>
+
+    @if (store.folder(); as folder) {
+        <div class="step__summary">
+            <div class="step__summary-row">
+                <span class="tq-muted">Folder</span>
+                <span class="tq-truncate">{{ folder }}</span>
+            </div>
+            <div class="step__summary-row">
+                <span class="tq-muted">PDF files</span>
+                <span class="tq-numeric">{{ store.pdfFileCount() }}</span>
+            </div>
+        </div>
+
+        @if (store.pdfFileCount() === 0) {
+            <div class="tq-notice tq-notice--warn">
+                <mat-icon class="tq-notice__icon"
+                          fontIcon="warning"></mat-icon>
+                <span>This folder holds no PDF file.</span>
+            </div>
+        }
+    }
+
+    <div class="step__actions">
+        <button (click)="startExtraction()"
+                [disabled]="store.pdfFileCount() === 0"
+                matButton="filled"
+                matStepperNext>
+            Next
+        </button>
+    </div>
+</div>

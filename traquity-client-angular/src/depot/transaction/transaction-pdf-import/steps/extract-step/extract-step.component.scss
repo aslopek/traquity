@@ -1,0 +1,12 @@
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-3);
+  padding: var(--tq-space-4) 0;
+}
+
+.step__progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-2);
+}

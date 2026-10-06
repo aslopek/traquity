@@ -1,0 +1,15 @@
+<div class="step">
+    <div class="step__progress">
+        <span class="tq-section-label">Extracting</span>
+        <mat-progress-bar mode="determinate"
+                          [value]="store.extractProgress()">
+        </mat-progress-bar>
+        <span class="tq-field-hint tq-numeric">
+            {{ store.filesDone() }} / {{ store.pdfFileCount() }} files
+        </span>
+    </div>
+
+    @if (store.currentPath(); as currentPath) {
+        <span class="tq-field-hint tq-truncate">{{ currentPath }}</span>
+    }
+</div>
