@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Import Transactions** on the *Depots / Transactions* tab is now a menu with `CSV` and `PDF`: `PDF` opens a wizard that imports a whole
+  folder of broker PDFs (subfolders included) in one run, creating the securities and transactions it finds.
+
 ## [1.2.4] - 2026-10-10
 
 ### Changed

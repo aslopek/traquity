@@ -6,6 +6,7 @@ import {MatButtonModule} from "@angular/material/button";
 import {MatButtonToggleModule} from "@angular/material/button-toggle";
 import {MatDialog, MatDialogRef} from "@angular/material/dialog";
 import {MatIconModule} from "@angular/material/icon";
+import {MatMenuModule} from "@angular/material/menu";
 import {MatPaginator, MatPaginatorModule, PageEvent,} from "@angular/material/paginator";
 import {MatSelectModule} from "@angular/material/select";
 import {MatTableModule} from "@angular/material/table";
@@ -21,12 +22,14 @@ import {TqPercentPipe} from "../../../common/pipe/tq-percent.pipe";
 import {TransactionTypeDisplayIconPipe} from "../../../common/pipe/transaction-type-display-icon.pipe";
 import {TransactionTypeDisplayNamePipe} from "../../../common/pipe/transaction-type-display-name.pipe";
 import {TransactionApi, TransactionRead, TransactionType, TransactionUpdate,} from "../../../gen/api/depot-transaction";
+import {isAiActive} from "../../../store/ai/ai.selector";
 import {hideAbsoluteValues} from "../../../store/app-config/app-config.selector";
 import {DepotActions} from "../../../store/depot/depot.actions";
 import {selectedDepotCurrency, selectedDepotIds} from "../../../store/depot/depot.selector";
 import {TransactionCreateComponent} from "../transaction-create/transaction-create.component";
 import {TransactionDeleteComponent} from "../transaction-delete/transaction-delete.component";
 import {TransactionImportComponent} from "../transaction-import/transaction-import.component";
+import {TransactionPdfImportComponent} from "../transaction-pdf-import/transaction-pdf-import.component";
 import {TableInputFieldComponent} from "./table-input-field/table-input-field.component";
 import {AppState} from "../../../store/app.state";
 import {ReadableTransactionPageStore, transactionPageStore} from "../transaction-store/transaction-page.store";
@@ -52,6 +55,7 @@ import {ReadableTransactionPageStore, transactionPageStore} from "../transaction
     TableInputFieldComponent,
     TqNetValuePipe,
     LetDirective,
+    MatMenuModule,
   ],
   templateUrl: "transaction-table.component.html",
   styleUrls: ["transaction-table.component.scss"],
@@ -99,6 +103,7 @@ export class TransactionTableComponent {
   protected readonly transactionPageStore: ReadableTransactionPageStore = inject(transactionPageStore);
   protected readonly depotCurrency: Signal<string> = this.store.selectSignal(selectedDepotCurrency);
   protected readonly hideAbsoluteValues$: Observable<boolean> = this.store.select(hideAbsoluteValues);
+  protected readonly aiActive: Signal<boolean> = this.store.selectSignal(isAiActive);
 
   constructor(
     private readonly dialog: MatDialog,
@@ -133,8 +138,19 @@ export class TransactionTableComponent {
     });
   }
 
-  protected openImportDialog(): void {
+  protected openCsvImportDialog(): void {
     this.dialog.open(TransactionImportComponent, {
+      viewContainerRef: this.viewContainerRef,
+      panelClass: "mat-app-background",
+      autoFocus: false,
+      disableClose: true,
+      width: "60rem",
+      maxHeight: "90vh",
+    });
+  }
+
+  protected openPdfImportDialog(): void {
+    this.dialog.open(TransactionPdfImportComponent, {
       viewContainerRef: this.viewContainerRef,
       panelClass: "mat-app-background",
       autoFocus: false,

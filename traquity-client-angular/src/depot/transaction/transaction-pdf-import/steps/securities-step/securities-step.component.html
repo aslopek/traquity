@@ -1,0 +1,40 @@
+<div class="step">
+    <span class="tq-field-hint">An empty name falls back to the ISIN</span>
+
+    @if (store.newSecurityRows().length === 0) {
+        <p class="tq-muted">No security will be created.</p>
+    } @else {
+        <div class="tq-card tq-card--flush">
+            <table class="tq-table">
+                <thead>
+                <tr>
+                    <th>ISIN</th>
+                    <th>Name</th>
+                </tr>
+                </thead>
+                <tbody>
+                    @for (row of store.newSecurityRows(); track row.isin) {
+                        <tr>
+                            <td class="tq-numeric">{{ row.isin }}</td>
+                            <td>
+                                <mat-form-field subscriptSizing="dynamic">
+                                    <input [ngModel]="row.typedName"
+                                           (ngModelChange)="store.setSecurityName(row.isin, $event)"
+                                           matInput
+                                           type="text">
+                                </mat-form-field>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <div class="step__actions">
+        <button matButton="filled"
+                matStepperNext>
+            Next
+        </button>
+    </div>
+</div>

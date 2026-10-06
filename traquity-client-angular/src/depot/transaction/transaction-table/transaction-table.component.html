@@ -67,10 +67,27 @@
         <span class="tq-spacer"></span>
 
         <div class="transaction-table__actions">
-            <button (click)="openImportDialog()"
+            <button [matMenuTriggerFor]="importMenu"
                     matButton="outlined">
                 Import Transactions
+                <mat-icon fontIcon="arrow_drop_down"
+                          iconPositionEnd>
+                </mat-icon>
             </button>
+
+            <mat-menu #importMenu>
+                <button (click)="openCsvImportDialog()"
+                        mat-menu-item>
+                    CSV
+                </button>
+                <span [matTooltip]="aiActive() ? null : 'AI is switched off. You can enable it in the settings.'">
+                    <button (click)="openPdfImportDialog()"
+                            [disabled]="!aiActive()"
+                            mat-menu-item>
+                        PDF
+                    </button>
+                </span>
+            </mat-menu>
 
             <button (click)="openCreateDialog()"
                     matButton="filled">

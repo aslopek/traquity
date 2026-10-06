@@ -1,0 +1,86 @@
+<div class="step">
+    <section class="step__section">
+        <h3 class="step__title">New Securities</h3>
+        @if (store.newSecurityRows().length === 0) {
+            <p class="tq-muted">No security will be created.</p>
+        } @else {
+            <div class="tq-card tq-card--flush">
+                <table class="tq-table">
+                    <thead>
+                    <tr>
+                        <th>ISIN</th>
+                        <th>Name</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        @for (row of store.newSecurityRows(); track row.isin) {
+                            <tr>
+                                <td class="tq-numeric">{{ row.isin }}</td>
+                                <td>{{ row.typedName }}</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+
+    @let preview = store.importPreview();
+
+    <section class="step__section">
+        <h3 class="step__title">Transactions</h3>
+        @if (preview.countsByType.length === 0) {
+            <p class="tq-muted">No transaction was found.</p>
+        } @else {
+            <div class="step__summary">
+                @for (item of preview.countsByType; track item.transactionType) {
+                    <div class="step__summary-row">
+                        <span class="tq-muted">{{ item.transactionType | transactionTypeDisplayName }}</span>
+                        <span class="tq-numeric">{{ item.count }}</span>
+                    </div>
+                }
+                @if (preview.minDate !== null && preview.maxDate !== null) {
+                    <div class="step__summary-row">
+                        <span class="tq-muted">Date range</span>
+                        <span class="tq-numeric">{{ preview.minDate | tqDate }} – {{ preview.maxDate | tqDate }}</span>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+    <section class="step__section">
+        <h3 class="step__title">Files Without a Transaction</h3>
+        @if (store.faulty().length === 0) {
+            <p class="tq-muted">Every PDF file could be read.</p>
+        } @else {
+            <div class="tq-card tq-card--flush">
+                <table class="tq-table">
+                    <thead>
+                    <tr>
+                        <th>File</th>
+                        <th>Reason</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        @for (file of store.faulty(); track file.path) {
+                            <tr>
+                                <td class="tq-truncate">{{ file.path }}</td>
+                                <td>{{ file.reason }}</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+
+    <div class="step__actions">
+        <button (click)="startImport()"
+                [disabled]="!store.canStartImport()"
+                matButton="filled"
+                matStepperNext>
+            Start Import
+        </button>
+    </div>
+</div>

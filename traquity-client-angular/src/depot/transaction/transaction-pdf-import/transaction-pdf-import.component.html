@@ -1,0 +1,42 @@
+<app-title-toolbar (onClose)="close()"
+                   title="Import Transactions">
+</app-title-toolbar>
+
+@let phase = store.phase();
+@let extracting = phase === 'extracting';
+@let extracted = phase === 'extracted' || phase === 'importing' || phase === 'imported';
+@let importStarted = phase === 'importing' || phase === 'imported';
+
+<mat-stepper class="transaction-pdf-import__stepper"
+             linear>
+    <mat-step label="Folder"
+              [completed]="store.pdfFileCount() > 0 && !extracting"
+              [editable]="!extracting && !importStarted">
+        <app-folder-step></app-folder-step>
+    </mat-step>
+
+    <mat-step label="Extract"
+              [completed]="extracted"
+              [editable]="!extracting && !importStarted">
+        <app-extract-step></app-extract-step>
+    </mat-step>
+
+    <mat-step label="Securities"
+              [completed]="extracted"
+              [editable]="!extracting && !importStarted"
+              optional>
+        <app-securities-step></app-securities-step>
+    </mat-step>
+
+    <mat-step label="Review"
+              [completed]="store.canStartImport() && !extracting"
+              [editable]="!extracting && !importStarted">
+        <app-review-step></app-review-step>
+    </mat-step>
+
+    <mat-step label="Import"
+              [completed]="phase === 'imported'"
+              [editable]="!extracting && !importStarted">
+        <app-import-step (closeRequested)="close()"></app-import-step>
+    </mat-step>
+</mat-stepper>
