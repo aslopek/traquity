@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Import Transactions** on the *Depots / Transactions* tab is now a menu with `CSV` and `PDF`: `PDF` opens a wizard that imports a whole
   folder of broker PDFs (subfolders included) in one run, creating the securities and transactions it finds.
+- **Sell Simulation** on the *Depots / Position List* view. When clicking on a position, next to the lots there is a simulation that
+  provides an estimate on what you may receive when selling a given amount of shares at the given conditions. It also calculates the taxable
+  gain which can support you in crafting a transaction for using available tax credits.
+- **Lots view** now displays the buy-in value of the lot and, if applicable, the cost basis. Cost basis is buy-in + fees and taxes.
 
 ## [1.2.4] - 2026-10-10
 

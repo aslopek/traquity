@@ -1,5 +1,11 @@
-@for (lot of lotStore.lots(); track $index) {
+@for (entry of positionStore.lotsWithSoldFraction(); track $index) {
+    @let lot = entry.lot;
     <article class="lot tq-card tq-card--quiet">
+        <div class="lot__sold"
+             [class.lot__sold--complete]="entry.soldFraction >= 1"
+             [style.height]="entry.soldFraction | lotSoldHeight">
+        </div>
+
         <h3 class="lot__title">{{ lot.securityId | securityName }}</h3>
 
         <div class="lot__row">
@@ -16,6 +22,31 @@
         </div>
 
         @if (!hideAbsoluteValues()) {
+            <div class="lot__row">
+                <span class="lot__label">Buy-in size</span>
+                <span class="lot__value tq-numeric">{{ lot.buyInAbsolute | tqCurrency : lot.currency }}</span>
+            </div>
+
+            @if (lot.fee + lot.tax !== 0) {
+                @let costBasisBreakdown = 'Buy-in ' + (lot.buyInAbsolute | tqCurrency : lot.currency)
+                  + ' + tax ' + (lot.tax | tqCurrency : lot.currency)
+                  + ' + fee ' + (lot.fee | tqCurrency : lot.currency);
+                <div class="lot__row">
+                    <span class="lot__label lot__label--with-info">
+                        Cost basis
+                        <mat-icon class="lot__info"
+                                  fontIcon="info"
+                                  aria-hidden="false"
+                                  [attr.aria-label]="costBasisBreakdown"
+                                  [matTooltip]="costBasisBreakdown">
+                        </mat-icon>
+                    </span>
+                    <span class="lot__value tq-numeric">
+                        {{ lot.buyInAbsolute + lot.tax + lot.fee | tqCurrency : lot.currency }}
+                    </span>
+                </div>
+            }
+
             <div class="lot__row">
                 <span class="lot__label">Current size</span>
                 <span class="lot__value tq-numeric">

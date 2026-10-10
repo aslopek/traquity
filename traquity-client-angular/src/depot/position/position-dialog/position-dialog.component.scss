@@ -1,0 +1,25 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.position-dialog__body {
+  display: flex;
+  flex-direction: row;
+  gap: var(--tq-space-5);
+  align-items: flex-start;
+}
+
+.position-dialog__column {
+  flex: 1 1 0;
+  min-width: 0;
+
+  &:last-child {
+    border-left: 0.0625rem solid var(--tq-border);
+    padding-left: var(--tq-space-5);
+    position: sticky;
+    top: 0;
+  }
+}

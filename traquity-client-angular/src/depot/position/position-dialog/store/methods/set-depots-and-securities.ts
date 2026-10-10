@@ -1,4 +1,4 @@
-import {LotState} from '../lot.store';
+import {PositionDialogState} from '../position-dialog.store';
 import {patchState} from '@ngrx/signals';
 import {WritableSignalStore} from '../../../../../common/types/signal-store.type';
 import {DepotPositionApi, Lot} from '../../../../../gen/api/depot-position';
@@ -9,7 +9,7 @@ import {SecurityActions} from '../../../../../store/security/security.actions';
 
 export type SetDepotsAndSecuritiesFunction = (depotIds: number[], securityIds: number[]) => Promise<void>;
 
-export function setDepotsAndSecurities(signalStore: WritableSignalStore<LotState, {}, {}>,
+export function setDepotsAndSecurities(signalStore: WritableSignalStore<PositionDialogState>,
                                        depotPositionApi: DepotPositionApi,
                                        globalStore: Store<AppState>): SetDepotsAndSecuritiesFunction {
   return async (depotIds: number[], securityIds: number[]): Promise<void> => {
@@ -27,12 +27,6 @@ export function setDepotsAndSecurities(signalStore: WritableSignalStore<LotState
 
     lots.sort((a: Lot, b: Lot): number => b.holdingPeriodInDays - a.holdingPeriodInDays);
 
-    patchState(signalStore, (): LotState => {
-      return {
-        securityIds,
-        depotIds,
-        lots
-      };
-    });
+    patchState(signalStore, {securityIds, depotIds, lots});
   };
 }

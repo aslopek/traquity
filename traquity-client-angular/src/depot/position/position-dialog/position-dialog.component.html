@@ -1,0 +1,17 @@
+<app-title-toolbar (onClose)="close()"
+                   [title]="dialogData.securityIds.length === 1 ? (dialogData.securityIds[0] | securityName) : dialogData.displayName">
+</app-title-toolbar>
+
+<div class="tq-dialog__body position-dialog__body">
+    <section class="position-dialog__column">
+        <h3 class="tq-section-label">Lots</h3>
+        <app-lot-view [depotIds]="dialogData.depotIds"
+                      [securityIds]="dialogData.securityIds">
+        </app-lot-view>
+    </section>
+
+    <section class="position-dialog__column">
+        <h3 class="tq-section-label">Sell Simulation</h3>
+        <app-sell-simulation [securityIds]="dialogData.securityIds"></app-sell-simulation>
+    </section>
+</div>
