@@ -1,0 +1,27 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tq-space-4);
+}
+
+.sell-simulation__divider {
+  border-top: 0.0625rem solid var(--tq-border);
+}
+
+.sell-simulation__result-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--tq-space-3);
+}
+
+.sell-simulation__result-label {
+  color: var(--tq-text-muted);
+}
+
+.sell-simulation__result-value--negative {
+  color: var(--tq-negative-soft);
+}
+
+.sell-simulation__result-value--emphasized {
+  font-weight: 500;
+}

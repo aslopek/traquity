@@ -1,5 +1,7 @@
 import {Component, DestroyRef, inject, input, InputSignal, Signal,} from "@angular/core";
-import {lotStore, ReadableLotStore} from "./store/lot.store";
+import {MatIconModule} from "@angular/material/icon";
+import {MatTooltipModule} from "@angular/material/tooltip";
+import {PositionDialogStore, ReadablePositionDialogStore} from "../position-dialog/store/position-dialog.store";
 import {Store} from "@ngrx/store";
 import {AppState} from "../../../store/app.state";
 import {combineLatest, Observable} from "rxjs";
@@ -11,18 +13,21 @@ import {TqDatePipe} from "../../../common/pipe/tq-date.pipe";
 import {TqDecimalPipe} from "../../../common/pipe/tq-decimal.pipe";
 import {TqPercentPipe} from "../../../common/pipe/tq-percent.pipe";
 import {hideAbsoluteValues} from "../../../store/app-config/app-config.selector";
+import {LotSoldHeightPipe} from "./lot-sold-height.pipe";
 
 @Component({
   selector: "app-lot-view",
   imports: [
+    MatIconModule,
+    MatTooltipModule,
     TqDatePipe,
     PerformanceLabelComponent,
     TqDecimalPipe,
     TqCurrencyPipe,
     SecurityNamePipe,
     TqPercentPipe,
+    LotSoldHeightPipe,
   ],
-  providers: [lotStore],
   templateUrl: "./lot-view.component.html",
   styleUrl: "./lot-view.component.scss",
 })
@@ -31,7 +36,7 @@ export class LotViewComponent {
   readonly securityIds: InputSignal<number[]> = input.required();
 
   protected readonly store: Store<AppState> = inject(Store);
-  protected readonly lotStore: ReadableLotStore = inject(lotStore);
+  protected readonly positionStore: ReadablePositionDialogStore = inject(PositionDialogStore);
 
   protected hideAbsoluteValues: Signal<boolean> =
     this.store.selectSignal(hideAbsoluteValues);
@@ -44,7 +49,7 @@ export class LotViewComponent {
       .pipe(takeUntilDestroyed(destroyRef))
       .subscribe(async (values: [number[], number[]]): Promise<void> => {
         const [depotIds, securityIds] = values;
-        await this.lotStore.setDepotsAndSecurities(depotIds, securityIds);
+        await this.positionStore.setDepotsAndSecurities(depotIds, securityIds);
       });
   }
 }

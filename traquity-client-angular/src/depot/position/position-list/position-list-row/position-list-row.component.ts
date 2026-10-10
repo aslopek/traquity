@@ -10,7 +10,7 @@ import {DepotPosition} from "../../../../gen/api/depot-position";
 import {hideAbsoluteValues} from "../../../../store/app-config/app-config.selector";
 import {AppState} from "../../../../store/app.state";
 import {MatDialog} from "@angular/material/dialog";
-import {LotsDialogComponent, LotsDialogData,} from "../../lots-dialog/lots-dialog.component";
+import {PositionDialogComponent, PositionDialogData,} from "../../position-dialog/position-dialog.component";
 import {IncomeByPosition} from "../../../../store/depot/depot.state";
 import {Performance} from "../../../../gen/api/depot-performance";
 import {incomeByPosition, selectedDepotCurrency, selectedDepotIds, usePositionBuyInValues,} from "../../../../store/depot/depot.selector";
@@ -47,10 +47,10 @@ export class PositionListRowComponent {
     this.positionIncome = computed((): Performance | undefined => income()[this.position().securityIds[0]]);
   }
 
-  protected openLotsDialog(): void {
-    this.dialog.open(LotsDialogComponent, {
+  protected openPositionDialog(): void {
+    this.dialog.open(PositionDialogComponent, {
       height: "90%",
-      width: "30%",
+      width: "60%",
       minHeight: "15em",
       minWidth: "5em",
       panelClass: "mat-app-background",
@@ -59,7 +59,8 @@ export class PositionListRowComponent {
       data: {
         depotIds: this.depotIds(),
         securityIds: this.position().securityIds,
-      } satisfies LotsDialogData,
+        displayName: this.position().displayName,
+      } satisfies PositionDialogData,
     });
   }
 }
