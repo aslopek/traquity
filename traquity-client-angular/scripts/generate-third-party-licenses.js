@@ -23,13 +23,12 @@ const path = require('path');
 
 const projectRoot = path.join(__dirname, '..');
 const bundleLicensesPath = path.join(projectRoot, 'dist', 'traquity', '3rdpartylicenses.txt');
-const nodeModulesPath = path.join(projectRoot, 'node_modules');
 const sourcePath = path.join(projectRoot, 'src');
 const angularJsonPath = path.join(projectRoot, 'angular.json');
 const outputPath = path.join(projectRoot, 'dist', 'traquity', 'browser', 'assets', 'third-party-licenses.json');
 const ownPackageJson = JSON.parse(fs.readFileSync(path.join(projectRoot, 'package.json'), 'utf-8'));
 
-/** @typedef {{name: string, traverse: boolean, optional?: boolean}} ShellPackageEntry */
+/** @typedef {{name: string, traverse: boolean, optional?: boolean, fromDirectory: string}} ShellPackageEntry */
 
 /** @typedef {{dependencies?: Record<string, string>, optionalDependencies?: Record<string, string>}} DependencyManifest */
 
@@ -50,13 +49,54 @@ const shellPackageRoots = [
 // an optional dependency npm skipped is skipped here too instead of failing the run.
 /**
  * @param {DependencyManifest} packageJson
+ * @param {string} fromDirectory
  * @returns {ShellPackageEntry[]}
  */
-function collectEntries(packageJson) {
+function collectEntries(packageJson, fromDirectory) {
   return [
-    ...Object.keys(packageJson.dependencies ?? {}).map(name => ({name, traverse: true, optional: false})),
-    ...Object.keys(packageJson.optionalDependencies ?? {}).map(name => ({name, traverse: true, optional: true}))
+    ...Object.keys(packageJson.dependencies ?? {}).map(name => ({name, traverse: true, optional: false, fromDirectory})),
+    ...Object.keys(packageJson.optionalDependencies ?? {}).map(name => ({name, traverse: true, optional: true, fromDirectory}))
   ];
+}
+
+// Every node_modules directory Node's own module resolution would consult for something required from
+// `fromDirectory`: that directory's own node_modules, then each ancestor's, nearest first. An ancestor that is
+// itself named node_modules is skipped, since node_modules/node_modules is never a real nesting level.
+/**
+ * @param {string} fromDirectory
+ * @returns {string[]}
+ */
+function nodeModulesSearchPaths(fromDirectory) {
+  /** @type {string[]} */
+  const searchPaths = [];
+  let directory = fromDirectory;
+  while (true) {
+    if (path.basename(directory) !== 'node_modules') {
+      searchPaths.push(path.join(directory, 'node_modules'));
+    }
+    const parent = path.dirname(directory);
+    if (parent === directory) {
+      return searchPaths;
+    }
+    directory = parent;
+  }
+}
+
+// npm nests a package under its requirer's own node_modules, instead of hoisting it to the top level, whenever
+// another version of it is already claimed higher up the tree.
+/**
+ * @param {string} name
+ * @param {string} fromDirectory
+ * @returns {string | null}
+ */
+function resolvePackageDirectory(name, fromDirectory) {
+  for (const searchPath of nodeModulesSearchPaths(fromDirectory)) {
+    const candidate = path.join(searchPath, ...name.split('/'));
+    if (fs.existsSync(path.join(candidate, 'package.json'))) {
+      return candidate;
+    }
+  }
+  return null;
 }
 
 // The rule the bundle file draws between two records, matched only where it trails a record: anchored at the end of
@@ -184,12 +224,12 @@ function fail(message) {
   process.exit(1);
 }
 
-function readPackageJson(packageName) {
-  const packageJsonPath = path.join(nodeModulesPath, ...packageName.split('/'), 'package.json');
-  if (!fs.existsSync(packageJsonPath)) {
+function readPackageJson(packageName, fromDirectory = projectRoot) {
+  const packageDirectory = resolvePackageDirectory(packageName, fromDirectory);
+  if (packageDirectory === null) {
     return null;
   }
-  return JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+  return JSON.parse(fs.readFileSync(path.join(packageDirectory, 'package.json'), 'utf-8'));
 }
 
 /**
@@ -253,8 +293,8 @@ function parseBundleLicenses() {
     // The bundle text stays as the fallback for a package that ships none.
     // The NOTICE is read here for the same reason - the bundle file never carries one, and Apache-2.0 §4(d) requires
     // the NOTICE of a package that ships one to be reproduced in the distribution.
-    const packageDirectory = path.join(nodeModulesPath, ...name.split('/'));
-    const packageExists = fs.existsSync(packageDirectory);
+    const packageDirectory = resolvePackageDirectory(name, projectRoot);
+    const packageExists = packageDirectory !== null;
     const fileLicenseText = packageExists ? readFirstExistingFile(packageDirectory, licenseFileNames) : null;
 
     packagesByName.set(name, {
@@ -274,25 +314,25 @@ function parseBundleLicenses() {
 }
 
 function collectShellPackages(packagesByName) {
-  const queue = [...shellPackageRoots];
+  const queue = shellPackageRoots.map(root => ({...root, fromDirectory: projectRoot}));
   const visited = new Set();
 
   while (queue.length > 0) {
-    const {name, traverse, optional} = queue.shift();
+    const {name, traverse, optional, fromDirectory} = queue.shift();
     if (visited.has(name)) {
       continue;
     }
     visited.add(name);
 
-    const packageJson = readPackageJson(name);
-    if (packageJson === null) {
+    const packageDirectory = resolvePackageDirectory(name, fromDirectory);
+    if (packageDirectory === null) {
       if (optional) {
         continue;
       }
       fail(`Shell package "${name}" not found in node_modules — run "npm install" first.`);
     }
+    const packageJson = JSON.parse(fs.readFileSync(path.join(packageDirectory, 'package.json'), 'utf-8'));
 
-    const packageDirectory = path.join(nodeModulesPath, ...name.split('/'));
     if (!packagesByName.has(name)) {
       packagesByName.set(name, {
         name,
@@ -305,7 +345,7 @@ function collectShellPackages(packagesByName) {
     }
 
     if (traverse) {
-      queue.push(...collectEntries(packageJson));
+      queue.push(...collectEntries(packageJson, packageDirectory));
     }
   }
 }
@@ -418,12 +458,12 @@ function collectStylesheetPackages(packagesByName) {
       continue;
     }
 
-    const packageJson = readPackageJson(name);
-    if (packageJson === null) {
+    const packageDirectory = resolvePackageDirectory(name, projectRoot);
+    if (packageDirectory === null) {
       fail(`Stylesheet package "${name}" not found in node_modules — run "npm install" first.`);
     }
+    const packageJson = JSON.parse(fs.readFileSync(path.join(packageDirectory, 'package.json'), 'utf-8'));
 
-    const packageDirectory = path.join(nodeModulesPath, ...name.split('/'));
     packagesByName.set(name, {
       name,
       version: packageJson.version,
