@@ -1,3 +1,22 @@
+// The fill level the sale reached: a crisp line with a meniscus glow above it.
+$fill-line: linear-gradient(to top,
+rgba(255, 255, 255, 0.45) 0,
+rgba(255, 255, 255, 0.45) 0.0625rem,
+rgba(255, 255, 255, 0.1) 0.0625rem,
+rgba(255, 255, 255, 0) 1rem);
+
+// The specular highlight running across the pane.
+$sheen: linear-gradient(118deg,
+rgba(255, 255, 255, 0.13) 0%,
+rgba(255, 255, 255, 0.02) 38%,
+rgba(255, 255, 255, 0) 58%,
+rgba(255, 255, 255, 0.09) 100%);
+
+// The tinted body of the glass, denser towards the fill level.
+$glass-body: linear-gradient(to top,
+rgba(6, 10, 16, 0.32) 0%,
+rgba(6, 10, 16, 0.2) 100%);
+
 :host {
   display: flex;
   flex-direction: column;
@@ -10,6 +29,24 @@
   flex-direction: column;
   gap: var(--tq-space-2);
   padding: var(--tq-space-4);
+  position: relative;
+  // clips the sold band to the card's rounded corners
+  overflow: hidden;
+}
+
+.lot__sold {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  backdrop-filter: saturate(0.3) brightness(0.9);
+  background-image: $fill-line, $sheen, $glass-body;
+  transition: height var(--tq-duration) var(--tq-ease);
+}
+
+.lot__sold--complete {
+  background-image: $sheen, $glass-body;
 }
 
 .lot__title {
@@ -29,6 +66,19 @@
   color: var(--tq-text-muted);
   font-size: var(--tq-font-size-base);
   white-space: nowrap;
+}
+
+.lot__label--with-info {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tq-space-1);
+}
+
+.lot__info {
+  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
+  cursor: help;
 }
 
 .lot__value {

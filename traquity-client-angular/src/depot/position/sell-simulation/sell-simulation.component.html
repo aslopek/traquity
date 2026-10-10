@@ -1,0 +1,151 @@
+<p class="tq-field-hint">
+    Lots are consumed oldest first.
+</p>
+
+@if (!singleSecurity()) {
+    <div class="tq-notice tq-notice--info">
+        <mat-icon class="tq-notice__icon"
+                  fontIcon="info">
+        </mat-icon>
+        <span>Available for a position of a single security only.</span>
+    </div>
+} @else if (hideAbsoluteValues()) {
+    <div class="tq-notice tq-notice--info">
+        <mat-icon class="tq-notice__icon"
+                  fontIcon="info">
+        </mat-icon>
+        <span>Available only when absolute values are displayed.</span>
+    </div>
+} @else {
+    <div class="tq-form">
+        <mat-form-field>
+            <mat-label>Shares to Sell</mat-label>
+            <input matInput
+                   type="number"
+                   [formField]="form.sharesToSell"
+                   (invalid)="$event.preventDefault()">
+            <mat-hint>{{ store.sharesHeld() | tqDecimal:'1.0-10' }} shares held</mat-hint>
+            @for (error of form.sharesToSell().errors(); track error) {
+                <mat-error>{{ error.message }}</mat-error>
+            }
+        </mat-form-field>
+
+        <mat-form-field>
+            <mat-label>Price per Share</mat-label>
+            <input matInput
+                   type="number"
+                   [formField]="form.pricePerShare"
+                   (invalid)="$event.preventDefault()">
+            @for (error of form.pricePerShare().errors(); track error) {
+                <mat-error>{{ error.message }}</mat-error>
+            }
+        </mat-form-field>
+
+        <mat-form-field>
+            <mat-label>Tax-free Gains %</mat-label>
+            <input matInput
+                   type="number"
+                   [formField]="form.taxFreeGainsPercent"
+                   (invalid)="$event.preventDefault()">
+            @for (error of form.taxFreeGainsPercent().errors(); track error) {
+                <mat-error>{{ error.message }}</mat-error>
+            }
+        </mat-form-field>
+
+        <mat-form-field>
+            <mat-label>Tax Rate %</mat-label>
+            <input matInput
+                   type="number"
+                   [formField]="form.taxRatePercent"
+                   (invalid)="$event.preventDefault()">
+            @for (error of form.taxRatePercent().errors(); track error) {
+                <mat-error>{{ error.message }}</mat-error>
+            }
+        </mat-form-field>
+
+        <mat-form-field>
+            <mat-label>Fee</mat-label>
+            <input matInput
+                   type="number"
+                   [formField]="form.fee"
+                   (invalid)="$event.preventDefault()">
+            @for (error of form.fee().errors(); track error) {
+                <mat-error>{{ error.message }}</mat-error>
+            }
+        </mat-form-field>
+    </div>
+
+    <mat-slide-toggle [formField]="form.feesReduceTaxableGain">
+        Fees Reduce the Taxable Gain
+    </mat-slide-toggle>
+    <p class="tq-field-hint">
+        {{ form.feesReduceTaxableGain().value() ? 'Buy and sell fees lower the taxable gain.' : 'Fees lower the net value only.' }}
+    </p>
+
+    <mat-slide-toggle [formField]="form.buyTaxesReduceTaxableGain">
+        Buy Taxes Reduce the Taxable Gain
+    </mat-slide-toggle>
+    <p class="tq-field-hint">
+        {{
+        form.buyTaxesReduceTaxableGain().value()
+          ? 'Taxes paid on a purchase lower the taxable gain.'
+          : 'Taxes paid on a purchase are left out of the taxable gain.'
+        }}
+    </p>
+
+    <div class="sell-simulation__divider"></div>
+
+    @let result = store.saleResult();
+
+    <div class="sell-simulation__result-row">
+        <span class="sell-simulation__result-label">
+            Gross Value
+        </span>
+        <span class="sell-simulation__result-value tq-numeric">
+            {{ result == null ? '-' : (result.grossValue | tqCurrency:depotCurrency()) }}
+        </span>
+    </div>
+
+    <div class="sell-simulation__result-row">
+        <span class="sell-simulation__result-label">
+            Taxable Gain
+        </span>
+        <span class="sell-simulation__result-value tq-numeric"
+              [class.sell-simulation__result-value--negative]="result != null && result.taxableGain < 0">
+            {{ result == null ? '-' : (result.taxableGain | tqCurrency:depotCurrency()) }}
+        </span>
+    </div>
+
+    <div class="sell-simulation__result-row">
+        <span class="sell-simulation__result-label">
+            Taxes
+        </span>
+        <span class="sell-simulation__result-value tq-numeric">
+            {{ result == null ? '-' : (result.taxes | tqCurrency:depotCurrency()) }}
+        </span>
+    </div>
+
+    <div class="sell-simulation__result-row">
+        <span class="sell-simulation__result-label">
+            Net Value
+        </span>
+        <span class="sell-simulation__result-value sell-simulation__result-value--emphasized tq-numeric">
+            {{ result == null ? '-' : (result.netValue | tqCurrency:depotCurrency()) }}
+        </span>
+    </div>
+
+    <div class="tq-notice tq-notice--warn">
+        <mat-icon class="tq-notice__icon"
+                  fontIcon="warning">
+        </mat-icon>
+        <div class="tq-notice__body">
+            <span>
+                For informational purposes only. This arithmetic model is based on the data you provide
+                and gives no guarantee on the correctness of the simulation results.
+            </span>
+            <span>
+                This application offers no financial or tax advice. Your actions remain your own responsibility.
+            </span>
+        </div>
+    </div>
+}

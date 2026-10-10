@@ -411,12 +411,12 @@ To get to the tab, open the **Depot** dropdown and click a single depot. That re
 
 ### The four depot tabs
 
-| Tab              | Shows                                                                           | Needs exactly one depot |
-|------------------|---------------------------------------------------------------------------------|-------------------------|
-| **Positions**    | Current holdings, per-position return, income, allocation chart, lot drill-down | no                      |
-| **Dividends**    | Received dividends over time, per-security yield tables                         | no                      |
-| **Performance**  | Depot value over time, KPI tiles, invested capital, XIRR, benchmarks            | no                      |
-| **Transactions** | The transaction history, and the actions to add, import, edit and delete        | **yes**                 |
+| Tab              | Shows                                                                             | Needs exactly one depot |
+|------------------|-----------------------------------------------------------------------------------|-------------------------|
+| **Positions**    | Current holdings, per-position return, income, allocation chart, position details | no                      |
+| **Dividends**    | Received dividends over time, per-security yield tables                           | no                      |
+| **Performance**  | Depot value over time, KPI tiles, invested capital, XIRR, benchmarks              | no                      |
+| **Transactions** | The transaction history, and the actions to add, import, edit and delete          | **yes**                 |
 
 On the **Positions** tab, a *Group by* control groups both the list and the chart by the sector kept in the security's master data.
 Positions whose security has no sector fall into an `Others` group. Each group carries its name and its share of the depot, with the group's
@@ -1039,9 +1039,30 @@ has no bearing on how one particular stock performed.
 
 For every position you currently hold, the view also shows net income, which is dividends and special dividends minus taxes.
 
-Clicking a position drills down into each lot you currently hold, including a CAGR per lot.
+Clicking a position opens its details dialog. **Lots** on the left lists every lot you currently hold, each with its buy date and time,
+holding period, buy-in size, cost basis (buy-in plus the fees and taxes of that purchase, shown when there were any), current size, CAGR and
+performance. **Sell Simulation** on the right estimates what selling part of the position would yield.
 
-![The lot drill-down of a position, with holding period, CAGR and performance per lot](./doc-assets/depot-position-lots.png)
+![Position details: the lots on the left, the sell simulation on the right](./doc-assets/depot-position-details.png)
+
+#### Sell Simulation
+
+Enter **Shares to Sell** — the hint below the field states how many you hold, and more than that is refused — and a **Price per Share**,
+which starts out pre-filled with the position's current price per share. **Tax-free Gains %** is the portion of the gain that stays untaxed,
+**Tax Rate %** the rate applied to the rest, and **Fee** the cost of the sale itself. Two toggles decide what the taxable gain is measured
+against: **Fees Reduce the Taxable Gain** subtracts the buy fees of the lots being sold and the selling fee, **Buy Taxes Reduce the Taxable
+Gain** subtracts the taxes paid on those purchases. Switched off, a fee or tax still lowers the net value, just not the taxable gain.
+
+Lots are consumed oldest first (FIFO). The lots on the left shade over to show how far the sale eats into each one, so you can see which
+purchases a given share count would sell. The four figures update while you type: **Gross Value** (shares × price), **Taxable Gain**,
+**Taxes** and **Net Value**, which is the gross value minus the full fee and the taxes.
+
+The simulation needs a position of a single security, and it needs absolute values to be visible — with **Hide Absolute Values** on, or
+for a position that merges several securities, it shows a notice instead of the form.
+
+The result is arithmetic over the numbers and transactios you provide, nothing more. It is not tax or investment advice, and what you
+actually receive and owe depends on your broker's settlement and your own tax situation, which the app knows nothing about. **Your actions
+remain your own responsibility.**
 
 ## Dev mode and direct database access
 
