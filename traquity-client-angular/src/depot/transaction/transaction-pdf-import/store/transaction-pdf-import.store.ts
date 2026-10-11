@@ -8,7 +8,7 @@ import {AppState} from "../../../../store/app.state";
 import {SecurityActions} from "../../../../store/security/security.actions";
 import {securitiesByIsin as securitiesByIsinSelector} from "../../../../store/security/security.selector";
 import {SecuritiesByIsin} from "../../../../store/security/selectors/get-securities-by-isin.selector";
-import {SecurityApi, SecurityCreate} from "../../../../gen/api/security";
+import {SecurityApi, SecurityCreate, StockSplitApi} from "../../../../gen/api/security";
 import {TransactionApi} from "../../../../gen/api/depot-transaction";
 import {ReadableTransactionPageStore, transactionPageStore} from "../../transaction-store/transaction-page.store";
 import {canStartImport} from "./computed/can-start-import";
@@ -80,11 +80,12 @@ export const TransactionPdfImportStore = signalStore(
                aiBridge: AiBridgeService = inject(AiBridgeService),
                securityApi: SecurityApi = inject(SecurityApi),
                transactionApi: TransactionApi = inject(TransactionApi),
+               stockSplitApi: StockSplitApi = inject(StockSplitApi),
                transactionPageStoreInstance: ReadableTransactionPageStore = inject(transactionPageStore)): TransactionPdfImportMethods => {
     return {
       cancel: (): void => cancel(signalStore),
       extractFolder: extractFolder(signalStore, aiBridge),
-      runImport: runImport(signalStore, globalStore, securityApi, transactionApi, transactionPageStoreInstance),
+      runImport: runImport(signalStore, globalStore, securityApi, transactionApi, stockSplitApi, transactionPageStoreInstance),
       setFolder: (folder: PickedFolder): void => setFolder(signalStore, folder),
       setSecurityName: (isin: string, name: string): void => setSecurityName(signalStore, isin, name)
     };

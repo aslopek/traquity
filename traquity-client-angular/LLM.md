@@ -225,6 +225,9 @@ container component's `providers: [XStore]`, then have descendant components
 - **Doc comments obey dependency inversion** (root `LLM.md`, "Dependency inversion binds the docs too"): a selector, computed, method,
   effect or store helper documents its own contract, never which component or screen calls it, in which order the callers run, or what
   another slice/screen does with the result afterwards.
+- **If present, a function's JSDoc states each parameter via `@param` and the return value via `@returns`**, never folded into prose, so a
+  parameter rename or a changed return type leaves an outdated tag to catch instead of a sentence that silently stays wrong. Not every
+  function needs JSDoc; having functions without it is fine.
 - **Input from outside the program is defined exactly once, as a zod schema, and its static type is inferred from that same schema** —
   the renderer's half of the boundary rule `electron/LLM.md` states in full. The case here is a file the user imports: the data source
   configuration files are described by `src/settings/data-source/data-source.schema.ts`, mirroring
