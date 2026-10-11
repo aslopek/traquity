@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Both the CSV and the PDF folder import wizard now apply the security's recorded stock splits to the imported quantity, filling *Quantity (
   split-adjusted)* automatically.
 
+### Changed
+
+- Dependency updates.
+- Minor UI improvements.
+
 ## [1.2.4] - 2026-10-10
 
 ### Changed

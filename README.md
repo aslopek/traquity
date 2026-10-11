@@ -15,9 +15,9 @@ own machine. No account, no cloud, no telemetry.
   another financial instrument instead?"
 - **Positions** — per-holding returns, drill-down into individual purchase lots, allocation
   chart; list and chart can be grouped by security's sector.
-- **Sell Simulation** — Simulate what happens when you sell shares. Takes the purchase lots in
-  FIFO order to estimate taxable gains. This helps you determine out how many proceedings you
-  would get from selling a given amount of shares or using available tax credits.
+- **Sell Simulation** — simulate what happens when you sell shares. Takes the purchase lots in
+  FIFO order to estimate taxable gains, so you can see what proceeds a given share count would
+  bring in, or how to use up an available tax credit.
 - **Dividends** — per-depot dividend history and yield tables, plus a calendar of upcoming
   dividend announcements with in-app notifications.
 - **Securities** — master data, stock splits, and historical price charts for every security

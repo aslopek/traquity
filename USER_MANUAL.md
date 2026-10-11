@@ -1064,7 +1064,7 @@ purchases a given share count would sell. The four figures update while you type
 The simulation needs a position of a single security, and it needs absolute values to be visible — with **Hide Absolute Values** on, or
 for a position that merges several securities, it shows a notice instead of the form.
 
-The result is arithmetic over the numbers and transactios you provide, nothing more. It is not tax or investment advice, and what you
+The result is arithmetic over the numbers and transactions you provide, nothing more. It is not tax or investment advice, and what you
 actually receive and owe depends on your broker's settlement and your own tax situation, which the app knows nothing about. **Your actions
 remain your own responsibility.**
 
