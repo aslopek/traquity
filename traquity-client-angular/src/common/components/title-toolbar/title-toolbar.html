@@ -1,5 +1,8 @@
 <header class="title-toolbar">
-    <h2 class="title-toolbar__title tq-truncate">{{ title }}</h2>
+    <div class="title-toolbar__heading">
+        <ng-content select="[title-toolbar-icon]"></ng-content>
+        <h2 class="title-toolbar__title tq-truncate">{{ title }}</h2>
+    </div>
     <button (click)="close()"
             matTooltip="Close"
             aria-label="Close"
