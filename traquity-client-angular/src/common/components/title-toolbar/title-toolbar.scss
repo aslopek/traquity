@@ -12,6 +12,13 @@
   border-bottom: 0.0625rem solid var(--tq-border);
 }
 
+.title-toolbar__heading {
+  display: flex;
+  align-items: center;
+  gap: var(--tq-space-3);
+  min-width: 0;
+}
+
 .title-toolbar__title {
   font-size: var(--tq-font-size-lg);
   font-weight: 500;

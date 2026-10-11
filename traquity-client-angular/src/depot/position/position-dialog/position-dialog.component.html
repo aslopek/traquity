@@ -1,5 +1,8 @@
 <app-title-toolbar (onClose)="close()"
                    [title]="dialogData.securityIds.length === 1 ? (dialogData.securityIds[0] | securityName) : dialogData.displayName">
+    <security-logo title-toolbar-icon
+                   [securityId]="dialogData.securityIds[0]">
+    </security-logo>
 </app-title-toolbar>
 
 <div class="tq-dialog__body position-dialog__body">

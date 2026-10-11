@@ -1,5 +1,6 @@
 import {Component, inject} from "@angular/core";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
+import {SecurityLogoComponent} from "../../../common/components/security-logo/security-logo.component";
 import {TitleToolbarComponent} from "../../../common/components/title-toolbar/title-toolbar.component";
 import {SecurityNamePipe} from "../../../common/pipe/security-name.pipe";
 import {LotViewComponent} from "../lot-view/lot-view.component";
@@ -14,7 +15,7 @@ export type PositionDialogData = {
 
 @Component({
   selector: "app-position-dialog",
-  imports: [TitleToolbarComponent, LotViewComponent, SellSimulationComponent, SecurityNamePipe],
+  imports: [TitleToolbarComponent, LotViewComponent, SellSimulationComponent, SecurityNamePipe, SecurityLogoComponent],
   providers: [PositionDialogStore],
   templateUrl: "./position-dialog.component.html",
   styleUrl: "./position-dialog.component.scss",
