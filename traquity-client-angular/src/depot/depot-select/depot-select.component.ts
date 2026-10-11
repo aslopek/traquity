@@ -67,8 +67,8 @@ export class DepotSelectComponent {
     this.dialog.open(DepotCreateComponent, {
       height: "20%",
       width: "25%",
-      minHeight: "20em",
-      minWidth: "25em",
+      minHeight: "25rem",
+      minWidth: "25rem",
       panelClass: "mat-app-background",
       autoFocus: false,
       disableClose: true,
