@@ -6,7 +6,7 @@ import {AppState} from '../../../../store/app.state';
 import {SecurityActions} from '../../../../store/security/security.actions';
 import {securitiesById as securitiesByIdSelector} from '../../../../store/security/security.selector';
 import {SecuritiesById} from '../../../../store/security/security.state';
-import {SecurityApi, SecurityCreate} from '../../../../gen/api/security';
+import {SecurityApi, SecurityCreate, StockSplitApi} from '../../../../gen/api/security';
 import {TransactionApi, TransactionType} from '../../../../gen/api/depot-transaction';
 import {ReadableTransactionPageStore, transactionPageStore} from '../../transaction-store/transaction-page.store';
 import {ColumnMapping, CsvRow, ImportPhase, MappableField, RowResolution} from './csv/csv.type';
@@ -115,10 +115,12 @@ export const TransactionImportStore = signalStore(
                globalStore: Store<AppState> = inject(Store),
                securityApi: SecurityApi = inject(SecurityApi),
                transactionApi: TransactionApi = inject(TransactionApi),
+               stockSplitApi: StockSplitApi = inject(StockSplitApi),
                transactionPageStoreInstance: ReadableTransactionPageStore = inject(transactionPageStore)): TransactionImportMethods => {
     return {
       cancelImport: (): void => cancelImport(signalStore),
-      runImport: (): Promise<void> => runImport(signalStore, globalStore, securityApi, transactionApi, transactionPageStoreInstance),
+      runImport: (): Promise<void> =>
+        runImport(signalStore, globalStore, securityApi, transactionApi, stockSplitApi, transactionPageStoreInstance),
       setColumnMapping: (field: MappableField, columnIndex: number | null): void => setColumnMapping(signalStore, field, columnIndex),
       setDateFormat: (dateFormat: string | null): void => setDateFormat(signalStore, dateFormat),
       setDecimalSeparator: (decimalSeparator: ',' | '.'): void => setDecimalSeparator(signalStore, decimalSeparator),

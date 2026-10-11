@@ -1,15 +1,19 @@
 import {patchState} from "@ngrx/signals";
 import {RxMethod, rxMethod} from "@ngrx/signals/rxjs-interop";
 import {Store} from "@ngrx/store";
-import {catchError, concat, concatMap, defer, EMPTY, finalize, from, map, Observable, OperatorFunction, pipe, switchMap, tap} from "rxjs";
+import {
+  catchError, concat, concatMap, defer, EMPTY, finalize, from, map, Observable, OperatorFunction, pipe, switchMap, tap
+} from "rxjs";
 import {WritableSignalStore} from "../../../../../common/types/signal-store.type";
 import {AppState} from "../../../../../store/app.state";
 import {DepotActions} from "../../../../../store/depot/depot.actions";
 import {SecurityActions} from "../../../../../store/security/security.actions";
 import {SecuritiesByIsin} from "../../../../../store/security/selectors/get-securities-by-isin.selector";
-import {SecurityApi, SecurityCreate, SecurityRead} from "../../../../../gen/api/security";
+import {SecurityApi, SecurityCreate, SecurityRead, StockSplit, StockSplitApi} from "../../../../../gen/api/security";
 import {TransactionApi, TransactionCreate} from "../../../../../gen/api/depot-transaction";
 import {ReadableTransactionPageStore} from "../../../transaction-store/transaction-page.store";
+import {splitAdjustedCount} from "../../../transaction-split-adjustment/split-adjusted-count";
+import {stockSplitsBySecurityId} from "../../../transaction-split-adjustment/stock-splits-by-security-id";
 import {CollectedTransaction, TransactionPdfImportState} from "../transaction-pdf-import.type";
 import {TransactionPdfImportComputed} from "../transaction-pdf-import.store";
 
@@ -21,12 +25,14 @@ export type RunImportArgs = {
 type ImportStore = WritableSignalStore<TransactionPdfImportState, TransactionPdfImportComputed>;
 
 export function runImport(signalStore: ImportStore, globalStore: Store<AppState>, securityApi: SecurityApi,
-                          transactionApi: TransactionApi, transactionPageStore: ReadableTransactionPageStore): RxMethod<RunImportArgs> {
-  return rxMethod<RunImportArgs>(runImportPipeline(signalStore, globalStore, securityApi, transactionApi, transactionPageStore));
+                          transactionApi: TransactionApi, stockSplitApi: StockSplitApi,
+                          transactionPageStore: ReadableTransactionPageStore): RxMethod<RunImportArgs> {
+  return rxMethod<RunImportArgs>(runImportPipeline(signalStore, globalStore, securityApi, transactionApi, stockSplitApi,
+    transactionPageStore));
 }
 
 export function runImportPipeline(signalStore: ImportStore, globalStore: Store<AppState>, securityApi: SecurityApi,
-                                  transactionApi: TransactionApi,
+                                  transactionApi: TransactionApi, stockSplitApi: StockSplitApi,
                                   transactionPageStore: ReadableTransactionPageStore): OperatorFunction<RunImportArgs, void> {
   return pipe(
     switchMap((args: RunImportArgs): Observable<void> => {
@@ -41,20 +47,30 @@ export function runImportPipeline(signalStore: ImportStore, globalStore: Store<A
       const idByIsin: Map<string, number> = new Map<string, number>();
       const newSecurityList: SecurityCreate[] = signalStore.newSecurities();
 
-      return concat(
-        from(newSecurityList).pipe(
-          concatMap((security: SecurityCreate): Observable<void> => signalStore.cancelled()
-            ? EMPTY
-            : createSecurity(signalStore, globalStore, securityApi, security, idByIsin))
-        ),
-        defer((): Observable<void> => from(signalStore.collected()).pipe(
-          concatMap((entry: CollectedTransaction): Observable<void> => signalStore.cancelled()
-            ? EMPTY
-            : importTransaction(signalStore, transactionApi, args, entry, idByIsin))
-        ))
-      ).pipe(finalize((): void => finish(signalStore, globalStore, transactionPageStore)));
+      return stockSplitsBySecurityId(stockSplitApi, knownSecurityIds(signalStore.collected(), args.securitiesByIsin)).pipe(
+        switchMap((splitsBySecurityId: Map<number, StockSplit[]>): Observable<void> => concat(
+          from(newSecurityList).pipe(
+            concatMap((security: SecurityCreate): Observable<void> => signalStore.cancelled()
+              ? EMPTY
+              : createSecurity(signalStore, globalStore, securityApi, security, idByIsin))
+          ),
+          defer((): Observable<void> => from(signalStore.collected()).pipe(
+            concatMap((entry: CollectedTransaction): Observable<void> => signalStore.cancelled()
+              ? EMPTY
+              : importTransaction(signalStore, transactionApi, args, entry, idByIsin, splitsBySecurityId))
+          ))
+        )),
+        finalize((): void => finish(signalStore, globalStore, transactionPageStore))
+      );
     })
   );
+}
+
+function knownSecurityIds(collected: CollectedTransaction[], securitiesByIsin: SecuritiesByIsin): number[] {
+  const ids: number[] = collected
+    .map((entry: CollectedTransaction): number | undefined => securitiesByIsin[entry.isin]?.id)
+    .filter((id: number | undefined): id is number => id !== undefined);
+  return [...new Set(ids)];
 }
 
 function createSecurity(signalStore: ImportStore, globalStore: Store<AppState>, securityApi: SecurityApi,
@@ -84,7 +100,8 @@ function createSecurity(signalStore: ImportStore, globalStore: Store<AppState>, 
 }
 
 function importTransaction(signalStore: ImportStore, transactionApi: TransactionApi, args: RunImportArgs,
-                             entry: CollectedTransaction, idByIsin: Map<string, number>): Observable<void> {
+                           entry: CollectedTransaction, idByIsin: Map<string, number>,
+                           splitsBySecurityId: Map<number, StockSplit[]>): Observable<void> {
   const securityId: number | undefined = idByIsin.get(entry.isin) ?? args.securitiesByIsin[entry.isin]?.id;
   if (securityId === undefined) {
     return defer((): Observable<never> => {
@@ -95,7 +112,9 @@ function importTransaction(signalStore: ImportStore, transactionApi: Transaction
 
   const transactionCreate: TransactionCreate = {
     ...entry.draft,
-    securityId
+    securityId,
+    securityCountSplitAdjusted:
+      splitAdjustedCount(entry.draft.securityCountOriginal, entry.draft.date, splitsBySecurityId.get(securityId) ?? [])
   };
   return transactionApi.createTransaction(args.depotId, transactionCreate).pipe(
     map((): void => {

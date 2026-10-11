@@ -1,19 +1,18 @@
 import {patchState} from '@ngrx/signals';
 import {Store} from '@ngrx/store';
 import {firstValueFrom} from 'rxjs';
-import {format, parse} from 'date-fns';
 import {WritableSignalStore} from '../../../../../common/types/signal-store.type';
 import {AppState} from '../../../../../store/app.state';
 import {SecurityActions} from '../../../../../store/security/security.actions';
 import {DepotActions} from '../../../../../store/depot/depot.actions';
 import {selectedDepotIds} from '../../../../../store/depot/depot.selector';
-import {SecurityApi, SecurityCreate, SecurityRead} from '../../../../../gen/api/security';
+import {SecurityApi, SecurityCreate, SecurityRead, StockSplit, StockSplitApi} from '../../../../../gen/api/security';
 import {TransactionApi, TransactionCreate, TransactionRead, TransactionType} from '../../../../../gen/api/depot-transaction';
 import {ReadableTransactionPageStore} from '../../../transaction-store/transaction-page.store';
+import {stockSplitsBySecurityId} from '../../../transaction-split-adjustment/stock-splits-by-security-id';
 import {TransactionImportComputed, TransactionImportState} from '../transaction-import.store';
 import {ColumnMapping, CsvRow, RowResolution} from '../csv/csv.type';
-import {parseDecimal} from '../csv/parse-decimal';
-import {lookupTransactionType} from '../csv/lookup-transaction-type';
+import {buildTransactionCreate} from '../csv/build-transaction-create';
 
 const delayBetweenRequestsMs: number = 20;
 
@@ -21,37 +20,6 @@ type ImportableResolution = Extract<RowResolution, { status: 'known' } | { statu
 
 function isImportable(resolution: RowResolution): resolution is ImportableResolution {
   return resolution.status !== 'unresolvable';
-}
-
-function normalizeTime(value: string): string | undefined {
-  const trimmed: string = value.trim();
-  if (trimmed.length === 0) {
-    return undefined;
-  }
-  return /^\d{2}:\d{2}$/.test(trimmed) ? `${trimmed}:00` : trimmed;
-}
-
-function buildTransactionCreate(row: CsvRow, columnMapping: ColumnMapping, securityId: number, dateFormat: string,
-                                decimalSeparator: ',' | '.',
-                                transactionTypeMapping: { [csvValue: string]: TransactionType | null }): TransactionCreate {
-  const dateCell: string = row.values[columnMapping.date!].trim();
-  const date: string = format(parse(dateCell, dateFormat, new Date()), 'yyyy-MM-dd');
-
-  const typeCell: string = row.values[columnMapping.transactionType!].trim();
-  const transactionType: TransactionType = lookupTransactionType(transactionTypeMapping, typeCell)!;
-
-  const securityCountOriginal: number = parseDecimal(row.values[columnMapping.securityCountOriginal!], decimalSeparator)!;
-  const grossValue: number = parseDecimal(row.values[columnMapping.grossValue!], decimalSeparator)!;
-
-  const time: string | undefined = columnMapping.time !== undefined ? normalizeTime(row.values[columnMapping.time] ?? '') : undefined;
-  const tax: number | undefined = columnMapping.tax !== undefined
-    ? parseDecimal(row.values[columnMapping.tax] ?? '', decimalSeparator) ?? undefined
-    : undefined;
-  const fee: number | undefined = columnMapping.fee !== undefined
-    ? parseDecimal(row.values[columnMapping.fee] ?? '', decimalSeparator) ?? undefined
-    : undefined;
-
-  return {date, time, securityId, transactionType, securityCountOriginal, grossValue, tax, fee};
 }
 
 function finish(signalStore: WritableSignalStore<TransactionImportState, TransactionImportComputed>,
@@ -66,6 +34,7 @@ export async function runImport(signalStore: WritableSignalStore<TransactionImpo
                                 globalStore: Store<AppState>,
                                 securityApi: SecurityApi,
                                 transactionApi: TransactionApi,
+                                stockSplitApi: StockSplitApi,
                                 transactionPageStore: ReadableTransactionPageStore): Promise<void> {
   const rowResolutionList: RowResolution[] = signalStore.rowResolutions();
   const unknownSecurityList: SecurityCreate[] = signalStore.unknownSecurities();
@@ -113,6 +82,17 @@ export async function runImport(signalStore: WritableSignalStore<TransactionImpo
     });
   }
 
+  if (signalStore.cancelled()) {
+    finish(signalStore, globalStore, transactionPageStore);
+    return;
+  }
+
+  const knownSecurityIds: number[] = [...new Set(importableRows
+    .filter((resolution: ImportableResolution): resolution is Extract<ImportableResolution, { status: 'known' }> =>
+      resolution.status === 'known')
+    .map((resolution: Extract<ImportableResolution, { status: 'known' }>): number => resolution.securityId))];
+  const splitsBySecurityId: Map<number, StockSplit[]> = await firstValueFrom(stockSplitsBySecurityId(stockSplitApi, knownSecurityIds));
+
   const rows: CsvRow[] = signalStore.rows();
   const columnMapping: ColumnMapping = signalStore.columnMapping();
   const decimalSeparator: ',' | '.' = signalStore.decimalSeparator();
@@ -133,8 +113,8 @@ export async function runImport(signalStore: WritableSignalStore<TransactionImpo
     }
 
     const row: CsvRow = rows[resolution.rowIndex];
-    const transactionCreate: TransactionCreate =
-      buildTransactionCreate(row, columnMapping, securityId, dateFormat, decimalSeparator, transactionTypeMapping);
+    const transactionCreate: TransactionCreate = buildTransactionCreate(row, columnMapping, securityId, dateFormat, decimalSeparator,
+      transactionTypeMapping, splitsBySecurityId.get(securityId) ?? []);
 
     let created: TransactionRead | undefined;
     try {
