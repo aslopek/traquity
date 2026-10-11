@@ -7,11 +7,12 @@ import {AppState} from "../../../../../store/app.state";
 import {DepotActions} from "../../../../../store/depot/depot.actions";
 import {SecurityActions} from "../../../../../store/security/security.actions";
 import {SecuritiesByIsin} from "../../../../../store/security/selectors/get-securities-by-isin.selector";
-import {SecurityApi, SecurityCreate, SecurityRead, SecurityType} from "../../../../../gen/api/security";
+import {SecurityApi, SecurityCreate, SecurityRead, SecurityType, StockSplit, StockSplitApi} from "../../../../../gen/api/security";
 import {TransactionApi, TransactionCreate, TransactionRead} from "../../../../../gen/api/depot-transaction";
 import {ReadableTransactionPageStore} from "../../../transaction-store/transaction-page.store";
 import {collectedTransactionFactory} from "../../../../../testing/collected-transaction.factory";
 import {securityReadFactory} from "../../../../../testing/security-read.factory";
+import {stockSplitFactory} from "../../../../../testing/stock-split.factory";
 import {TransactionPdfImportComputed} from "../transaction-pdf-import.store";
 import {CollectedTransaction, initialState, TransactionPdfImportState} from "../transaction-pdf-import.type";
 import {RunImportArgs, runImportPipeline} from "./run-import";
@@ -19,6 +20,7 @@ import {RunImportArgs, runImportPipeline} from "./run-import";
 type ImportStore = SignalState<TransactionPdfImportState> & TransactionPdfImportComputed;
 type CreateSecurity = (security: SecurityCreate) => Observable<SecurityRead>;
 type CreateTransaction = (depotId: number, body: TransactionCreate) => Observable<TransactionRead>;
+type GetStockSplits = (id: number) => Observable<StockSplit[]>;
 
 describe("runImportPipeline", (): void => {
   const okIsin: string = "US0378331005";
@@ -32,8 +34,10 @@ describe("runImportPipeline", (): void => {
   let calls: string[];
   let createSecurity: jest.Mock<CreateSecurity>;
   let createTransaction: jest.Mock<CreateTransaction>;
+  let getStockSplits: jest.Mock<GetStockSplits>;
   let securityApi: SecurityApi;
   let transactionApi: TransactionApi;
+  let stockSplitApi: StockSplitApi;
   let dispatch: jest.Mock<(action: unknown) => void>;
   let globalStore: Store<AppState>;
   let reloadFirstPage: jest.Mock<() => void>;
@@ -42,7 +46,7 @@ describe("runImportPipeline", (): void => {
   function run(): Promise<void> {
     return new Promise<void>((resolve): void => {
       of(args)
-        .pipe(runImportPipeline(store, globalStore, securityApi, transactionApi, transactionPageStore))
+        .pipe(runImportPipeline(store, globalStore, securityApi, transactionApi, stockSplitApi, transactionPageStore))
         .subscribe({complete: (): void => resolve()});
     });
   }
@@ -79,6 +83,9 @@ describe("runImportPipeline", (): void => {
       return of({} as TransactionRead);
     });
     transactionApi = {createTransaction} as unknown as TransactionApi;
+
+    getStockSplits = jest.fn<GetStockSplits>((): Observable<StockSplit[]> => of([]));
+    stockSplitApi = {getStockSplits} as unknown as StockSplitApi;
 
     dispatch = jest.fn<(action: unknown) => void>();
     globalStore = {dispatch} as unknown as Store<AppState>;
@@ -133,6 +140,12 @@ describe("runImportPipeline", (): void => {
     expect(store.phase()).toBe("imported");
   });
 
+  it("looks up stock splits for no security that is only being created in this run", async (): Promise<void> => {
+    await run();
+
+    expect(getStockSplits).not.toHaveBeenCalled();
+  });
+
   it("sends no further request once the run was cancelled", async (): Promise<void> => {
     createSecurity.mockImplementation((security: SecurityCreate): Observable<SecurityRead> => {
       calls.push(`security:${security.isin}`);
@@ -171,6 +184,65 @@ describe("runImportPipeline", (): void => {
       expect(createTransaction).not.toHaveBeenCalled();
       expect(store.importDone()).toBe(collected.length);
       expect(store.transactionsCreated()).toBe(0);
+    });
+
+    it("applies every stock split with an exDate after the transaction's date to the stated quantity", async (): Promise<void> => {
+      const known: SecurityRead = securityReadFactory({isin: okIsin, id: 11});
+      args = {
+        ...args,
+        securitiesByIsin: {
+          [known.isin]: known
+        } satisfies SecuritiesByIsin
+      };
+      const applyingSplit: StockSplit = stockSplitFactory({exDate: "2024-05-20", quantityOld: 1, quantityNew: 4});
+      getStockSplits.mockImplementation((id: number): Observable<StockSplit[]> => of(id === known.id ? [applyingSplit] : []));
+
+      await run();
+
+      const securityCountSplitAdjusted: number =
+        collected[0].draft.securityCountOriginal * (applyingSplit.quantityNew / applyingSplit.quantityOld);
+      expect(createTransaction.mock.calls).toEqual([
+        [args.depotId, {...collected[0].draft, securityId: known.id, securityCountSplitAdjusted}],
+        [args.depotId, {...collected[1].draft, securityId: known.id, securityCountSplitAdjusted}]
+      ]);
+    });
+
+    it("carries no split-adjusted quantity when no recorded split is newer than the transaction's date", async (): Promise<void> => {
+      const known: SecurityRead = securityReadFactory({isin: okIsin, id: 11});
+      args = {
+        ...args,
+        securitiesByIsin: {
+          [known.isin]: known
+        } satisfies SecuritiesByIsin
+      };
+      const notApplyingSplit: StockSplit = stockSplitFactory({exDate: collected[0].draft.date});
+      getStockSplits.mockImplementation((): Observable<StockSplit[]> => of([notApplyingSplit]));
+
+      await run();
+
+      expect(createTransaction.mock.calls).toEqual([
+        [args.depotId, {...collected[0].draft, securityId: known.id}],
+        [args.depotId, {...collected[1].draft, securityId: known.id}]
+      ]);
+    });
+
+    it("still books the transaction without a split-adjusted quantity when the stock-split lookup fails", async (): Promise<void> => {
+      const known: SecurityRead = securityReadFactory({isin: okIsin, id: 11});
+      args = {
+        ...args,
+        securitiesByIsin: {
+          [known.isin]: known
+        } satisfies SecuritiesByIsin
+      };
+      getStockSplits.mockReturnValue(throwError((): Error => new Error("not found")));
+
+      await run();
+
+      expect(createTransaction.mock.calls).toEqual([
+        [args.depotId, {...collected[0].draft, securityId: known.id}],
+        [args.depotId, {...collected[1].draft, securityId: known.id}]
+      ]);
+      expect(store.transactionsCreated()).toBe(2);
     });
   });
 });

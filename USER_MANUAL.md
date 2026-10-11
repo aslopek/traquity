@@ -543,6 +543,8 @@ Press **Start Import** to run it.
 transactions were created out of how many attempted. If any row failed, a **Download Failed Rows** button appears, which saves exactly those
 rows as a CSV — fix them there and import that file again. Press **Close** to return to the transaction list.
 
+Any recorded stock split is applied automatically, so the imported quantities are already split-adjusted.
+
 ![The Transactions tab with the full transaction history](./doc-assets/depot-transactions.png)
 
 ### Importing transactions from a folder of PDF files
@@ -569,6 +571,8 @@ range, and the faulty files from step 2, each with its full path and why it prod
 reports how many securities and how many transactions were created out of how many were collected. If a security could not be created, a
 warning names it and how many of its transactions were skipped along with it — a transaction is never created for a security that does not
 exist. Press **Close** to return to the transaction list.
+
+Any recorded stock split is applied automatically, so the imported quantities are already split-adjusted.
 
 Hints:
 

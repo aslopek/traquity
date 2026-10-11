@@ -1,6 +1,7 @@
 import {isValid, parse} from "date-fns";
 import {ExtractedTransaction} from "../../../../../bridge/ai-bridge.type";
 import {TransactionType} from "../../../../../gen/api/depot-transaction";
+import {padTimeWithSeconds} from "../../../../../common/functions/pad-time-with-seconds";
 import {PdfTransactionDraft} from "../transaction-pdf-import.type";
 
 const KNOWN_TYPES: readonly TransactionType[] = Object.values(TransactionType);
@@ -30,8 +31,5 @@ export function transactionOfExtraction(extracted: ExtractedTransaction): PdfTra
 }
 
 function normalizedTime(time: string | undefined): string | undefined {
-  if (time === undefined) {
-    return undefined;
-  }
-  return /^\d{2}:\d{2}$/.test(time) ? `${time}:00` : time;
+  return time === undefined ? undefined : padTimeWithSeconds(time);
 }

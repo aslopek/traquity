@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   provides an estimate on what you may receive when selling a given amount of shares at the given conditions. It also calculates the taxable
   gain which can support you in crafting a transaction for using available tax credits.
 - **Lots view** now displays the buy-in value of the lot and, if applicable, the cost basis. Cost basis is buy-in + fees and taxes.
+- Both the CSV and the PDF folder import wizard now apply the security's recorded stock splits to the imported quantity, filling *Quantity (
+  split-adjusted)* automatically.
 
 ## [1.2.4] - 2026-10-10
 
