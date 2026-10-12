@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The *Cash position* caption on the *Depots / Performance* tab no longer renders `Infinity` for a depot holding only cash with
+  `Add cash to absolute value` enabled, and now relates the cash position to the same depot value shown in the *Absolute depot value*
+  tile beside it.
+
 ## [1.3.0] - 2026-10-11
 
 ### Added
