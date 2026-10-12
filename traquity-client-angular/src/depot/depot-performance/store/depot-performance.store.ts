@@ -70,7 +70,7 @@ export const DepotPerformanceStore = signalStore(
       extendedInternalRateOfReturn: extendedInternalRateOfReturn(globalStore),
       filteredDepotValues: isRebasedSignal,
       groupedTransactions: groupedTransaction(signalStore),
-      kpis: depotPerformanceKpis(signalStore, depotValuesSignal, isRebasedSignal)
+      kpis: depotPerformanceKpis(depotValuesSignal, isRebasedSignal)
     };
   }),
   withMethods((signalStore: WritableSignalStore<DepotPerformanceState, DepotPerformanceComputed>): DepotPerformanceMethods => {

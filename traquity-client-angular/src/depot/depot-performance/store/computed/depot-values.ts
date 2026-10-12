@@ -15,7 +15,7 @@ export type DepotValuesResult = {
   isRebased: boolean
 };
 
-function relativeTo(numerator: number, baseline: number): number | 'infinity' {
+export function relativeTo(numerator: number, baseline: number): number | 'infinity' {
   if (baseline !== 0) {
     return numerator / baseline;
   }
