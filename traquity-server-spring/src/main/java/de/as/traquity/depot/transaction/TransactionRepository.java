@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -24,6 +25,12 @@ interface TransactionRepository extends JpaRepository<TransactionEntity, Long> {
   List<TransactionEntity> findAllByDepotIdInAndSecurityIdInAndTransactionTypeInOrderByDateAscTimeAsc(Set<Long> depotIds,
                                                                                                      Set<Long> securityIds,
                                                                                                      Set<TransactionTypeDto> types);
+
+  Stream<TransactionEntity> streamAllByDepotIdInAndTransactionTypeInOrderByDateAscTimeAscIdAsc(Set<Long> depotIds,
+                                                                                               Set<TransactionTypeDto> types);
+
+  Stream<TransactionEntity> streamAllByDepotIdInAndTransactionTypeInAndSecurityIdInOrderByDateAscTimeAscIdAsc(
+      Set<Long> depotIds, Set<TransactionTypeDto> types, Set<Long> securityIds);
 
   List<TransactionEntity> findAllByDepotIdAndTransactionTypeAndDate(Long depotId, TransactionTypeDto type,
                                                                     LocalDate date);

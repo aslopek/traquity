@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import de.as.traquity.common.error.ConflictException;
 import de.as.traquity.depot.DepotService;
+import jakarta.persistence.EntityManager;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,7 +23,7 @@ class TransactionServiceTest {
   void beforeEach() {
     transactionRepository = mock(TransactionRepository.class);
     subject = new TransactionServiceImpl(mock(TransactionMapper.class), transactionRepository, mock(DepotService.class),
-        MATH_CONTEXT);
+        MATH_CONTEXT, mock(EntityManager.class));
   }
 
   @Test

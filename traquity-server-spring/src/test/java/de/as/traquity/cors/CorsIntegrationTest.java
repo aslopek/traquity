@@ -171,6 +171,13 @@ class CorsIntegrationTest {
     testEndpoint(HttpMethod.GET, "/depot-performance/income", null);
   }
 
+  // /depot-performance/position
+
+  @Test
+  void getPositionPerformance() throws Exception {
+    testEndpoint(HttpMethod.GET, "/depot-performance/position", null);
+  }
+
   // /depot-positions
 
   @Test

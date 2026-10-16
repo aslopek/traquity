@@ -18,4 +18,11 @@ public interface ExchangeRateService {
    */
   List<BigDecimal> convert(List<CurrencyConversionRequest> items, String baseCurrency, String targetCurrency)
       throws NotFoundException, OutdatedExchangeRateException;
+
+  /**
+   * Like {@link #convert}, but one item's conversion problem never takes down the rest of the list. An item with
+   * no rate between the two currencies for its date gets {@code null} in its slot instead of an exception. An
+   * item whose only available rate is outdated still gets converted with it.
+   */
+  List<BigDecimal> convertBestEffort(List<CurrencyConversionRequest> items, String baseCurrency, String targetCurrency);
 }

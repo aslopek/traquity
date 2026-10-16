@@ -7,12 +7,15 @@ import de.as.traquity.common.error.NotFoundException;
 import de.as.traquity.common.pagination.PageContainer;
 import de.as.traquity.depot.DepotService;
 import de.as.traquity.depot.transaction.api.model.TransactionTypeDto;
+import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.time.LocalDate;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -32,6 +35,7 @@ class TransactionServiceImpl implements TransactionService {
   private final TransactionRepository transactionRepository;
   private final DepotService depotService;
   private final MathContext mathContext;
+  private final EntityManager entityManager;
 
   @Override
   public Transaction createTransaction(Long depotId, Transaction transaction)
@@ -76,6 +80,25 @@ class TransactionServiceImpl implements TransactionService {
         transactionRepository.findAllByDepotIdInAndSecurityIdInAndTransactionTypeInOrderByDateAscTimeAsc(depotIds,
             securityIds, transactionTypes);
     return entities.stream().map(transactionMapper::fromEntity).toList();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public void forEachTransaction(Set<Long> depotIds, Set<Long> securityIds, Set<TransactionTypeDto> transactionTypes,
+                                 Consumer<Transaction> consumer) throws BadRequestException {
+    if (depotIds == null || depotIds.isEmpty() || transactionTypes == null || transactionTypes.isEmpty()
+        || (securityIds != null && securityIds.isEmpty())) {
+      throw new BadRequestException();
+    }
+    try (Stream<TransactionEntity> entities = securityIds == null
+        ? transactionRepository.streamAllByDepotIdInAndTransactionTypeInOrderByDateAscTimeAscIdAsc(depotIds, transactionTypes)
+        : transactionRepository.streamAllByDepotIdInAndTransactionTypeInAndSecurityIdInOrderByDateAscTimeAscIdAsc(depotIds,
+        transactionTypes, securityIds)) {
+      entities.forEach(entity -> {
+        consumer.accept(transactionMapper.fromEntity(entity));
+        entityManager.detach(entity);
+      });
+    }
   }
 
   @Override
