@@ -69,32 +69,69 @@ class ExchangeRateServiceImpl implements ExchangeRateService {
         .toList();
   }
 
+  @Override
+  @Transactional
+  public List<BigDecimal> convertBestEffort(List<CurrencyConversionRequest> items, String baseCurrency, String targetCurrency) {
+    if (items.isEmpty()) {
+      return List.of();
+    }
+    if (baseCurrency.equals(targetCurrency)) {
+      return items.stream().map(CurrencyConversionRequest::getValue).toList();
+    }
+
+    List<ExchangeRateEntity> forwardRates = exchangeRateRepository
+        .findAllByBaseCurrencyAndTargetCurrencyOrderByDateAsc(baseCurrency, targetCurrency);
+    List<ExchangeRateEntity> reverseRates = exchangeRateRepository
+        .findAllByBaseCurrencyAndTargetCurrencyOrderByDateAsc(targetCurrency, baseCurrency);
+
+    MathContext mathContext = arithmeticConfig.mathContext();
+    return items.stream()
+        .map(item -> {
+          RateLookup rate = findApplicableRate(item, forwardRates, reverseRates, mathContext);
+          return rate == null ? null : item.getValue().multiply(rate.multiplier(), mathContext);
+        })
+        .toList();
+  }
+
   private BigDecimal convertUsingCachedRates(CurrencyConversionRequest item, List<ExchangeRateEntity> forwardRates,
                                              List<ExchangeRateEntity> reverseRates, String baseCurrency,
                                              String targetCurrency, MathContext mathContext) {
-    ExchangeRateEntity entity = findRateOnOrBefore(forwardRates, item.getDate());
-    BigDecimal multiplier;
-
-    if (entity != null) {
-      multiplier = entity.getExchangeRate();
-    } else {
-      entity = findRateOnOrBefore(reverseRates, item.getDate());
-      if (entity == null) {
-        log.error("No exchange rate found for {} to {} at {}", baseCurrency, targetCurrency, item.getDate());
-        throw new NotFoundException();
-      }
-      multiplier = ONE.divide(entity.getExchangeRate(), mathContext);
+    RateLookup rate = findApplicableRate(item, forwardRates, reverseRates, mathContext);
+    if (rate == null) {
+      log.error("No exchange rate found for {} to {} at {}", baseCurrency, targetCurrency, item.getDate());
+      throw new NotFoundException();
     }
 
-    long exchangeRateAgeInDays = DAYS.between(item.getDate(), entity.getDate());
-    BigDecimal result = item.getValue().multiply(multiplier, mathContext);
+    long exchangeRateAgeInDays = DAYS.between(item.getDate(), rate.entity().getDate());
+    BigDecimal result = item.getValue().multiply(rate.multiplier(), mathContext);
     if (Math.abs(exchangeRateAgeInDays) <= MAX_AGE) {
       return result;
     } else {
-      throw OutdatedExchangeRateException.builder().date(entity.getDate()).baseCurrency(entity.getBaseCurrency())
-          .targetCurrency(entity.getTargetCurrency()).exchangeRate(entity.getExchangeRate()).conversionResult(result)
-          .build();
+      throw OutdatedExchangeRateException.builder().date(rate.entity().getDate()).baseCurrency(rate.entity().getBaseCurrency())
+          .targetCurrency(rate.entity().getTargetCurrency()).exchangeRate(rate.entity().getExchangeRate())
+          .conversionResult(result).build();
     }
+  }
+
+  /**
+   * The exchange rate entity applicable to {@code item}'s date - forward if available, otherwise reverse inverted
+   * via {@code mathContext} - or {@code null} if neither list has one on or before that date.
+   */
+  private RateLookup findApplicableRate(CurrencyConversionRequest item, List<ExchangeRateEntity> forwardRates,
+                                        List<ExchangeRateEntity> reverseRates, MathContext mathContext) {
+    ExchangeRateEntity entity = findRateOnOrBefore(forwardRates, item.getDate());
+    if (entity != null) {
+      return new RateLookup(entity, entity.getExchangeRate());
+    }
+
+    entity = findRateOnOrBefore(reverseRates, item.getDate());
+    if (entity == null) {
+      return null;
+    }
+    return new RateLookup(entity, ONE.divide(entity.getExchangeRate(), mathContext));
+  }
+
+  private record RateLookup(ExchangeRateEntity entity, BigDecimal multiplier) {
   }
 
   /**

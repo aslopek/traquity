@@ -120,6 +120,28 @@ class HistoricalSecurityPriceServiceImpl implements HistoricalSecurityPriceServi
   }
 
   @Override
+  public Map<Long, HistoricalSecurityPrice> getLatestPrices(Set<Long> securityIds, String currency) {
+    if (securityIds.isEmpty()) {
+      return Map.of();
+    }
+
+    Map<Long, HistoricalSecurityPrice> latestPriceBySecurityId = new HashMap<>();
+    for (HistoricalSecurityPriceEntity entity : priceRepository.findLatestBySecurityIdIn(securityIds)) {
+      latestPriceBySecurityId.put(entity.getSecurityId(), priceMapper.fromEntity(entity));
+    }
+
+    // group by source currency and convert each group in one batch call
+    Map<String, List<HistoricalSecurityPrice>> pricesToConvertByCurrency = latestPriceBySecurityId.values().stream()
+        .filter(price -> !price.getCurrency().equals(currency))
+        .collect(Collectors.groupingBy(HistoricalSecurityPrice::getCurrency));
+
+    pricesToConvertByCurrency.forEach((sourceCurrency, pricesToConvert) ->
+        convertLatestPrices(latestPriceBySecurityId, pricesToConvert, sourceCurrency, currency));
+
+    return latestPriceBySecurityId;
+  }
+
+  @Override
   public void splitAdjustment(Long securityId, BigDecimal multiplier, LocalDate exDate) {
     priceRepository.findAllBySecurityIdAndDateLessThanOrderByDateDesc(securityId, exDate).forEach(price -> {
       BigDecimal adjustedPrice = price.getPrice().divide(multiplier, mathContext);
@@ -371,5 +393,22 @@ class HistoricalSecurityPriceServiceImpl implements HistoricalSecurityPriceServi
       }
     }
     return true;
+  }
+
+  private void convertLatestPrices(Map<Long, HistoricalSecurityPrice> latestPriceBySecurityId, List<HistoricalSecurityPrice> prices,
+                                   String sourceCurrency, String currency) {
+    List<CurrencyConversionRequest> conversionRequests = prices.stream()
+        .map(price -> new CurrencyConversionRequest(price.getPrice(), price.getDate()))
+        .toList();
+    List<BigDecimal> converted = exchangeRateService.convertBestEffort(conversionRequests, sourceCurrency, currency);
+    for (int i = 0; i < prices.size(); i++) {
+      BigDecimal price = converted.get(i);
+      if (price == null) {
+        latestPriceBySecurityId.remove(prices.get(i).getSecurityId());
+      } else {
+        prices.get(i).setPrice(price);
+        prices.get(i).setCurrency(currency);
+      }
+    }
   }
 }

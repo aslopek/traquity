@@ -7,6 +7,8 @@ import de.as.traquity.exchangerates.OutdatedExchangeRateException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public interface HistoricalSecurityPriceService {
 
@@ -17,6 +19,8 @@ public interface HistoricalSecurityPriceService {
       throws BadRequestException, NotFoundException, OutdatedExchangeRateException;
 
   HistoricalSecurityPrice getLatestPrice(long securityId, String currency) throws NotFoundException;
+
+  Map<Long, HistoricalSecurityPrice> getLatestPrices(Set<Long> securityIds, String currency);
 
   void splitAdjustment(Long securityId, BigDecimal multiplier, LocalDate exDate);
 
