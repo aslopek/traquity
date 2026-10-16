@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public interface TransactionService {
 
@@ -21,6 +22,9 @@ public interface TransactionService {
 
   List<Transaction> getTransactions(Set<Long> depotIds, Set<Long> securityIds, Set<TransactionTypeDto> transactionTypes)
       throws BadRequestException;
+
+  void forEachTransaction(Set<Long> depotIds, Set<Long> securityIds, Set<TransactionTypeDto> transactionTypes,
+                          Consumer<Transaction> consumer) throws BadRequestException;
 
   PageContainer<Transaction> getTransactions(TransactionPageRequest request)
       throws BadRequestException, NotFoundException;
