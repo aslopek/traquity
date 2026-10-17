@@ -3,7 +3,7 @@
         <article class="kpi">
             <span class="tq-section-label">Invested capital</span>
             @if (hideAbsoluteValues()) {
-                <app-obfuscated-kpi></app-obfuscated-kpi>
+                <app-obfuscated-value class="tq-value"></app-obfuscated-value>
             } @else {
                 <span class="tq-value">{{ data.investedCapital | tqCurrency:currency() }}</span>
             }
@@ -15,7 +15,7 @@
         <article class="kpi">
             <span class="tq-section-label">Absolute depot value</span>
             @if (hideAbsoluteValues()) {
-                <app-obfuscated-kpi></app-obfuscated-kpi>
+                <app-obfuscated-value class="tq-value"></app-obfuscated-value>
             } @else {
                 <span class="tq-value">{{ data.absoluteValue | tqCurrency:currency() }}</span>
             }
@@ -29,7 +29,7 @@
                  [class.kpi--negative]="data.dateRange.growthAbsolute < 0">
             <span class="tq-section-label">Growth abs.</span>
             @if (hideAbsoluteValues()) {
-                <app-obfuscated-kpi></app-obfuscated-kpi>
+                <app-obfuscated-value class="tq-value"></app-obfuscated-value>
             } @else {
                 <span class="tq-value">
                     {{ data.dateRange.growthAbsolute > 0 ? '+' : '' }}{{ data.dateRange.growthAbsolute | tqCurrency:currency() }}
@@ -69,7 +69,7 @@
         <article class="kpi">
             <span class="tq-section-label">Cash position</span>
             @if (hideAbsoluteValues()) {
-                <app-obfuscated-kpi></app-obfuscated-kpi>
+                <app-obfuscated-value class="tq-value"></app-obfuscated-value>
             } @else {
                 <span class="tq-value">{{ data.cashPosition | tqCurrency:currency() }}</span>
             }

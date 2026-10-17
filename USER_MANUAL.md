@@ -1043,11 +1043,18 @@ has no bearing on how one particular stock performed.
 
 For every position you currently hold, the view also shows net income, which is dividends and special dividends minus taxes.
 
-Clicking a position opens its details dialog. **Lots** on the left lists every lot you currently hold, each with its buy date and time,
-holding period, buy-in size, cost basis (buy-in plus the fees and taxes of that purchase, shown when there were any), current size, CAGR and
-performance. **Sell Simulation** on the right estimates what selling part of the position would yield.
+Clicking a position opens its details dialog on the **Lots** tab. **Lots** on the left lists every lot you currently hold, each with its
+buy date and time, holding period, buy-in size, cost basis (buy-in plus the fees and taxes of that purchase, shown when there were any),
+current size, CAGR and performance. **Sell Simulation** on the right estimates what selling part of the position would yield.
 
-![Position details: the lots on the left, the sell simulation on the right](./doc-assets/depot-position-details.png)
+![Position details: the lots on the left, the sell simulation on the right](doc-assets/depot-position-details-lots.png)
+
+The **Performance Breakdown** tab sums up the position's whole transaction history, including shares already sold: Buys, Sells,
+Dividends, Taxes and Fees add up to Net cash flow, which together with Current value sums to the Total return and its percentage. Cost
+basis carries an info tooltip breaking it into buys, taxes and fees. With **Hide Absolute Values** on, every figure is hidden except the
+relative total.
+
+![Performance breakdown of a position](doc-assets/depot-position-details-performance-breakdown.png)
 
 #### Sell Simulation
 
