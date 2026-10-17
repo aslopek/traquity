@@ -29,8 +29,17 @@ $group-gutter-width: 2.5rem;
 .position-list__total {
   display: flex;
   align-items: center;
+  align-self: flex-start;
+  width: fit-content;
   gap: var(--tq-space-3);
   padding-top: var(--tq-space-2);
+  cursor: pointer;
+  border-radius: var(--tq-radius-sm);
+  transition: background-color var(--tq-duration-fast) var(--tq-ease);
+
+  &:hover {
+    background-color: var(--tq-surface-hover);
+  }
 }
 
 .position-list__columns {
@@ -78,6 +87,13 @@ $group-gutter-width: 2.5rem;
   align-items: center;
   width: $group-gutter-width;
   overflow: hidden;
+  cursor: pointer;
+  border-radius: var(--tq-radius-sm);
+  transition: background-color var(--tq-duration-fast) var(--tq-ease);
+
+  &:hover {
+    background-color: var(--tq-surface-hover);
+  }
 }
 
 .position-list__brace {

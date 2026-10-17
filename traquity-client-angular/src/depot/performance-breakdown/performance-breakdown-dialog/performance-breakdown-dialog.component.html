@@ -1,0 +1,19 @@
+<app-title-toolbar [title]="dialogData.title"
+                   (onClose)="close()">
+</app-title-toolbar>
+
+@if (dialogData.depotPositions.length > 0) {
+    <div class="performance-breakdown-dialog__logos tq-scroll">
+        @for (position of dialogData.depotPositions; track position) {
+            <span [matTooltip]="position.displayName">
+                <security-logo [securityId]="position.securityIds[0]"></security-logo>
+            </span>
+        }
+    </div>
+}
+
+<div class="tq-dialog__body">
+    <app-performance-breakdown [depotIds]="dialogData.depotIds"
+                               [securityIds]="securityIds()">
+    </app-performance-breakdown>
+</div>
