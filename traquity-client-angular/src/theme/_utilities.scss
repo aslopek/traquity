@@ -191,6 +191,22 @@
   font-size: var(--tq-font-size-base);
 }
 
+.tq-obfuscated {
+  display: inline-block;
+  // blur and tracking scale with the hidden value's own font-size, so one class serves multiple UI elements
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: var(--tq-line-height-tight);
+  letter-spacing: 0.15em;
+  color: var(--tq-text);
+  filter: blur(0.2em);
+  opacity: 0.8;
+
+  // security (in case real values are being blurred)
+  pointer-events: none; // prevent mouse-over events
+  user-select: none; // prevent text selection
+}
+
 .tq-notice {
   display: flex;
   align-items: flex-start;
