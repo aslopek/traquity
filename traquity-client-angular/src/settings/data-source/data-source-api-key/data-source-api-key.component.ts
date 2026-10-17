@@ -4,13 +4,18 @@ import {MatInputModule} from "@angular/material/input";
 import {MatButtonModule} from "@angular/material/button";
 import {Store} from "@ngrx/store";
 import {DataSourceStore, ReadableDataSourceStore} from "../store/data-source.store";
-import {DataSourceWithId, MultiUrlDataSource, UrlPattern} from "../data-source.type";
+import {DataSourceWithId, MultiUrlDataSource, SingleUrlDataSource} from "../data-source.type";
 import {AppState} from "../../../store/app.state";
 import {SecurityActions} from "../../../store/security/security.actions";
-import {extractMaskedValue, findMaskedValue, replaceMaskedValue} from "./mask-value.util";
+import {DividendAnnouncementActions} from "../../../store/dividend-announcement/dividend-announcement.actions";
+import {findMaskedValue, maskedValueCarriers, withMaskedValue} from "./mask-value.util";
 
 function isMultiUrlDataSource(dataSource: DataSourceWithId): dataSource is DataSourceWithId & MultiUrlDataSource {
   return dataSource.urlPatterns != null;
+}
+
+function isSingleUrlDataSource(dataSource: DataSourceWithId): dataSource is DataSourceWithId & SingleUrlDataSource {
+  return dataSource.urlPattern != null;
 }
 
 @Component({
@@ -44,23 +49,27 @@ export class DataSourceApiKeyComponent {
 
   protected save(): void {
     const dataSource: DataSourceWithId | null = this.selectedDataSource();
-    if (dataSource === null || !isMultiUrlDataSource(dataSource) || !this.canSave()) {
+    if (dataSource === null || !this.canSave()) {
+      return;
+    }
+    const newApiKey: string = this.apiKey().trim();
+
+    if (isMultiUrlDataSource(dataSource)) {
+      const {id, version, ...rest} = dataSource;
+      this.store.dispatch(SecurityActions.setHistoricalSecurityPriceDataSource({
+        id,
+        dataSource: withMaskedValue(rest, newApiKey)
+      }));
       return;
     }
 
-    const {id, version, ...rest} = dataSource;
-    const newApiKey: string = this.apiKey().trim();
-    const updated: MultiUrlDataSource = {
-      ...rest,
-      urlPatterns: rest.urlPatterns.map((pattern: UrlPattern): UrlPattern => {
-        if (extractMaskedValue(pattern.urlPattern) === null) {
-          return pattern;
-        }
-        return {...pattern, urlPattern: replaceMaskedValue(pattern.urlPattern, newApiKey)};
-      })
-    };
-
-    this.store.dispatch(SecurityActions.setHistoricalSecurityPriceDataSource({id, dataSource: updated}));
+    if (isSingleUrlDataSource(dataSource)) {
+      const {id, version, ...rest} = dataSource;
+      this.store.dispatch(DividendAnnouncementActions.setDividendAnnouncementDataSource({
+        id,
+        dataSource: withMaskedValue(rest, newApiKey)
+      }));
+    }
   }
 
   protected cancel(): void {
@@ -69,7 +78,6 @@ export class DataSourceApiKeyComponent {
 
   private resetForm(): void {
     const dataSource: DataSourceWithId | null = this.selectedDataSource();
-    const urlPatterns: UrlPattern[] = dataSource !== null && isMultiUrlDataSource(dataSource) ? dataSource.urlPatterns : [];
-    this.apiKey.set(findMaskedValue(urlPatterns) ?? '');
+    this.apiKey.set(dataSource === null ? '' : findMaskedValue(maskedValueCarriers(dataSource)) ?? '');
   }
 }
