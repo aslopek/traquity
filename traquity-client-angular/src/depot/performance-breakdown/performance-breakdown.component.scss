@@ -29,3 +29,29 @@
   height: 1rem;
   cursor: help;
 }
+
+.performance-breakdown__skeleton-bar {
+  display: inline-block;
+  height: 0.875rem;
+  border-radius: var(--tq-radius-xs);
+  background-color: var(--tq-surface-sunken);
+  animation: performance-breakdown-skeleton-pulse 1.4s var(--tq-ease) infinite;
+}
+
+.performance-breakdown__skeleton-bar--label {
+  width: 40%;
+}
+
+.performance-breakdown__skeleton-bar--value {
+  width: 20%;
+}
+
+@keyframes performance-breakdown-skeleton-pulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 0.9;
+  }
+}

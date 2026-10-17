@@ -4,7 +4,8 @@
 <div class="position-list tq-scroll">
     <div class="position-list__header"
          [class.position-list__header--grouped]="grouped.groups.length > 0">
-        <div class="position-list__total">
+        <div (click)="openDepotBreakdown()"
+             class="position-list__total">
             @if (!hideAbsoluteValues()) {
                 @let total = useBuyIn() ? composition.buyInAbsolute : composition.currentSizeAbsolute;
                 <span class="tq-value tq-numeric">
@@ -34,7 +35,8 @@
             @let label = group | positionGroupText : useBuyIn() : hideAbsoluteValues() : false : depotCurrency();
             @let tooltip = group | positionGroupText : useBuyIn() : hideAbsoluteValues() : true : depotCurrency();
             <div class="position-list__group">
-                <div class="position-list__gutter">
+                <div (click)="openGroupBreakdown(group)"
+                     class="position-list__gutter">
                     <span class="position-list__group-label"
                           [matTooltip]="tooltip">
                         {{ label }}

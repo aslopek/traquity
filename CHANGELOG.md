@@ -9,9 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- The position details dialog gains a **Performance Breakdown** tab, next to the existing **Lots** tab. It shows Buys, Sells,
-  Dividends, Taxes and Fees summing to Net cash flow, which together with Current value sums to the position's Total return and its
-  cost basis.
+- A **Performance Breakdown** over the whole transaction history, including shares already sold. It shows buys, sells, dividends, taxes and
+  fees summing to net cash flow, which together with current value sums to the Total return, its percentage and the cost basis. It is
+  available for a single position on the new **Performance Breakdown** tab of the position details dialog, for a position group by clicking
+  the group's label in the *Depots / Positions* list or its arc in the allocation chart, and for the whole depot selection by clicking the
+  total above the list or the center of the allocation chart.
+- Clicking a slice of the allocation chart on the *Depots / Positions* tab opens that position's details dialog, just like clicking its
+  line in the position list does.
 
 ### Fixed
 

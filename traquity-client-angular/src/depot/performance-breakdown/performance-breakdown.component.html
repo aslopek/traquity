@@ -94,4 +94,12 @@
             <span class="tq-numeric">{{ performance.costBasis | tqCurrency:performance.currency }}</span>
         }
     </div>
+} @else {
+    @for (isSum of skeletonRows; track $index) {
+        <div class="performance-breakdown__row"
+             [class.performance-breakdown__row--sum]="isSum">
+            <span class="performance-breakdown__skeleton-bar performance-breakdown__skeleton-bar--label"></span>
+            <span class="performance-breakdown__skeleton-bar performance-breakdown__skeleton-bar--value"></span>
+        </div>
+    }
 }

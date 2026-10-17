@@ -10,7 +10,8 @@ import {DepotPosition} from "../../../../gen/api/depot-position";
 import {hideAbsoluteValues} from "../../../../store/app-config/app-config.selector";
 import {AppState} from "../../../../store/app.state";
 import {MatDialog} from "@angular/material/dialog";
-import {PositionDialogComponent, PositionDialogData,} from "../../position-dialog/position-dialog.component";
+import {openPositionDialog} from "../../position-dialog/open-position-dialog";
+import {PositionDialogData,} from "../../position-dialog/position-dialog.component";
 import {IncomeByPosition} from "../../../../store/depot/depot.state";
 import {Performance} from "../../../../gen/api/depot-performance";
 import {incomeByPosition, selectedDepotCurrency, selectedDepotIds, usePositionBuyInValues,} from "../../../../store/depot/depot.selector";
@@ -48,19 +49,10 @@ export class PositionListRowComponent {
   }
 
   protected openPositionDialog(): void {
-    this.dialog.open(PositionDialogComponent, {
-      height: "90%",
-      width: "60%",
-      minHeight: "15em",
-      minWidth: "5em",
-      panelClass: "mat-app-background",
-      autoFocus: false,
-      disableClose: true,
-      data: {
-        depotIds: this.depotIds(),
-        securityIds: this.position().securityIds,
-        displayName: this.position().displayName,
-      } satisfies PositionDialogData,
-    });
+    openPositionDialog(this.dialog, {
+      depotIds: this.depotIds(),
+      securityIds: this.position().securityIds,
+      displayName: this.position().displayName,
+    } satisfies PositionDialogData);
   }
 }

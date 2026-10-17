@@ -6,6 +6,7 @@
             <div (chartInit)="onChartInit($event)"
                  (chartMouseOver)="onChartMouseOver($event)"
                  (chartMouseOut)="onChartMouseOut()"
+                 (chartClick)="onChartClick($event)"
                  [options]="grouping().positions | positionPieChart : hideAbsoluteValues() : currency() : useBuyIn() : groupingActive"
                  class="pie-chart__canvas"
                  echarts>
@@ -32,10 +33,12 @@
                               stroke-linecap="round">
                         </path>
 
-                        <path (mouseleave)="onGroupArcMouseLeave()"
+                        <path (click)="openGroupBreakdown($index)"
+                              (mouseleave)="onGroupArcMouseLeave()"
                               (mousemove)="onGroupArcMouseMove($event, arc)"
                               [attr.d]="arc.hoverPath"
                               [attr.stroke-width]="arc.hoverStrokeWidth"
+                              class="pie-chart__arc-target"
                               fill="none"
                               pointer-events="stroke"
                               stroke="transparent">
@@ -92,11 +95,14 @@
         </div>
 
         <div class="pie-chart__center">
-            @if (!hideAbsoluteValues()) {
-                @let total = useBuyIn() ? depotComposition().buyInAbsolute : depotComposition().currentSizeAbsolute;
-                <span class="pie-chart__total tq-numeric">{{ total | tqCurrency:currency() }}</span>
-            }
-            <span class="pie-chart__count">{{ depotComposition().positions.length }} Positions</span>
+            <div (click)="openDepotBreakdown()"
+                 class="pie-chart__center-target">
+                @if (!hideAbsoluteValues()) {
+                    @let total = useBuyIn() ? depotComposition().buyInAbsolute : depotComposition().currentSizeAbsolute;
+                    <span class="pie-chart__total tq-numeric">{{ total | tqCurrency:currency() }}</span>
+                }
+                <span class="pie-chart__count">{{ depotComposition().positions.length }} Positions</span>
+            </div>
         </div>
     }
 </div>

@@ -1056,6 +1056,10 @@ relative total.
 
 ![Performance breakdown of a position](doc-assets/depot-position-details-performance-breakdown.png)
 
+The same breakdown exists for more than a single position: clicking a group's label in the list or its arc in the allocation chart opens it
+for that group, and clicking the total above the list or the center of the allocation chart opens it for the whole depot selection. Also see
+[Why these numbers differ from each other](#why-these-numbers-differ-from-each-other).
+
 #### Sell Simulation
 
 Enter **Shares to Sell** — the hint below the field states how many you hold, and more than that is refused — and a **Price per Share**,
@@ -1074,6 +1078,38 @@ for a position that merges several securities, it shows a notice instead of the 
 The result is arithmetic over the numbers and transactions you provide, nothing more. It is not tax or investment advice, and what you
 actually receive and owe depends on your broker's settlement and your own tax situation, which the app knows nothing about. **Your actions
 remain your own responsibility.**
+
+### Why these numbers differ from each other
+
+A position's line in the **Positions** list, its **Performance Breakdown** and the **Performance** tab look at the same depot from three
+different angles. Their figures mostly differ, which is not a malfunction of the app but an expected behavior:
+
+- **A line in the list, and the group and depot totals above it** answer "what are the shares I hold right now worth, compared to what I
+  paid for them?". They cover the shares still held and their buy-in. They ignore shares already sold and reinvesting cash.
+- **A Performance Breakdown** — of a position, of a group, or of the whole depot selection — answers "what did this cost me, and what came
+  back out of it?". It covers every buy, sell, dividend, tax and fee ever booked for those securities, plus the current value of what is
+  still held. It ignores reinvested cash and how long your money was invested.
+- **The Performance tab** answers "how did the depot's total value develop over the period I selected?". It covers stocks and cash
+  together, counts money deposited during the period as growth, and expresses return as an annual rate via XIRR. Most importantly, it
+  is aware of reinvesting cash: When you sell shares or receive dividends or tax refunds, that money goes into your cash position. The next
+  expenses you have, such as a tax payments or buying new shares, first uses up that cash before 'new cash' flows into your depot.
+
+What follows from that:
+
+- A security you sold completely is gone from the list and from the total above it, while its buys, sells and dividends keep counting in
+  the breakdown of its group and of the depot.
+- A position you once sold at a loss and bought again can show a gain in the list and a loss in its breakdown. The list only knows the
+  shares you hold today; the breakdown also knows the gains and losses you realized before, as well as all taxes and fees.
+- Dividends (less taxes) are reported as net income of their own in the list and are folded into the total return in the breakdown. A
+  position whose price went nowhere is therefore flat in the list and up in its breakdown.
+- The depot total above the list and the depot's breakdown differ by exactly the realized part of your history: the proceeds of sold shares
+  against what those shares cost, the dividends, and every tax and fee. Neither of the two contains cash.
+- Growth on the Performance tab measures value, not return, so money you deposited during the period counts as growth there. The
+  breakdown's **Total** measures against what you put in, so a deposit alone does not move it.
+- The breakdown's percentage divides by everything ever paid in for that selection — buys plus the taxes and fees of every transaction,
+  taxes on sales and dividends included. The list's percentage divides by the buy-in of the shares you still hold.
+- Total return in the breakdown is not comparable to XIRR either: 40% total over eight years is not 40% a year. XIRR annualizes and weighs
+  every contribution by how long it was invested.
 
 ## Dev mode and direct database access
 
