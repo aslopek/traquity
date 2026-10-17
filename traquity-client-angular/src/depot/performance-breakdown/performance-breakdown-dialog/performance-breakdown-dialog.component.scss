@@ -1,0 +1,12 @@
+.performance-breakdown-dialog__logos {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  gap: var(--tq-space-2);
+  padding: var(--tq-space-3) var(--tq-space-5);
+  overflow-x: auto;
+
+  > * {
+    flex: 0 0 auto;
+  }
+}

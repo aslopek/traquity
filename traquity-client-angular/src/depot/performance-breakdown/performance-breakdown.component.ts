@@ -22,6 +22,10 @@ export class PerformanceBreakdownComponent {
   readonly depotIds: InputSignal<number[]> = input.required();
   readonly securityIds: InputSignal<number[] | undefined> = input<number[] | undefined>();
 
+  // one entry per row the loaded breakdown renders, true where that row carries the `--sum` divider, so the
+  // skeleton takes the same height as the content it stands in for
+  protected readonly skeletonRows: readonly boolean[] = [false, false, false, false, false, true, false, true, false];
+
   protected readonly performanceBreakdownStore: ReadablePerformanceBreakdownStore = inject(PerformanceBreakdownStore);
   protected readonly hideAbsoluteValues: Signal<boolean> = inject(Store<AppState>).selectSignal(hideAbsoluteValues);
 
