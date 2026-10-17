@@ -7,7 +7,7 @@ import {Store} from "@ngrx/store";
 import {AppState} from "../../../store/app.state";
 import {selectedDepotCurrency} from "../../../store/depot/depot.selector";
 import {hideAbsoluteValues} from "../../../store/app-config/app-config.selector";
-import {ObfuscatedKpiComponent} from "./obfuscated-kpi/obfuscated-kpi.component";
+import {ObfuscatedValueComponent} from "../../../common/components/obfuscated-value/obfuscated-value.component";
 import {DataRanges} from "../store/computed/data-ranges";
 import {DepotPerformanceKpis} from "../store/computed/depot-performance-kpis";
 
@@ -16,7 +16,7 @@ import {DepotPerformanceKpis} from "../store/computed/depot-performance-kpis";
   imports: [
     TqCurrencyPipe,
     TqPercentPipe,
-    ObfuscatedKpiComponent,
+    ObfuscatedValueComponent,
     TqDatePipe
   ],
   templateUrl: "./depot-performance-kpis.component.html",

@@ -1,0 +1,97 @@
+@let performance = performanceBreakdownStore.performance();
+
+@if (performanceBreakdownStore.loadFailed()) {
+    <div class="tq-notice tq-notice--error">
+        <mat-icon class="tq-notice__icon"
+                  fontIcon="error"></mat-icon>
+        <span>The performance breakdown could not be loaded.</span>
+    </div>
+} @else if (performance) {
+    <div class="performance-breakdown__row">
+        <span class="tq-section-label">Buys</span>
+        @if (hideAbsoluteValues()) {
+            <app-obfuscated-value class="tq-numeric"></app-obfuscated-value>
+        } @else {
+            <span class="tq-numeric">{{ performance.buysGross | tqCurrency:performance.currency }}</span>
+        }
+    </div>
+
+    <div class="performance-breakdown__row">
+        <span class="tq-section-label">Sells</span>
+        @if (hideAbsoluteValues()) {
+            <app-obfuscated-value class="tq-numeric"></app-obfuscated-value>
+        } @else {
+            <span class="tq-numeric">{{ performance.sellsGross | tqCurrency:performance.currency }}</span>
+        }
+    </div>
+
+    <div class="performance-breakdown__row">
+        <span class="tq-section-label">Dividends</span>
+        @if (hideAbsoluteValues()) {
+            <app-obfuscated-value class="tq-numeric"></app-obfuscated-value>
+        } @else {
+            <span class="tq-numeric">{{ performance.dividendsGross | tqCurrency:performance.currency }}</span>
+        }
+    </div>
+
+    <div class="performance-breakdown__row">
+        <span class="tq-section-label">Taxes</span>
+        @if (hideAbsoluteValues()) {
+            <app-obfuscated-value class="tq-numeric"></app-obfuscated-value>
+        } @else {
+            <span class="tq-numeric">{{ performance.taxes | tqCurrency:performance.currency }}</span>
+        }
+    </div>
+
+    <div class="performance-breakdown__row">
+        <span class="tq-section-label">Fees</span>
+        @if (hideAbsoluteValues()) {
+            <app-obfuscated-value class="tq-numeric"></app-obfuscated-value>
+        } @else {
+            <span class="tq-numeric">{{ performance.fees | tqCurrency:performance.currency }}</span>
+        }
+    </div>
+
+    <div class="performance-breakdown__row performance-breakdown__row--sum">
+        <span class="tq-section-label">Net cash flow</span>
+        @if (hideAbsoluteValues()) {
+            <app-obfuscated-value class="tq-numeric"></app-obfuscated-value>
+        } @else {
+            <span class="tq-numeric">{{ performance.netCashFlow | tqCurrency:performance.currency }}</span>
+        }
+    </div>
+
+    <div class="performance-breakdown__row">
+        <span class="tq-section-label">Current value</span>
+        @if (hideAbsoluteValues()) {
+            <app-obfuscated-value class="tq-numeric"></app-obfuscated-value>
+        } @else {
+            <span class="tq-numeric">{{ performance.currentSizeAbsolute | tqCurrency:performance.currency }}</span>
+        }
+    </div>
+
+    <div class="performance-breakdown__row performance-breakdown__row--sum">
+        <span class="tq-section-label">Total</span>
+        <app-performance-label [performanceAbsolute]="performance.performanceAbsolute"
+                               [performanceRelative]="performanceBreakdownStore.relativePerformance()!"
+                               [currency]="performance.currency">
+        </app-performance-label>
+    </div>
+
+    <div class="performance-breakdown__row">
+        <span class="performance-breakdown__label--with-info tq-section-label">
+            Cost basis
+            <mat-icon class="performance-breakdown__info"
+                      fontIcon="info"
+                      aria-hidden="false"
+                      [attr.aria-label]="performance | costBasisBreakdown"
+                      [matTooltip]="performance | costBasisBreakdown">
+            </mat-icon>
+        </span>
+        @if (hideAbsoluteValues()) {
+            <app-obfuscated-value class="tq-numeric"></app-obfuscated-value>
+        } @else {
+            <span class="tq-numeric">{{ performance.costBasis | tqCurrency:performance.currency }}</span>
+        }
+    </div>
+}

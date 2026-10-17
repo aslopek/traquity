@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The position details dialog gains a **Performance Breakdown** tab, next to the existing **Lots** tab. It shows Buys, Sells,
+  Dividends, Taxes and Fees summing to Net cash flow, which together with Current value sums to the position's Total return and its
+  cost basis.
+
 ### Fixed
 
 - The *Cash position* caption on the *Depots / Performance* tab no longer renders `Infinity` for a depot holding only cash with
