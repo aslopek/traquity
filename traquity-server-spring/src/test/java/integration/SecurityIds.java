@@ -78,6 +78,11 @@ public class SecurityIds {
   public static final long QCOM = 23;
 
   /**
+   * Thermo Fisher
+   */
+  public static final long TMO = 11;
+
+  /**
    * Vanguard FTSE All-World High Dividend Yield (Dist)
    */
   public static final long VNGGF = 4;

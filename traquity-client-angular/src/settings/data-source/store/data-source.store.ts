@@ -5,9 +5,11 @@ import {selectDataSourceId} from "./methods/select-data-source-id";
 import {setDataSources} from "./methods/set-data-sources";
 import {Signal} from "@angular/core";
 import {selectedDatasource} from "./computed/selected-datasource";
+import {selectedDataSourceIsPreconfigured} from "./computed/selected-data-source-is-preconfigured";
 
 export type DataSourceComputed = {
   selectedDataSource: Signal<DataSourceWithId | null>
+  selectedDataSourceIsPreconfigured: Signal<boolean>
 };
 
 export type DataSourceMethods = {
@@ -33,7 +35,8 @@ export const DataSourceStore = signalStore(
   withState(initialState),
   withComputed((signalStore: ReadableSignalStore<DataSourceState>): DataSourceComputed => {
     return {
-      selectedDataSource: selectedDatasource(signalStore)
+      selectedDataSource: selectedDatasource(signalStore),
+      selectedDataSourceIsPreconfigured: selectedDataSourceIsPreconfigured(signalStore)
     };
   }),
   withMethods((signalStore: WritableSignalStore<DataSourceState, DataSourceComputed>): DataSourceMethods => {

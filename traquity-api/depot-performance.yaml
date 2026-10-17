@@ -42,11 +42,7 @@ paths:
           required: true
           description: identifies the securities the income is reported for
           schema:
-            type: array
-            nullable: false
-            minItems: 1
-            items:
-              $ref: '#/components/schemas/Id'
+            $ref: '#/components/schemas/SecurityIds'
         - in: query
           name: incomeTypes
           required: true
@@ -83,6 +79,37 @@ paths:
         '404':
           description: At least one of the specified depot IDs does not exist
 
+  /depot-performance/position:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/DepotIds'
+        - in: query
+          name: securityIds
+          required: false
+          description: Identifies the securities the position performance is reported for. If omitted, all securities/transactions count.
+          schema:
+            $ref: '#/components/schemas/SecurityIds'
+      tags:
+        - DepotPerformancePosition
+      operationId: getPositionPerformance
+      responses:
+        '200':
+          description: Successfully returned the position performance, with zero amounts if the selection has no transactions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PositionPerformance'
+        '400':
+          description: |
+            - Specified depot IDs reference depots with different currencies
+            - syntactically malformed query parameters
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: At least one of the specified depot or security IDs does not exist
+
 components:
   parameters:
     DepotIds:
@@ -114,6 +141,19 @@ components:
       nullable: false
       minimum: 1
       example: 1
+
+    Currency:
+      type: string
+      nullable: false
+      pattern: ^[A-Z]{3}$
+      example: USD
+
+    SecurityIds:
+      type: array
+      nullable: false
+      minItems: 1
+      items:
+        $ref: '#/components/schemas/Id'
 
     IncomeType:
       type: string
@@ -214,5 +254,65 @@ components:
           nullable: false
         performanceRelative:
           description: performanceAbsolute / investedCapital, as a percentage (e.g. 0.1 meaning 10%)
+          type: number
+          nullable: false
+
+    PositionPerformance:
+      description: |
+        The total performance of a position over its whole transaction history, in the currency the selected depots share. The cash
+        flow lines are signed contributions: money leaving is negative, money arriving is positive.
+      type: object
+      nullable: false
+      required:
+        - currency
+        - buysGross
+        - sellsGross
+        - dividendsGross
+        - taxes
+        - fees
+        - netCashFlow
+        - currentSizeAbsolute
+        - costBasis
+        - performanceAbsolute
+      properties:
+        currency:
+          $ref: '#/components/schemas/Currency'
+        buysGross:
+          description: what was paid for the bought shares, before taxes and fees
+          type: number
+          nullable: false
+        sellsGross:
+          description: what the sold shares yielded, before taxes and fees
+          type: number
+          nullable: false
+        dividendsGross:
+          description: what the dividends yielded, before taxes and fees
+          type: number
+          nullable: false
+        taxes:
+          type: number
+          nullable: false
+        fees:
+          type: number
+          nullable: false
+        netCashFlow:
+          description: buysGross + sellsGross + dividendsGross + taxes + fees
+          type: number
+          nullable: false
+        currentSizeAbsolute:
+          description: The current (latest known) value of the currently held share. May be zero if no shares are held.
+          type: number
+          nullable: false
+        costBasis:
+          description: all money put in - buys, taxes and fees - as a positive amount
+          type: number
+          nullable: false
+        performanceAbsolute:
+          description: netCashFlow + currentSizeAbsolute
+          type: number
+          nullable: false
+        performanceRelative:
+          description: |
+            performanceAbsolute / costBasis, as a ratio (e.g. 0.1 meaning 10%). Absent when costBasis is equal to or lower than zero.
           type: number
           nullable: false

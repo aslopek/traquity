@@ -1,7 +1,6 @@
-import {ReadableSignalStore} from "../../../../common/types/signal-store.type";
-import {DepotPerformanceState} from "../depot-performance.store";
 import {computed, Signal} from "@angular/core";
 import {RebasedDepotValue} from "./rebased-depot-value.type";
+import {relativeTo} from "./depot-values";
 
 export type DepotPerformanceKpis = {
   investedCapital: number
@@ -25,11 +24,8 @@ const emptyKpis: DepotPerformanceKpis = {
   }
 } as const;
 
-export function depotPerformanceKpis(signalStore: ReadableSignalStore<DepotPerformanceState>,
-                                     depotValuesSignal: Signal<RebasedDepotValue[]>,
+export function depotPerformanceKpis(depotValuesSignal: Signal<RebasedDepotValue[]>,
                                      isRebasedSignal: Signal<boolean>): Signal<DepotPerformanceKpis> {
-  const addCashToAbsoluteValue: Signal<boolean> = signalStore.addCashToAbsoluteValue;
-
   return computed<DepotPerformanceKpis>((): DepotPerformanceKpis => {
     const depotValues: RebasedDepotValue[] = depotValuesSignal();
     if (depotValues.length === 0) {
@@ -42,19 +38,10 @@ export function depotPerformanceKpis(signalStore: ReadableSignalStore<DepotPerfo
     // with a single data point in view there's no "during the window" to measure growth over
     const isSingleDataPoint: boolean = depotValues.length === 1;
 
-    let cashPositionRelativeToAbsoluteValue: number | 'infinity';
-    if (last.absoluteValue === 0) {
-      cashPositionRelativeToAbsoluteValue = 'infinity';
-    } else if (addCashToAbsoluteValue()) {
-      cashPositionRelativeToAbsoluteValue = last.cashPosition / (last.absoluteValue - last.cashPosition);
-    } else {
-      cashPositionRelativeToAbsoluteValue = last.cashPosition / last.absoluteValue;
-    }
-
     return {
       investedCapital: isRebased ? last.investedCapital - first.investedCapital : last.investedCapital,
       cashPosition: last.cashPosition,
-      cashPositionRelativeToAbsoluteValue,
+      cashPositionRelativeToAbsoluteValue: relativeTo(last.cashPosition, last.absoluteValue),
       absoluteValue: last.absoluteValue,
       dateRange: {
         growthAbsolute: isSingleDataPoint ? 0 : last.performanceAbsolute,

@@ -191,6 +191,7 @@ card overrides — a `mat-card` added anyway would come out unthemed.
 - `.tq-muted` / `.tq-faint` — text color only, no other effect.
 - `.tq-notice` + `.tq-notice--info` / `--warn` / `--error` — an inline banner with an icon slot. Every warning or error
   message in a template uses this instead of a hand-rolled colored div.
+- `.tq-obfuscated` — blurs whatever content it wraps, for hiding a value. Inherits font-size/weight from the element it's on.
 
 ### Forms
 

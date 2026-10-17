@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A **Performance Breakdown** over the whole transaction history, including shares already sold. It shows buys, sells, dividends, taxes and
+  fees summing to net cash flow, which together with current value sums to the Total return, its percentage and the cost basis. It is
+  available for a single position on the new **Performance Breakdown** tab of the position details dialog, for a position group by clicking
+  the group's label in the *Depots / Positions* list or its arc in the allocation chart, and for the whole depot selection by clicking the
+  total above the list or the center of the allocation chart.
+- Clicking a slice of the allocation chart on the *Depots / Positions* tab opens that position's details dialog, just like clicking its
+  line in the position list does.
+- **Divvy Diary** is now a preconfigured data source in both *Settings / Historical Security Prices* and *Settings / Dividend
+  Announcements*. Like the other preconfigured sources it needs nothing but your personal API key, and it contacts
+  Divvy Diary only once that key is saved and a security is configured against it. Creating an API key and using it according to the
+  applicable Terms of Service remains your responsibility.
+
+### Fixed
+
+- The *Cash position* caption on the *Depots / Performance* tab no longer renders `Infinity` for a depot holding only cash with
+  `Add cash to absolute value` enabled, and now relates the cash position to the same depot value shown in the *Absolute depot value*
+  tile beside it.
+
 ## [1.3.0] - 2026-10-11
 
 ### Added

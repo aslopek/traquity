@@ -5,16 +5,28 @@
     </security-logo>
 </app-title-toolbar>
 
-<div class="tq-dialog__body position-dialog__body">
-    <section class="position-dialog__column">
-        <h3 class="tq-section-label">Lots</h3>
-        <app-lot-view [depotIds]="dialogData.depotIds"
-                      [securityIds]="dialogData.securityIds">
-        </app-lot-view>
-    </section>
+<mat-tab-group class="position-dialog__tabs">
+    <mat-tab label="Lots">
+        <div class="position-dialog__tab-body position-dialog__body">
+            <section class="position-dialog__column">
+                <h3 class="tq-section-label">Lots</h3>
+                <app-lot-view [depotIds]="dialogData.depotIds"
+                              [securityIds]="dialogData.securityIds">
+                </app-lot-view>
+            </section>
 
-    <section class="position-dialog__column">
-        <h3 class="tq-section-label">Sell Simulation</h3>
-        <app-sell-simulation [securityIds]="dialogData.securityIds"></app-sell-simulation>
-    </section>
-</div>
+            <section class="position-dialog__column">
+                <h3 class="tq-section-label">Sell Simulation</h3>
+                <app-sell-simulation [securityIds]="dialogData.securityIds"></app-sell-simulation>
+            </section>
+        </div>
+    </mat-tab>
+
+    <mat-tab label="Performance Breakdown">
+        <div class="position-dialog__tab-body">
+            <app-performance-breakdown [depotIds]="dialogData.depotIds"
+                                       [securityIds]="dialogData.securityIds">
+            </app-performance-breakdown>
+        </div>
+    </mat-tab>
+</mat-tab-group>

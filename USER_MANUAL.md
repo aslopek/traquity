@@ -683,18 +683,18 @@ managed separately:
 - **Settings → Historical Security Prices** — daily prices per security.
 - **Settings → Dividend Announcements** — upcoming dividends per security.
 
-TraQuity ships with preconfigured price sources, requiring a personal API key. TraQuity is not affiliated with any provider, and your use of
-their APIs is subject to their terms and plan limits. The same applies to any source you add yourself.
+TraQuity ships with preconfigured price sources and dividend announcement sources, requiring a personal API key. TraQuity is not affiliated
+with any provider, and your use of their APIs is subject to their terms and plan limits. The same applies to any source you add yourself.
 
 ### Entering an API key for a preconfigured source
 
-1. Open **Settings → Historical Security Prices**.
+1. Open **Settings → Historical Security Prices** or **Settings → Dividend Announcements**.
 2. Select the datasource in the list on the left.
 3. Enter your key in the **API Key** field and press **Save**.
 
-These two sources show only the API key form, because everything else about them is already set. The preconfigured sources may also not be
-deleted. Deleting them by hand from the database is strongly discouraged, as future updates of the TraQuity app may reference their database
-IDs and therefore, your database may be incompatible with future updates of the app.
+A preconfigured source shows only the API key form, because everything else about it is already set. The preconfigured sources may also not
+be deleted. Deleting them by hand from the database is strongly discouraged, as future updates of the TraQuity app may reference their
+database IDs and therefore, your database may be incompatible with future updates of the app.
 
 ### Adding, replacing and deleting a data source
 
@@ -899,8 +899,8 @@ URL patterns and header values are templates. A function is written `#name(argum
 | `#rng(min,max)`           | A random integer between `min` and `max`, both inclusive            |
 | `#base64(text)`           | The argument, base64-encoded                                        |
 
-Put an API key into `#mask(...)` rather than writing it plainly: it is what keeps the key out of `traquity.log`, and for the two
-preconfigured sources it is also the place the **API Key** field writes to.
+Put an API key into `#mask(...)` instead of writing it plainly: it is what keeps the key out of `traquity.log`, and for a preconfigured
+source it is also the place the **API Key** field writes to.
 
 ## AI features
 
@@ -1043,11 +1043,22 @@ has no bearing on how one particular stock performed.
 
 For every position you currently hold, the view also shows net income, which is dividends and special dividends minus taxes.
 
-Clicking a position opens its details dialog. **Lots** on the left lists every lot you currently hold, each with its buy date and time,
-holding period, buy-in size, cost basis (buy-in plus the fees and taxes of that purchase, shown when there were any), current size, CAGR and
-performance. **Sell Simulation** on the right estimates what selling part of the position would yield.
+Clicking a position opens its details dialog on the **Lots** tab. **Lots** on the left lists every lot you currently hold, each with its
+buy date and time, holding period, buy-in size, cost basis (buy-in plus the fees and taxes of that purchase, shown when there were any),
+current size, CAGR and performance. **Sell Simulation** on the right estimates what selling part of the position would yield.
 
-![Position details: the lots on the left, the sell simulation on the right](./doc-assets/depot-position-details.png)
+![Position details: the lots on the left, the sell simulation on the right](doc-assets/depot-position-details-lots.png)
+
+The **Performance Breakdown** tab sums up the position's whole transaction history, including shares already sold: Buys, Sells,
+Dividends, Taxes and Fees add up to Net cash flow, which together with Current value sums to the Total return and its percentage. Cost
+basis carries an info tooltip breaking it into buys, taxes and fees. With **Hide Absolute Values** on, every figure is hidden except the
+relative total.
+
+![Performance breakdown of a position](doc-assets/depot-position-details-performance-breakdown.png)
+
+The same breakdown exists for more than a single position: clicking a group's label in the list or its arc in the allocation chart opens it
+for that group, and clicking the total above the list or the center of the allocation chart opens it for the whole depot selection. Also see
+[Why these numbers differ from each other](#why-these-numbers-differ-from-each-other).
 
 #### Sell Simulation
 
@@ -1067,6 +1078,38 @@ for a position that merges several securities, it shows a notice instead of the 
 The result is arithmetic over the numbers and transactions you provide, nothing more. It is not tax or investment advice, and what you
 actually receive and owe depends on your broker's settlement and your own tax situation, which the app knows nothing about. **Your actions
 remain your own responsibility.**
+
+### Why these numbers differ from each other
+
+A position's line in the **Positions** list, its **Performance Breakdown** and the **Performance** tab look at the same depot from three
+different angles. Their figures mostly differ, which is not a malfunction of the app but an expected behavior:
+
+- **A line in the list, and the group and depot totals above it** answer "what are the shares I hold right now worth, compared to what I
+  paid for them?". They cover the shares still held and their buy-in. They ignore shares already sold and reinvesting cash.
+- **A Performance Breakdown** — of a position, of a group, or of the whole depot selection — answers "what did this cost me, and what came
+  back out of it?". It covers every buy, sell, dividend, tax and fee ever booked for those securities, plus the current value of what is
+  still held. It ignores reinvested cash and how long your money was invested.
+- **The Performance tab** answers "how did the depot's total value develop over the period I selected?". It covers stocks and cash
+  together, counts money deposited during the period as growth, and expresses return as an annual rate via XIRR. Most importantly, it
+  is aware of reinvesting cash: When you sell shares or receive dividends or tax refunds, that money goes into your cash position. The next
+  expenses you have, such as a tax payments or buying new shares, first uses up that cash before 'new cash' flows into your depot.
+
+What follows from that:
+
+- A security you sold completely is gone from the list and from the total above it, while its buys, sells and dividends keep counting in
+  the breakdown of its group and of the depot.
+- A position you once sold at a loss and bought again can show a gain in the list and a loss in its breakdown. The list only knows the
+  shares you hold today; the breakdown also knows the gains and losses you realized before, as well as all taxes and fees.
+- Dividends (less taxes) are reported as net income of their own in the list and are folded into the total return in the breakdown. A
+  position whose price went nowhere is therefore flat in the list and up in its breakdown.
+- The depot total above the list and the depot's breakdown differ by exactly the realized part of your history: the proceeds of sold shares
+  against what those shares cost, the dividends, and every tax and fee. Neither of the two contains cash.
+- Growth on the Performance tab measures value, not return, so money you deposited during the period counts as growth there. The
+  breakdown's **Total** measures against what you put in, so a deposit alone does not move it.
+- The breakdown's percentage divides by everything ever paid in for that selection — buys plus the taxes and fees of every transaction,
+  taxes on sales and dividends included. The list's percentage divides by the buy-in of the shares you still hold.
+- Total return in the breakdown is not comparable to XIRR either: 40% total over eight years is not 40% a year. XIRR annualizes and weighs
+  every contribution by how long it was invested.
 
 ## Dev mode and direct database access
 
