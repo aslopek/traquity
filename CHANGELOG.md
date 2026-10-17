@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   total above the list or the center of the allocation chart.
 - Clicking a slice of the allocation chart on the *Depots / Positions* tab opens that position's details dialog, just like clicking its
   line in the position list does.
+- **Divvy Diary** is now a preconfigured data source in both *Settings / Historical Security Prices* and *Settings / Dividend
+  Announcements*. Like the other preconfigured sources it needs nothing but your personal API key, and it contacts
+  Divvy Diary only once that key is saved and a security is configured against it. Creating an API key and using it according to the
+  applicable Terms of Service remains your responsibility.
 
 ### Fixed
 

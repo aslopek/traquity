@@ -683,18 +683,18 @@ managed separately:
 - **Settings → Historical Security Prices** — daily prices per security.
 - **Settings → Dividend Announcements** — upcoming dividends per security.
 
-TraQuity ships with preconfigured price sources, requiring a personal API key. TraQuity is not affiliated with any provider, and your use of
-their APIs is subject to their terms and plan limits. The same applies to any source you add yourself.
+TraQuity ships with preconfigured price sources and dividend announcement sources, requiring a personal API key. TraQuity is not affiliated
+with any provider, and your use of their APIs is subject to their terms and plan limits. The same applies to any source you add yourself.
 
 ### Entering an API key for a preconfigured source
 
-1. Open **Settings → Historical Security Prices**.
+1. Open **Settings → Historical Security Prices** or **Settings → Dividend Announcements**.
 2. Select the datasource in the list on the left.
 3. Enter your key in the **API Key** field and press **Save**.
 
-These two sources show only the API key form, because everything else about them is already set. The preconfigured sources may also not be
-deleted. Deleting them by hand from the database is strongly discouraged, as future updates of the TraQuity app may reference their database
-IDs and therefore, your database may be incompatible with future updates of the app.
+A preconfigured source shows only the API key form, because everything else about it is already set. The preconfigured sources may also not
+be deleted. Deleting them by hand from the database is strongly discouraged, as future updates of the TraQuity app may reference their
+database IDs and therefore, your database may be incompatible with future updates of the app.
 
 ### Adding, replacing and deleting a data source
 
@@ -899,8 +899,8 @@ URL patterns and header values are templates. A function is written `#name(argum
 | `#rng(min,max)`           | A random integer between `min` and `max`, both inclusive            |
 | `#base64(text)`           | The argument, base64-encoded                                        |
 
-Put an API key into `#mask(...)` rather than writing it plainly: it is what keeps the key out of `traquity.log`, and for the two
-preconfigured sources it is also the place the **API Key** field writes to.
+Put an API key into `#mask(...)` instead of writing it plainly: it is what keeps the key out of `traquity.log`, and for a preconfigured
+source it is also the place the **API Key** field writes to.
 
 ## AI features
 

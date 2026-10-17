@@ -1,4 +1,4 @@
-import {Component, computed, effect, inject, input, InputSignal, Signal} from "@angular/core";
+import {Component, effect, inject, input, InputSignal, Signal} from "@angular/core";
 import {DataSourceVariant, DataSourceWithId} from "../data-source.type";
 import {DataSourceStore, ReadableDataSourceStore} from "../store/data-source.store";
 import {DataSourceCardComponent} from "../data-source-card/data-source-card.component";
@@ -12,8 +12,6 @@ import {getHistoricalSecurityPriceDataSource} from "../../../store/security/secu
 import {SecurityActions} from "../../../store/security/security.actions";
 import {getDividendAnnouncementDataSource} from "../../../store/dividend-announcement/dividend-announcement.selector";
 import {DividendAnnouncementActions} from "../../../store/dividend-announcement/dividend-announcement.actions";
-
-const API_KEY_ONLY_DATA_SOURCE_IDS: ReadonlySet<number> = new Set<number>([1, 2]);
 
 @Component({
   selector: "app-data-source-page",
@@ -36,11 +34,7 @@ export class DataSourcePageComponent {
   private globalStore: Store<AppState> = inject(Store);
   private readonly dialog: MatDialog = inject(MatDialog);
 
-  protected readonly showApiKeyOnly: Signal<boolean> = computed((): boolean => {
-    const selectedId: number | null = this.dataSourceStore.selectedDataSourceId();
-    return this.dataSourceVariant() === 'historical-security-price' &&
-      selectedId !== null && API_KEY_ONLY_DATA_SOURCE_IDS.has(selectedId);
-  });
+  protected readonly showApiKeyOnly: Signal<boolean> = this.dataSourceStore.selectedDataSourceIsPreconfigured;
 
   constructor() {
     effect((): void => {

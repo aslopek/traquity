@@ -17,4 +17,5 @@
     <include file="/db/changelogs/00012-add-hsp-data-sources.yaml"/>
     <include file="/db/changelogs/00013-add-example-data.yaml"/>
     <include file="/db/changelogs/00014-security-wkn-unique-constraint.yaml"/>
+    <include file="/db/changelogs/00015-add-divvy-diary-data-sources.yaml"/>
 </databaseChangeLog>
