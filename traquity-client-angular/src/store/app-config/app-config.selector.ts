@@ -41,6 +41,10 @@ export const hideAbsoluteValues: MemoizedSelector<AppState, boolean>
   = createSelector(appConfigSelector,
   (state: AppConfigState) => state.hideAbsoluteValues);
 
+export const isAppConfigLoaded: MemoizedSelector<AppState, boolean>
+  = createSelector(appConfigSelector,
+  (state: AppConfigState) => state.loaded);
+
 export const isDevModeActive: MemoizedSelector<AppState, boolean>
   = createSelector(appConfigSelector,
   (state: AppConfigState) => state.devModeActive);

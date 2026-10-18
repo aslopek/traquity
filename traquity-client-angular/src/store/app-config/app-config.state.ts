@@ -11,6 +11,7 @@ export type AppConfigState = {
   dateFormat: string
   devModeActive: boolean
   hideAbsoluteValues: boolean
+  loaded: boolean
   openPage: Page
   sideMenuOpen: boolean
   locales: LocaleConfig

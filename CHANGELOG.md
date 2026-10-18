@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Divvy Diary only once that key is saved and a security is configured against it. Creating an API key and using it according to the
   applicable Terms of Service remains your responsibility.
 
+### Changed
+
+- Minor UI improvements.
+
 ### Fixed
 
 - The *Cash position* caption on the *Depots / Performance* tab no longer renders `Infinity` for a depot holding only cash with
