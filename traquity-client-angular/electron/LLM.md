@@ -1,497 +1,206 @@
 # LLM.md
 
-This file provides guidance to LLM coding agents (Claude Code, etc.) when working with code in this repository.
+Guidance for LLM coding agents (Claude Code, etc.) working in this directory.
 
 ## What this directory is
 
-The Electron main process: the desktop shell that owns `traquity.config.json`, resolves Java, spawns the Spring backend jar as a child
-process, and opens the `BrowserWindow` on the built Angular app (`../dist/traquity/browser/index.html`). `main.js` is the entry point
-named by `package.json`'s `"main"`.
+The Electron main process: owns the config file, resolves Java, spawns the Spring backend jar as a child process, opens the
+window on the built Angular app. `main.js` is the entry point.
 
-`traquity.config.json` and `traquity.log` both live in `~/traquity/` (`appDataDir` in `main.js`), created once at startup if missing
-(`ensureAppDataDir`) — see `architecture/configuration.md` ADR-011 for why the two are kept together and out of the home directory itself.
-The downloaded JDK is the one artifact that stays in the app's own working directory instead, per ADR-010.
+Config and log file live in the user's dir, created at startup if missing. The downloaded JDK stays in the app's own
+working directory.
 
-Paths here are relative to `electron/`, so `__dirname` needs a `'..'` to reach the package root — that is where `dist/`, `resources/` and
-`node_modules/` live.
+Paths here are relative to `electron/` — `__dirname` needs a `'..'` to reach the package root.
 
-See the parent `LLM.md` for the Angular renderer, and the root `LLM.md` for how the three monorepo parts fit together.
-
-## Module layout
-
-```
-electron/
-  main.js                      entry point; wiring only, no logic worth testing
-  preload.js                   the three contextBridge surfaces shared with the renderer
-  ai/
-    catalogue.js                the curated models, pinned to a Hugging Face revision each; projects the
-                                public `CatalogueEntry` shape out of the full internal one
-    ai-registry.js              the `ai` key of a loaded config: notice confirmation (re-hashed against the packaged
-                                notice resource), which catalogued models are actually installed (each entry's path
-                                verified against the filesystem), and the three writes over that key - `install`,
-                                `remove` and `activate`
-    model-download.js           downloads one catalogue entry from its pinned `resolve/<revision>/<file>` URL into a
-                                picked directory, staged then renamed. Validates sha256 digest after download
-    machine-capability.js       probes the GPU backend and VRAM `node-llama-cpp` reports and derives a per-catalogue-entry
-                                verdict from it, fresh on every read and never persisted
-    prompt-resolver.js          the system prompt for a (usecase, model) pair, out of four layers - two overrides on
-                                disk and two packaged - with the layer that answered as part of the result
-    transaction-extraction/
-      transaction-extraction.js the document-extraction usecase: the grammar of token ids built from the tokens a
-                                request carries, the message the model reads, and the schema its answer is parsed with.
-      transaction-extractor.js  one transaction out of one document: model by key, prompt by layer, grammar by
-                                document, answer by schema; a request runs to an outcome, without cancellation
-    local-inference.js          the one place a model is loaded and prompted, in the main process itself
-    inference-lock.js           one inference at a time across every usecase: wraps a run and refuses, never
-                                queues, whatever arrives while one is in flight
-    context-size.js             how large a context one generation needs, and whether the model can hold one
-    response-text.js            the text of a generation, taken from every part of it, segments included
-  logging/
-    log-file.js                one entry at a time into `traquity.log`, appended synchronously so entries from
-                               several sources keep the order they happened in
-  download/                    mechanics shared by every streamed download in this app, agnostic of what is being
-                               downloaded and of how a completed one is verified, if at all
-    byte-cap-transform.js      a stream `Transform` that ends the pipeline once a byte cap is passed, enforced
-                               on the stream itself
-    progress-reporter.js       throttled, rolling-window-averaged `downloading`-phase progress, shared by
-                               `java/corretto-download.js` and `ai/model-download.js`
-    error-message.js           an error's message followed by its `cause` chain, down to a bounded depth
-    free-space.js              whether a directory's disk has a required number of free bytes, should be cecked before
-                               starting a download
-  app/
-    restart-into-configuration.js sets `configureOnNextStart`, stops the backend, relaunches and exits, in that order
-  config/
-    config-schema.js           zod schemas + inferred types for traquity.config.json
-    config-file.js             read/write traquity.config.json
-    auth.js                    pure scrypt records: create / classify / verify
-    auth-registry.js           the auth map over a loaded config, keyed by database base path: classify, verify,
-                               record a proven start, list the known databases, remove one entry
-    configuration-writer.js    the configuration screen's single config write, one section's slice per config key
-    configure-on-next-start.js sets the one-shot `configureOnNextStart` flag and saves the loaded config
-  backend/
-    backend-reachable.js       poll GET /admin/pid until reachable or child exit
-    backend-process.js         spawn, stdin password/shutdown channel, log piping, single-instance guard, proven-start recording
-  java/
-    java-path.js               resolve `java` on `PATH`; normalize a picked path to a binary
-    java-version.js            async, timeout- and byte-bounded `java -version` run of one absolute path
-    java-runtime.js            the boot-time resolution chain and the configuration screen's literal check, both
-                               over the two modules above
-    jvm-environment.js         the environment every JVM this app spawns is allowed to see
-    corretto-public-key.js     the pinned Amazon Corretto release signing key, parsed from its armored form
-    corretto-signature.js      parses a detached OpenPGP signature and has `security/verify-hash.js` check it
-                               against that key
-    corretto-download.js       downloads, verifies and extracts the Corretto 25 JDK, reporting progress
-  ipc/
-    ipc-schema.js              zod schema for IPC input crossing the renderer boundary
-    trusted-sender.js          whether an IPC event came from the main frame of the app's own window
-    trusted-channels.js        the `handle`/`on` registration mechanics shared by every bridge module below -
-                               refuses an untrusted sender, throwing for `handle` and dropping for `on`
-    startup-bridge.js          registers the startup/configuration IPC channels
-    ai-bridge.js               registers the `ai:*` IPC channels
-  security/
-    signature-bounds.js        how long a detached signature may be, for every schema that validates one
-    tls-override.js            whether `NODE_TLS_REJECT_UNAUTHORIZED` overrides the default, verifying behavior
-    verify-hash.js             verifies a detached signature over a file streamed into the hash, format-agnostic
-    file-digest.js             digests a file streamed into the hash, no signature involved
-  window/
-    startup-mode.js            computes the startup mode (`boot` | `configure` | `insecure` | `unlock`) and consumes
-                               `configureOnNextStart`
-    main-window.js             `BrowserWindow` creation, wired to `preload.js`; `getMainWindow()` exposes it as a
-                               dialog parent
-    navigation-policy.js       whether a URL may be opened by the OS, and whether the window may navigate to it
-    database-dialogs.js        native open/save dialogs for the database file, normalizing to base paths
-    java-dialogs.js            native picker for a java binary or its containing directory
-    ai-dialogs.js              native directory picker for choosing where a model download lands
-  testing/                     shared spec-only helpers (custom matchers, ...) used by more than one *.spec.js
-```
-
-The channels `ipc/startup-bridge.js` registers — eleven request/response via `ipcMain.handle`, two one-way via `ipcMain.on`, one push
-from the main process into the renderer:
-
-- `startup:getState`
-- `backend:start`
-- `auth:verify`
-- `configure:getState`
-- `database:pickExisting`
-- `database:pickNew`
-- `auth:forget`
-- `config:apply`
-- `java:verify`
-- `java:pick`
-- `java:download`
-- `app:restartAndConfigure` (one-way)
-- `app:quit` (one-way)
-- `java:downloadProgress` (push, main → renderer)
-
-The channels `ipc/ai-bridge.js` registers — six request/response via `ipcMain.handle`, one push from the main process into the renderer:
-
-- `ai:getState`
-- `ai:confirm`
-- `ai:download`
-- `ai:extractTransaction`
-- `ai:remove`
-- `ai:activate`
-- `ai:downloadProgress` (push, main → renderer)
-
-`preload.js` exposes these two channel sets as separate `contextBridge` globals, `window.traquity` and `window.traquityAi`, plus a third,
-`window.traquityFiles`, with one member (`pathForFile`) that registers no IPC channel at all — `webUtils.getPathForFile` is answered
-inside the preload itself, so the duplicated-literal checklist above does not extend to it.
-
-Keep this map current as new channels land — it is what a reader starts from.
+See the parent `LLM.md` for the renderer, the root `LLM.md` for how the three monorepo parts fit together.
 
 ## Running a model
 
-Everything under `ai/` outside `transaction-extraction/` is usecase-agnostic: the catalogue, the registry and the download are about models
-alone, `ai/prompt-resolver.js` takes the usecase as a parameter, and `ai/local-inference.js` is the one place a model is loaded and
-prompted. A usecase adds two things — a packaged prompt directory (`prompts/<usecase>/`, a `default.md` plus a `<modelKey>.md` where one
-model needs its own) and a subdirectory under `ai/` holding the grammar its answers decode under and the schema they are parsed with. Only
-the prompts are packaged files; a grammar is generated per request.
+Model loading/catalogue/registry/download code is usecase-agnostic; one module takes the usecase as a parameter and is the only
+place a model is loaded and prompted. A usecase adds: a packaged prompt directory, and a subdirectory holding the grammar its
+answers decode under and the schema they're parsed with. Only prompts are packaged files — a grammar is generated per request.
 
-What `node-llama-cpp` itself reports goes to `traquity.log`, through the `logger`.
+Non-obvious points:
 
-A few things about running a model are not obvious:
-
-- **The inference lock is per process, never per usecase**, since the machine holds the weights of one model at a time. A usecase is handed
-  `ai/inference-lock.js`'s `run` and never the raw one. Nothing queues: a generation holds a model and a context for seconds to minutes.
-- **A model is loaded in the main process, not in a utility process.** Before loading a GPU-enabled binary, `node-llama-cpp` tests it in a
-  child process (on Windows, whenever the binary is not CPU-only) and picks how to fork by runtime: under Electron it asks for
-  `utilityProcess`, otherwise it falls back to `child_process.fork`, which starts `process.execPath`. Inside a utility process both halves
-  go wrong — `process.versions.electron` is set, so it reports itself as Electron, while the `electron` module it can reach has no
-  `utilityProcess` — so it takes the fallback. In a packaged build `process.execPath` is this app's own executable, which loads the app
-  out of `app.asar` and ignores the script argument: the fork starts a second TraQuity, whose `app.on('ready')` puts a window on screen and
-  runs `removePreviousLog()` over the log of the run in progress. `architecture/ai.md` ADR-007 has the reasoning. Nothing in the suite
-  catches a regression here; it shows up as a flashing window on a packaged run.
-- **A thinking model's answer is not in `responseText`.** Its chat wrapper force-opens a thought segment before the first generated token,
-  and the plain response text leaves segments out. Under a grammar every token belongs to the answer, so the whole answer lands in that
-  segment and `responseText` comes back empty — which a usecase reads as a model that answered nothing. `ai/response-text.js` takes the
-  answer out of the parts `promptWithMeta` returns.
-- **The context is sized to the prompt, and the layer split follows from it.** Left alone the library fills the VRAM with model layers and
-  sizes the context into what is left, which on a modest VRAM is far below the prompt it was handed. So `ai/local-inference.js` counts the
-  prompt's tokens first — a `vocabOnly` load reads the tokenizer out of the same file without a single weight tensor — asks
-  `ai/context-size.js` how large a context that needs, and passes it to `loadModel` as `gpuLayers: {fitContext: {contextSize}}`, so a long
-  prompt moves layers to the CPU instead of losing its own text. The size is pinned: a context that merely almost fits pushes the top of the
-  prompt out of the window, and the model answers from what is left. A size beyond what the model was trained on is refused, naming both
-  numbers.
-- **`fitContext` is an estimate, and it comes out short.** It is answered against the VRAM free at that moment, on a card also holding a
-  window and a UI, so `createContext` can still fail with an `InsufficientMemoryError` for the very size `loadModel` was asked to
-  leave room for. That failure retries down `ai/context-size.js`'s `gpuLayerLadder`, in fifths from the count the library chose, ending at
-  nothing on the GPU. The context size never moves; the placement is what gives.
-- **`dispose` is the only thing that releases the weights.** A path added to `ai/local-inference.js` that leaves the context or the model
-  undisposed leaks for the rest of the run, in a process that outlives every generation.
+- **The inference lock is per process, never per usecase** — the machine holds one model's weights at a time. Nothing queues; a
+  generation holds a model and context for seconds to minutes.
+- **A model loads in the main process, not a utility process.** The library's own GPU-binary probe mis-detects Electron and
+  forks a second copy of this app in a packaged build instead of a lightweight probe process. Nothing in the suite catches a
+  regression here — it shows up as a flashing window on a packaged run.
+- **A thinking model's answer is not in the plain response-text field** — under a grammar, every token belongs to the answer, so
+  the whole thing lands in the thought segment and the plain field comes back empty. Use the dedicated response-text extractor.
+- **Context size is sized to the prompt, and GPU/CPU layer split follows from that** — never the reverse. A context that merely
+  almost fits silently truncates the top of the prompt. Fitting is an estimate and can still fail at context-creation time; that
+  retries down a fallback ladder moving layers off the GPU. The context size itself never moves.
+- **`dispose` is the only thing that releases model/context weights.** Any new code path must dispose on every exit, or it leaks
+  for the life of the process.
 
 ## Transaction extraction
 
-One transaction read out of one already-parsed broker document, served by `ai:extractTransaction` and implemented under
-`ai/transaction-extraction/` plus `prompts/transaction-extraction/`.
+One transaction read out of one already-parsed broker document.
 
-The channel takes an **already extracted** document — the renderer parses the PDF itself (`architecture/ai.md` ADR-008) — plus **the
-tokens that renderer read off it**, the currency the answer is to be denoted in and the catalogue key of the model to use. Behind it,
-`ai/transaction-extraction/transaction-extractor.js` resolves the prompt and the model, builds the grammar out of those tokens' ids and
-hands the request to `ai/local-inference.js`; nothing is written to `traquity.config.json`.
-
-Its failures are ones a user cannot debug from the screen: `The model did not answer with a transaction.` covers an answer that was not JSON
-and an answer the schema rejected alike. So the whole run goes to `traquity.log` — the document text, the generated grammar, which prompt
-layer answered, the raw answer, the parse failure, and which `stopReason` ended the generation (`maxTokens` explains truncated JSON). A
-request the *channel's* schema refuses is logged there too, by `ipc/ai-bridge.js`, since the extractor never sees it: a rejected `invoke`
-carries no outcome, so a tripped bound is named in the log or nowhere.
-
-A token's `label` carries a bound of its own, `MAXIMUM_AI_LABEL_LENGTH`, for the reason `ipc/ipc-schema.js` states beside it.
-
-Two things about this usecase are not obvious:
-
-**The model sorts, and states no value** (ADR-011, ADR-013). Every field of the answer is a token id, the grammar admits only the ids the
-request carried, and `transactionOfAnswer` resolves each one back to the value the renderer read. Two things follow, both worth knowing
-before editing anything here: **no notation is read in this tier** — not in the grammar, and not in the prompt, which tells the model
-outright that it never reads a number, a date or a time — and a value the renderer's `src/common/pdf/` readers missed has no id, so no
-field of the answer can carry it and the fix belongs there. A change that puts a figure into the grammar, or a reading rule back into a
-prompt, splits one decision across two tiers again.
-
-**The ISIN is no part of the answer** (ADR-013): the grammar has no `isin` rule, the answer schema no `isin` key and the packaged prompts no
-ISIN instruction. This is because the ISIN can be determined in a deterministic way.
+- The channel takes an **already extracted** document plus the tokens the renderer read off it, the target currency, and the
+  model key. Nothing is written to the config file.
+- Failures are logged in full (document text, grammar, prompt, raw answer, parse failure, stop reason) — the user only ever sees
+  a generic "could not extract" message, since these failures aren't user-debuggable from the screen.
+- **The model sorts, and states no value.** Every answer field is a token id resolved back to a value the renderer already
+  read; the model never reads a number, date or time itself. A value the renderer's own parsers missed has no id, so the fix
+  belongs in the renderer's PDF parsing, never in the grammar or the prompt.
+- **The ISIN is no part of the model's answer** — it's determined deterministically, not asked for.
 
 ## Boot order
 
-`app.on('ready')` loads the config, computes the startup mode (`window/startup-mode.js`), registers the two IPC bridges
-(`ipc/startup-bridge.js`, `ipc/ai-bridge.js`) and opens the single `BrowserWindow` (`window/main-window.js`). The backend is spawned only
-when the renderer calls `backend:start` over the first of those bridges, handled by `backend/backend-process.js`, which resolves with an
-outcome (`reachable` or not) the renderer routes on.
+- `app.on('ready')` loads the config, computes the startup mode, registers the IPC bridges, and opens the single window. The
+  backend spawns only when the renderer calls the start channel, and resolves with a reachability outcome the renderer routes
+  on.
+- **Java resolution runs once, eagerly, not lazily at spawn time** — its promise is shared by startup-mode computation and the
+  backend spawn, so a straight-through boot probes Java exactly once. Saving a new Java path is the only thing that re-triggers
+  resolution.
+- The machine capability probe is held the same way — kicked off once, re-read on every query, never persisted, so a changed
+  machine is picked up on the next start without ever writing a stale verdict to disk.
+- **The Java probe runs an untrusted binary** (named by a config file or a file dialog) — treat every bound here as load-bearing:
+  absolute path to `java`/`java.exe` only (never a relative lookup through `PATH`), no shell, a fixed argument vector, no stdin,
+  a restricted environment, a timeout, and an output byte budget. Every failure resolves to an explicit error verdict.
+- Both JVM spawns (probe and backend) share the same environment-sanitizing step, which strips JVM-affecting and
+  dynamic-linker-affecting variables (`JAVA_TOOL_OPTIONS`-style injection points, `LD_PRELOAD`/`DYLD_INSERT_LIBRARIES` and
+  equivalents) and the DB password — applied *after* merging the config file's own `env`, so nothing written there can smuggle
+  any of this back in.
+- Setting `NODE_TLS_REJECT_UNAUTHORIZED` to anything other than `1` short-circuits startup into an insecure mode before the auth
+  registry or any config mutation runs: no JVM is ever spawned, and only the bare minimum IPC surface (state query, quit) is
+  registered.
+- **The DB password goes to the backend over stdin, never the environment** — the environment only carries a marker flag.
+  Closing that stream is the shutdown request. Rules for touching this code: zero the password buffer right after the write
+  (Node queues it by reference); never let the handover block the start call (a non-responsive child surfaces through the
+  reachability poll, not a hang); shutdown closes stdin, waits for exit, then force-kills after a timeout. Every quit path
+  awaits shutdown before continuing — including the case of an orphaned child, which still gets EOF once its parent's handles
+  are reclaimed.
 
-Java resolution now decides the startup mode rather than running lazily at spawn time: `java/java-runtime.js`'s `resolve()` is kicked off
-once, its `Promise<string | null>` held in `main.js` as `javaPromise` and reused by both `window/startup-mode.js` (which yields `configure`
-mode when it resolves to `null`) and `backend/backend-process.js`'s `resolveJava`, so a boot-straight-through start probes Java exactly
-once. `startup:getState` therefore answers from a `Promise<StartupState>` rather than a plain value - `ipcMain.handle` awaits whatever its
-listener returns, so the window opens immediately while the probe runs concurrently with the renderer's own bootstrap. The one thing that
-invalidates `javaPromise` is `config:apply`, which reassigns it after saving, since that is the only write able to change `java.path`.
+## IPC channels and the preload
 
-The machine capability probe is held the same way: `ai/machine-capability.js` is kicked off once in `main.js` and its
-`Promise<MachineCapability | null>` answers every `ai:getState`, so a changed machine is picked up on the next start. Nothing reassigns it,
-and it never rejects — a missing prebuilt binary or a refusing driver resolves to `null`, which is what the per-entry verdict turns into
-`unknown`. The verdict itself is derived on every read and written nowhere, so `traquity.config.json` can never carry a verdict that
-outlived the machine it was computed for.
+- IPC bridges register channels through a shared trusted-channel wrapper; the preload exposes them as `contextBridge` globals.
+- **The preload cannot `require` this app's own modules** — every channel name is therefore a literal duplicated between the
+  preload and whichever bridge registers it. Nothing checks the two copies agree: a rename compiles, passes the suite, and
+  fails only at runtime. Changing a channel name means changing it in both places.
 
-That probe is one place this app runs a binary it did not ship, named by a config file or a file dialog, so
-`java/java-version.js` treats it as untrusted and every one of its bounds exists for a reason worth keeping: an absolute path named
-`java`/`java.exe` only — relative paths are resolved by the OS against the working directory before any `PATH` lookup, and the name is what
-keeps a channel that spawns a JVM from being a channel that spawns anything — no shell and an argument vector, no stdin, the environment
-`java/jvm-environment.js` allows, a timeout, and a byte budget across both output streams. Output is read in flowing mode, so nothing but
-that budget bounds what a chatty child can make this process accumulate, and V8's ~512 MiB string limit turns into an uncaught `RangeError`
-inside a `data` listener when it is reached. Every failure of the run resolves to an `error` verdict, since the promise is created before
-`app.on('ready')` and a rejection with no handler yet attached terminates the main process. `java/java-path.js` passes over a relative
-`PATH` entry for the same reason rather than letting it become a candidate the probe would then refuse.
+## The window
 
-`java/jvm-environment.js` is what both JVM spawns — the probe and the backend — pass their environment through, which is what makes it one
-rule rather than two: a JVM appends `JAVA_TOOL_OPTIONS`, `JDK_JAVA_OPTIONS` and `_JAVA_OPTIONS` to its own command line, so an inherited
-one of those is an inherited argument (`-javaagent:` among them); `LD_PRELOAD`, `LD_AUDIT` and `DYLD_INSERT_LIBRARIES` are the same
-substitution one level lower, where the dynamic linker rather than the JVM reads the variable; and `TQ_DB_FILE_PASSWORD` has no business in
-a block other processes can read. The backend's spawn sanitizes *after* merging the config file's own `env`, so neither a password nor any
-of the above written into the config can come back in through it either.
+- A URL the renderer hands over is **data**, not a trusted navigation target — only open `http:`/`https:` externally; every
+  other scheme resolves to whatever the OS or this app's own webview stack would do with it.
+- **Top-level navigation away from the app's own document is refused outright** — `contextIsolation` protects the bridge from
+  page scripts, not from the page being replaced, and a navigated window takes every IPC channel with it. Subframes get their
+  own, narrower allowance, because the app embeds the backend's H2 console in an iframe.
+- Webviews are refused outright. Every permission request (camera, mic, location, notifications, device access) is answered
+  `false` — a portfolio tracker needs none of them.
+- Spellcheck is off (the renderer displays untrusted names/content) and devtools are off (a devtools window can inspect the
+  bridge from inside the trusted context). Neither is a default — both are explicit.
+- Never relax anything in the window's web preferences without stating which of the above it gives up.
 
-`NODE_TLS_REJECT_UNAUTHORIZED` set to anything other than `1` (see `security/tls-override.js`) short-circuits all of this: the startup mode
-resolves to `insecure` before the auth registry is consulted or `configureOnNextStart` is consumed, `javaPromise` becomes
-`Promise.resolve(null)` so no JVM is ever spawned, `ipc/startup-bridge.js` registers only `startup:getState` and `app:quit`, and
-`ipc/ai-bridge.js` registers nothing at all - two channels only across both bridges, so "nothing can be done" is enforced.
+## The config file
 
-The spawn passes the database password as the first line of the child's stdin instead of through the child's environment: the
-environment carries `TQ_DB_FILE_PASSWORD_STDIN=true` as a marker and no password at all. The stream then stays open for the rest of the
-run — closing it is what asks the backend to shut down, not part of the handover (`architecture/configuration.md` ADR-012). A few rules
-are worth knowing before touching `backend-process.js` again: the password buffer is zeroed inside the write callback, because Node
-queues the chunk by reference instead of copying it; the handover never blocks `start` — a child that never reads its stdin surfaces as a
-failed start through the existing reachability poll instead of hanging the IPC call; and `stop()` closes stdin, waits for the child's
-`exit`, and force-kills it after `SHUTDOWN_TIMEOUT_MILLISECONDS` if it never answers. Both quit paths — `window-all-closed` and
-`app:restartAndConfigure` — await `stop()` before continuing. A main process that dies without quitting, or a child orphaned by a start
-that raced a quit, still goes down: the OS closes the pipe's write end as it reclaims the parent's handles, and EOF on the backend's side
-is what triggers its own shutdown.
-
-The preload (`preload.js`) runs in Electron's sandboxed preload context, where `require` is a limited polyfill resolving only `electron`
-and a handful of Node built-ins — it cannot `require` a module of this app. That is why the IPC channel names listed above are literals
-duplicated between `preload.js` and whichever of `ipc/startup-bridge.js`/`ipc/ai-bridge.js` registers them, not shared via an import.
-Nothing checks that the two copies agree — a renamed channel compiles, passes the suite, and fails only at runtime, so a change to one
-literal is a change to two files.
-
-The window itself is locked down in `window/main-window.js`, and the two decisions worth arguing about live in `window/navigation-policy.js`
-so they can be tested at all (`main-window.js` needs a real Electron and therefore gets no spec). A URL a renderer hands over is **data** —
-a release page out of an HTTP response, a link out of the database — so `shell.openExternal` is reached only for `http:`/`https:`, because
-every other scheme resolves to whatever the OS registered for it and `file:` resolves to "run this". A navigation away from the app's own
-document is refused outright: `contextIsolation` protects the bridge from the page's scripts, not from the page being replaced, and a
-window that navigates takes the preload — every IPC channel above — along to wherever it lands. That rule is the top-level frame's:
-`will-navigate` does not fire for subframes, and the `will-frame-navigate` that would cover them cannot refuse everything but this
-document, because the app embeds the backend's H2 console in an iframe. What a subframe may load is therefore the built document's own
-`frame-src`, and `nodeIntegrationInSubFrames: false` is what keeps the preload out of one. Webviews are refused outright, and every
-permission request and check is answered `false`, because a portfolio tracker needs no camera, microphone, location or notifications —
-device access (WebHID/WebUSB/Web Serial) is decided by `setDevicePermissionHandler`, which those two do not cover, so it is answered
-`false` too.
-
-Two decisions in `window/main-window.js` are about what the renderer may *reach out* to rather than about what it may do: `spellcheck` is
-off because the renderer displays security names, depot names and imported file contents, and `devTools` is off because a devtools window
-inspects the bridge from inside the trusted context. Neither is a default.
-
-Nothing in `webPreferences` may be relaxed without saying which of the above it gives up.
-
-`config/config-file.js`'s `load()` writes nothing, ever. It reports which of three things it observed — `read`, `missing` or `unreadable`
-(unparsable JSON, a schema violation, a failed read) — alongside the configuration it hands back, and a file it could not read is left on
-disk exactly as it is, with the reason logged to `traquity.log` and nowhere else. `missing` and `unreadable` both mean `configure` mode,
-which is the one mode that needs no readable config and spawns no backend. The default configuration `load()` falls back to for either
-**names no database at all**: a proposed path is one "Save & start" away from becoming a decision the user never made, so the configuration
-screen asks for one instead of inheriting the backend's own built-in default silently.
-
-Every write of that file lands as mode `0600`, and a `chmod` to the same mode follows each one, since a `mode` passed to a write only
-applies to a file being created and an install predating this rule still carries whatever umask it was written under.
-
-Seven channels write `traquity.config.json`, three of them in `ipc/startup-bridge.js` and four in `ipc/ai-bridge.js`: `auth:forget` removes
-one `auth` entry immediately, while the screen is still up, `config:apply` persists the configuration screen on finish, touching
-`env.TQ_DB_FILE_PATH` and nothing else, `app:restartAndConfigure` sets `configureOnNextStart` on the way out, `ai:confirm` hashes the
-packaged AI notice resource and writes that digest as `ai.confirmedNotice`, initializing `ai.models` to `{}` the first time, `ai:download`
-sets one `ai.models[key]` entry on a completed download, `ai:remove` drops one `ai.models[key]` entry once the file it names has been
-deleted from disk, and `ai:activate` sets one `ai.models[key]`'s `active` flag to `true` while clearing it on every other entry. All seven
-reach the disk through a collaborator of their own (`config/auth-registry.js`'s `forget`, `config/configuration-writer.js`'s `apply`,
-`config/configure-on-next-start.js`'s `request`, `ai/ai-registry.js`'s `confirm`, `install`, `remove` and `activate`); no `ConfigFile` is
-injected into either bridge directly, so no other channel can write at all. Nothing in the main process ever *writes* an `auth` entry
-outside `recordProvenStart`, which is what keeps "a failed start never discards a record" intact.
-
-A database is identified everywhere by its **base path without extension** — `env.TQ_DB_FILE_PATH`, the `auth` map's keys and
-`StartupState.databasePath` are all that shape. The `.mv.db` suffix H2 materializes exists only at the dialog boundary, where
-`window/database-dialogs.js` strips it, and in the renderer's presentation, where a pipe re-appends it.
+- The config loader **never writes**. It reports what it observed (read / missing / unreadable) alongside whatever it hands
+  back; an unreadable file is left on disk untouched, with the reason logged only to the log file. Missing or unreadable both
+  mean "show the configure screen".
+- The built-in default configuration names **no database at all** — a proposed path is one click away from becoming a decision
+  the user never made, so the configure screen always asks.
+- Every write to the config file is mode `0600`.
+- A small, fixed set of IPC channels is allowed to write the config file, each through its own dedicated collaborator — no
+  channel handler is ever given direct write access to the config file itself. Nothing in the main process writes an auth
+  entry outside the one function that records a proven start — a failed start must never discard an existing record.
+- A database is identified everywhere by its **base path without extension**. The on-disk file suffix only ever appears at the
+  file-dialog boundary and in the renderer's own presentation layer.
 
 ## Structure rule
 
-There is **no integration-test harness for Electron main code**. Everything with logic therefore lives in a module of its own that takes
-its I/O dependencies as arguments (file system, `fetch`, timers, the spawned child), and `main.js` is wiring: it constructs the
-collaborators, passes the real implementations, and connects them to Electron's `app` events. A piece of logic that can only be reached by
-booting Electron is a piece of logic nothing will ever test — that is why the directory looks the way it does.
+There is **no integration-test harness for Electron main code**. Every module with logic takes its I/O dependencies (file
+system, `fetch`, timers, the spawned child) as arguments; `main.js` is wiring only — it constructs collaborators, passes real
+implementations, and connects them to Electron's `app` events. Logic reachable only by booting real Electron is logic nothing
+will ever test.
 
-The flip side is a limit on what a green suite proves here: it says nothing about whether the packaged app actually starts. Wiring,
-`__dirname` resolution, resource paths and dependency pruning are all outside its reach. Never report a main-process change as verified on
-a passing suite alone — say which part still rests on a packaged run.
+A green suite says nothing about whether the packaged app actually starts — wiring, path resolution, and dependency pruning are
+outside its reach. Never report a main-process change as verified on a passing suite alone; say which part still rests on a
+packaged run.
 
 ## Type safety — JSDoc over checked JavaScript
 
-Electron loads `main.js` directly, so these files are CommonJS rather than TypeScript. That is a constraint on the *syntax*, not on the
-type checking: **every file under `electron/` is fully type-checked by `tsc` in strict mode, with all types expressed as JSDoc**.
-`tsconfig.electron.json` is the single switch (no `// @ts-check` pragmas in the files), and it covers `*.spec.js` as well. Untyped
-JavaScript is not an accepted state anywhere in this directory: no `any` in any form, no `@ts-ignore`, no `@ts-nocheck`. `@ts-expect-error`
-is allowed only in a spec that deliberately asserts a type error, with a comment naming which one.
-
-Why the overrides in `tsconfig.electron.json` are what they are — none of this should be "cleaned up" later:
-
-- **`module`/`moduleResolution: node16`** — the base config's `ES2022` + `bundler` is rejected together with CommonJS and would mistype
-  `require`. `package.json` has no `"type"` field, so `node16` correctly treats these files as CJS.
-- **`lib: ["ES2023"]`, no `DOM`** — the main process has no DOM, so `document`, `window` and `localStorage` fail to compile here instead of
-  failing at runtime. `fetch`, `Response` and friends come from `@types/node`.
-- **`noUncheckedIndexedAccess`** — makes an index access carry `| undefined`, which is what turns "a database with no `auth` entry is
-  pending" into something the compiler enforces rather than something a doc asserts.
-- **`exactOptionalPropertyTypes`** — an optional property may be absent, but not present-and-`undefined`. Build option bags by omission
-  (`{...(logger ? {logger} : {})}`), not by assigning `undefined`; where a property genuinely means "explicitly not set", declare it as
-  `@property {X | undefined} [key]` rather than reaching for the flag.
-- **`strict`, `noImplicitReturns`, `noFallthroughCasesInSwitch`, `noPropertyAccessFromIndexSignature`** are inherited from the base config.
-  Keep them.
+Electron loads `main.js` directly, so these files are CommonJS, not TypeScript — that constrains syntax, not type checking.
+**Every file under `electron/` is fully type-checked by `tsc` in strict mode, with all types expressed as JSDoc.** No `any` in
+any form, no `@ts-ignore`/`@ts-nocheck` anywhere. `@ts-expect-error` is allowed only in a spec deliberately asserting a type
+error, with a comment naming which one.
 
 JSDoc rules:
 
-1. **Every exported function has a complete signature** — one `@param {Type} name` per parameter, one `@returns {Type}`. `@param {Object}`
-   and `@returns {*}` are not types.
-2. **Every internal data shape is a named `@typedef`**, declared once in the module that owns it: option bags, injected-dependency shapes,
-   return objects. Import them across files with `@import {X} from './y.js'` next to the `require` calls — never re-declare.
-3. **Model states as unions and literal types**, not as loose objects and `string` (`@typedef {'pending' | 'passwordless' | 'scrypt'}
-   AuthState`), so classifying becomes a narrowing operation.
-4. **Injected dependencies get a minimal declared type** — the same principle the parent `LLM.md` states for selectors. A module needing
-   three `fs` functions declares exactly those three (see `ConfigFileSystem`), rather than depending on the whole module type. The real
-   dependency is structurally assignable to it, and — the actual payoff — so is a test stub made of exactly that many `jest.fn()`s, with no
-   cast anywhere. A stub missing one is a compile error. This holds just as much for **this app's own collaborators** as for a third-party
-   module: an injected `ConfigFile`, `AuthRegistry` or `BackendProcess` is declared as a `Pick<>` of the members the module actually calls
-   (`Pick<ConfigFile, 'save'>`), never as the whole exported typedef. Naming the whole type costs nothing at runtime and everything in a
-   spec — the stub then has to carry members the module cannot reach, and a reader of that spec is left wondering which of them the
-   behavior depends on.
-5. **Type assertions** are written `/** @type {X} */ (expression)`, parentheses required, and only where no parser can help (a dynamic
-   `require`). Never assert to `any`.
-6. **Constant objects use `@satisfies`**, which checks the shape without widening the literal types away.
-7. **Electron and Node types come from the real packages**: `/** @type {import('electron').BrowserWindow | null} */`,
-   `/** @type {import('node:child_process').ChildProcessWithoutNullStreams | null} */`.
-8. Document *meaning* in prose only where the type cannot carry it (encodings, units, "base path without extension"). A comment restating
-   the type is noise. **A comment naming the module's callers is worse than noise** — see the root `LLM.md`, "Dependency inversion binds
-   the docs too". A module here documents its own contract (the channel it serves, what it writes, what it returns); which part of the
-   boot order reaches it, and why, is documented in the boot order above, not in the module.
+1. Every exported function has a complete signature — one `@param {Type} name`, one `@returns {Type}`. `@param {Object}` and
+   `@returns {*}` are not types.
+2. Every internal data shape is a named `@typedef`, declared once in the module that owns it, imported elsewhere — never
+   re-declared.
+3. Model states as unions/literal types, not loose objects and `string`.
+4. **Injected dependencies get a minimal declared type** — a module needing three `fs` functions declares exactly those three.
+   The payoff: a test stub missing one member is a compile error, with no cast anywhere. This applies to this app's own
+   collaborators too, declared as a `Pick<>` of only the members actually called — never the whole exported type.
+5. Type assertions are `/** @type {X} */ (expression)`, only where no parser can help. Never assert to `any`.
+6. Constant objects use `@satisfies`, which checks shape without widening literal types away.
+7. Electron/Node types come from the real packages (`import('electron').BrowserWindow`, etc.).
+8. Document meaning in prose only where the type can't carry it. A comment restating the type is noise; a comment naming the
+   module's callers is worse than noise (root `LLM.md`, dependency inversion). Document a module's own contract — not which
+   part of the boot order reaches it.
 
 ## The zod boundary rule
 
-**Anything arriving from outside the program — disk, IPC, the network, a subprocess — is defined exactly once, as a zod schema, with its
-static type inferred from that same schema via `z.infer`.** A hand-written `@typedef` for such a shape is an *assertion about* the data
-while the validating code is a *separate* piece of logic; nothing keeps the two in agreement, and they drift the moment a key is added.
-`JSON.parse` returns `any` and is the one real hole in checked JS: its result goes straight into a `safeParse` and never flows on untyped.
-Do not hand-roll a type predicate for it either.
+**Anything arriving from outside the program — disk, IPC, the network, a subprocess — is defined exactly once, as a zod schema,
+with its static type inferred from that schema.** A hand-written typedef for such a shape is just an assertion about the data;
+nothing keeps it and the validating code in agreement. `JSON.parse` output goes straight into a `safeParse`, never flows on
+untyped, and never gets a hand-rolled type predicate instead.
 
-`config/config-schema.js` owns every schema and every exported type for `traquity.config.json`. Later keys (`configureOnNextStart`,
-`java`) extend that one file rather than adding parsers of their own, and every consumer's static type follows automatically.
+**Everything your own code constructs stays a plain typedef.** The test: does a value of this shape ever arrive from disk, IPC,
+network or a subprocess? Then zod. Otherwise typedef — in particular, injected-dependency bags of functions can't be zod at all
+(a function field can't be validated meaningfully), and a schema over internally-constructed shapes dilutes zod's signal that
+"untrusted input arrives here".
 
-**Everything your own code constructs stays a `@typedef`.** The test for a new type: *does a value of this shape ever arrive from disk,
-IPC, the network or a subprocess?* Then zod. Otherwise `@typedef`. Reasons this is a line rather than a preference, so it does not get
-re-litigated:
-
-- Shapes constructed three lines earlier (`ConfigFileOptions`, `BackendStartOutcome`, `AuthState`) have no untrusted input to validate. A
-  schema for them runs at every call for a check that cannot fail, and buys a type a one-line `@typedef` already states.
-- The injected-dependency types **cannot** be zod: `ConfigFileSystem` is a bag of functions, `z.function()` in zod 4 is a function factory
-  rather than a schema and cannot be a field in `z.object()`, and validating a function at runtime would be meaningless anyway. That
-  typedef exists so a drifted *test stub* fails `tsc` — which is the right time to fail.
-- A schema must read as a **signal**. Where zod appears, a reader concludes "untrusted input arrives here". Spread over internal shapes, it
-  stops carrying that meaning while the real boundaries blend in.
-
-Two rules the config schemas specifically depend on: an entry map is validated **per entry**, so one mangled entry makes that entry
-unusable rather than throwing away the whole file; and the semantic checks that protect a *call* (resource bounds around `scryptSync`) stay
-in the calling module, not in the schema — zod answers "is this shaped like a record", not "is this safe to run".
-
-Every string in `ipc/ipc-schema.js` carries a maximum length, and the bound is about the receiving side rather than about what a user would
-type: a password is run through scrypt, a path is spawned or written to the config file. The renderer is not the trustworthy source it
-looks like — it renders what a database and an HTTP response contain — so a new field there gets a bound like the others.
-
-One check runs *before* any of those schemas: `ipc/trusted-sender.js` decides whether the event's sending frame is the main frame of the
-app's own window, and `ipc/trusted-channels.js`'s `handle`/`on` wrappers - shared by `ipc/startup-bridge.js` and `ipc/ai-bridge.js` - run it
-behind every channel either module registers, the two one-way ones included. A registration is per channel name, not per frame, so which
-frame an event came from is a question only the event answers, and the answer is an identity comparison against an object this process
-created, not a check on a URL the sender influences. A refused `handle` throws (the renderer sees a rejected `invoke`, the same shape
-a rejected argument takes); a refused `on` is dropped, since there is no answer to reject. Adding a channel means adding it through
-`trusted-channels.js`'s `handle`/`on`, never through `ipcMain` directly.
+- Validate an entry map **per entry**, so one mangled entry doesn't take down the whole file.
+- Semantic checks protecting a call (e.g. resource bounds around a crypto call) stay in the calling module, not the schema —
+  zod answers "is this shaped right", not "is this safe to run".
+- Every string accepted over IPC carries a maximum length, sized to the receiving side (what it's spawned into, hashed with, or
+  written to) — the renderer is not a trustworthy source; it renders whatever a database or an HTTP response contains.
+- One check runs before any schema: every registered channel verifies the event's sending frame is the app's own main frame,
+  not a URL-based check. Register new channels only through the shared trusted-channel wrapper, never `ipcMain` directly.
 
 ## Runtime dependencies
 
-`package.json`'s `dependencies` block is the main process's. Anything the main process `require`s statically belongs there and **not** in
-`devDependencies`: electron-packager prunes dev dependencies out of the packaged app.
-
-A package added to `dependencies` ships to users, and `scripts/generate-third-party-licenses.js` picks it up from that block on its own —
-attribution is not something to remember here. Its license still has to pass `npm run licenses:check` and the root `LLM.md`'s licensing
-rule. The reverse direction is the one that needs care: a package required only by a spec stays a `devDependency` (`expect`, used by
-`testing/base64-of.js`, is the example) and must never be moved into `dependencies` to make something resolve — that would ship a test
-library to users and put it in the license report.
-
-`node-llama-cpp` is the one entry there that is neither CommonJS nor pure JavaScript, and both halves of that cost something. It is
-ESM-only, so `main.js` reaches it through a dynamic `import()` — the only one in this directory. Its binding is a native addon delivered by
-a per-platform `@node-llama-cpp/*` optional dependency, next to the shared libraries the OS loader resolves beside it on a real filesystem,
-which an asar archive is not: `forge.config.js` unpacks that whole scope, and `scripts/generate-third-party-licenses.js`
-follows `optionalDependencies` so the binaries a release carries are attributed like everything else.
+- Anything the main process `require`s statically belongs in `dependencies`, never `devDependencies` — packaging prunes dev
+  dependencies out.
+- A package required only by a spec stays a `devDependency` and must never move to make something resolve — that ships a test
+  library to users.
+- The local-inference library is ESM-only and loaded via dynamic `import()`; its native addon ships as an unpacked,
+  per-platform optional dependency so the OS loader can resolve its shared libraries on a real filesystem.
 
 ## What of this directory ships
 
-`forge.config.js`'s `packagerConfig.ignore` is an **allowlist**: `package.json`, `electron/`, `dist/traquity/browser/` and
-`node_modules/` go into `app.asar`, and everything else in the package directory — the Angular sources, the build tooling, a second copy of
-`backend.jar` (it is already delivered as an `extraResource`) — does not. A file added anywhere else therefore ships only once someone says
-so, instead of shipping because nobody looked.
-
-Within `electron/`, three things are carved back out: `*.spec.js`, everything under `testing/`, and the `*.md` files. Test code in a
-shipped app cannot even load — its dependencies are pruned away with the other devDependencies — and its only remaining effect would be to
-suggest a test library is part of the product. Keep new spec-only helpers under `testing/` so they stay covered by that rule.
-
-Note that a function-valued `ignore` *replaces* electron-packager's built-in default patterns rather than extending them, which is why
-`node_modules/.bin` is excluded explicitly. Anything else worth keeping out of the package belongs in the same list.
-
-`forge.config.js` also flips a set of Electron **fuses** into the packaged binary, and they matter to everything in this directory: the
-binary otherwise accepts `ELECTRON_RUN_AS_NODE=1`, `NODE_OPTIONS=--require=…` and `--inspect`, each of which runs code in the main process
-without `main.js` ever being consulted — which is to say, past the preload boundary, the IPC schemas and the bounded java probe alike, all
-at once. `OnlyLoadAppFromAsar` belongs to the same list because Electron otherwise prefers an unpacked `app` directory next to `app.asar`.
-`GrantFileProtocolExtraPrivileges` is deliberately left on: this app's own document *is* a `file:` URL. A fuse is a property of the
-packaged binary, so none of this is observable from the suite — it is verifiable only on a packaged run.
+- Packaging uses an **allowlist**, not a denylist — only `package.json`, `electron/`, the built Angular output, and
+  `node_modules/` go into the packaged app.
+- Within `electron/`, specs, test-only helpers, and markdown files are carved back out — test code can't even load in a
+  packaged app (its deps are pruned) and would otherwise suggest a test library ships with the product.
+- Packaging also locks a set of Electron fuses — these block known ways to run arbitrary code in the main process
+  (`ELECTRON_RUN_AS_NODE`, `NODE_OPTIONS`, `--inspect`, loading an unpacked app next to the asar) that would otherwise bypass
+  the preload boundary, the IPC schemas, and the sandboxed Java probe entirely. None of this is observable from the test suite
+  — only from a packaged run.
 
 ## Testing
 
-Specs are `electron/**/*.spec.js`, plain CommonJS, run by `jest.electron.config.ts` via `npm run test:electron` — which type-checks the
-directory first, so a type error fails fast instead of surfacing as a confusing runtime failure. The suite needs nothing but `npm ci`: no
-Angular build, no generated API clients, no backend jar, no Java.
+Electron specs are plain CommonJS, run by a dedicated jest config that type-checks the directory first. The suite needs nothing
+but a clean install — no Angular build, no generated clients, no backend jar, no Java.
 
-The shared conventions from the parent `LLM.md`'s Testing section apply unchanged — explicit `@jest/globals` imports, `beforeEach`
-establishes the baseline, the first test in the file *is* the baseline case, every other test changes exactly one precondition in its own
-arrange step, shared alterations live in a nested `describe`'s own `beforeEach`, mocks over real dependencies, and every
-`toHaveBeenCalledWith(...)` paired with a `toHaveBeenCalledTimes(n)` and vice versa — or, for more than one call,
-`expect(fn.mock.calls).toEqual([...])` covering count, arguments and order in one literal, as
-`java/corretto-download.spec.js` does for the three `rmSync` calls a download makes. What is specific here:
+The parent `LLM.md`'s testing conventions apply unchanged. Specific to this directory:
 
-- `jest.electron.config.ts` sets `injectGlobals: false`, because jest's injected `jest` wrapper argument collides with the explicit
-  `const {jest} = require('@jest/globals')` in a CommonJS file. Import every jest symbol; there are no ambient globals to fall back on.
-- The same config sets `transform: {}`, and that changes how `jest.mock()` has to be written here: **nothing hoists it**. Babel-jest is
-  what normally lifts a `jest.mock(...)` call above the imports, and it does not run in this directory, so the call has to physically
-  precede the `require` of the module under test — otherwise that module has already captured the real collaborator and the mock silently
-  does nothing. `java/corretto-signature.spec.js` is the worked example.
-- The parent `LLM.md`'s custom-asymmetric-matcher convention applies here too, with `electron/testing/` standing in for `src/testing/` as
-  the shared location (there is no `src/` in this directory) — see `testing/base64-of.js` for the worked example: a class extending
-  `expect`'s `AsymmetricMatcher`, JSDoc-typed like everything else here, with its own `base64-of.spec.js`.
-- Specs are type-checked like everything else. Declare the mock functions standalone, assemble them into the declared dependency type, and
-  assert on the standalone bindings:
-
-  ```js
-  const existsSync = jest.fn(() => true);
-  const readFileSync = jest.fn(() => storedContents);
-  const writeFileSync = jest.fn();
-
-  /** @type {ConfigFileSystem} */
-  const fileSystem = {existsSync, readFileSync, writeFileSync};
-  ```
-
-  Reaching for `/** @type {any} */` on a stub means the stub and the real dependency have diverged — fix the stub.
-- A stub that stands in for something asynchronous must model *waiting*, not just resolving. A `delay` stub resolving immediately turns a
-  poll loop into a microtask spin that starves the event loop; return a promise that stays pending instead.
-- **The specs and the shipped app do not run on the same crypto.** `npm run test:electron` runs under plain Node, which statically links
-  its own OpenSSL; the packaged app runs under Electron, which builds Node against Chromium's BoringSSL instead (`process.versions.openssl`
-  reads `0.0.0` there — that is the tell). Both are bundled into the respective binary, identically on Windows, macOS and Linux, so this is
-  a *runtime* difference and never a platform one: no system `libssl` is ever involved.
-
-  Anything here touching `node:crypto` therefore carries a gap no spec can close. Code that relies on a rule enforced *inside* one of those
-  libraries must **degrade rather than throw** when the other one disagrees — `config/auth.js` is the worked example: its resource bounds
-  mirror scrypt's own parameter validation so a hand-edited record classifies as pending, and the derivation is additionally guarded so an
-  unanticipated rejection reads as "does not verify" instead of escaping into the startup path. To settle an actual disagreement, probe the
-  shipped runtime directly: `ELECTRON_RUN_AS_NODE=1 npx electron <script>` runs any script under Electron's own Node and crypto.
+- The jest config disables global injection — import every jest symbol explicitly; `jest.mock` colliding with an explicit
+  import otherwise breaks.
+- The same config disables the transform that normally hoists `jest.mock()` calls — write the mock call **before** the
+  `require` of the module under test, or the module has already captured the real collaborator.
+- The custom-asymmetric-matcher convention applies here too, with its own `testing/` folder standing in for the renderer's.
+- Declare mock functions standalone, assemble them into the declared dependency type, and assert on the standalone bindings —
+  a stub typed `any` means the stub and the real dependency have diverged; fix the stub instead.
+- A stub standing in for something asynchronous must model *waiting*, not just resolving immediately — an immediately-resolving
+  delay stub turns a poll loop into a microtask spin that starves the event loop.
+- **Specs and the shipped app run on different crypto backends** (plain Node's OpenSSL vs. Electron's bundled BoringSSL) — this
+  is a runtime difference, not a platform one. Code relying on a rule enforced *inside* one of those libraries must degrade
+  instead of throwing when the other disagrees. To settle an actual disagreement, probe the shipped runtime directly
+  (`ELECTRON_RUN_AS_NODE=1 npx electron <script>`).
