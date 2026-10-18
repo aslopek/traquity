@@ -1,12 +1,12 @@
-import {Pipe, PipeTransform} from "@angular/core";
-import {TqCurrencyPipe} from "../../../common/pipe/tq-currency.pipe";
-import {TqDecimalPipe} from "../../../common/pipe/tq-decimal.pipe";
-import {TqPercentPipe} from "../../../common/pipe/tq-percent.pipe";
-import {DepotPosition} from "../../../gen/api/depot-position";
-import {SecurityLogoUrlPipe} from "../../../common/pipe/security-logo-url.pipe";
-import {EChartsOption} from "echarts";
-import {positionPieChartGeometry} from "./position-pie-chart-geometry";
-import {chartToken} from "../../../common/chart/chart-token";
+import {Pipe, PipeTransform} from '@angular/core';
+import {TqCurrencyPipe} from '../../../common/pipe/tq-currency.pipe';
+import {TqDecimalPipe} from '../../../common/pipe/tq-decimal.pipe';
+import {TqPercentPipe} from '../../../common/pipe/tq-percent.pipe';
+import {DepotPosition} from '../../../gen/api/depot-position';
+import {SecurityLogoUrlPipe} from '../../../common/pipe/security-logo-url.pipe';
+import {EChartsOption} from 'echarts';
+import {positionPieChartGeometry} from './position-pie-chart-geometry';
+import {chartToken} from '../../../common/chart/chart-token';
 
 @Pipe({
   name: 'positionPieChart',

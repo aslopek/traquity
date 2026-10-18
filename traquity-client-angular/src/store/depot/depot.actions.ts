@@ -1,13 +1,13 @@
 import {createActionGroup, emptyProps, props} from '@ngrx/store';
-import {DepotState, DividendView, PositionView} from "./depot.state";
-import {DepotCreate, DepotRead} from "../../gen/api/depot";
-import {DepotTab} from "./depot-tabs";
-import {DepotConfigKey} from "./depot-config-keys";
-import {Dividends} from "../../gen/api/depot-dividend";
-import {DepotComposition} from "../../gen/api/depot-position";
-import {Timespan} from "../../common/types/timespan";
-import {DepotPerformance, Performance} from "../../gen/api/depot-performance";
-import {PositionGroupBy} from "./position-grouping/position-group.type";
+import {DepotState, DividendView, PositionView} from './depot.state';
+import {DepotCreate, DepotRead} from '../../gen/api/depot';
+import {DepotTab} from './depot-tabs';
+import {DepotConfigKey} from './depot-config-keys';
+import {Dividends} from '../../gen/api/depot-dividend';
+import {DepotComposition} from '../../gen/api/depot-position';
+import {Timespan} from '../../common/types/timespan';
+import {DepotPerformance, Performance} from '../../gen/api/depot-performance';
+import {PositionGroupBy} from './position-grouping/position-group.type';
 
 export type AddDepotActionArgs = {
   depot: DepotCreate

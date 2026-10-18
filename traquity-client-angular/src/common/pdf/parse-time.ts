@@ -1,4 +1,4 @@
-import {undecorated} from "./undecorated";
+import {undecorated} from './undecorated';
 
 const TIME: RegExp = /^(\d{1,2}):(\d{2})(?::(\d{2}))?(?:[:.,]\d+)?(?:\s*([AaPp])\.?[Mm]\.?)?$/;
 
@@ -27,7 +27,7 @@ export function parseTime(text: string): string | null {
     return null;
   }
 
-  return `${String(hours).padStart(2, "0")}:${printedMinutes}:${printedSeconds ?? "00"}`;
+  return `${String(hours).padStart(2, '0')}:${printedMinutes}:${printedSeconds ?? '00'}`;
 }
 
 /**
@@ -42,7 +42,7 @@ function hoursOn24HourClock(hours: number, meridiem: string | undefined): number
   if (hours < 1 || hours > 12) {
     return null;
   }
-  if (meridiem.toUpperCase() === "P") {
+  if (meridiem.toUpperCase() === 'P') {
     return hours === 12 ? 12 : hours + 12;
   }
   return hours === 12 ? 0 : hours;

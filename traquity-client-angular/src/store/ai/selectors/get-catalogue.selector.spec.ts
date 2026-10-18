@@ -1,7 +1,7 @@
 import {beforeEach, describe, expect, it} from '@jest/globals';
 import {AiState} from '../ai.state';
 import {CatalogueEntryViewModel, getCatalogueSelector} from './get-catalogue.selector';
-import {initialState} from "../ai.reducer";
+import {initialState} from '../ai.reducer';
 
 describe('getCatalogueSelector', (): void => {
   let state: AiState;
@@ -78,12 +78,12 @@ describe('getCatalogueSelector', (): void => {
 
       expect(otherNotInstalled).toEqual([
         {
-          description: "Model C",
+          description: 'Model C',
           downloading: false,
           error: null,
           installed: false,
-          key: "model-c",
-          license: "MIT",
+          key: 'model-c',
+          license: 'MIT',
           removalFailed: false,
           requiredVram: 3_000_000_000,
           showDownloadButton: false,

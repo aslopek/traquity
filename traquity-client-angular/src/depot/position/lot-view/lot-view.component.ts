@@ -1,22 +1,22 @@
-import {Component, DestroyRef, inject, input, InputSignal, Signal,} from "@angular/core";
-import {MatIconModule} from "@angular/material/icon";
-import {MatTooltipModule} from "@angular/material/tooltip";
-import {PositionDialogStore, ReadablePositionDialogStore} from "../position-dialog/store/position-dialog.store";
-import {Store} from "@ngrx/store";
-import {AppState} from "../../../store/app.state";
-import {combineLatest, Observable} from "rxjs";
-import {takeUntilDestroyed, toObservable} from "@angular/core/rxjs-interop";
-import {PerformanceLabelComponent} from "../../../common/components/performance-label/performance-label.component";
-import {SecurityNamePipe} from "../../../common/pipe/security-name.pipe";
-import {TqCurrencyPipe} from "../../../common/pipe/tq-currency.pipe";
-import {TqDatePipe} from "../../../common/pipe/tq-date.pipe";
-import {TqDecimalPipe} from "../../../common/pipe/tq-decimal.pipe";
-import {TqPercentPipe} from "../../../common/pipe/tq-percent.pipe";
-import {hideAbsoluteValues} from "../../../store/app-config/app-config.selector";
-import {LotSoldHeightPipe} from "./lot-sold-height.pipe";
+import {Component, DestroyRef, inject, input, InputSignal, Signal,} from '@angular/core';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {PositionDialogStore, ReadablePositionDialogStore} from '../position-dialog/store/position-dialog.store';
+import {Store} from '@ngrx/store';
+import {AppState} from '../../../store/app.state';
+import {combineLatest, Observable} from 'rxjs';
+import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
+import {PerformanceLabelComponent} from '../../../common/components/performance-label/performance-label.component';
+import {SecurityNamePipe} from '../../../common/pipe/security-name.pipe';
+import {TqCurrencyPipe} from '../../../common/pipe/tq-currency.pipe';
+import {TqDatePipe} from '../../../common/pipe/tq-date.pipe';
+import {TqDecimalPipe} from '../../../common/pipe/tq-decimal.pipe';
+import {TqPercentPipe} from '../../../common/pipe/tq-percent.pipe';
+import {hideAbsoluteValues} from '../../../store/app-config/app-config.selector';
+import {LotSoldHeightPipe} from './lot-sold-height.pipe';
 
 @Component({
-  selector: "app-lot-view",
+  selector: 'app-lot-view',
   imports: [
     MatIconModule,
     MatTooltipModule,
@@ -28,8 +28,8 @@ import {LotSoldHeightPipe} from "./lot-sold-height.pipe";
     TqPercentPipe,
     LotSoldHeightPipe,
   ],
-  templateUrl: "./lot-view.component.html",
-  styleUrl: "./lot-view.component.scss",
+  templateUrl: './lot-view.component.html',
+  styleUrl: './lot-view.component.scss',
 })
 export class LotViewComponent {
   readonly depotIds: InputSignal<number[]> = input.required();

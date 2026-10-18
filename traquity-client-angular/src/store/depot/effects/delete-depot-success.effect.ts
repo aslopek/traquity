@@ -1,8 +1,8 @@
-import {Actions, ofType} from "@ngrx/effects";
-import {map, Observable} from "rxjs";
-import {Action} from "@ngrx/store";
-import {DepotActions} from "../depot.actions";
-import {selectedDepotIds} from "../depot-config-keys";
+import {Actions, ofType} from '@ngrx/effects';
+import {map, Observable} from 'rxjs';
+import {Action} from '@ngrx/store';
+import {DepotActions} from '../depot.actions';
+import {selectedDepotIds} from '../depot-config-keys';
 
 export type DeleteDepotSuccessEffectArgs = {
   actions$: Actions

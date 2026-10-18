@@ -1,6 +1,6 @@
-import {patchState} from "@ngrx/signals";
-import {WritableSignalStore} from "../../../../../common/types/signal-store.type";
-import {ConfigureStoreState} from "../../configure.store";
+import {patchState} from '@ngrx/signals';
+import {WritableSignalStore} from '../../../../../common/types/signal-store.type';
+import {ConfigureStoreState} from '../../configure.store';
 
 /**
  * Adopts a file that already exists. No password is defined for it: an existing file's password can only be proven,

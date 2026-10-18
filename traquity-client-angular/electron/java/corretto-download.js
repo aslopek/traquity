@@ -127,7 +127,7 @@ const RETRY_DELAY_MILLIS = 200;
 /**
  * Every removal here is issued with these. A removal is refused for as long as another process holds a handle
  * anywhere in the tree - a scanner or an indexer working through the few hundred megabytes that just appeared - and
- * is reported as `EPERM` or `ENOTEMPTY` rather than as anything resembling "try again", so the retries are what turn
+ * is reported as `EPERM` or `ENOTEMPTY` rather than as anything resembling 'try again', so the retries are what turn
  * the short-lived case of that into a wait instead of a failed download. One held for longer than the retries last
  * still fails, and then says so in the message.
  *

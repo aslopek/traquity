@@ -1,6 +1,6 @@
 import {createActionGroup, emptyProps, props} from '@ngrx/store';
 import {DividendAnnouncementDataSourceRead, DividendAnnouncementRead} from '../../gen/api/notification/dividend-announcement';
-import {SingleUrlDataSource} from "../../settings/data-source/data-source.type";
+import {SingleUrlDataSource} from '../../settings/data-source/data-source.type';
 
 export type SetDividendAnnouncementDataSourceActionArgs = {
   dataSource: SingleUrlDataSource

@@ -1,22 +1,22 @@
-import {Component, computed, Signal,} from "@angular/core";
-import {MatButtonModule} from "@angular/material/button";
-import {MatDialog} from "@angular/material/dialog";
-import {MatIconModule} from "@angular/material/icon";
-import {MatSelectModule} from "@angular/material/select";
-import {MatTooltipModule} from "@angular/material/tooltip";
-import {TqCurrencySymbolPipe} from "../../common/pipe/tq-currency-symbol.pipe";
-import {DepotRead} from "../../gen/api/depot";
-import {DepotCreateComponent} from "../depot-create/depot-create.component";
-import {DepotDeleteComponent} from "../depot-delete/depot-delete.component";
-import {Store} from "@ngrx/store";
-import {AppState} from "../../store/app.state";
-import {depots, depotsByCurrency, isMultipleSelectionAllowed, selectedDepotIds, selectedDepots,} from "../../store/depot/depot.selector";
-import {DepotsByCurrency} from "../../store/depot/selectors/get-all-depots-by-currency.selector";
-import {DepotActions} from "../../store/depot/depot.actions";
-import {DepotLogoUrlPipe} from "../../common/pipe/depot-logo-url.pipe";
+import {Component, computed, Signal,} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatDialog} from '@angular/material/dialog';
+import {MatIconModule} from '@angular/material/icon';
+import {MatSelectModule} from '@angular/material/select';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TqCurrencySymbolPipe} from '../../common/pipe/tq-currency-symbol.pipe';
+import {DepotRead} from '../../gen/api/depot';
+import {DepotCreateComponent} from '../depot-create/depot-create.component';
+import {DepotDeleteComponent} from '../depot-delete/depot-delete.component';
+import {Store} from '@ngrx/store';
+import {AppState} from '../../store/app.state';
+import {depots, depotsByCurrency, isMultipleSelectionAllowed, selectedDepotIds, selectedDepots,} from '../../store/depot/depot.selector';
+import {DepotsByCurrency} from '../../store/depot/selectors/get-all-depots-by-currency.selector';
+import {DepotActions} from '../../store/depot/depot.actions';
+import {DepotLogoUrlPipe} from '../../common/pipe/depot-logo-url.pipe';
 
 @Component({
-  selector: "app-depot-select",
+  selector: 'app-depot-select',
   imports: [
     MatSelectModule,
     MatButtonModule,
@@ -25,8 +25,8 @@ import {DepotLogoUrlPipe} from "../../common/pipe/depot-logo-url.pipe";
     TqCurrencySymbolPipe,
     DepotLogoUrlPipe,
   ],
-  templateUrl: "./depot-select.component.html",
-  styleUrls: ["./depot-select.component.scss"],
+  templateUrl: './depot-select.component.html',
+  styleUrls: ['./depot-select.component.scss'],
 })
 export class DepotSelectComponent {
   protected readonly multipleSelectionAllowed: Signal<boolean>;
@@ -65,11 +65,11 @@ export class DepotSelectComponent {
 
   protected createDepot(): void {
     this.dialog.open(DepotCreateComponent, {
-      height: "20%",
-      width: "25%",
-      minHeight: "25rem",
-      minWidth: "25rem",
-      panelClass: "mat-app-background",
+      height: '20%',
+      width: '25%',
+      minHeight: '25rem',
+      minWidth: '25rem',
+      panelClass: 'mat-app-background',
       autoFocus: false,
       disableClose: true,
     });
@@ -82,11 +82,11 @@ export class DepotSelectComponent {
     }
 
     this.dialog.open(DepotDeleteComponent, {
-      height: "20%",
-      width: "25%",
-      minHeight: "20em",
-      minWidth: "25em",
-      panelClass: "mat-app-background",
+      height: '20%',
+      width: '25%',
+      minHeight: '20em',
+      minWidth: '25em',
+      panelClass: 'mat-app-background',
       autoFocus: false,
       disableClose: true,
       data: {

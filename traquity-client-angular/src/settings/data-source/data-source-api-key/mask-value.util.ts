@@ -1,4 +1,4 @@
-import {AnyDataSource, MultiUrlDataSource, RequestHeader, SingleUrlDataSource, UrlPattern} from "../data-source.type";
+import {AnyDataSource, MultiUrlDataSource, RequestHeader, SingleUrlDataSource, UrlPattern} from '../data-source.type';
 
 /**
  * Matches `#mask(...)` with an argument that may contain one level of nested parentheses. The alternation consumes a single character per

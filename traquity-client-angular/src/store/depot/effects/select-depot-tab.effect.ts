@@ -1,14 +1,14 @@
-import {Actions, ofType} from "@ngrx/effects";
-import {ConfigApi} from "../../../gen/api/configuration";
-import {Action, Store} from "@ngrx/store";
-import {AppState} from "../../app.state";
-import {DepotActions} from "../depot.actions";
-import {concatLatestFrom} from "@ngrx/operators";
-import {selectedTab} from "../depot.selector";
-import {catchError, map, Observable, of, switchMap} from "rxjs";
-import {clientId} from "../../client-id";
-import {selectedTabIndex} from "../depot-config-keys";
-import {DepotTab} from "../depot-tabs";
+import {Actions, ofType} from '@ngrx/effects';
+import {ConfigApi} from '../../../gen/api/configuration';
+import {Action, Store} from '@ngrx/store';
+import {AppState} from '../../app.state';
+import {DepotActions} from '../depot.actions';
+import {concatLatestFrom} from '@ngrx/operators';
+import {selectedTab} from '../depot.selector';
+import {catchError, map, Observable, of, switchMap} from 'rxjs';
+import {clientId} from '../../client-id';
+import {selectedTabIndex} from '../depot-config-keys';
+import {DepotTab} from '../depot-tabs';
 
 export type SelectDepotTabEffectArgs = {
   actions$: Actions

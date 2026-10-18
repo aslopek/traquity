@@ -1,34 +1,34 @@
-import {inject, Injectable} from "@angular/core";
-import {Actions, createEffect} from "@ngrx/effects";
-import {DepotApi} from "../../gen/api/depot";
-import {initializeDepotsSlice, InitializeDepotsSliceEffectArgs} from "./effects/initialize-depot-slice.effect";
-import {ConfigApi} from "../../gen/api/configuration";
-import {synchronizeDepotConfig, SynchronizeDepotConfigEffectArgs} from "./effects/synchronize-depot-config.effect";
-import {Store} from "@ngrx/store";
-import {AppState} from "../app.state";
-import {deleteDepot, DeleteDepotEffectArgs} from "./effects/delete-depot.effect";
-import {addDepot, AddDepotEffectArgs} from "./effects/add-depot.effect";
-import {selectDepotTab, SelectDepotTabEffectArgs} from "./effects/select-depot-tab.effect";
-import {ChangeDepotSelectionEffectArgs, toggleDepotSelection} from "./effects/toggle-depot-selection.effect";
-import {addDepotSuccess, AddDepotSuccessEffectArgs} from "./effects/add-depot-success.effect";
-import {deleteDepotSuccess, DeleteDepotSuccessEffectArgs} from "./effects/delete-depot-success.effect";
-import {DividendApi} from "../../gen/api/depot-dividend";
-import {loadDividendsPositions, LoadDividendsPositionsEffectArgs} from "./effects/load-dividends-positions.effect";
-import {DepotPositionApi} from "../../gen/api/depot-position";
-import {IncludeSpecialDividendsEffectArgs, setIncludeSpecialDividends} from "./effects/dividend/set-include-special-dividends.effect";
-import {setUseDividendGrossValues, UseDividendGrossValuesEffectArgs} from "./effects/dividend/set-use-dividend-gross-values.effect";
-import {loadDividends, LoadDividendsEffectArgs} from "./effects/dividend/load-dividends.effect";
+import {inject, Injectable} from '@angular/core';
+import {Actions, createEffect} from '@ngrx/effects';
+import {DepotApi} from '../../gen/api/depot';
+import {initializeDepotsSlice, InitializeDepotsSliceEffectArgs} from './effects/initialize-depot-slice.effect';
+import {ConfigApi} from '../../gen/api/configuration';
+import {synchronizeDepotConfig, SynchronizeDepotConfigEffectArgs} from './effects/synchronize-depot-config.effect';
+import {Store} from '@ngrx/store';
+import {AppState} from '../app.state';
+import {deleteDepot, DeleteDepotEffectArgs} from './effects/delete-depot.effect';
+import {addDepot, AddDepotEffectArgs} from './effects/add-depot.effect';
+import {selectDepotTab, SelectDepotTabEffectArgs} from './effects/select-depot-tab.effect';
+import {ChangeDepotSelectionEffectArgs, toggleDepotSelection} from './effects/toggle-depot-selection.effect';
+import {addDepotSuccess, AddDepotSuccessEffectArgs} from './effects/add-depot-success.effect';
+import {deleteDepotSuccess, DeleteDepotSuccessEffectArgs} from './effects/delete-depot-success.effect';
+import {DividendApi} from '../../gen/api/depot-dividend';
+import {loadDividendsPositions, LoadDividendsPositionsEffectArgs} from './effects/load-dividends-positions.effect';
+import {DepotPositionApi} from '../../gen/api/depot-position';
+import {IncludeSpecialDividendsEffectArgs, setIncludeSpecialDividends} from './effects/dividend/set-include-special-dividends.effect';
+import {setUseDividendGrossValues, UseDividendGrossValuesEffectArgs} from './effects/dividend/set-use-dividend-gross-values.effect';
+import {loadDividends, LoadDividendsEffectArgs} from './effects/dividend/load-dividends.effect';
 import {
   DividendAggregationTimespanEffectArgs,
   setDividendAggregationTimespan
-} from "./effects/dividend/set-dividend-aggregation-timespan.effect";
-import {setSelectedDividendView, SetSelectedDividendViewEffectArgs} from "./effects/dividend/set-selected-dividend-view.effect";
-import {setSelectedPositionView, SetSelectedPositionViewEffectArgs} from "./effects/position/set-selected-position-view.effect";
-import {setUsePositionBuyInValues, SetUsePositionBuyInValuesEffectArgs} from "./effects/position/set-use-position-buy-in-values.effect";
-import {setPositionGroupBy, SetPositionGroupByEffectArgs} from "./effects/position/set-position-group-by.effect";
-import {DepotPerformanceApi, DepotPerformanceIncomeApi} from "../../gen/api/depot-performance";
-import {loadPerformance, LoadPerformanceEffectArgs} from "./effects/performance/load-performance.effect";
-import {reloadDepotsOn, ReloadDepotsOnEffectArgs} from "./effects/reload-depots-on.effect";
+} from './effects/dividend/set-dividend-aggregation-timespan.effect';
+import {setSelectedDividendView, SetSelectedDividendViewEffectArgs} from './effects/dividend/set-selected-dividend-view.effect';
+import {setSelectedPositionView, SetSelectedPositionViewEffectArgs} from './effects/position/set-selected-position-view.effect';
+import {setUsePositionBuyInValues, SetUsePositionBuyInValuesEffectArgs} from './effects/position/set-use-position-buy-in-values.effect';
+import {setPositionGroupBy, SetPositionGroupByEffectArgs} from './effects/position/set-position-group-by.effect';
+import {DepotPerformanceApi, DepotPerformanceIncomeApi} from '../../gen/api/depot-performance';
+import {loadPerformance, LoadPerformanceEffectArgs} from './effects/performance/load-performance.effect';
+import {reloadDepotsOn, ReloadDepotsOnEffectArgs} from './effects/reload-depots-on.effect';
 
 @Injectable()
 export class DepotEffects {

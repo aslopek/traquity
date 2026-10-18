@@ -1,6 +1,6 @@
-import {ReadableSignalStore} from "../../../../common/types/signal-store.type";
-import {ReadableStartupStore} from "../../../startup/store/startup.store";
-import {UnlockComputed, UnlockState} from "../unlock.store";
+import {ReadableSignalStore} from '../../../../common/types/signal-store.type';
+import {ReadableStartupStore} from '../../../startup/store/startup.store';
+import {UnlockComputed, UnlockState} from '../unlock.store';
 
 /**
  * The single guarded entry point for starting the backend: while `canSubmit` is false this does nothing at all.

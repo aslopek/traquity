@@ -6,7 +6,7 @@ const {MAXIMUM_SIGNATURE_LENGTH} = require('../security/signature-bounds.js');
  * single definition of every shape read from that file: zod validates at runtime and the static types are inferred
  * from the very same schemas, so a parsed shape can never drift from the code that describes it.
  *
- * The semantic checks do not live here - zod answers "is this shaped like a scrypt record", while the resource bounds
+ * The semantic checks do not live here - zod answers 'is this shaped like a scrypt record', while the resource bounds
  * that keep `scryptSync` from becoming a memory or CPU bomb belong next to the call they protect (see `auth.js`).
  */
 

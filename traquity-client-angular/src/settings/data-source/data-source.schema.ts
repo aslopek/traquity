@@ -1,4 +1,4 @@
-import {z} from "zod";
+import {z} from 'zod';
 
 /**
  * The schemas for a data source configuration file, mirroring `HistoricalSecurityPriceDataSourceCreate` of
@@ -62,7 +62,7 @@ export const historicalSecurityPriceDataSourceSchema = z.strictObject({
   ...dataSourceShape,
   ...storedDataSourceShape,
   urlPatterns: z.array(urlPatternSchema).min(1),
-  // the API requires the array, so an absent one is read as "this data source declares no market close time" rather
+  // the API requires the array, so an absent one is read as 'this data source declares no market close time' rather
   // than as a reason to reject the file
   marketCloseTimes: z.array(zonedTimeSchema).default([])
 }).transform(({id, version, ...dataSource}) => dataSource);

@@ -1,10 +1,10 @@
-import {computed, Signal} from "@angular/core";
-import {ReadableSignalStore} from "../../../../common/types/signal-store.type";
-import {ReadableStartupStore} from "../../../startup/store/startup.store";
-import {ConfigureStoreState} from "../configure.store";
+import {computed, Signal} from '@angular/core';
+import {ReadableSignalStore} from '../../../../common/types/signal-store.type';
+import {ReadableStartupStore} from '../../../startup/store/startup.store';
+import {ConfigureStoreState} from '../configure.store';
 
 /**
- * "Discard & start" continues the startup with the config as it was, so it needs a config that was there and that
+ * 'Discard & start' continues the startup with the config as it was, so it needs a config that was there and that
  * named a database:
  *
  * - a missing file is a true first run - there is nothing to continue with, and finishing the setup is the only way

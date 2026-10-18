@@ -1,5 +1,5 @@
-import {DepotState} from "../depot.state";
-import {DepotRead} from "../../../gen/api/depot";
+import {DepotState} from '../depot.state';
+import {DepotRead} from '../../../gen/api/depot';
 
 export type GetAllDepotsByCurrencyState = Pick<DepotState, 'depots'>;
 export type DepotsByCurrency = { [currency: string]: DepotRead[] };

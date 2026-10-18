@@ -1,6 +1,6 @@
-import {Inject, Injectable} from "@angular/core";
-import {defer, from, Observable} from "rxjs";
-import {BRIDGE_HOST, BridgeHost} from "./bridge-host.token";
+import {Inject, Injectable} from '@angular/core';
+import {defer, from, Observable} from 'rxjs';
+import {BRIDGE_HOST, BridgeHost} from './bridge-host.token';
 import {
   AppliedConfiguration,
   BackendStartOutcome,
@@ -13,14 +13,14 @@ import {
   PickedDatabase,
   StartupState,
   TraQuityStartupBridge
-} from "./startup-bridge.type";
+} from './startup-bridge.type';
 
 /**
  * Wraps the startup/configuration channels of the `window.traquity` `contextBridge` surface `preload.js` exposes as
  * observables. A further channel on that same global is added here as another wrapper, never by reaching into
  * `window.traquity` from somewhere else; a channel on a different global belongs to that global's own bridge service.
  */
-@Injectable({providedIn: "root"})
+@Injectable({providedIn: 'root'})
 export class StartupBridgeService {
 
   private readonly bridge: TraQuityStartupBridge | null;
@@ -102,7 +102,7 @@ export class StartupBridgeService {
 
   private requireBridge(): TraQuityStartupBridge {
     if (this.bridge == null) {
-      throw new Error("The traquity bridge is not available");
+      throw new Error('The traquity bridge is not available');
     }
     return this.bridge;
   }

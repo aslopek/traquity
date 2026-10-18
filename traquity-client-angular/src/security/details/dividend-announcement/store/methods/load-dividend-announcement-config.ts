@@ -1,15 +1,15 @@
-import {WritableSignalStore} from "../../../../../common/types/signal-store.type";
-import {DividendAnnouncementConfigState} from "../dividend-announcement-config-store";
+import {WritableSignalStore} from '../../../../../common/types/signal-store.type';
+import {DividendAnnouncementConfigState} from '../dividend-announcement-config-store';
 import {
   DividendAnnouncementConfigApi,
   DividendAnnouncementConfigRead,
   DividendAnnouncementDataSourceRead
-} from "../../../../../gen/api/notification/dividend-announcement";
-import {catchError, of, take} from "rxjs";
-import {patchState} from "@ngrx/signals";
-import {Store} from "@ngrx/store";
-import {AppState} from "../../../../../store/app.state";
-import {getAllDataSources} from "../../../../../store/dividend-announcement/dividend-announcement.selector";
+} from '../../../../../gen/api/notification/dividend-announcement';
+import {catchError, of, take} from 'rxjs';
+import {patchState} from '@ngrx/signals';
+import {Store} from '@ngrx/store';
+import {AppState} from '../../../../../store/app.state';
+import {getAllDataSources} from '../../../../../store/dividend-announcement/dividend-announcement.selector';
 
 export function loadDividendAnnouncementConfig(signalStore: WritableSignalStore<DividendAnnouncementConfigState>,
                                                globalStore: Store<AppState>,

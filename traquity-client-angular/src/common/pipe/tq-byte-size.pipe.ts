@@ -1,10 +1,10 @@
-import {Pipe, PipeTransform} from "@angular/core";
-import {TqDecimalPipe} from "./tq-decimal.pipe";
+import {Pipe, PipeTransform} from '@angular/core';
+import {TqDecimalPipe} from './tq-decimal.pipe';
 
 const bytesPerMebibyte: number = 2 ** 20;
 const bytesPerGibibyte: number = 2 ** 30;
 
-@Pipe({name: "tqByteSize", standalone: true})
+@Pipe({name: 'tqByteSize', standalone: true})
 export class TqByteSizePipe implements PipeTransform {
 
   constructor(private readonly tqDecimalPipe: TqDecimalPipe) {

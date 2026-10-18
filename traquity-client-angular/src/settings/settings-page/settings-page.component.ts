@@ -1,21 +1,21 @@
-import {Component, inject, Signal} from "@angular/core";
-import {MatAccordion, MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle,} from "@angular/material/expansion";
-import {MatIcon} from "@angular/material/icon";
-import {AppearanceComponent} from "../appearance/appearance.component";
-import {Store} from "@ngrx/store";
-import {DataSourceWithId} from "../data-source/data-source.type";
-import {AppState} from "../../store/app.state";
-import {getHistoricalSecurityPriceDataSources} from "../../store/security/security.selector";
-import {getDividendAnnouncementDataSources} from "../../store/dividend-announcement/dividend-announcement.selector";
-import {DataSourcePageComponent} from "../data-source/data-source-page/data-source-page.component";
-import {SecurityGroupPageComponent} from "../security-group/security-group-page/security-group-page.component";
-import {RestartConfigureComponent} from "../restart-configure/restart-configure.component";
-import {StartupBridgeService} from "../../bridge/startup-bridge.service";
-import {AiIconComponent} from "../../common/components/ai-icon/ai-icon.component";
-import {AiPageComponent} from "../ai/ai-page/ai-page.component";
+import {Component, inject, Signal} from '@angular/core';
+import {MatAccordion, MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle,} from '@angular/material/expansion';
+import {MatIcon} from '@angular/material/icon';
+import {AppearanceComponent} from '../appearance/appearance.component';
+import {Store} from '@ngrx/store';
+import {DataSourceWithId} from '../data-source/data-source.type';
+import {AppState} from '../../store/app.state';
+import {getHistoricalSecurityPriceDataSources} from '../../store/security/security.selector';
+import {getDividendAnnouncementDataSources} from '../../store/dividend-announcement/dividend-announcement.selector';
+import {DataSourcePageComponent} from '../data-source/data-source-page/data-source-page.component';
+import {SecurityGroupPageComponent} from '../security-group/security-group-page/security-group-page.component';
+import {RestartConfigureComponent} from '../restart-configure/restart-configure.component';
+import {StartupBridgeService} from '../../bridge/startup-bridge.service';
+import {AiIconComponent} from '../../common/components/ai-icon/ai-icon.component';
+import {AiPageComponent} from '../ai/ai-page/ai-page.component';
 
 @Component({
-  selector: "app-settings-page",
+  selector: 'app-settings-page',
   imports: [
     AiPageComponent,
     AppearanceComponent,
@@ -29,8 +29,8 @@ import {AiPageComponent} from "../ai/ai-page/ai-page.component";
     RestartConfigureComponent,
     AiIconComponent,
   ],
-  templateUrl: "settings-page.component.html",
-  styleUrls: ["settings-page.component.scss"],
+  templateUrl: 'settings-page.component.html',
+  styleUrls: ['settings-page.component.scss'],
 })
 export class SettingsPageComponent {
 

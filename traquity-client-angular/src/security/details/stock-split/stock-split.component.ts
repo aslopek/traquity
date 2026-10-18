@@ -1,17 +1,17 @@
-import {Component, DestroyRef, effect, inject, input, InputSignal, signal, WritableSignal,} from "@angular/core";
-import {FormsModule, ReactiveFormsModule} from "@angular/forms";
-import {MatButtonModule} from "@angular/material/button";
-import {MatSlideToggleModule} from "@angular/material/slide-toggle";
-import {MatDatepickerModule} from "@angular/material/datepicker";
-import {MatInputModule} from "@angular/material/input";
-import {TqDatePipe} from "../../../common/pipe/tq-date.pipe";
-import {TqDecimalPipe} from "../../../common/pipe/tq-decimal.pipe";
-import {ReadableStockSplitStore, StockSplitParams, stockSplitStore,} from "./store/stock-split.store";
-import {takeUntilDestroyed, toObservable} from "@angular/core/rxjs-interop";
-import {FieldTree, form, FormField} from "@angular/forms/signals";
+import {Component, DestroyRef, effect, inject, input, InputSignal, signal, WritableSignal,} from '@angular/core';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import {MatDatepickerModule} from '@angular/material/datepicker';
+import {MatInputModule} from '@angular/material/input';
+import {TqDatePipe} from '../../../common/pipe/tq-date.pipe';
+import {TqDecimalPipe} from '../../../common/pipe/tq-decimal.pipe';
+import {ReadableStockSplitStore, StockSplitParams, stockSplitStore,} from './store/stock-split.store';
+import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
+import {FieldTree, form, FormField} from '@angular/forms/signals';
 
 @Component({
-  selector: "app-stock-split",
+  selector: 'app-stock-split',
   imports: [
     FormsModule,
     TqDatePipe,
@@ -24,8 +24,8 @@ import {FieldTree, form, FormField} from "@angular/forms/signals";
     FormField,
   ],
   providers: [stockSplitStore],
-  templateUrl: "./stock-split.component.html",
-  styleUrl: "./stock-split.component.scss",
+  templateUrl: './stock-split.component.html',
+  styleUrl: './stock-split.component.scss',
 })
 export class StockSplitComponent {
   readonly securityId: InputSignal<number> = input.required<number>();

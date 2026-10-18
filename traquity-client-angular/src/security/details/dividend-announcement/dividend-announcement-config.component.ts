@@ -1,20 +1,20 @@
-import {Component, DestroyRef, effect, inject, input, InputSignal, output, OutputEmitterRef, signal, Signal, WritableSignal,} from "@angular/core";
-import {Store} from "@ngrx/store";
-import {AppState} from "../../../store/app.state";
-import {getAllDataSources} from "../../../store/dividend-announcement/dividend-announcement.selector";
-import {DividendAnnouncementDataSourceRead} from "../../../gen/api/notification/dividend-announcement";
+import {Component, DestroyRef, effect, inject, input, InputSignal, output, OutputEmitterRef, signal, Signal, WritableSignal,} from '@angular/core';
+import {Store} from '@ngrx/store';
+import {AppState} from '../../../store/app.state';
+import {getAllDataSources} from '../../../store/dividend-announcement/dividend-announcement.selector';
+import {DividendAnnouncementDataSourceRead} from '../../../gen/api/notification/dividend-announcement';
 import {
   DividendAnnouncementConfigParams,
   readableDividendAnnouncementConfigStore,
   ReadableDividendAnnouncementConfigStore,
-} from "./store/dividend-announcement-config-store";
-import {takeUntilDestroyed, toObservable} from "@angular/core/rxjs-interop";
-import {disabled, FieldTree, form, FormField, SchemaPathTree,} from "@angular/forms/signals";
-import {MatFormField, MatInput, MatLabel} from "@angular/material/input";
-import {MatOption, MatSelect} from "@angular/material/select";
-import {MatSlideToggle} from "@angular/material/slide-toggle";
-import {MatIcon} from "@angular/material/icon";
-import {skip, tap} from "rxjs";
+} from './store/dividend-announcement-config-store';
+import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
+import {disabled, FieldTree, form, FormField, SchemaPathTree,} from '@angular/forms/signals';
+import {MatFormField, MatInput, MatLabel} from '@angular/material/input';
+import {MatOption, MatSelect} from '@angular/material/select';
+import {MatSlideToggle} from '@angular/material/slide-toggle';
+import {MatIcon} from '@angular/material/icon';
+import {skip, tap} from 'rxjs';
 
 export type DividendAnnouncementConfigChangedEvent =
   DividendAnnouncementConfigParams & {
@@ -22,7 +22,7 @@ export type DividendAnnouncementConfigChangedEvent =
 };
 
 @Component({
-  selector: "app-dividend-announcement-config",
+  selector: 'app-dividend-announcement-config',
   imports: [
     MatFormField,
     MatLabel,
@@ -34,8 +34,8 @@ export type DividendAnnouncementConfigChangedEvent =
     MatIcon,
   ],
   providers: [readableDividendAnnouncementConfigStore],
-  templateUrl: "./dividend-announcement-config.component.html",
-  styleUrl: "./dividend-announcement-config.component.scss",
+  templateUrl: './dividend-announcement-config.component.html',
+  styleUrl: './dividend-announcement-config.component.scss',
 })
 export class DividendAnnouncementConfigComponent {
   readonly securityId: InputSignal<number | undefined> = input<number>();

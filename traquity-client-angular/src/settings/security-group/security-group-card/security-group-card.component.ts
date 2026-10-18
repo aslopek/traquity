@@ -1,17 +1,17 @@
-import {Component, computed, EventEmitter, inject, input, InputSignal, Output, Signal} from "@angular/core";
-import {SecurityGroupRead} from "../../../gen/api/configuration-security-group";
-import {MatIcon} from "@angular/material/icon";
-import {ReadableSecurityGroupStore, SecurityGroupStore} from "../store/security-group.store";
-import {SecurityLogoComponent} from "../../../common/components/security-logo/security-logo.component";
+import {Component, computed, EventEmitter, inject, input, InputSignal, Output, Signal} from '@angular/core';
+import {SecurityGroupRead} from '../../../gen/api/configuration-security-group';
+import {MatIcon} from '@angular/material/icon';
+import {ReadableSecurityGroupStore, SecurityGroupStore} from '../store/security-group.store';
+import {SecurityLogoComponent} from '../../../common/components/security-logo/security-logo.component';
 
 @Component({
-  selector: "app-security-group-card",
+  selector: 'app-security-group-card',
   imports: [
     MatIcon,
     SecurityLogoComponent
   ],
-  templateUrl: "./security-group-card.component.html",
-  styleUrl: "./security-group-card.component.scss",
+  templateUrl: './security-group-card.component.html',
+  styleUrl: './security-group-card.component.scss',
 })
 export class SecurityGroupCardComponent {
 

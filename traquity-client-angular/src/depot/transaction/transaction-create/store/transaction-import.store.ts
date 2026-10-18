@@ -1,14 +1,14 @@
-import {inject, Signal} from "@angular/core";
-import {signalStore, withComputed, withMethods, withState} from "@ngrx/signals";
-import {RxMethod} from "@ngrx/signals/rxjs-interop";
-import {Store} from "@ngrx/store";
-import {AiBridgeService} from "../../../../bridge/ai-bridge.service";
-import {ReadableSignalStore, WritableSignalStore} from "../../../../common/types/signal-store.type";
-import {AppState} from "../../../../store/app.state";
-import {canImport} from "./computed/can-import";
-import {importPdf, ImportPdfArgs} from "./effects/import-pdf";
-import {clearPrefill} from "./methods/clear-prefill";
-import {ImportMessage, TransactionPrefill} from "./transaction-import.type";
+import {inject, Signal} from '@angular/core';
+import {signalStore, withComputed, withMethods, withState} from '@ngrx/signals';
+import {RxMethod} from '@ngrx/signals/rxjs-interop';
+import {Store} from '@ngrx/store';
+import {AiBridgeService} from '../../../../bridge/ai-bridge.service';
+import {ReadableSignalStore, WritableSignalStore} from '../../../../common/types/signal-store.type';
+import {AppState} from '../../../../store/app.state';
+import {canImport} from './computed/can-import';
+import {importPdf, ImportPdfArgs} from './effects/import-pdf';
+import {clearPrefill} from './methods/clear-prefill';
+import {ImportMessage, TransactionPrefill} from './transaction-import.type';
 
 export type TransactionImportState = {
   /** Set for as long as one document is being read and extracted. */

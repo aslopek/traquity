@@ -10,9 +10,9 @@ import {getSecuritiesByIsinSelector, SecuritiesByIsin} from './selectors/get-sec
 import {HistoricalSecurityPriceConfigRead} from '../../gen/api/historical-security-price';
 import {getHistoricalSecurityPriceConfigSelector} from './selectors/get-historical-security-price-config.selector';
 import {getHistoricalSecurityPriceConfigsSelector} from './selectors/get-historical-security-price-configs.selector';
-import {DataSourceWithId} from "../../settings/data-source/data-source.type";
-import {getHistoricalSecurityPriceDataSourcesSelector} from "./selectors/get-historical-security-price-data-sources.selector";
-import {getHistoricalSecurityPriceDataSourceSelector} from "./selectors/get-historical-security-price-data-source.selector";
+import {DataSourceWithId} from '../../settings/data-source/data-source.type';
+import {getHistoricalSecurityPriceDataSourcesSelector} from './selectors/get-historical-security-price-data-sources.selector';
+import {getHistoricalSecurityPriceDataSourceSelector} from './selectors/get-historical-security-price-data-source.selector';
 
 export const securityStore = 'security';
 

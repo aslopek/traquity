@@ -1,4 +1,4 @@
-import {DepotState} from "../depot.state";
+import {DepotState} from '../depot.state';
 
 export type GetSelectableDepotTabsStage = Pick<DepotState, 'selectedDepotIds' | 'selectedTabIndex'>;
 

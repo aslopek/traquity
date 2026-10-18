@@ -1,23 +1,23 @@
-import {Component, computed, inject, input, InputSignal, Signal,} from "@angular/core";
-import {MatTooltipModule} from "@angular/material/tooltip";
-import {Store} from "@ngrx/store";
-import {TqIconComponent} from "../../../../common/components/tq-icon/tq-icon.component";
-import {SecurityLogoUrlPipe} from "../../../../common/pipe/security-logo-url.pipe";
-import {TqCurrencyPipe} from "../../../../common/pipe/tq-currency.pipe";
-import {TqDecimalPipe} from "../../../../common/pipe/tq-decimal.pipe";
-import {TqPercentPipe} from "../../../../common/pipe/tq-percent.pipe";
-import {DepotPosition} from "../../../../gen/api/depot-position";
-import {hideAbsoluteValues} from "../../../../store/app-config/app-config.selector";
-import {AppState} from "../../../../store/app.state";
-import {MatDialog} from "@angular/material/dialog";
-import {openPositionDialog} from "../../position-dialog/open-position-dialog";
-import {PositionDialogData,} from "../../position-dialog/position-dialog.component";
-import {IncomeByPosition} from "../../../../store/depot/depot.state";
-import {Performance} from "../../../../gen/api/depot-performance";
-import {incomeByPosition, selectedDepotCurrency, selectedDepotIds, usePositionBuyInValues,} from "../../../../store/depot/depot.selector";
+import {Component, computed, inject, input, InputSignal, Signal,} from '@angular/core';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {Store} from '@ngrx/store';
+import {TqIconComponent} from '../../../../common/components/tq-icon/tq-icon.component';
+import {SecurityLogoUrlPipe} from '../../../../common/pipe/security-logo-url.pipe';
+import {TqCurrencyPipe} from '../../../../common/pipe/tq-currency.pipe';
+import {TqDecimalPipe} from '../../../../common/pipe/tq-decimal.pipe';
+import {TqPercentPipe} from '../../../../common/pipe/tq-percent.pipe';
+import {DepotPosition} from '../../../../gen/api/depot-position';
+import {hideAbsoluteValues} from '../../../../store/app-config/app-config.selector';
+import {AppState} from '../../../../store/app.state';
+import {MatDialog} from '@angular/material/dialog';
+import {openPositionDialog} from '../../position-dialog/open-position-dialog';
+import {PositionDialogData,} from '../../position-dialog/position-dialog.component';
+import {IncomeByPosition} from '../../../../store/depot/depot.state';
+import {Performance} from '../../../../gen/api/depot-performance';
+import {incomeByPosition, selectedDepotCurrency, selectedDepotIds, usePositionBuyInValues,} from '../../../../store/depot/depot.selector';
 
 @Component({
-  selector: "app-position-list-row",
+  selector: 'app-position-list-row',
   imports: [
     TqCurrencyPipe,
     TqPercentPipe,
@@ -26,8 +26,8 @@ import {incomeByPosition, selectedDepotCurrency, selectedDepotIds, usePositionBu
     SecurityLogoUrlPipe,
     MatTooltipModule,
   ],
-  templateUrl: "./position-list-row.component.html",
-  styleUrl: "./position-list-row.component.scss",
+  templateUrl: './position-list-row.component.html',
+  styleUrl: './position-list-row.component.scss',
 })
 export class PositionListRowComponent {
   readonly position: InputSignal<DepotPosition> = input.required<DepotPosition>();

@@ -1,8 +1,8 @@
-import {StockSplitState, StockSplitWithMultiplier} from "../stock-split.store";
-import {WritableSignalStore} from "../../../../../common/types/signal-store.type";
-import {StockSplit, StockSplitApi} from "../../../../../gen/api/security";
-import {catchError, EMPTY, Observable, take} from "rxjs";
-import {patchState} from "@ngrx/signals";
+import {StockSplitState, StockSplitWithMultiplier} from '../stock-split.store';
+import {WritableSignalStore} from '../../../../../common/types/signal-store.type';
+import {StockSplit, StockSplitApi} from '../../../../../gen/api/security';
+import {catchError, EMPTY, Observable, take} from 'rxjs';
+import {patchState} from '@ngrx/signals';
 
 export function loadStockSplitState(signalStore: WritableSignalStore<StockSplitState>,
                                     stockSplitApi: StockSplitApi,

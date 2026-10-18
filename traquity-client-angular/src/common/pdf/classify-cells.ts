@@ -1,8 +1,8 @@
-import {parseDate} from "./parse-date";
-import {parseNumber, ParsedNumber} from "./parse-number";
-import {parseTime} from "./parse-time";
-import {PdfCell, PdfCellBox, PdfNumberSign, PdfToken} from "./pdf-document.type";
-import {wordsOf as wordsOfText} from "./words-of-text";
+import {parseDate} from './parse-date';
+import {parseNumber, ParsedNumber} from './parse-number';
+import {parseTime} from './parse-time';
+import {PdfCell, PdfCellBox, PdfNumberSign, PdfToken} from './pdf-document.type';
+import {wordsOf as wordsOfText} from './words-of-text';
 
 const SIGN: RegExp = /^[+-]$/;
 const MERIDIEM: RegExp = /^[AaPp]\.?[Mm]\.?$/;
@@ -67,8 +67,8 @@ export function classifyCells(cells: PdfCellBox[], currency: string): PdfCell[] 
       const denotedIn: string | null = parsed == null ? null : currencyOf(behind, prefix.currency, inFront, currency);
 
       tokens.push({
-        text: spelled ? words.slice(i, end + 1).join(" ") : word,
-        label: words.slice(0, prefix.start).join(" ") || null,
+        text: spelled ? words.slice(i, end + 1).join(' ') : word,
+        label: words.slice(0, prefix.start).join(' ') || null,
         ...(parsed != null ? {magnitude: parsed.magnitude, digits: parsed.digits} : {}),
         ...(sign != null ? {sign} : {}),
         ...(denotedIn != null ? {currency: denotedIn} : {}),
@@ -92,7 +92,7 @@ export function classifyCells(cells: PdfCellBox[], currency: string): PdfCell[] 
  */
 function dateAt(words: string[], index: number): PrintedDate | null {
   for (let end: number = Math.min(index + MAXIMUM_DATE_WORDS - 1, words.length - 1); end >= index; end--) {
-    const date: string | null = parseDate(words.slice(index, end + 1).join(" "));
+    const date: string | null = parseDate(words.slice(index, end + 1).join(' '));
     if (date != null) {
       return {date, end};
     }
@@ -131,7 +131,7 @@ function prefixOf(words: string[], index: number, currency: string): AmountPrefi
  * currencies and no amount in either of them.
  */
 function quotesARate(words: string[], index: number): boolean {
-  return words[index - 1] === "/";
+  return words[index - 1] === '/';
 }
 
 /**

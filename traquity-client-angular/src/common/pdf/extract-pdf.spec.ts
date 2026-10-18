@@ -1,10 +1,10 @@
-import {beforeEach, describe, expect, it, jest} from "@jest/globals";
-import {getDocument} from "pdfjs-dist";
-import {extractPdf, PdfExtractionBounds, PdfExtractionResult} from "./extract-pdf";
-import {PdfDocument} from "./pdf-document.type";
-import {PdfTextItem} from "./runs-of-text-content";
+import {beforeEach, describe, expect, it, jest} from '@jest/globals';
+import {getDocument} from 'pdfjs-dist';
+import {extractPdf, PdfExtractionBounds, PdfExtractionResult} from './extract-pdf';
+import {PdfDocument} from './pdf-document.type';
+import {PdfTextItem} from './runs-of-text-content';
 
-jest.mock("pdfjs-dist", (): unknown => ({getDocument: jest.fn()}));
+jest.mock('pdfjs-dist', (): unknown => ({getDocument: jest.fn()}));
 
 type PageStub = {
   getViewport: (options: { scale: number }) => { width: number, height: number }
@@ -22,11 +22,11 @@ const PAGE_HEIGHT: number = 842;
 
 function itemFactory(overrides: Partial<PdfTextItem> = {}): PdfTextItem {
   return {
-    str: "Kurswert",
+    str: 'Kurswert',
     transform: [10, 0, 0, 10, 70.8, 412.5],
     width: 44.2,
     height: 10,
-    fontName: "g_d0_f1",
+    fontName: 'g_d0_f1',
     ...overrides
   };
 }
@@ -35,7 +35,7 @@ function bytesOf(content: string): ArrayBuffer {
   return new TextEncoder().encode(content).buffer as ArrayBuffer;
 }
 
-describe("extractPdf", (): void => {
+describe('extractPdf', (): void => {
   let getDocumentMock: jest.Mock<GetDocumentStub>;
   let destroy: jest.Mock<() => Promise<void>>;
   let bytes: ArrayBuffer;
@@ -61,22 +61,22 @@ describe("extractPdf", (): void => {
     getDocumentMock = getDocument as unknown as jest.Mock<GetDocumentStub>;
     getDocumentMock.mockReset();
 
-    bytes = bytesOf("%PDF-1.7 ...");
+    bytes = bytesOf('%PDF-1.7 ...');
     bounds = {maximumPages: 50, maximumRuns: 1000, milliseconds: 30_000, now: (): number => 0};
     itemsByPage = [
       [
         itemFactory(),
-        itemFactory({str: "1.005,00", transform: [10, 0, 0, 10, 300, 412.5]})
+        itemFactory({str: '1.005,00', transform: [10, 0, 0, 10, 300, 412.5]})
       ]
     ];
     stubDocument();
   });
 
-  it("produces one page carrying the row the items stood on", async (): Promise<void> => {
-    const result: PdfExtractionResult = await extractPdf(bytes, "EUR", bounds);
+  it('produces one page carrying the row the items stood on', async (): Promise<void> => {
+    const result: PdfExtractionResult = await extractPdf(bytes, 'EUR', bounds);
 
     expect(result).toEqual({
-      status: "extracted",
+      status: 'extracted',
       document: {
         pages: [{
           number: 1,
@@ -87,18 +87,18 @@ describe("extractPdf", (): void => {
             y: PAGE_HEIGHT - 412.5,
             cells: [
               {
-                text: "Kurswert",
+                text: 'Kurswert',
                 x: 70.8,
                 width: 44.2,
                 height: 10,
                 tokens: []
               },
               {
-                text: "1.005,00",
+                text: '1.005,00',
                 x: 300,
                 width: 44.2,
                 height: 10,
-                tokens: [{text: "1.005,00", label: null, magnitude: 1005, digits: 2, last: true}]
+                tokens: [{text: '1.005,00', label: null, magnitude: 1005, digits: 2, last: true}]
               }
             ]
           }]
@@ -107,8 +107,8 @@ describe("extractPdf", (): void => {
     });
   });
 
-  it("passes the bytes to pdf.js", async (): Promise<void> => {
-    await extractPdf(bytes, "EUR", bounds);
+  it('passes the bytes to pdf.js', async (): Promise<void> => {
+    await extractPdf(bytes, 'EUR', bounds);
 
     expect(getDocumentMock).toHaveBeenCalledWith({
       data: new Uint8Array(bytes),
@@ -117,111 +117,111 @@ describe("extractPdf", (): void => {
     expect(getDocumentMock).toHaveBeenCalledTimes(1);
   });
 
-  it("releases the loading task", async (): Promise<void> => {
-    await extractPdf(bytes, "EUR", bounds);
+  it('releases the loading task', async (): Promise<void> => {
+    await extractPdf(bytes, 'EUR', bounds);
 
     expect(destroy).toHaveBeenCalledWith();
     expect(destroy).toHaveBeenCalledTimes(1);
   });
 
-  it("reads every page of a document", async (): Promise<void> => {
+  it('reads every page of a document', async (): Promise<void> => {
     itemsByPage = [
       [itemFactory()],
-      [itemFactory({str: "Seite 2"})]
+      [itemFactory({str: 'Seite 2'})]
     ];
     stubDocument();
 
-    const result: PdfExtractionResult = await extractPdf(bytes, "EUR", bounds);
+    const result: PdfExtractionResult = await extractPdf(bytes, 'EUR', bounds);
 
-    expect(result.status === "extracted" && result.document.pages.map((page): number => page.number)).toEqual([1, 2]);
+    expect(result.status === 'extracted' && result.document.pages.map((page): number => page.number)).toEqual([1, 2]);
   });
 
-  it("reports a page whose text layer holds no runs as empty", async (): Promise<void> => {
+  it('reports a page whose text layer holds no runs as empty', async (): Promise<void> => {
     itemsByPage = [[itemFactory()], []];
     stubDocument();
 
-    const result: PdfExtractionResult = await extractPdf(bytes, "EUR", bounds);
+    const result: PdfExtractionResult = await extractPdf(bytes, 'EUR', bounds);
 
-    expect(result.status === "extracted" && result.document.pages.map((page): boolean => page.empty))
+    expect(result.status === 'extracted' && result.document.pages.map((page): boolean => page.empty))
       .toEqual([false, true]);
   });
 
-  it("denotes an amount the page prints the given code beside", async (): Promise<void> => {
+  it('denotes an amount the page prints the given code beside', async (): Promise<void> => {
     itemsByPage = [[
       itemFactory(),
-      itemFactory({str: "1.005,00 EUR", transform: [10, 0, 0, 10, 300, 412.5]})
+      itemFactory({str: '1.005,00 EUR', transform: [10, 0, 0, 10, 300, 412.5]})
     ]];
     stubDocument();
 
-    const result: PdfExtractionResult = await extractPdf(bytes, "EUR", bounds);
+    const result: PdfExtractionResult = await extractPdf(bytes, 'EUR', bounds);
 
-    expect(result.status === "extracted" && result.document.pages[0].rows[0].cells[1].tokens)
-      .toEqual([{text: "1.005,00", label: null, magnitude: 1005, digits: 2, currency: "EUR", last: false}]);
+    expect(result.status === 'extracted' && result.document.pages[0].rows[0].cells[1].tokens)
+      .toEqual([{text: '1.005,00', label: null, magnitude: 1005, digits: 2, currency: 'EUR', last: false}]);
   });
 
-  describe("refusals", (): void => {
-    it("refuses bytes carrying no PDF header, without reaching pdf.js", async (): Promise<void> => {
-      bytes = bytesOf("date;amount\n2025-01-02;11.00");
+  describe('refusals', (): void => {
+    it('refuses bytes carrying no PDF header, without reaching pdf.js', async (): Promise<void> => {
+      bytes = bytesOf('date;amount\n2025-01-02;11.00');
 
-      const result: PdfExtractionResult = await extractPdf(bytes, "EUR", bounds);
+      const result: PdfExtractionResult = await extractPdf(bytes, 'EUR', bounds);
 
-      expect(result).toEqual({status: "failed", failure: {reason: "notAPdf"}});
+      expect(result).toEqual({status: 'failed', failure: {reason: 'notAPdf'}});
       expect(getDocumentMock).not.toHaveBeenCalled();
     });
 
-    it("refuses a document pdf.js cannot open, naming what it said", async (): Promise<void> => {
-      getDocumentMock.mockReturnValue({destroy, promise: Promise.reject(new Error("Invalid PDF structure."))});
+    it('refuses a document pdf.js cannot open, naming what it said', async (): Promise<void> => {
+      getDocumentMock.mockReturnValue({destroy, promise: Promise.reject(new Error('Invalid PDF structure.'))});
 
-      const result: PdfExtractionResult = await extractPdf(bytes, "EUR", bounds);
+      const result: PdfExtractionResult = await extractPdf(bytes, 'EUR', bounds);
 
-      expect(result).toEqual({status: "failed", failure: {reason: "unreadable", message: "Invalid PDF structure."}});
+      expect(result).toEqual({status: 'failed', failure: {reason: 'unreadable', message: 'Invalid PDF structure.'}});
     });
 
-    it("releases the loading task of a document it could not open", async (): Promise<void> => {
-      getDocumentMock.mockReturnValue({destroy, promise: Promise.reject(new Error("Invalid PDF structure."))});
+    it('releases the loading task of a document it could not open', async (): Promise<void> => {
+      getDocumentMock.mockReturnValue({destroy, promise: Promise.reject(new Error('Invalid PDF structure.'))});
 
-      await extractPdf(bytes, "EUR", bounds);
+      await extractPdf(bytes, 'EUR', bounds);
 
       expect(destroy).toHaveBeenCalledWith();
       expect(destroy).toHaveBeenCalledTimes(1);
     });
 
-    it("refuses a document whose every page is empty", async (): Promise<void> => {
+    it('refuses a document whose every page is empty', async (): Promise<void> => {
       itemsByPage = [[], []];
       stubDocument();
 
-      const result: PdfExtractionResult = await extractPdf(bytes, "EUR", bounds);
+      const result: PdfExtractionResult = await extractPdf(bytes, 'EUR', bounds);
 
-      expect(result).toEqual({status: "failed", failure: {reason: "noTextLayer"}});
+      expect(result).toEqual({status: 'failed', failure: {reason: 'noTextLayer'}});
     });
 
-    it("refuses more pages than the bound allows, before reading any of them", async (): Promise<void> => {
+    it('refuses more pages than the bound allows, before reading any of them', async (): Promise<void> => {
       bounds = {...bounds, maximumPages: 1};
       itemsByPage = [[itemFactory()], [itemFactory()]];
       stubDocument();
 
-      const result: PdfExtractionResult = await extractPdf(bytes, "EUR", bounds);
+      const result: PdfExtractionResult = await extractPdf(bytes, 'EUR', bounds);
 
-      expect(result).toEqual({status: "failed", failure: {reason: "tooManyPages", pages: 2, maximum: 1}});
+      expect(result).toEqual({status: 'failed', failure: {reason: 'tooManyPages', pages: 2, maximum: 1}});
     });
 
-    it("refuses more runs than the bound allows, counted across the document", async (): Promise<void> => {
+    it('refuses more runs than the bound allows, counted across the document', async (): Promise<void> => {
       bounds = {...bounds, maximumRuns: 3};
       itemsByPage = [[itemFactory(), itemFactory()], [itemFactory(), itemFactory()]];
       stubDocument();
 
-      const result: PdfExtractionResult = await extractPdf(bytes, "EUR", bounds);
+      const result: PdfExtractionResult = await extractPdf(bytes, 'EUR', bounds);
 
-      expect(result).toEqual({status: "failed", failure: {reason: "tooManyRuns", maximum: 3}});
+      expect(result).toEqual({status: 'failed', failure: {reason: 'tooManyRuns', maximum: 3}});
     });
 
-    it("refuses a document that outlives its time budget", async (): Promise<void> => {
+    it('refuses a document that outlives its time budget', async (): Promise<void> => {
       const elapsing: number[] = [0, 31_000];
       bounds = {...bounds, now: (): number => elapsing.shift() ?? 31_000};
 
-      const result: PdfExtractionResult = await extractPdf(bytes, "EUR", bounds);
+      const result: PdfExtractionResult = await extractPdf(bytes, 'EUR', bounds);
 
-      expect(result).toEqual({status: "failed", failure: {reason: "outOfTime", milliseconds: 30_000}});
+      expect(result).toEqual({status: 'failed', failure: {reason: 'outOfTime', milliseconds: 30_000}});
     });
   });
 });

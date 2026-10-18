@@ -1,12 +1,12 @@
-import {Actions, ofType} from "@ngrx/effects";
-import {HistoricalSecurityPriceDataSourceApi} from "../../../gen/api/historical-security-price";
-import {Action, Store} from "@ngrx/store";
-import {AppState} from "../../app.state";
-import {catchError, map, Observable, of, switchMap} from "rxjs";
-import {DeleteHistoricalSecurityPriceDataSourceActionArgs, SecurityActions} from "../security.actions";
-import {concatLatestFrom} from "@ngrx/operators";
-import {DataSourceWithId} from "../../../settings/data-source/data-source.type";
-import {getHistoricalSecurityPriceDataSource} from "../security.selector";
+import {Actions, ofType} from '@ngrx/effects';
+import {HistoricalSecurityPriceDataSourceApi} from '../../../gen/api/historical-security-price';
+import {Action, Store} from '@ngrx/store';
+import {AppState} from '../../app.state';
+import {catchError, map, Observable, of, switchMap} from 'rxjs';
+import {DeleteHistoricalSecurityPriceDataSourceActionArgs, SecurityActions} from '../security.actions';
+import {concatLatestFrom} from '@ngrx/operators';
+import {DataSourceWithId} from '../../../settings/data-source/data-source.type';
+import {getHistoricalSecurityPriceDataSource} from '../security.selector';
 
 export type DeleteHistoricalSecurityPriceDataSourceEffectArgs = {
   actions$: Actions

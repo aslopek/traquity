@@ -1,7 +1,7 @@
-import {Router} from "@angular/router";
-import {patchState} from "@ngrx/signals";
-import {WritableSignalStore} from "../../../../common/types/signal-store.type";
-import {StartupComputed, StartupStoreState} from "../startup.store";
+import {Router} from '@angular/router';
+import {patchState} from '@ngrx/signals';
+import {WritableSignalStore} from '../../../../common/types/signal-store.type';
+import {StartupComputed, StartupStoreState} from '../startup.store';
 
 /**
  * Navigates back to the shell only when the phase was not already `booting`: entering the phase the app is already in

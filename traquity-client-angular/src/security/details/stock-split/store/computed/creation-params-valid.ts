@@ -1,7 +1,7 @@
-import {ReadableSignalStore} from "../../../../../common/types/signal-store.type";
-import {StockSplitParams, StockSplitState} from "../stock-split.store";
-import {StockSplit} from "../../../../../gen/api/security";
-import {fromDateString} from "../../../../../common/functions/from-date-string";
+import {ReadableSignalStore} from '../../../../../common/types/signal-store.type';
+import {StockSplitParams, StockSplitState} from '../stock-split.store';
+import {StockSplit} from '../../../../../gen/api/security';
+import {fromDateString} from '../../../../../common/functions/from-date-string';
 
 export function creationParamsValid(signalStore: ReadableSignalStore<StockSplitState>): boolean {
   const params: StockSplitParams = signalStore.stockSplitParams();

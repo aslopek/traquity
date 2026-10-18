@@ -1,5 +1,5 @@
-import {Timespan} from "../../../../common/types/timespan";
-import {Dividends, DividendsByYear} from "../../../../gen/api/depot-dividend";
+import {Timespan} from '../../../../common/types/timespan';
+import {Dividends, DividendsByYear} from '../../../../gen/api/depot-dividend';
 
 export type MonthlyAggregatedDividends = {
   year: number

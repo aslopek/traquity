@@ -1,8 +1,8 @@
-import {inject} from "@angular/core";
-import {map, Observable, of, tap} from "rxjs";
-import {StartupBridgeService} from "../../bridge/startup-bridge.service";
-import {StartupState} from "../../bridge/startup-bridge.type";
-import {ReadableStartupStore, StartupStore} from "./store/startup.store";
+import {inject} from '@angular/core';
+import {map, Observable, of, tap} from 'rxjs';
+import {StartupBridgeService} from '../../bridge/startup-bridge.service';
+import {StartupState} from '../../bridge/startup-bridge.type';
+import {ReadableStartupStore, StartupStore} from './store/startup.store';
 
 /**
  * Resolves the startup state from the bridge into the store, as an app initializer: it has to complete before the

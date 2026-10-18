@@ -1,5 +1,5 @@
-import {DepotState, IncomeByPosition} from "../depot.state";
-import {LoadDividendsPositionsSuccessActionArgs} from "../depot.actions";
+import {DepotState, IncomeByPosition} from '../depot.state';
+import {LoadDividendsPositionsSuccessActionArgs} from '../depot.actions';
 
 export function setPerformanceDataReducer(state: Readonly<DepotState>, actionArgs: LoadDividendsPositionsSuccessActionArgs): DepotState {
   const incomeByPosition: IncomeByPosition = {};

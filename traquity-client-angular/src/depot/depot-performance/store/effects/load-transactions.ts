@@ -1,14 +1,14 @@
-import {RxMethod, rxMethod} from "@ngrx/signals/rxjs-interop";
-import {catchError, EMPTY, expand, forkJoin, map, Observable, of, pipe, reduce, switchMap, tap} from "rxjs";
-import {WritableSignalStore} from "../../../../common/types/signal-store.type";
-import {DepotPerformanceComputed, DepotPerformanceState} from "../depot-performance.store";
-import {PaginatedTransactionRead, SortOrder, TransactionApi, TransactionRead} from "../../../../gen/api/depot-transaction";
-import {sortTransactions} from "../../../../common/functions/sort-transactions";
-import {patchState} from "@ngrx/signals";
-import {Store} from "@ngrx/store";
-import {AppState} from "../../../../store/app.state";
-import {SecurityActions} from "../../../../store/security/security.actions";
-import {RebasedDepotValue} from "../computed/rebased-depot-value.type";
+import {RxMethod, rxMethod} from '@ngrx/signals/rxjs-interop';
+import {catchError, EMPTY, expand, forkJoin, map, Observable, of, pipe, reduce, switchMap, tap} from 'rxjs';
+import {WritableSignalStore} from '../../../../common/types/signal-store.type';
+import {DepotPerformanceComputed, DepotPerformanceState} from '../depot-performance.store';
+import {PaginatedTransactionRead, SortOrder, TransactionApi, TransactionRead} from '../../../../gen/api/depot-transaction';
+import {sortTransactions} from '../../../../common/functions/sort-transactions';
+import {patchState} from '@ngrx/signals';
+import {Store} from '@ngrx/store';
+import {AppState} from '../../../../store/app.state';
+import {SecurityActions} from '../../../../store/security/security.actions';
+import {RebasedDepotValue} from '../computed/rebased-depot-value.type';
 
 export type LoadTransactionsArgs = {
   depotIds: number[]

@@ -1,7 +1,7 @@
-import {DepotState} from "../depot.state";
-import {ToggleDepotSelectionActionArgs} from "../depot.actions";
-import {DepotRead} from "../../../gen/api/depot";
-import {multipleSelectionAllowed} from "../selectors/multiple-selection-allowed.selector";
+import {DepotState} from '../depot.state';
+import {ToggleDepotSelectionActionArgs} from '../depot.actions';
+import {DepotRead} from '../../../gen/api/depot';
+import {multipleSelectionAllowed} from '../selectors/multiple-selection-allowed.selector';
 
 export function toggleDepotSelectionReducer(state: Readonly<DepotState>, actionArgs: ToggleDepotSelectionActionArgs): DepotState {
   const depot: DepotRead | undefined = state.depots.find((item: DepotRead) => item.id === actionArgs.depotId)

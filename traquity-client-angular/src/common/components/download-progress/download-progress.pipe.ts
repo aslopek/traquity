@@ -1,14 +1,14 @@
-import {Pipe, PipeTransform} from "@angular/core";
-import {TqByteSizePipe} from "../../pipe/tq-byte-size.pipe";
-import {TqPercentPipe} from "../../pipe/tq-percent.pipe";
-import {downloadPercentage} from "./download-progress.util";
+import {Pipe, PipeTransform} from '@angular/core';
+import {TqByteSizePipe} from '../../pipe/tq-byte-size.pipe';
+import {TqPercentPipe} from '../../pipe/tq-percent.pipe';
+import {downloadPercentage} from './download-progress.util';
 
 /**
  * The one status line of a download: received size, total size, percentage, rate and remaining time, joined with
  * ` · `. Sizes and rate are always MiB, the remaining time always `mm:ss`, and a term whose figure is absent is
  * dropped rather than faked.
  */
-@Pipe({name: "downloadProgress"})
+@Pipe({name: 'downloadProgress'})
 export class DownloadProgressPipe implements PipeTransform {
 
   constructor(private readonly tqByteSizePipe: TqByteSizePipe, private readonly tqPercentPipe: TqPercentPipe) {

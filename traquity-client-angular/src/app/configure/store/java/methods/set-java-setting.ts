@@ -1,7 +1,7 @@
-import {patchState} from "@ngrx/signals";
-import {WritableSignalStore} from "../../../../../common/types/signal-store.type";
-import {JavaVerification} from "../../../../../bridge/startup-bridge.type";
-import {ConfigureStoreState} from "../../configure.store";
+import {patchState} from '@ngrx/signals';
+import {WritableSignalStore} from '../../../../../common/types/signal-store.type';
+import {JavaVerification} from '../../../../../bridge/startup-bridge.type';
+import {ConfigureStoreState} from '../../configure.store';
 
 /**
  * Signature and verification move together. An `ok` result stores the path the caller says this

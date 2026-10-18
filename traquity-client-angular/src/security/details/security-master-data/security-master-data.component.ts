@@ -1,18 +1,18 @@
-import {Component, DestroyRef, effect, inject, input, InputSignal, output, OutputEmitterRef, signal, WritableSignal,} from "@angular/core";
-import {takeUntilDestroyed, toObservable} from "@angular/core/rxjs-interop";
-import {getSecurity} from "../../../store/security/security.selector";
-import {Store} from "@ngrx/store";
-import {AppState} from "../../../store/app.state";
-import {SecurityCreate, SecurityRead, SecurityType,} from "../../../gen/api/security";
-import {FieldTree, form, FormField, maxLength, minLength, pattern, required, SchemaPathTree,} from "@angular/forms/signals";
-import {MatFormField, MatInput, MatLabel} from "@angular/material/input";
-import {MatChipGrid, MatChipInput, MatChipInputEvent, MatChipRemove, MatChipRow,} from "@angular/material/chips";
-import {MatIcon} from "@angular/material/icon";
-import {MatOption, MatSelect} from "@angular/material/select";
-import {MatButton} from "@angular/material/button";
-import {FilePreviewPipe} from "../../../common/pipe/file-preview.pipe";
-import {SecurityLogoUrlPipe} from "../../../common/pipe/security-logo-url.pipe";
-import {SecurityTypeDisplayNamePipe} from "../../../common/pipe/security-type-display-name.pipe";
+import {Component, DestroyRef, effect, inject, input, InputSignal, output, OutputEmitterRef, signal, WritableSignal,} from '@angular/core';
+import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
+import {getSecurity} from '../../../store/security/security.selector';
+import {Store} from '@ngrx/store';
+import {AppState} from '../../../store/app.state';
+import {SecurityCreate, SecurityRead, SecurityType,} from '../../../gen/api/security';
+import {FieldTree, form, FormField, maxLength, minLength, pattern, required, SchemaPathTree,} from '@angular/forms/signals';
+import {MatFormField, MatInput, MatLabel} from '@angular/material/input';
+import {MatChipGrid, MatChipInput, MatChipInputEvent, MatChipRemove, MatChipRow,} from '@angular/material/chips';
+import {MatIcon} from '@angular/material/icon';
+import {MatOption, MatSelect} from '@angular/material/select';
+import {MatButton} from '@angular/material/button';
+import {FilePreviewPipe} from '../../../common/pipe/file-preview.pipe';
+import {SecurityLogoUrlPipe} from '../../../common/pipe/security-logo-url.pipe';
+import {SecurityTypeDisplayNamePipe} from '../../../common/pipe/security-type-display-name.pipe';
 
 type FormModel = {
   isin: string;
@@ -24,7 +24,7 @@ type FormModel = {
 };
 
 @Component({
-  selector: "app-security-master-data",
+  selector: 'app-security-master-data',
   imports: [
     MatFormField,
     MatLabel,
@@ -42,8 +42,8 @@ type FormModel = {
     SecurityLogoUrlPipe,
     SecurityTypeDisplayNamePipe,
   ],
-  templateUrl: "./security-master-data.component.html",
-  styleUrl: "./security-master-data.component.scss",
+  templateUrl: './security-master-data.component.html',
+  styleUrl: './security-master-data.component.scss',
 })
 export class SecurityMasterDataComponent {
   readonly securityId: InputSignal<number | undefined> = input<number>();
@@ -64,11 +64,11 @@ export class SecurityMasterDataComponent {
 
   constructor(destroyRef: DestroyRef) {
     this.formModel = signal<FormModel>({
-      isin: "",
+      isin: '',
       symbols: [],
-      name: "",
-      wkn: "",
-      sector: "",
+      name: '',
+      wkn: '',
+      sector: '',
       securityType: SecurityType.STOCK,
     });
     this.form = form(
@@ -107,8 +107,8 @@ export class SecurityMasterDataComponent {
         this.form.isin().value.set(security.isin);
         this.form.symbols().value.set(security.symbols);
         this.form.name().value.set(security.name);
-        this.form.wkn().value.set(security.wkn ?? "");
-        this.form.sector().value.set(security.sector ?? "");
+        this.form.wkn().value.set(security.wkn ?? '');
+        this.form.sector().value.set(security.sector ?? '');
         this.form.securityType().value.set(security.securityType);
         this.hasExistingLogo.set(security._links.logo != null);
       });

@@ -1,5 +1,5 @@
-import {DepotState, Positions} from "../../depot.state";
-import {DepotPosition} from "../../../../gen/api/depot-position";
+import {DepotState, Positions} from '../../depot.state';
+import {DepotPosition} from '../../../../gen/api/depot-position';
 
 export type GetPositionsState = {
   position: Pick<DepotState['position'], 'positions' | 'useBuyIn'>

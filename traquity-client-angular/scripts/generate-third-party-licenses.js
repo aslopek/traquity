@@ -207,13 +207,13 @@ function licenseTextFor(name, packageDirectory, packageJson) {
 
 const stylesheetExtensions = ['.scss', '.css'];
 
-// @use 'package' or @use "package"
+// @use 'package' or @use 'package'
 const usePattern = /@use\s+['"]([^'"]+)['"]/g;
 
-// @import 'package' or @import "package"
+// @import 'package' or @import 'package'
 const importPattern = /@import\s+['"]([^'"]+)['"]/g;
 
-// url('path'), url("path"), or url(path)
+// url('path'), url('path'), or url(path)
 const urlPattern = /url\(\s*['"]?([^'")]+?)['"]?\s*\)/g;
 
 /** @type {RegExp[]} */
@@ -269,7 +269,7 @@ function parseBundleLicenses() {
   // A record runs from its own `Package:` line to the next one. Splitting on the rule the file draws between records
   // is what this must not do: a license text may draw a rule of its own, and the OFL draws one of 59 dashes above and
   // below its title where the file's own separator is 80. Splitting on any dash run therefore cut every OFL text off
-  // at "This license is copied below" and dropped the remainder - it landed in blocks carrying no `Package:` line,
+  // at 'This license is copied below' and dropped the remainder - it landed in blocks carrying no `Package:` line,
   // which the loop then skipped as noise.
   const headers = [...content.matchAll(/^Package: (.+)$/gm)];
   for (const [index, header] of headers.entries()) {

@@ -1,26 +1,26 @@
-import {Component, Input, numberAttribute, OnDestroy, OnInit, signal, WritableSignal,} from "@angular/core";
-import {MatButtonToggle, MatButtonToggleGroup} from "@angular/material/button-toggle";
-import {MatSlideToggleModule} from "@angular/material/slide-toggle";
-import {MatIcon} from "@angular/material/icon";
-import {MatProgressBarModule} from "@angular/material/progress-bar";
-import {format} from "date-fns";
-import {ECharts} from "echarts/core";
-import {NgxEchartsDirective} from "ngx-echarts";
-import {Store} from "@ngrx/store";
-import {firstValueFrom} from "rxjs";
-import {CurrencySelectComponent} from "../../../common/components/currency-select/currency-select.component";
-import {TqCurrencyPipe} from "../../../common/pipe/tq-currency.pipe";
-import {TqDatePipe} from "../../../common/pipe/tq-date.pipe";
-import {TqPercentPipe} from "../../../common/pipe/tq-percent.pipe";
-import {DataRange, fromDateRange} from "../../../common/types/data-range";
-import {ConfigApi} from "../../../gen/api/configuration";
-import {HistoricalSecurityPrice, HistoricalSecurityPriceApi,} from "../../../gen/api/historical-security-price";
-import {AppState} from "../../../store/app.state";
-import {NotificationActions} from "../../../store/notification/notification.actions";
-import {HistoricalPriceChartPipe} from "./historical-price-chart.pipe";
+import {Component, Input, numberAttribute, OnDestroy, OnInit, signal, WritableSignal,} from '@angular/core';
+import {MatButtonToggle, MatButtonToggleGroup} from '@angular/material/button-toggle';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import {MatIcon} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {format} from 'date-fns';
+import {ECharts} from 'echarts/core';
+import {NgxEchartsDirective} from 'ngx-echarts';
+import {Store} from '@ngrx/store';
+import {firstValueFrom} from 'rxjs';
+import {CurrencySelectComponent} from '../../../common/components/currency-select/currency-select.component';
+import {TqCurrencyPipe} from '../../../common/pipe/tq-currency.pipe';
+import {TqDatePipe} from '../../../common/pipe/tq-date.pipe';
+import {TqPercentPipe} from '../../../common/pipe/tq-percent.pipe';
+import {DataRange, fromDateRange} from '../../../common/types/data-range';
+import {ConfigApi} from '../../../gen/api/configuration';
+import {HistoricalSecurityPrice, HistoricalSecurityPriceApi,} from '../../../gen/api/historical-security-price';
+import {AppState} from '../../../store/app.state';
+import {NotificationActions} from '../../../store/notification/notification.actions';
+import {HistoricalPriceChartPipe} from './historical-price-chart.pipe';
 
 @Component({
-  selector: "app-historical-price",
+  selector: 'app-historical-price',
   imports: [
     NgxEchartsDirective,
     MatButtonToggleGroup,
@@ -36,8 +36,8 @@ import {HistoricalPriceChartPipe} from "./historical-price-chart.pipe";
     TqDatePipe,
     TqPercentPipe,
   ],
-  templateUrl: "historical-price-chart.component.html",
-  styleUrls: ["historical-price-chart.component.scss"],
+  templateUrl: 'historical-price-chart.component.html',
+  styleUrls: ['historical-price-chart.component.scss'],
 })
 export class HistoricalPriceChartComponent implements OnDestroy, OnInit {
   protected currencies: string[] = [];
@@ -48,7 +48,7 @@ export class HistoricalPriceChartComponent implements OnDestroy, OnInit {
   protected readonly selectedCurrency: WritableSignal<string | undefined> = signal(undefined);
   protected readonly isLoading: WritableSignal<boolean> = signal(false);
   protected readonly dataAvailable: WritableSignal<boolean> = signal(true);
-  protected readonly dataRange: WritableSignal<DataRange> = signal("1y");
+  protected readonly dataRange: WritableSignal<DataRange> = signal('1y');
   protected readonly percent: WritableSignal<boolean> = signal(false);
   protected readonly prices: WritableSignal<HistoricalSecurityPrice[]> = signal([]);
 
@@ -109,7 +109,7 @@ export class HistoricalPriceChartComponent implements OnDestroy, OnInit {
   /** Loads the prices for the current range and currency into `prices`, and reports whether they arrived. */
   private async loadPrices(): Promise<boolean> {
     this.isLoading.set(true);
-    const startDate: string = format(fromDateRange(this.dataRange()), "yyyy-MM-dd");
+    const startDate: string = format(fromDateRange(this.dataRange()), 'yyyy-MM-dd');
 
     let prices: HistoricalSecurityPrice[];
 
@@ -122,7 +122,7 @@ export class HistoricalPriceChartComponent implements OnDestroy, OnInit {
         ),
       );
     } catch {
-      this.store.dispatch(NotificationActions.addError({message: "The historical prices could not be loaded."}));
+      this.store.dispatch(NotificationActions.addError({message: 'The historical prices could not be loaded.'}));
       this.isLoading.set(false);
       return false;
     }

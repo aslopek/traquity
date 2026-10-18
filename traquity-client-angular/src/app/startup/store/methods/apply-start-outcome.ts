@@ -1,9 +1,9 @@
-import {Router} from "@angular/router";
-import {patchState} from "@ngrx/signals";
-import {WritableSignalStore} from "../../../../common/types/signal-store.type";
-import {BackendStartOutcome} from "../../../../bridge/startup-bridge.type";
-import {phaseAfterFailedStart, startupRouteFor} from "../routing/startup-route";
-import {StartupComputed, StartupPhase, StartupStoreState} from "../startup.store";
+import {Router} from '@angular/router';
+import {patchState} from '@ngrx/signals';
+import {WritableSignalStore} from '../../../../common/types/signal-store.type';
+import {BackendStartOutcome} from '../../../../bridge/startup-bridge.type';
+import {phaseAfterFailedStart, startupRouteFor} from '../routing/startup-route';
+import {StartupComputed, StartupPhase, StartupStoreState} from '../startup.store';
 
 /**
  * On a reachable outcome this does nothing: the phase stays as it was and nothing is navigated, because a reachable

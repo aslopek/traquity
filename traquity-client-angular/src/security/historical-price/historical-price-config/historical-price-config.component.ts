@@ -1,17 +1,17 @@
-import {Component, computed, effect, input, InputSignal, output, OutputEmitterRef, Signal, signal, WritableSignal,} from "@angular/core";
-import {FormsModule} from "@angular/forms";
-import {MatIcon} from "@angular/material/icon";
-import {MatInputModule} from "@angular/material/input";
-import {MatSelectModule} from "@angular/material/select";
-import {MatSlideToggleModule} from "@angular/material/slide-toggle";
-import {HistoricalSecurityPriceConfigCreate, HistoricalSecurityPriceConfigRead} from "../../../gen/api/historical-security-price";
-import {disabled, FieldTree, form, FormField, min, minLength, required, SchemaPathTree,} from "@angular/forms/signals";
-import {Store} from "@ngrx/store";
-import {AppState} from "../../../store/app.state";
-import {SecurityActions} from "../../../store/security/security.actions";
-import {HistoricalSecurityPriceConfigs} from "../../../store/security/security.state";
-import {getHistoricalSecurityPriceConfigs, getHistoricalSecurityPriceDataSources} from "../../../store/security/security.selector";
-import {DataSourceWithId} from "../../../settings/data-source/data-source.type";
+import {Component, computed, effect, input, InputSignal, output, OutputEmitterRef, Signal, signal, WritableSignal,} from '@angular/core';
+import {FormsModule} from '@angular/forms';
+import {MatIcon} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import {HistoricalSecurityPriceConfigCreate, HistoricalSecurityPriceConfigRead} from '../../../gen/api/historical-security-price';
+import {disabled, FieldTree, form, FormField, min, minLength, required, SchemaPathTree,} from '@angular/forms/signals';
+import {Store} from '@ngrx/store';
+import {AppState} from '../../../store/app.state';
+import {SecurityActions} from '../../../store/security/security.actions';
+import {HistoricalSecurityPriceConfigs} from '../../../store/security/security.state';
+import {getHistoricalSecurityPriceConfigs, getHistoricalSecurityPriceDataSources} from '../../../store/security/security.selector';
+import {DataSourceWithId} from '../../../settings/data-source/data-source.type';
 
 type FormModel = {
   isActive: boolean
@@ -20,12 +20,12 @@ type FormModel = {
 };
 
 export type Input =
-  | Pick<HistoricalSecurityPriceConfigRead, "isActive" | "externalSecurityId">
+  | Pick<HistoricalSecurityPriceConfigRead, 'isActive' | 'externalSecurityId'>
   | undefined;
 export type Output = HistoricalSecurityPriceConfigCreate;
 
 @Component({
-  selector: "app-historical-price-config",
+  selector: 'app-historical-price-config',
   imports: [
     MatInputModule,
     FormsModule,
@@ -34,8 +34,8 @@ export type Output = HistoricalSecurityPriceConfigCreate;
     MatIcon,
     FormField,
   ],
-  templateUrl: "historical-price-config.component.html",
-  styleUrls: ["historical-price-config.component.scss"],
+  templateUrl: 'historical-price-config.component.html',
+  styleUrls: ['historical-price-config.component.scss'],
 })
 export class HistoricalPriceConfigComponent {
   readonly securityId: InputSignal<number | undefined> = input<
@@ -67,7 +67,7 @@ export class HistoricalPriceConfigComponent {
     const dataSourceId: number = availableDataSources.length > 0 ? availableDataSources[0].id : 0;
     this.formModel = signal<FormModel>({
       isActive: false,
-      externalSecurityId: "",
+      externalSecurityId: '',
       dataSourceId
     });
 
@@ -94,7 +94,7 @@ export class HistoricalPriceConfigComponent {
     effect((): void => {
       const config: HistoricalSecurityPriceConfigRead | null = this.selectedConfig();
       const isActive: boolean = config?.isActive ?? false;
-      const externalSecurityId: string = config?.externalSecurityId ?? "";
+      const externalSecurityId: string = config?.externalSecurityId ?? '';
       const availableDataSources: DataSourceWithId[] = this.dataSources();
       const dataSourceId: number = config?.dataSourceId ?? (availableDataSources.length > 0 ? availableDataSources[0].id : 0);
       this.formModel.set({

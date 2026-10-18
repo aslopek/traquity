@@ -1,21 +1,21 @@
-import {Component, inject, OnDestroy, Signal} from "@angular/core";
-import {DepotPerformanceStore, ReadableDepotPerformanceStore} from "../store/depot-performance.store";
-import {RebasedDepotValue} from "../store/computed/rebased-depot-value.type";
-import {Store} from "@ngrx/store";
-import {AppState} from "../../../store/app.state";
-import {selectedDepotCurrency} from "../../../store/depot/depot.selector";
-import {hideAbsoluteValues} from "../../../store/app-config/app-config.selector";
-import {ECharts} from "echarts/core";
-import {NgxEchartsDirective} from "ngx-echarts";
-import {DepotPerformanceChartPipe} from "./depot-performance-chart.pipe";
-import {TqCurrencyPipe} from "../../../common/pipe/tq-currency.pipe";
-import {TqDatePipe} from "../../../common/pipe/tq-date.pipe";
-import {TqPercentPipe} from "../../../common/pipe/tq-percent.pipe";
-import {MatSlideToggle} from "@angular/material/slide-toggle";
-import {BenchmarkResult} from "../store/benchmark/benchmark.type";
+import {Component, inject, OnDestroy, Signal} from '@angular/core';
+import {DepotPerformanceStore, ReadableDepotPerformanceStore} from '../store/depot-performance.store';
+import {RebasedDepotValue} from '../store/computed/rebased-depot-value.type';
+import {Store} from '@ngrx/store';
+import {AppState} from '../../../store/app.state';
+import {selectedDepotCurrency} from '../../../store/depot/depot.selector';
+import {hideAbsoluteValues} from '../../../store/app-config/app-config.selector';
+import {ECharts} from 'echarts/core';
+import {NgxEchartsDirective} from 'ngx-echarts';
+import {DepotPerformanceChartPipe} from './depot-performance-chart.pipe';
+import {TqCurrencyPipe} from '../../../common/pipe/tq-currency.pipe';
+import {TqDatePipe} from '../../../common/pipe/tq-date.pipe';
+import {TqPercentPipe} from '../../../common/pipe/tq-percent.pipe';
+import {MatSlideToggle} from '@angular/material/slide-toggle';
+import {BenchmarkResult} from '../store/benchmark/benchmark.type';
 
 @Component({
-  selector: "app-depot-performance-chart",
+  selector: 'app-depot-performance-chart',
   imports: [
     NgxEchartsDirective,
     DepotPerformanceChartPipe,
@@ -26,8 +26,8 @@ import {BenchmarkResult} from "../store/benchmark/benchmark.type";
     TqDatePipe,
     TqPercentPipe
   ],
-  templateUrl: "./depot-performance-chart.component.html",
-  styleUrl: "./depot-performance-chart.component.scss",
+  templateUrl: './depot-performance-chart.component.html',
+  styleUrl: './depot-performance-chart.component.scss',
 })
 export class DepotPerformanceChartComponent implements OnDestroy {
 

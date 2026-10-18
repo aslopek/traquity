@@ -1,27 +1,27 @@
-import {Component, inject, Signal,} from "@angular/core";
-import {toSignal} from "@angular/core/rxjs-interop";
-import {MatButtonModule} from "@angular/material/button";
-import {MatDialog} from "@angular/material/dialog";
-import {MatIconModule} from "@angular/material/icon";
-import {MatToolbarModule} from "@angular/material/toolbar";
-import {MatTooltipModule} from "@angular/material/tooltip";
-import {Store} from "@ngrx/store";
-import {catchError, Observable, of, switchMap, take} from "rxjs";
-import {AdminApi, DatabaseConfig} from "../../gen/api/admin";
-import {AppConfigActions} from "../../store/app-config/app-config.actions";
-import {getOpenPage, isDevModeActive, isSideMenuOpen,} from "../../store/app-config/app-config.selector";
-import {DatabaseComponent} from "../database/database.component";
-import {AboutButtonComponent} from "../info/about-button/about-button.component";
-import {NotificationsComponent} from "./notifications/notifications.component";
-import {AppState} from "../../store/app.state";
-import {Page} from "../page.type";
-import {DepotControlsComponent} from "../../depot/depot-controls/depot-controls.component";
-import {SecurityControlsComponent} from "../../security/security-controls/security-controls.component";
-import {AiDownloadIndicatorComponent} from "./ai-download-indicator/ai-download-indicator.component";
-import {UpdateIndicatorComponent} from "./update-indicator/update-indicator.component";
+import {Component, inject, Signal,} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
+import {MatButtonModule} from '@angular/material/button';
+import {MatDialog} from '@angular/material/dialog';
+import {MatIconModule} from '@angular/material/icon';
+import {MatToolbarModule} from '@angular/material/toolbar';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {Store} from '@ngrx/store';
+import {catchError, Observable, of, switchMap, take} from 'rxjs';
+import {AdminApi, DatabaseConfig} from '../../gen/api/admin';
+import {AppConfigActions} from '../../store/app-config/app-config.actions';
+import {getOpenPage, isDevModeActive, isSideMenuOpen,} from '../../store/app-config/app-config.selector';
+import {DatabaseComponent} from '../database/database.component';
+import {AboutButtonComponent} from '../info/about-button/about-button.component';
+import {NotificationsComponent} from './notifications/notifications.component';
+import {AppState} from '../../store/app.state';
+import {Page} from '../page.type';
+import {DepotControlsComponent} from '../../depot/depot-controls/depot-controls.component';
+import {SecurityControlsComponent} from '../../security/security-controls/security-controls.component';
+import {AiDownloadIndicatorComponent} from './ai-download-indicator/ai-download-indicator.component';
+import {UpdateIndicatorComponent} from './update-indicator/update-indicator.component';
 
 @Component({
-  selector: "app-header",
+  selector: 'app-header',
   imports: [
     MatToolbarModule,
     MatIconModule,
@@ -34,8 +34,8 @@ import {UpdateIndicatorComponent} from "./update-indicator/update-indicator.comp
     UpdateIndicatorComponent,
     AboutButtonComponent,
   ],
-  templateUrl: "header.component.html",
-  styleUrls: ["header.component.scss"],
+  templateUrl: 'header.component.html',
+  styleUrls: ['header.component.scss'],
 })
 export class HeaderComponent {
   private readonly appConfigStore: Store<AppState> = inject(Store);
@@ -72,9 +72,9 @@ export class HeaderComponent {
       return;
     }
     this.dialog.open(DatabaseComponent, {
-      width: "95%",
-      height: "90%",
-      panelClass: "mat-app-background",
+      width: '95%',
+      height: '90%',
+      panelClass: 'mat-app-background',
       autoFocus: false,
       disableClose: true,
       data: databaseConfig,
@@ -82,6 +82,6 @@ export class HeaderComponent {
   }
 
   protected openNewTab(url: string): void {
-    window.open(url, "_blank");
+    window.open(url, '_blank');
   }
 }

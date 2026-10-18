@@ -1,5 +1,5 @@
 import {createActionGroup, emptyProps, props} from '@ngrx/store';
-import {AiActivateOutcome, AiDownloadOutcome, AiDownloadProgress, AiRemoveOutcome, ElectronAiState} from "../../bridge/ai-bridge.type";
+import {AiActivateOutcome, AiDownloadOutcome, AiDownloadProgress, AiRemoveOutcome, ElectronAiState} from '../../bridge/ai-bridge.type';
 
 export type LoadAiStateDoneActionArgs = {
   electronAiState: ElectronAiState

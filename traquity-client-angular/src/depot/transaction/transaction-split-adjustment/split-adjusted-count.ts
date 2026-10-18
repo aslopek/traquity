@@ -1,4 +1,4 @@
-import {StockSplit} from "../../../gen/api/security";
+import {StockSplit} from '../../../gen/api/security';
 
 /**
  * Applies every stock split with an `exDate` after `date`, each contributing its `quantityNew / quantityOld` ratio once.

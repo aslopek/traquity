@@ -37,7 +37,7 @@ const {createTrustedChannels} = require('./trusted-channels.js');
  *
  * A TLS-overridden environment collapses the registration to two channels - `startup:getState` and `app:quit` -
  * before anything else is registered: with no `java:download`, no `backend:start` and no `config:apply` registered,
- * "nothing can be done" is enforced by architecture.
+ * 'nothing can be done' is enforced by architecture.
  *
  * Every channel is registered behind `isTrustedSender`, which runs before that channel's own argument schema: a
  * registration is per channel name rather than per frame, so *which* frame sent an event is a question only the event

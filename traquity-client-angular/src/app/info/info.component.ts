@@ -1,19 +1,19 @@
-import {Component, inject, OnInit, signal, WritableSignal} from "@angular/core";
-import {HttpClient} from "@angular/common/http";
-import {MatDialogRef} from "@angular/material/dialog";
-import {MatIconModule} from "@angular/material/icon";
-import {MatTabsModule} from "@angular/material/tabs";
-import {firstValueFrom} from "rxjs";
-import * as packageJson from "../../../package.json";
-import {TitleToolbarComponent} from "../../common/components/title-toolbar/title-toolbar.component";
-import {AdminApi, ThirdPartyLicense} from "../../gen/api/admin";
-import {LicenseComponent} from "../license/license.component";
-import {PrivacyNoticeComponent} from "../privacy/privacy-notice/privacy-notice.component";
-import {LicenseEntryKeyPipe, LicenseSection} from "./license-entry-key.pipe";
-import {ThirdPartyLicenseEntry, ThirdPartyLicensesFile} from "./third-party-license-entry.type";
+import {Component, inject, OnInit, signal, WritableSignal} from '@angular/core';
+import {HttpClient} from '@angular/common/http';
+import {MatDialogRef} from '@angular/material/dialog';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTabsModule} from '@angular/material/tabs';
+import {firstValueFrom} from 'rxjs';
+import * as packageJson from '../../../package.json';
+import {TitleToolbarComponent} from '../../common/components/title-toolbar/title-toolbar.component';
+import {AdminApi, ThirdPartyLicense} from '../../gen/api/admin';
+import {LicenseComponent} from '../license/license.component';
+import {PrivacyNoticeComponent} from '../privacy/privacy-notice/privacy-notice.component';
+import {LicenseEntryKeyPipe, LicenseSection} from './license-entry-key.pipe';
+import {ThirdPartyLicenseEntry, ThirdPartyLicensesFile} from './third-party-license-entry.type';
 
 @Component({
-  selector: "app-info",
+  selector: 'app-info',
   imports: [
     MatTabsModule,
     MatIconModule,
@@ -22,8 +22,8 @@ import {ThirdPartyLicenseEntry, ThirdPartyLicensesFile} from "./third-party-lice
     LicenseEntryKeyPipe,
     PrivacyNoticeComponent,
   ],
-  templateUrl: "info.component.html",
-  styleUrls: ["info.component.scss"],
+  templateUrl: 'info.component.html',
+  styleUrls: ['info.component.scss'],
 })
 export class InfoComponent implements OnInit {
 
@@ -46,7 +46,7 @@ export class InfoComponent implements OnInit {
 
     try {
       const licensesFile: ThirdPartyLicensesFile =
-        await firstValueFrom(this.httpClient.get<ThirdPartyLicensesFile>("assets/third-party-licenses.json"));
+        await firstValueFrom(this.httpClient.get<ThirdPartyLicensesFile>('assets/third-party-licenses.json'));
       this.frontendLicenses.set(licensesFile.packages);
     } catch {
       // show error in dialog
@@ -64,6 +64,6 @@ export class InfoComponent implements OnInit {
 
   protected openNpm(dependency: string, event: MouseEvent): void {
     event.stopPropagation();
-    window.open(`https://www.npmjs.com/package/${dependency}`, "_blank");
+    window.open(`https://www.npmjs.com/package/${dependency}`, '_blank');
   }
 }

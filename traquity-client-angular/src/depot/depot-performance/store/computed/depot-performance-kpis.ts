@@ -1,6 +1,6 @@
-import {computed, Signal} from "@angular/core";
-import {RebasedDepotValue} from "./rebased-depot-value.type";
-import {relativeTo} from "./depot-values";
+import {computed, Signal} from '@angular/core';
+import {RebasedDepotValue} from './rebased-depot-value.type';
+import {relativeTo} from './depot-values';
 
 export type DepotPerformanceKpis = {
   investedCapital: number
@@ -35,7 +35,7 @@ export function depotPerformanceKpis(depotValuesSignal: Signal<RebasedDepotValue
     const first: RebasedDepotValue = depotValues[0];
     const last: RebasedDepotValue = depotValues[depotValues.length - 1];
     const isRebased: boolean = isRebasedSignal();
-    // with a single data point in view there's no "during the window" to measure growth over
+    // with a single data point in view there's no 'during the window' to measure growth over
     const isSingleDataPoint: boolean = depotValues.length === 1;
 
     return {

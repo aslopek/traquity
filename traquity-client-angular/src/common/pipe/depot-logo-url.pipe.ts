@@ -1,8 +1,8 @@
-import {Pipe, PipeTransform} from "@angular/core";
-import {DepotLogoApi} from "../../gen/api/depot";
+import {Pipe, PipeTransform} from '@angular/core';
+import {DepotLogoApi} from '../../gen/api/depot';
 
 @Pipe({
-  name: "depotLogoUrl",
+  name: 'depotLogoUrl',
 })
 export class DepotLogoUrlPipe implements PipeTransform {
 

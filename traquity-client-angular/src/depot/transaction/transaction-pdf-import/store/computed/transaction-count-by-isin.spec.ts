@@ -1,17 +1,17 @@
-import {describe, expect, it} from "@jest/globals";
-import {signalState, SignalState} from "@ngrx/signals";
-import {collectedTransactionFactory} from "../../../../../testing/collected-transaction.factory";
-import {initialState, TransactionPdfImportState} from "../transaction-pdf-import.type";
-import {transactionCountByIsin} from "./transaction-count-by-isin";
+import {describe, expect, it} from '@jest/globals';
+import {signalState, SignalState} from '@ngrx/signals';
+import {collectedTransactionFactory} from '../../../../../testing/collected-transaction.factory';
+import {initialState, TransactionPdfImportState} from '../transaction-pdf-import.type';
+import {transactionCountByIsin} from './transaction-count-by-isin';
 
-describe("transactionCountByIsin", (): void => {
-  it("counts how many collected() entries name each ISIN", (): void => {
+describe('transactionCountByIsin', (): void => {
+  it('counts how many collected() entries name each ISIN', (): void => {
     const store: SignalState<TransactionPdfImportState> = signalState<TransactionPdfImportState>({
       ...initialState,
       collected: [
-        collectedTransactionFactory({isin: "US0378331005", path: "/a.pdf"}),
-        collectedTransactionFactory({isin: "DE0007236101", path: "/b.pdf"}),
-        collectedTransactionFactory({isin: "US0378331005", path: "/c.pdf"})
+        collectedTransactionFactory({isin: 'US0378331005', path: '/a.pdf'}),
+        collectedTransactionFactory({isin: 'DE0007236101', path: '/b.pdf'}),
+        collectedTransactionFactory({isin: 'US0378331005', path: '/c.pdf'})
       ]
     });
 
@@ -21,7 +21,7 @@ describe("transactionCountByIsin", (): void => {
     });
   });
 
-  it("yields an empty record when nothing was collected", (): void => {
+  it('yields an empty record when nothing was collected', (): void => {
     const store: SignalState<TransactionPdfImportState> = signalState<TransactionPdfImportState>({...initialState});
 
     expect(transactionCountByIsin(store)()).toEqual({});

@@ -1,5 +1,5 @@
-import {beforeEach, describe, expect, it, jest} from "@jest/globals";
-import {FileDropDirective} from "./file-drop.directive";
+import {beforeEach, describe, expect, it, jest} from '@jest/globals';
+import {FileDropDirective} from './file-drop.directive';
 
 /** The four handlers the host bindings reach, which are `protected` on the directive itself. */
 type DragHandlers = {
@@ -9,13 +9,13 @@ type DragHandlers = {
   onDrop: (event: DragEvent) => void
 };
 
-type DragEventStub = Pick<DragEvent, "preventDefault"> & { dataTransfer: { files: File[] } };
+type DragEventStub = Pick<DragEvent, 'preventDefault'> & { dataTransfer: { files: File[] } };
 
-function fileFactory(name: string = "settlement.pdf"): File {
-  return {name, type: "application/pdf"} as File;
+function fileFactory(name: string = 'settlement.pdf'): File {
+  return {name, type: 'application/pdf'} as File;
 }
 
-describe("FileDropDirective", (): void => {
+describe('FileDropDirective', (): void => {
   let directive: FileDropDirective;
   let handlers: DragHandlers;
   let preventDefault: jest.Mock<() => void>;
@@ -41,21 +41,21 @@ describe("FileDropDirective", (): void => {
     });
   });
 
-  it("emits the dropped file", (): void => {
+  it('emits the dropped file', (): void => {
     handlers.onDrop(dragEvent());
 
     expect(dropped).toEqual([files]);
   });
 
-  it("emits every dropped file in one list", (): void => {
-    files = [fileFactory("first.pdf"), fileFactory("second.csv")];
+  it('emits every dropped file in one list', (): void => {
+    files = [fileFactory('first.pdf'), fileFactory('second.csv')];
 
     handlers.onDrop(dragEvent());
 
     expect(dropped).toEqual([files]);
   });
 
-  it("emits nothing for a drop carrying no file at all", (): void => {
+  it('emits nothing for a drop carrying no file at all', (): void => {
     files = [];
 
     handlers.onDrop(dragEvent());
@@ -63,76 +63,76 @@ describe("FileDropDirective", (): void => {
     expect(dropped).toEqual([]);
   });
 
-  it("prevents the default on a drop, which would otherwise navigate to the file", (): void => {
+  it('prevents the default on a drop, which would otherwise navigate to the file', (): void => {
     handlers.onDrop(dragEvent());
 
     expect(preventDefault).toHaveBeenCalledWith();
     expect(preventDefault).toHaveBeenCalledTimes(1);
   });
 
-  it("prevents the default while dragging over, without which no drop happens", (): void => {
+  it('prevents the default while dragging over, without which no drop happens', (): void => {
     handlers.onDragOver(dragEvent());
 
     expect(preventDefault).toHaveBeenCalledWith();
     expect(preventDefault).toHaveBeenCalledTimes(1);
   });
 
-  describe("the drag state", (): void => {
-    it("is not set before a drag arrives", (): void => {
-      expect(directive["dragOver"]()).toBe(false);
+  describe('the drag state', (): void => {
+    it('is not set before a drag arrives', (): void => {
+      expect(directive['dragOver']()).toBe(false);
     });
 
-    it("is set once a drag enters", (): void => {
+    it('is set once a drag enters', (): void => {
       handlers.onDragEnter(dragEvent());
 
-      expect(directive["dragOver"]()).toBe(true);
+      expect(directive['dragOver']()).toBe(true);
     });
 
-    it("is cleared once the drag has left again", (): void => {
-      handlers.onDragEnter(dragEvent());
-      handlers.onDragLeave(dragEvent());
-
-      expect(directive["dragOver"]()).toBe(false);
-    });
-
-    it("survives a pointer crossing a child of the host", (): void => {
-      handlers.onDragEnter(dragEvent());
+    it('is cleared once the drag has left again', (): void => {
       handlers.onDragEnter(dragEvent());
       handlers.onDragLeave(dragEvent());
 
-      expect(directive["dragOver"]()).toBe(true);
+      expect(directive['dragOver']()).toBe(false);
     });
 
-    it("is cleared by the drop itself", (): void => {
+    it('survives a pointer crossing a child of the host', (): void => {
+      handlers.onDragEnter(dragEvent());
+      handlers.onDragEnter(dragEvent());
+      handlers.onDragLeave(dragEvent());
+
+      expect(directive['dragOver']()).toBe(true);
+    });
+
+    it('is cleared by the drop itself', (): void => {
       handlers.onDragEnter(dragEvent());
       handlers.onDrop(dragEvent());
 
-      expect(directive["dragOver"]()).toBe(false);
+      expect(directive['dragOver']()).toBe(false);
     });
   });
 
-  describe("while disabled", (): void => {
+  describe('while disabled', (): void => {
     beforeEach((): void => {
       directive.fileDropDisabled = true;
     });
 
-    it("emits nothing for a drop", (): void => {
+    it('emits nothing for a drop', (): void => {
       handlers.onDrop(dragEvent());
 
       expect(dropped).toEqual([]);
     });
 
-    it("leaves the default in place, so the host is no drop target", (): void => {
+    it('leaves the default in place, so the host is no drop target', (): void => {
       handlers.onDragOver(dragEvent());
       handlers.onDrop(dragEvent());
 
       expect(preventDefault).not.toHaveBeenCalled();
     });
 
-    it("does not mark the host as a drag target", (): void => {
+    it('does not mark the host as a drag target', (): void => {
       handlers.onDragEnter(dragEvent());
 
-      expect(directive["dragOver"]()).toBe(false);
+      expect(directive['dragOver']()).toBe(false);
     });
   });
 });

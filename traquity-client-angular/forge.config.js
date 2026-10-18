@@ -9,7 +9,7 @@ const {FuseV1Options, FuseVersion} = require('@electron/fuses');
 // delivered as an extraResource). Hence an allowlist rather than a list of exclusions: a file added later ships only
 // if it lands somewhere named here, instead of shipping by default and being noticed by nobody.
 const packagedPaths = [
-    '/package.json',            // Electron resolves the "main" entry point through it
+  '/package.json',            // Electron resolves the 'main' entry point through it
     '/electron',                // the main process
     '/dist/traquity/browser', // the built Angular app that electron/main.js loads
     '/node_modules'             // production dependency closure - electron-packager prunes the devDependencies itself

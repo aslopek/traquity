@@ -1,7 +1,7 @@
-import {Pipe, PipeTransform} from "@angular/core";
+import {Pipe, PipeTransform} from '@angular/core';
 
 @Pipe({
-  name: "filePreview",
+  name: 'filePreview',
 })
 export class FilePreviewPipe implements PipeTransform {
   transform(file: File | undefined | null): string | null {

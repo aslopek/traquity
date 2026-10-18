@@ -1,30 +1,30 @@
-import {IMAGE_CONFIG, registerLocaleData} from "@angular/common";
-import {provideHttpClient, withXhr} from "@angular/common/http";
-import localeDe from "@angular/common/locales/de";
-import localeDeExtra from "@angular/common/locales/extra/de";
-import {ApplicationConfig, importProvidersFrom, inject, provideAppInitializer,} from "@angular/core";
-import {MatIconRegistry} from "@angular/material/icon";
-import {DateAdapter, MatNativeDateModule} from "@angular/material/core";
-import {provideRouter} from "@angular/router";
-import {TqDateAdapter} from "../common/date/tq-date-adapter";
-import {configurePdfWorker} from "../common/pdf/configure-pdf-worker";
-import {TqDatePipe} from "../common/pipe/tq-date.pipe";
-import {provideEffects} from "@ngrx/effects";
-import {provideStore} from "@ngrx/store";
-import {AiEffects} from "../store/ai/ai.effects";
-import {aiReducer} from "../store/ai/ai.reducer";
-import {AppConfigEffects} from "../store/app-config/app-config.effects";
-import {appConfigReducer} from "../store/app-config/app-config.reducer";
-import {DividendAnnouncementEffects} from "../store/dividend-announcement/dividend-announcement.effects";
-import {dividendAnnouncementReducer} from "../store/dividend-announcement/dividend-announcement.reducer";
-import {notificationReducer} from "../store/notification/notification.reducer";
-import {routes} from "./app.routes";
-import {initializeStartup} from "./startup/startup.initializer";
-import {BarChart, LineChart, PieChart} from "echarts/charts";
-import * as echarts from "echarts/core";
-import {provideEchartsCore} from "ngx-echarts";
-import {SVGRenderer} from "echarts/renderers";
-import {GridComponent, LegendComponent, TooltipComponent,} from "echarts/components";
+import {IMAGE_CONFIG, registerLocaleData} from '@angular/common';
+import {provideHttpClient, withXhr} from '@angular/common/http';
+import localeDe from '@angular/common/locales/de';
+import localeDeExtra from '@angular/common/locales/extra/de';
+import {ApplicationConfig, importProvidersFrom, inject, provideAppInitializer,} from '@angular/core';
+import {MatIconRegistry} from '@angular/material/icon';
+import {DateAdapter, MatNativeDateModule} from '@angular/material/core';
+import {provideRouter} from '@angular/router';
+import {TqDateAdapter} from '../common/date/tq-date-adapter';
+import {configurePdfWorker} from '../common/pdf/configure-pdf-worker';
+import {TqDatePipe} from '../common/pipe/tq-date.pipe';
+import {provideEffects} from '@ngrx/effects';
+import {provideStore} from '@ngrx/store';
+import {AiEffects} from '../store/ai/ai.effects';
+import {aiReducer} from '../store/ai/ai.reducer';
+import {AppConfigEffects} from '../store/app-config/app-config.effects';
+import {appConfigReducer} from '../store/app-config/app-config.reducer';
+import {DividendAnnouncementEffects} from '../store/dividend-announcement/dividend-announcement.effects';
+import {dividendAnnouncementReducer} from '../store/dividend-announcement/dividend-announcement.reducer';
+import {notificationReducer} from '../store/notification/notification.reducer';
+import {routes} from './app.routes';
+import {initializeStartup} from './startup/startup.initializer';
+import {BarChart, LineChart, PieChart} from 'echarts/charts';
+import * as echarts from 'echarts/core';
+import {provideEchartsCore} from 'ngx-echarts';
+import {SVGRenderer} from 'echarts/renderers';
+import {GridComponent, LegendComponent, TooltipComponent,} from 'echarts/components';
 import {
   aiSlice,
   appConfigSlice,
@@ -32,13 +32,13 @@ import {
   dividendAnnouncementSlice,
   notificationSlice,
   securitySlice,
-} from "../store/app.state";
-import {securityReducer} from "../store/security/security.reducer";
-import {SecurityEffects} from "../store/security/security.effects";
-import {depotReducer} from "../store/depot/depot.reducer";
-import {DepotEffects} from "../store/depot/depot.effects";
+} from '../store/app.state';
+import {securityReducer} from '../store/security/security.reducer';
+import {SecurityEffects} from '../store/security/security.effects';
+import {depotReducer} from '../store/depot/depot.reducer';
+import {DepotEffects} from '../store/depot/depot.effects';
 
-registerLocaleData(localeDe, "de-DE", localeDeExtra);
+registerLocaleData(localeDe, 'de-DE', localeDeExtra);
 
 // A pdf.js global, so it is set once for the application and not per parse.
 configurePdfWorker();
@@ -83,7 +83,7 @@ export const appConfig: ApplicationConfig = {
     TqDatePipe,
     {provide: DateAdapter, useClass: TqDateAdapter},
     provideAppInitializer(() => {
-      inject(MatIconRegistry).setDefaultFontSetClass("material-symbols-outlined", "mat-ligature-font");
+      inject(MatIconRegistry).setDefaultFontSetClass('material-symbols-outlined', 'mat-ligature-font');
     }),
     provideAppInitializer(() => initializeStartup()),
     {

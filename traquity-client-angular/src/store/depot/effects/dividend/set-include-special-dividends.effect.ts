@@ -1,13 +1,13 @@
-import {Actions, ofType} from "@ngrx/effects";
-import {ConfigApi} from "../../../../gen/api/configuration";
-import {Action, Store} from "@ngrx/store";
-import {AppState} from "../../../app.state";
-import {catchError, map, Observable, of, switchMap} from "rxjs";
-import {DepotActions, SetIncludeSpecialDividendsActionArgs} from "../../depot.actions";
-import {concatLatestFrom} from "@ngrx/operators";
-import {dividendIncludeSpecialDividends as includeSpecialDividendsConfigKey} from "../../depot-config-keys";
-import {includeSpecialDividends as includeSpecialDividendsSelector} from "../../depot.selector";
-import {clientId} from "../../../client-id";
+import {Actions, ofType} from '@ngrx/effects';
+import {ConfigApi} from '../../../../gen/api/configuration';
+import {Action, Store} from '@ngrx/store';
+import {AppState} from '../../../app.state';
+import {catchError, map, Observable, of, switchMap} from 'rxjs';
+import {DepotActions, SetIncludeSpecialDividendsActionArgs} from '../../depot.actions';
+import {concatLatestFrom} from '@ngrx/operators';
+import {dividendIncludeSpecialDividends as includeSpecialDividendsConfigKey} from '../../depot-config-keys';
+import {includeSpecialDividends as includeSpecialDividendsSelector} from '../../depot.selector';
+import {clientId} from '../../../client-id';
 
 export type IncludeSpecialDividendsEffectArgs = {
   actions$: Actions

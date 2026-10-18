@@ -1,27 +1,27 @@
-import {Component, inject, Signal,} from "@angular/core";
-import {MatDialog} from "@angular/material/dialog";
-import {MatTooltipModule} from "@angular/material/tooltip";
-import {Store} from "@ngrx/store";
-import {PerformanceLabelComponent} from "../../../common/components/performance-label/performance-label.component";
-import {TqCurrencyPipe} from "../../../common/pipe/tq-currency.pipe";
-import {TqPercentPipe} from "../../../common/pipe/tq-percent.pipe";
+import {Component, inject, Signal,} from '@angular/core';
+import {MatDialog} from '@angular/material/dialog';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {Store} from '@ngrx/store';
+import {PerformanceLabelComponent} from '../../../common/components/performance-label/performance-label.component';
+import {TqCurrencyPipe} from '../../../common/pipe/tq-currency.pipe';
+import {TqPercentPipe} from '../../../common/pipe/tq-percent.pipe';
 import {
   depotBreakdownDialogData,
   groupBreakdownDialogData,
   openPerformanceBreakdownDialog,
-} from "../../performance-breakdown/performance-breakdown-dialog/open-performance-breakdown-dialog";
-import {hideAbsoluteValues} from "../../../store/app-config/app-config.selector";
-import {AppState} from "../../../store/app.state";
-import {Positions} from "../../../store/depot/depot.state";
+} from '../../performance-breakdown/performance-breakdown-dialog/open-performance-breakdown-dialog';
+import {hideAbsoluteValues} from '../../../store/app-config/app-config.selector';
+import {AppState} from '../../../store/app.state';
+import {Positions} from '../../../store/depot/depot.state';
 import {
   groupedPositions, positions, selectedDepotCurrency, selectedDepotIds, usePositionBuyInValues,
-} from "../../../store/depot/depot.selector";
-import {GroupedPositions, PositionGroup} from "../../../store/depot/position-grouping/position-group.type";
-import {PositionGroupTextPipe} from "../position-group-text.pipe";
-import {PositionListRowComponent} from "./position-list-row/position-list-row.component";
+} from '../../../store/depot/depot.selector';
+import {GroupedPositions, PositionGroup} from '../../../store/depot/position-grouping/position-group.type';
+import {PositionGroupTextPipe} from '../position-group-text.pipe';
+import {PositionListRowComponent} from './position-list-row/position-list-row.component';
 
 @Component({
-  selector: "app-position-list",
+  selector: 'app-position-list',
   imports: [
     TqCurrencyPipe,
     PerformanceLabelComponent,
@@ -30,8 +30,8 @@ import {PositionListRowComponent} from "./position-list-row/position-list-row.co
     PositionGroupTextPipe,
   ],
   providers: [TqCurrencyPipe, TqPercentPipe, PositionGroupTextPipe],
-  templateUrl: "./position-list.component.html",
-  styleUrl: "./position-list.component.scss",
+  templateUrl: './position-list.component.html',
+  styleUrl: './position-list.component.scss',
 })
 export class PositionListComponent {
   protected readonly depotCurrency: Signal<string>;

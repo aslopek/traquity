@@ -1,4 +1,4 @@
-import {Directive, EventEmitter, Input, Output, signal, WritableSignal} from "@angular/core";
+import {Directive, EventEmitter, Input, Output, signal, WritableSignal} from '@angular/core';
 
 /**
  * Turns its host element into a drop target for files.
@@ -14,13 +14,13 @@ import {Directive, EventEmitter, Input, Output, signal, WritableSignal} from "@a
  * left it. The depth counter keeps the drag state correct over a host with children.
  */
 @Directive({
-  selector: "[appFileDrop]",
+  selector: '[appFileDrop]',
   host: {
-    "(dragenter)": "onDragEnter($event)",
-    "(dragover)": "onDragOver($event)",
-    "(dragleave)": "onDragLeave($event)",
-    "(drop)": "onDrop($event)",
-    "[class.file-drop-over]": "dragOver()",
+    '(dragenter)': 'onDragEnter($event)',
+    '(dragover)': 'onDragOver($event)',
+    '(dragleave)': 'onDragLeave($event)',
+    '(drop)': 'onDrop($event)',
+    '[class.file-drop-over]': 'dragOver()',
   },
 })
 export class FileDropDirective {

@@ -1,7 +1,7 @@
 import {beforeEach, describe, expect, it} from '@jest/globals';
 import {AiState} from '../ai.state';
 import {getIsAiActiveSelector} from './get-is-ai-active.selector';
-import {initialState} from "../ai.reducer";
+import {initialState} from '../ai.reducer';
 
 describe('getIsAiActiveSelector', (): void => {
   let state: AiState;

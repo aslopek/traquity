@@ -12,20 +12,20 @@ import {
   positionUseBuyIn,
   selectedDepotIds,
   selectedTabIndex
-} from "./depot-config-keys";
-import {addDepotReducer} from "./reducers/add-depot.reducer";
-import {deleteDepotReducer} from "./reducers/delete-depot.reducer";
-import {selectDepotTabReducer} from "./reducers/select-depot-tab.reducer";
-import {toggleDepotSelectionReducer} from "./reducers/toggle-depot-selection.reducer";
-import {setPerformanceDataReducer} from "./reducers/set-performance-data.reducer";
-import {setIncludeSpecialDividendsReducer} from "./reducers/dividend/set-include-special-dividends.reducer";
-import {setUseDividendGrossValuesReducer} from "./reducers/dividend/set-use-dividend-gross-values.reducer";
-import {setDividendAggregationTimespanReducer} from "./reducers/dividend/set-dividend-aggregation-timespan.reducer";
-import {setSelectedDividendViewReducer} from "./reducers/dividend/set-selected-dividend-view.reducer";
-import {setUsePositionBuyInValuesReducer} from "./reducers/position/set-use-position-buy-in-values.reducer";
-import {setSelectedPositionViewReducer} from "./reducers/position/set-selected-position-view.reducer";
-import {setPerformanceReducer} from "./reducers/performance/set-performance.reducer";
-import {setPositionGroupByReducer} from "./reducers/position/set-position-group-by.reducer";
+} from './depot-config-keys';
+import {addDepotReducer} from './reducers/add-depot.reducer';
+import {deleteDepotReducer} from './reducers/delete-depot.reducer';
+import {selectDepotTabReducer} from './reducers/select-depot-tab.reducer';
+import {toggleDepotSelectionReducer} from './reducers/toggle-depot-selection.reducer';
+import {setPerformanceDataReducer} from './reducers/set-performance-data.reducer';
+import {setIncludeSpecialDividendsReducer} from './reducers/dividend/set-include-special-dividends.reducer';
+import {setUseDividendGrossValuesReducer} from './reducers/dividend/set-use-dividend-gross-values.reducer';
+import {setDividendAggregationTimespanReducer} from './reducers/dividend/set-dividend-aggregation-timespan.reducer';
+import {setSelectedDividendViewReducer} from './reducers/dividend/set-selected-dividend-view.reducer';
+import {setUsePositionBuyInValuesReducer} from './reducers/position/set-use-position-buy-in-values.reducer';
+import {setSelectedPositionViewReducer} from './reducers/position/set-selected-position-view.reducer';
+import {setPerformanceReducer} from './reducers/performance/set-performance.reducer';
+import {setPositionGroupByReducer} from './reducers/position/set-position-group-by.reducer';
 
 export const initialState: DepotState = {
   depots: [],

@@ -1,9 +1,9 @@
-import {StockSplit, StockSplitApi} from "../../../../../gen/api/security";
-import {WritableSignalStore} from "../../../../../common/types/signal-store.type";
-import {StockSplitParams, StockSplitState} from "../stock-split.store";
-import {catchError, EMPTY, take} from "rxjs";
-import {patchState} from "@ngrx/signals";
-import {toDateString} from "../../../../../common/functions/to-date-string";
+import {StockSplit, StockSplitApi} from '../../../../../gen/api/security';
+import {WritableSignalStore} from '../../../../../common/types/signal-store.type';
+import {StockSplitParams, StockSplitState} from '../stock-split.store';
+import {catchError, EMPTY, take} from 'rxjs';
+import {patchState} from '@ngrx/signals';
+import {toDateString} from '../../../../../common/functions/to-date-string';
 
 export function addStockSplit(signalStore: WritableSignalStore<StockSplitState>,
                               stockSplitApi: StockSplitApi): void {

@@ -1,4 +1,4 @@
-import {z} from "zod";
+import {z} from 'zod';
 import {
   currencyMappingSchema,
   dateConfigurationSchema,
@@ -7,7 +7,7 @@ import {
   requestHeaderSchema,
   urlPatternSchema,
   zonedTimeSchema
-} from "./data-source.schema";
+} from './data-source.schema';
 
 export type DataSourceVariant = 'historical-security-price' | 'dividend-announcement';
 

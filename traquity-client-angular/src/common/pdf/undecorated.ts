@@ -16,5 +16,5 @@ const DECORATION_AROUND_SIGN: RegExp = /^[^\p{L}\p{N}+-]+|[^\p{L}\p{N}+-]+$/gu;
  * @param keepSign whether a leading or trailing `+`/`-` belongs to the value, as it does for an amount
  */
 export function undecorated(text: string, {keepSign = false}: { keepSign?: boolean } = {}): string {
-  return text.replace(keepSign ? DECORATION_AROUND_SIGN : DECORATION, "");
+  return text.replace(keepSign ? DECORATION_AROUND_SIGN : DECORATION, '');
 }

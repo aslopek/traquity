@@ -1,5 +1,5 @@
-import {dividendAnnouncementDataSourceSchema, historicalSecurityPriceDataSourceSchema} from "./data-source.schema";
-import {DataSourceVariant, MultiUrlDataSource, SingleUrlDataSource} from "./data-source.type";
+import {dividendAnnouncementDataSourceSchema, historicalSecurityPriceDataSourceSchema} from './data-source.schema';
+import {DataSourceVariant, MultiUrlDataSource, SingleUrlDataSource} from './data-source.type';
 
 export type ParsedDataSource =
   | { variant: 'historical-security-price', dataSource: MultiUrlDataSource }

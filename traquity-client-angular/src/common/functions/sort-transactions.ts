@@ -1,4 +1,4 @@
-import {TransactionRead} from "../../gen/api/depot-transaction";
+import {TransactionRead} from '../../gen/api/depot-transaction';
 
 const transactionTypeOrder = {
   'DIVIDEND': 1,

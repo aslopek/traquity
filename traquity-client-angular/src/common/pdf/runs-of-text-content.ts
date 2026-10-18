@@ -1,4 +1,4 @@
-import {PdfRun} from "./pdf-document.type";
+import {PdfRun} from './pdf-document.type';
 
 /**
  * The part of a pdf.js text item this stage reads. Declared here as its own minimal type, so the stage depends on
@@ -25,7 +25,7 @@ const FALLBACK_HEIGHT: number = 8;
  */
 export function runsOfTextContent(items: PdfTextItem[], pageHeight: number): PdfRun[] {
   return items
-    .filter((item: PdfTextItem): boolean => item.str.trim() !== "")
+    .filter((item: PdfTextItem): boolean => item.str.trim() !== '')
     .map((item: PdfTextItem): PdfRun => ({
       text: item.str,
       x: item.transform[4],

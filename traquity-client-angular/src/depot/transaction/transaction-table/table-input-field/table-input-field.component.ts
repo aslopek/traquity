@@ -1,11 +1,11 @@
-import {Component, EventEmitter, Input, Output,} from "@angular/core";
-import {MatInputModule} from "@angular/material/input";
+import {Component, EventEmitter, Input, Output,} from '@angular/core';
+import {MatInputModule} from '@angular/material/input';
 
 @Component({
-  selector: "app-table-input-field",
+  selector: 'app-table-input-field',
   imports: [MatInputModule],
-  templateUrl: "./table-input-field.component.html",
-  styleUrl: "./table-input-field.component.scss",
+  templateUrl: './table-input-field.component.html',
+  styleUrl: './table-input-field.component.scss',
 })
 export class TableInputFieldComponent {
   @Input()
@@ -20,8 +20,8 @@ export class TableInputFieldComponent {
 
   protected emit(event: Event): void {
     const value: string = (event.target as HTMLInputElement).value.replace(
-      ",",
-      ".",
+      ',',
+      '.',
     );
     let parsedValue: number | undefined = Number(value);
 

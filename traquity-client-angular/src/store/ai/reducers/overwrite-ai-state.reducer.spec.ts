@@ -2,7 +2,7 @@ import {beforeEach, describe, expect, it} from '@jest/globals';
 import {ElectronAiState, ModelEntry} from '../../../bridge/ai-bridge.type';
 import {AiState} from '../ai.state';
 import {overwriteAiState} from './overwrite-ai-state.reducer';
-import {initialState} from "../ai.reducer";
+import {initialState} from '../ai.reducer';
 
 describe('overwriteAiState', (): void => {
   const modelAPath: string = 'C:\\traquity\\ai\\models\\model-a.gguf';

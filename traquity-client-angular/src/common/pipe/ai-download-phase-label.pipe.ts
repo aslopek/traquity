@@ -1,11 +1,11 @@
-import {Pipe, PipeTransform} from "@angular/core";
-import {AiDownloadPhase} from "../../bridge/ai-bridge.type";
+import {Pipe, PipeTransform} from '@angular/core';
+import {AiDownloadPhase} from '../../bridge/ai-bridge.type';
 
 /**
  * The caption `app-download-progress` shows instead of its byte-derived line for a phase that carries no byte count.
  * The downloading phase needs none - that phase is exactly where the byte-derived line takes over.
  */
-@Pipe({name: "aiDownloadPhaseLabel"})
+@Pipe({name: 'aiDownloadPhaseLabel'})
 export class AiDownloadPhaseLabelPipe implements PipeTransform {
 
   transform(phase: AiDownloadPhase): string | undefined {

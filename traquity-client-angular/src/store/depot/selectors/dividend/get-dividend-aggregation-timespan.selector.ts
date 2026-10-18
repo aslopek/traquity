@@ -1,5 +1,5 @@
-import {DepotState} from "../../depot.state";
-import {Timespan} from "../../../../common/types/timespan";
+import {DepotState} from '../../depot.state';
+import {Timespan} from '../../../../common/types/timespan';
 
 export type GetDividendAggregationTimespanState = {
   dividend: Pick<DepotState['dividend'], 'aggregationTimespan'>

@@ -5,4 +5,4 @@
  * fetched at runtime: the bundler follows the `new URL('./pdf.worker', import.meta.url)` beside it, and what ships
  * is same-origin, which is all `script-src 'self'` admits.
  */
-import "pdfjs-dist/build/pdf.worker.min.mjs";
+import 'pdfjs-dist/build/pdf.worker.min.mjs';

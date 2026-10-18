@@ -1,19 +1,19 @@
-import {Component, computed, input, InputSignal, Signal} from "@angular/core";
-import {SecurityNamePipe} from "../../../../common/pipe/security-name.pipe";
-import {TqCurrencyPipe} from "../../../../common/pipe/tq-currency.pipe";
-import {TqDatePipe} from "../../../../common/pipe/tq-date.pipe";
-import {TransactionTypeDisplayIconPipe} from "../../../../common/pipe/transaction-type-display-icon.pipe";
-import {TransactionTypeDisplayNamePipe} from "../../../../common/pipe/transaction-type-display-name.pipe";
-import {Store} from "@ngrx/store";
-import {AppState} from "../../../../store/app.state";
-import {selectedDepotCurrency} from "../../../../store/depot/depot.selector";
-import {MatIcon} from "@angular/material/icon";
-import {MatTooltip} from "@angular/material/tooltip";
-import {TransactionWithCashFlow} from "../../store/computed/grouped-transactions";
-import {SecurityLogoComponent} from "../../../../common/components/security-logo/security-logo.component";
+import {Component, computed, input, InputSignal, Signal} from '@angular/core';
+import {SecurityNamePipe} from '../../../../common/pipe/security-name.pipe';
+import {TqCurrencyPipe} from '../../../../common/pipe/tq-currency.pipe';
+import {TqDatePipe} from '../../../../common/pipe/tq-date.pipe';
+import {TransactionTypeDisplayIconPipe} from '../../../../common/pipe/transaction-type-display-icon.pipe';
+import {TransactionTypeDisplayNamePipe} from '../../../../common/pipe/transaction-type-display-name.pipe';
+import {Store} from '@ngrx/store';
+import {AppState} from '../../../../store/app.state';
+import {selectedDepotCurrency} from '../../../../store/depot/depot.selector';
+import {MatIcon} from '@angular/material/icon';
+import {MatTooltip} from '@angular/material/tooltip';
+import {TransactionWithCashFlow} from '../../store/computed/grouped-transactions';
+import {SecurityLogoComponent} from '../../../../common/components/security-logo/security-logo.component';
 
 @Component({
-  selector: "app-transaction-group",
+  selector: 'app-transaction-group',
   imports: [
     TqDatePipe,
     TransactionTypeDisplayIconPipe,
@@ -24,8 +24,8 @@ import {SecurityLogoComponent} from "../../../../common/components/security-logo
     TransactionTypeDisplayNamePipe,
     SecurityLogoComponent
   ],
-  templateUrl: "./transaction-group.component.html",
-  styleUrl: "./transaction-group.component.scss",
+  templateUrl: './transaction-group.component.html',
+  styleUrl: './transaction-group.component.scss',
 })
 export class TransactionGroupComponent {
 

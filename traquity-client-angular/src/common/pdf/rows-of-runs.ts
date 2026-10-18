@@ -1,4 +1,4 @@
-import {PdfRun, PdfRunRow} from "./pdf-document.type";
+import {PdfRun, PdfRunRow} from './pdf-document.type';
 
 /**
  * Vertical distance below which two runs share a baseline, as a fraction of the taller one's height. A fraction

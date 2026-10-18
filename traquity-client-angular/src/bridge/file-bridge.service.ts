@@ -1,11 +1,11 @@
-import {Inject, Injectable} from "@angular/core";
-import {BRIDGE_HOST, BridgeHost} from "./bridge-host.token";
-import {TraQuityFileBridge} from "./file-bridge.type";
+import {Inject, Injectable} from '@angular/core';
+import {BRIDGE_HOST, BridgeHost} from './bridge-host.token';
+import {TraQuityFileBridge} from './file-bridge.type';
 
 /**
  * Wraps the `window.traquityFiles` `contextBridge` surface: an `available` flag plus `pathForFile`.
  */
-@Injectable({providedIn: "root"})
+@Injectable({providedIn: 'root'})
 export class FileBridgeService {
 
   private readonly bridge: TraQuityFileBridge | null;
@@ -24,7 +24,7 @@ export class FileBridgeService {
 
   private requireBridge(): TraQuityFileBridge {
     if (this.bridge == null) {
-      throw new Error("The traquity bridge is not available");
+      throw new Error('The traquity bridge is not available');
     }
     return this.bridge;
   }

@@ -1,7 +1,7 @@
-import {patchState} from "@ngrx/signals";
-import {WritableSignalStore} from "../../../../../common/types/signal-store.type";
-import {PickedFolder} from "../folder/picked-folder-of-files";
-import {TransactionPdfImportState} from "../transaction-pdf-import.type";
+import {patchState} from '@ngrx/signals';
+import {WritableSignalStore} from '../../../../../common/types/signal-store.type';
+import {PickedFolder} from '../folder/picked-folder-of-files';
+import {TransactionPdfImportState} from '../transaction-pdf-import.type';
 
 export function setFolder(signalStore: WritableSignalStore<TransactionPdfImportState>, folder: PickedFolder): void {
   patchState(signalStore, {

@@ -1,6 +1,6 @@
-import {SecurityState} from "../security.state";
-import {DeleteHistoricalSecurityPriceDataSourceDoneActionArgs} from "../security.actions";
-import {DataSourceWithId} from "../../../settings/data-source/data-source.type";
+import {SecurityState} from '../security.state';
+import {DeleteHistoricalSecurityPriceDataSourceDoneActionArgs} from '../security.actions';
+import {DataSourceWithId} from '../../../settings/data-source/data-source.type';
 
 export function deleteHistoricalSecurityPriceDataSource(state: Readonly<SecurityState>, args: DeleteHistoricalSecurityPriceDataSourceDoneActionArgs): SecurityState {
   const id: number | undefined = args.id;

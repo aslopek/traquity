@@ -1,9 +1,9 @@
-import {getDocument, PDFDocumentLoadingTask, PDFDocumentProxy, PDFPageProxy} from "pdfjs-dist";
-import {cellsOfRow} from "./cells-of-row";
-import {classifyCells} from "./classify-cells";
-import {PdfDocument, PdfPage, PdfRow, PdfRun, PdfRunRow} from "./pdf-document.type";
-import {rowsOfRuns} from "./rows-of-runs";
-import {PdfTextItem, runsOfTextContent} from "./runs-of-text-content";
+import {getDocument, PDFDocumentLoadingTask, PDFDocumentProxy, PDFPageProxy} from 'pdfjs-dist';
+import {cellsOfRow} from './cells-of-row';
+import {classifyCells} from './classify-cells';
+import {PdfDocument, PdfPage, PdfRow, PdfRun, PdfRunRow} from './pdf-document.type';
+import {rowsOfRuns} from './rows-of-runs';
+import {PdfTextItem, runsOfTextContent} from './runs-of-text-content';
 
 /**
  * Why a document produced no model. Each case is distinguishable without reading a message, so a caller can put
@@ -13,16 +13,16 @@ import {PdfTextItem, runsOfTextContent} from "./runs-of-text-content";
  * an encrypted one included.
  */
 export type PdfExtractionFailure =
-  | { reason: "notAPdf" }
-  | { reason: "unreadable", message: string }
-  | { reason: "noTextLayer" }
-  | { reason: "tooManyPages", pages: number, maximum: number }
-  | { reason: "tooManyRuns", maximum: number }
-  | { reason: "outOfTime", milliseconds: number };
+  | { reason: 'notAPdf' }
+  | { reason: 'unreadable', message: string }
+  | { reason: 'noTextLayer' }
+  | { reason: 'tooManyPages', pages: number, maximum: number }
+  | { reason: 'tooManyRuns', maximum: number }
+  | { reason: 'outOfTime', milliseconds: number };
 
 export type PdfExtractionResult =
-  | { status: "extracted", document: PdfDocument }
-  | { status: "failed", failure: PdfExtractionFailure };
+  | { status: 'extracted', document: PdfDocument }
+  | { status: 'failed', failure: PdfExtractionFailure };
 
 /**
  * The bounds a parse runs under. They exist because this runs in the renderer: a document that never finishes
@@ -46,7 +46,7 @@ export const DEFAULT_PDF_EXTRACTION_BOUNDS: PdfExtractionBounds = {
 
 /** How far into the file the header may start, since a producer may prepend bytes before it. */
 const HEADER_SEARCH_LENGTH: number = 1024;
-const HEADER: string = "%PDF-";
+const HEADER: string = '%PDF-';
 
 /**
  * The geometric model of a PDF, through ADR-009's five stages: runs, joined runs, rows by baseline, cells by gap,
@@ -68,7 +68,7 @@ export async function extractPdf(
   bounds: PdfExtractionBounds = DEFAULT_PDF_EXTRACTION_BOUNDS,
 ): Promise<PdfExtractionResult> {
   if (!hasPdfHeader(bytes)) {
-    return {status: "failed", failure: {reason: "notAPdf"}};
+    return {status: 'failed', failure: {reason: 'notAPdf'}};
   }
 
   const startedAt: number = bounds.now();
@@ -80,7 +80,7 @@ export async function extractPdf(
   try {
     const pdf: PDFDocumentProxy = await loadingTask.promise;
     if (pdf.numPages > bounds.maximumPages) {
-      return {status: "failed", failure: {reason: "tooManyPages", pages: pdf.numPages, maximum: bounds.maximumPages}};
+      return {status: 'failed', failure: {reason: 'tooManyPages', pages: pdf.numPages, maximum: bounds.maximumPages}};
     }
 
     const pages: PdfPage[] = [];
@@ -88,7 +88,7 @@ export async function extractPdf(
 
     for (let number: number = 1; number <= pdf.numPages; number++) {
       if (bounds.now() - startedAt > bounds.milliseconds) {
-        return {status: "failed", failure: {reason: "outOfTime", milliseconds: bounds.milliseconds}};
+        return {status: 'failed', failure: {reason: 'outOfTime', milliseconds: bounds.milliseconds}};
       }
 
       const page: PDFPageProxy = await pdf.getPage(number);
@@ -97,18 +97,18 @@ export async function extractPdf(
 
       runCount += runs.length;
       if (runCount > bounds.maximumRuns) {
-        return {status: "failed", failure: {reason: "tooManyRuns", maximum: bounds.maximumRuns}};
+        return {status: 'failed', failure: {reason: 'tooManyRuns', maximum: bounds.maximumRuns}};
       }
 
       pages.push({number, width, height, empty: runs.length === 0, rows: rowsOf(runs, currency)});
     }
 
     if (pages.every((page: PdfPage): boolean => page.empty)) {
-      return {status: "failed", failure: {reason: "noTextLayer"}};
+      return {status: 'failed', failure: {reason: 'noTextLayer'}};
     }
-    return {status: "extracted", document: {pages}};
+    return {status: 'extracted', document: {pages}};
   } catch (error: unknown) {
-    return {status: "failed", failure: {reason: "unreadable", message: messageOf(error)}};
+    return {status: 'failed', failure: {reason: 'unreadable', message: messageOf(error)}};
   } finally {
     await loadingTask.destroy();
   }
@@ -131,7 +131,7 @@ function hasPdfHeader(bytes: ArrayBuffer): boolean {
  * is dropped here instead of being handled downstream.
  */
 function textItemsOf(content: { items: unknown[] }): PdfTextItem[] {
-  return content.items.filter((item: unknown): item is PdfTextItem => typeof (item as PdfTextItem).str === "string");
+  return content.items.filter((item: unknown): item is PdfTextItem => typeof (item as PdfTextItem).str === 'string');
 }
 
 function messageOf(error: unknown): string {

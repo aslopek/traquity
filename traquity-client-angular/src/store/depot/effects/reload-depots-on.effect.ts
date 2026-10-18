@@ -1,8 +1,8 @@
-import {Actions, ofType} from "@ngrx/effects";
-import {filter, map, merge, Observable} from "rxjs";
-import {Action} from "@ngrx/store";
-import {DepotActions} from "../depot.actions";
-import {SecurityActions} from "../../security/security.actions";
+import {Actions, ofType} from '@ngrx/effects';
+import {filter, map, merge, Observable} from 'rxjs';
+import {Action} from '@ngrx/store';
+import {DepotActions} from '../depot.actions';
+import {SecurityActions} from '../../security/security.actions';
 
 export type ReloadDepotsOnEffectArgs = {
   actions$: Actions

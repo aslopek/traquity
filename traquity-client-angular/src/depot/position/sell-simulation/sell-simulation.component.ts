@@ -1,8 +1,8 @@
-import {Component, computed, effect, inject, InputSignal, input, Signal, signal, untracked, WritableSignal,} from "@angular/core";
-import {MatFormFieldModule} from "@angular/material/form-field";
-import {MatIconModule} from "@angular/material/icon";
-import {MatInputModule} from "@angular/material/input";
-import {MatSlideToggleModule} from "@angular/material/slide-toggle";
+import {Component, computed, effect, inject, InputSignal, input, Signal, signal, untracked, WritableSignal,} from '@angular/core';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
 import {
   FieldContext,
   FieldTree,
@@ -15,14 +15,14 @@ import {
   SchemaPathTree,
   validate,
   ValidationResult,
-} from "@angular/forms/signals";
-import {Store} from "@ngrx/store";
-import {AppState} from "../../../store/app.state";
-import {hideAbsoluteValues} from "../../../store/app-config/app-config.selector";
-import {selectedDepotCurrency} from "../../../store/depot/depot.selector";
-import {PositionDialogStore, ReadablePositionDialogStore, SellSimulationInputs} from "../position-dialog/store/position-dialog.store";
-import {TqCurrencyPipe} from "../../../common/pipe/tq-currency.pipe";
-import {TqDecimalPipe} from "../../../common/pipe/tq-decimal.pipe";
+} from '@angular/forms/signals';
+import {Store} from '@ngrx/store';
+import {AppState} from '../../../store/app.state';
+import {hideAbsoluteValues} from '../../../store/app-config/app-config.selector';
+import {selectedDepotCurrency} from '../../../store/depot/depot.selector';
+import {PositionDialogStore, ReadablePositionDialogStore, SellSimulationInputs} from '../position-dialog/store/position-dialog.store';
+import {TqCurrencyPipe} from '../../../common/pipe/tq-currency.pipe';
+import {TqDecimalPipe} from '../../../common/pipe/tq-decimal.pipe';
 
 export type SellSimulationFormModel = {
   sharesToSell: number | null
@@ -35,10 +35,10 @@ export type SellSimulationFormModel = {
 };
 
 @Component({
-  selector: "app-sell-simulation",
+  selector: 'app-sell-simulation',
   imports: [MatFormFieldModule, MatIconModule, MatInputModule, MatSlideToggleModule, FormField, TqCurrencyPipe, TqDecimalPipe],
-  templateUrl: "./sell-simulation.component.html",
-  styleUrl: "./sell-simulation.component.scss",
+  templateUrl: './sell-simulation.component.html',
+  styleUrl: './sell-simulation.component.scss',
 })
 export class SellSimulationComponent {
   readonly securityIds: InputSignal<number[]> = input.required();
@@ -62,11 +62,11 @@ export class SellSimulationComponent {
   protected readonly form: FieldTree<SellSimulationFormModel> = form(this.formModel,
     (schemaPath: SchemaPathTree<SellSimulationFormModel>): void => {
       required(schemaPath.sharesToSell);
-      max(schemaPath.sharesToSell, (): number => this.store.sharesHeld(), {message: "Cannot exceed the shares held"});
+      max(schemaPath.sharesToSell, (): number => this.store.sharesHeld(), {message: 'Cannot exceed the shares held'});
       validate(schemaPath.sharesToSell, (ctx: FieldContext<number | null>): ValidationResult => {
         const value: number | null = ctx.value();
         if (value != null && value <= 0) {
-          return minError(0, {message: "Must be greater than 0"});
+          return minError(0, {message: 'Must be greater than 0'});
         }
         return null;
       });

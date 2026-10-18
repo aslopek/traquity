@@ -11,20 +11,20 @@ import {updateSecurityLogo} from './effects/update-security-logo.effect';
 import {HistoricalSecurityPriceConfigApi, HistoricalSecurityPriceDataSourceApi} from '../../gen/api/historical-security-price';
 import {loadHistoricalSecurityPriceConfig} from './effects/load-historical-security-price-config.effect';
 import {updateHistoricalSecurityPriceConfigEffect} from './effects/update-historical-security-price-config.effect';
-import {DividendAnnouncementConfigApi} from "../../gen/api/notification/dividend-announcement";
+import {DividendAnnouncementConfigApi} from '../../gen/api/notification/dividend-announcement';
 import {
   loadHistoricalSecurityPriceDataSources,
   LoadHistoricalSecurityPriceDataSourcesEffectArgs
-} from "./effects/load-historical-security-price-data-sources.effect";
+} from './effects/load-historical-security-price-data-sources.effect';
 import {
   setHistoricalSecurityPriceDataSource,
   SetHistoricalSecurityPriceDataSourceEffectArgs
-} from "./effects/set-historical-security-price-data-source.effect";
+} from './effects/set-historical-security-price-data-source.effect';
 import {
   deleteHistoricalSecurityPriceDataSource,
   DeleteHistoricalSecurityPriceDataSourceEffectArgs
-} from "./effects/delete-historical-security-price-data-source.effect";
-import {loadSecuritiesOn, LoadSecuritiesOnEffectArgs} from "./effects/load-securities-on.effect";
+} from './effects/delete-historical-security-price-data-source.effect';
+import {loadSecuritiesOn, LoadSecuritiesOnEffectArgs} from './effects/load-securities-on.effect';
 
 @Injectable()
 export class SecurityEffects {

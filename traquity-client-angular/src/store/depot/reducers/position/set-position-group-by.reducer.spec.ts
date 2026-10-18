@@ -2,7 +2,7 @@ import {beforeEach, describe, expect, it} from '@jest/globals';
 import {setPositionGroupByReducer} from './set-position-group-by.reducer';
 import {DepotState} from '../../depot.state';
 import {SetPositionGroupByActionArgs} from '../../depot.actions';
-import {initialState} from "../../depot.reducer";
+import {initialState} from '../../depot.reducer';
 
 describe('setPositionGroupByReducer', (): void => {
   let state: Readonly<DepotState>;

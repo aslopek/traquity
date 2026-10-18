@@ -1,17 +1,17 @@
-import {SecurityGroupApi, SecurityGroupRead} from "../../../gen/api/configuration-security-group";
-import {ReadableSignalStore, WritableSignalStore} from "../../../common/types/signal-store.type";
-import {signalStore, withComputed, withHooks, withMethods, withState} from "@ngrx/signals";
-import {inject, Signal} from "@angular/core";
-import {Store} from "@ngrx/store";
-import {AppState} from "../../../store/app.state";
-import {selectedSecurityGroup} from "./computed/selected-security-group";
-import {assignedSecurityIds} from "./computed/assigned-security-ids";
-import {loadSecurityGroups} from "./methods/load-security-groups";
-import {selectSecurityGroup} from "./methods/select-security-group";
-import {createSecurityGroup} from "./methods/create-security-group";
-import {updateSecurityGroup} from "./methods/update-security-group";
-import {deleteSecurityGroup} from "./methods/delete-security-group";
-import {SecurityActions} from "../../../store/security/security.actions";
+import {SecurityGroupApi, SecurityGroupRead} from '../../../gen/api/configuration-security-group';
+import {ReadableSignalStore, WritableSignalStore} from '../../../common/types/signal-store.type';
+import {signalStore, withComputed, withHooks, withMethods, withState} from '@ngrx/signals';
+import {inject, Signal} from '@angular/core';
+import {Store} from '@ngrx/store';
+import {AppState} from '../../../store/app.state';
+import {selectedSecurityGroup} from './computed/selected-security-group';
+import {assignedSecurityIds} from './computed/assigned-security-ids';
+import {loadSecurityGroups} from './methods/load-security-groups';
+import {selectSecurityGroup} from './methods/select-security-group';
+import {createSecurityGroup} from './methods/create-security-group';
+import {updateSecurityGroup} from './methods/update-security-group';
+import {deleteSecurityGroup} from './methods/delete-security-group';
+import {SecurityActions} from '../../../store/security/security.actions';
 
 export type SecurityGroupComputed = {
   assignedSecurityIds: Signal<Set<number>>

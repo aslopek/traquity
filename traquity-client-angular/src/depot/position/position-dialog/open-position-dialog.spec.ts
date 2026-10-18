@@ -1,9 +1,9 @@
-import {beforeEach, describe, expect, it, jest} from "@jest/globals";
-import {MatDialog} from "@angular/material/dialog";
-import {openPositionDialog} from "./open-position-dialog";
-import {PositionDialogComponent, PositionDialogData} from "./position-dialog.component";
+import {beforeEach, describe, expect, it, jest} from '@jest/globals';
+import {MatDialog} from '@angular/material/dialog';
+import {openPositionDialog} from './open-position-dialog';
+import {PositionDialogComponent, PositionDialogData} from './position-dialog.component';
 
-describe("openPositionDialog", () => {
+describe('openPositionDialog', () => {
   let openMock: jest.Mock;
   let dialog: MatDialog;
   let data: PositionDialogData;
@@ -14,19 +14,19 @@ describe("openPositionDialog", () => {
     data = {
       depotIds: [7],
       securityIds: [1],
-      displayName: "Apple Inc."
+      displayName: 'Apple Inc.'
     };
   });
 
-  it("opens the position dialog with the given data", () => {
+  it('opens the position dialog with the given data', () => {
     openPositionDialog(dialog, data);
 
     expect(openMock).toHaveBeenCalledWith(PositionDialogComponent, {
-      height: "90%",
-      width: "60%",
-      minHeight: "15em",
-      minWidth: "5em",
-      panelClass: "mat-app-background",
+      height: '90%',
+      width: '60%',
+      minHeight: '15em',
+      minWidth: '5em',
+      panelClass: 'mat-app-background',
       autoFocus: false,
       disableClose: true,
       data,

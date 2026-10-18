@@ -1,20 +1,20 @@
-import {Component, inject, Signal} from "@angular/core";
-import {MatButton} from "@angular/material/button";
-import {MatDialog} from "@angular/material/dialog";
-import {MatIcon} from "@angular/material/icon";
-import {Store} from "@ngrx/store";
-import {TqByteSizePipe} from "../../../common/pipe/tq-byte-size.pipe";
-import {TqDecimalPipe} from "../../../common/pipe/tq-decimal.pipe";
-import {AiActions} from "../../../store/ai/ai.actions";
-import {getCatalogue, getIsNoticeConfirmed, isProbeFailed} from "../../../store/ai/ai.selector";
-import {CatalogueEntryViewModel} from "../../../store/ai/selectors/get-catalogue.selector";
-import {AppState} from "../../../store/app.state";
-import {RemoveModelDialog, RemoveModelDialogData} from "../remove-model-dialog/remove-model-dialog.component";
-import {AiNoticeComponent} from "../ai-notice/ai-notice.component";
-import {AiVerdictLabelPipe} from "./ai-verdict-label.pipe";
+import {Component, inject, Signal} from '@angular/core';
+import {MatButton} from '@angular/material/button';
+import {MatDialog} from '@angular/material/dialog';
+import {MatIcon} from '@angular/material/icon';
+import {Store} from '@ngrx/store';
+import {TqByteSizePipe} from '../../../common/pipe/tq-byte-size.pipe';
+import {TqDecimalPipe} from '../../../common/pipe/tq-decimal.pipe';
+import {AiActions} from '../../../store/ai/ai.actions';
+import {getCatalogue, getIsNoticeConfirmed, isProbeFailed} from '../../../store/ai/ai.selector';
+import {CatalogueEntryViewModel} from '../../../store/ai/selectors/get-catalogue.selector';
+import {AppState} from '../../../store/app.state';
+import {RemoveModelDialog, RemoveModelDialogData} from '../remove-model-dialog/remove-model-dialog.component';
+import {AiNoticeComponent} from '../ai-notice/ai-notice.component';
+import {AiVerdictLabelPipe} from './ai-verdict-label.pipe';
 
 @Component({
-  selector: "app-ai-page",
+  selector: 'app-ai-page',
   imports: [
     AiNoticeComponent,
     AiVerdictLabelPipe,
@@ -23,8 +23,8 @@ import {AiVerdictLabelPipe} from "./ai-verdict-label.pipe";
     TqByteSizePipe,
   ],
   providers: [TqDecimalPipe, TqByteSizePipe],
-  templateUrl: "./ai-page.component.html",
-  styleUrl: "./ai-page.component.scss",
+  templateUrl: './ai-page.component.html',
+  styleUrl: './ai-page.component.scss',
 })
 export class AiPageComponent {
 
@@ -49,9 +49,9 @@ export class AiPageComponent {
 
   protected openRemoveDialog(entry: CatalogueEntryViewModel): void {
     this.dialog.open(RemoveModelDialog, {
-      width: "30%",
-      minWidth: "25em",
-      panelClass: "mat-app-background",
+      width: '30%',
+      minWidth: '25em',
+      panelClass: 'mat-app-background',
       autoFocus: false,
       disableClose: true,
       data: {key: entry.key, description: entry.description} satisfies RemoveModelDialogData

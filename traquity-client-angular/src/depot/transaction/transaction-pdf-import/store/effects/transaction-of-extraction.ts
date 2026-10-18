@@ -1,8 +1,8 @@
-import {isValid, parse} from "date-fns";
-import {ExtractedTransaction} from "../../../../../bridge/ai-bridge.type";
-import {TransactionType} from "../../../../../gen/api/depot-transaction";
-import {padTimeWithSeconds} from "../../../../../common/functions/pad-time-with-seconds";
-import {PdfTransactionDraft} from "../transaction-pdf-import.type";
+import {isValid, parse} from 'date-fns';
+import {ExtractedTransaction} from '../../../../../bridge/ai-bridge.type';
+import {TransactionType} from '../../../../../gen/api/depot-transaction';
+import {padTimeWithSeconds} from '../../../../../common/functions/pad-time-with-seconds';
+import {PdfTransactionDraft} from '../transaction-pdf-import.type';
 
 const KNOWN_TYPES: readonly TransactionType[] = Object.values(TransactionType);
 
@@ -12,7 +12,7 @@ export function transactionOfExtraction(extracted: ExtractedTransaction): PdfTra
   if (transactionType === undefined) {
     return null;
   }
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(extracted.date) || !isValid(parse(extracted.date, "yyyy-MM-dd", new Date()))) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(extracted.date) || !isValid(parse(extracted.date, 'yyyy-MM-dd', new Date()))) {
     return null;
   }
   if (!Number.isFinite(extracted.securityCountOriginal) || !Number.isFinite(extracted.grossValue)) {

@@ -63,7 +63,7 @@ describe('ScriptTokenizerPipe', (): void => {
 
   // the argument is long enough that a pattern backtracking exponentially over it would not finish, so this also guards the linear parse
   it('keeps an unterminated script as plain text', (): void => {
-    value = `?key=#mask(${"'".repeat(40)}`;
+    value = `?key=#mask(${'\''.repeat(40)}`;
 
     expect(pipe.transform(value)).toEqual([{text: value, isScript: false}] satisfies TextToken[]);
   });

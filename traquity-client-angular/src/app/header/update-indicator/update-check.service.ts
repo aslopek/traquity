@@ -1,11 +1,11 @@
-import {HttpClient} from "@angular/common/http";
-import {inject, Injectable, signal, Signal, WritableSignal} from "@angular/core";
-import * as packageJson from "../../../../package.json";
-import {GithubRelease} from "./github-release.type";
+import {HttpClient} from '@angular/common/http';
+import {inject, Injectable, signal, Signal, WritableSignal} from '@angular/core';
+import * as packageJson from '../../../../package.json';
+import {GithubRelease} from './github-release.type';
 
-const releasesUrl: string = "https://api.github.com/repos/aslopek/traquity/releases/latest";
+const releasesUrl: string = 'https://api.github.com/repos/aslopek/traquity/releases/latest';
 
-@Injectable({providedIn: "root"})
+@Injectable({providedIn: 'root'})
 export class UpdateCheckService {
 
   private readonly httpClient: HttpClient = inject(HttpClient);
@@ -15,7 +15,7 @@ export class UpdateCheckService {
   checkForUpdate(): void {
     this.httpClient.get<GithubRelease>(releasesUrl).subscribe({
       next: (release: GithubRelease): void => {
-        const remoteVersion: string = release.tag_name.replace(/^v/, "");
+        const remoteVersion: string = release.tag_name.replace(/^v/, '');
         if (this.isNewerVersion(remoteVersion, packageJson.version)) {
           this.availableUpdateSignal.set(release);
         }
@@ -27,8 +27,8 @@ export class UpdateCheckService {
   }
 
   private isNewerVersion(remote: string, current: string): boolean {
-    const remoteParts: number[] = remote.split(".").map(part => Number(part));
-    const currentParts: number[] = current.split(".").map(part => Number(part));
+    const remoteParts: number[] = remote.split('.').map(part => Number(part));
+    const currentParts: number[] = current.split('.').map(part => Number(part));
     const length: number = Math.max(remoteParts.length, currentParts.length);
 
     for (let i = 0; i < length; i++) {

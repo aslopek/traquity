@@ -1,7 +1,7 @@
-import {labelOfToken} from "./label-of-token";
-import {PdfCell, PdfDocument, PdfRow, PdfToken} from "./pdf-document.type";
+import {labelOfToken} from './label-of-token';
+import {PdfCell, PdfDocument, PdfRow, PdfToken} from './pdf-document.type';
 
-export type DocumentTokenKind = "date" | "time" | "number";
+export type DocumentTokenKind = 'date' | 'time' | 'number';
 
 /** One value a page states, normalized and kept with the text naming it. */
 export type DocumentToken = {
@@ -24,7 +24,7 @@ export type DocumentToken = {
  * page and no question the notation answers.
  */
 export function tokensOfDocument(document: PdfDocument): DocumentToken[] {
-  const found: Omit<DocumentToken, "id">[] = [];
+  const found: Omit<DocumentToken, 'id'>[] = [];
 
   for (const page of document.pages) {
     for (const row of page.rows) {
@@ -36,21 +36,21 @@ export function tokensOfDocument(document: PdfDocument): DocumentToken[] {
     }
   }
 
-  return found.map((token: Omit<DocumentToken, "id">, index: number): DocumentToken => ({id: index + 1, ...token}));
+  return found.map((token: Omit<DocumentToken, 'id'>, index: number): DocumentToken => ({id: index + 1, ...token}));
 }
 
-function kindsOf(token: PdfToken, label: string | null): Omit<DocumentToken, "id">[] {
-  const kinds: Omit<DocumentToken, "id">[] = [];
+function kindsOf(token: PdfToken, label: string | null): Omit<DocumentToken, 'id'>[] {
+  const kinds: Omit<DocumentToken, 'id'>[] = [];
 
   if (token.date != null) {
-    kinds.push({kind: "date", text: token.text, value: token.date, label});
+    kinds.push({kind: 'date', text: token.text, value: token.date, label});
   }
   if (token.time != null) {
-    kinds.push({kind: "time", text: token.text, value: token.time, label});
+    kinds.push({kind: 'time', text: token.text, value: token.time, label});
   }
   if (token.magnitude != null) {
     kinds.push({
-      kind: "number",
+      kind: 'number',
       text: token.text,
       value: token.magnitude.toFixed(token.digits ?? 0),
       label,

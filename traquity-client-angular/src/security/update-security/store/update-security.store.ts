@@ -14,10 +14,10 @@ import {HistoricalSecurityPriceConfigCreate} from '../../../gen/api/historical-s
 import {setHistoricalSecurityPriceConfig} from './methods/set-historical-security-price-config';
 import {historicalSecurityPriceConfigValid} from './computed/historical-security-price-config-valid';
 import {setUntouched} from './methods/set-untouched';
-import {DividendAnnouncementConfigChangedEvent} from "../../details/dividend-announcement/dividend-announcement-config.component";
-import {dividendAnnouncementConfigValid} from "./computed/dividend-announcement-config-valid";
-import {setDividendAnnouncementConfig} from "./methods/set-dividend-announcement-config";
-import {DividendAnnouncementConfigApi} from "../../../gen/api/notification/dividend-announcement";
+import {DividendAnnouncementConfigChangedEvent} from '../../details/dividend-announcement/dividend-announcement-config.component';
+import {dividendAnnouncementConfigValid} from './computed/dividend-announcement-config-valid';
+import {setDividendAnnouncementConfig} from './methods/set-dividend-announcement-config';
+import {DividendAnnouncementConfigApi} from '../../../gen/api/notification/dividend-announcement';
 
 export type UpdateSecurityComputed = {
   masterDataValid: () => boolean

@@ -1,4 +1,4 @@
-import {RebasedDepotValue} from "../computed/rebased-depot-value.type";
+import {RebasedDepotValue} from '../computed/rebased-depot-value.type';
 
 export type CashFlow = {
   date: string

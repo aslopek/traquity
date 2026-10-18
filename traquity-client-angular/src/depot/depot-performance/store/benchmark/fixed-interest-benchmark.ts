@@ -1,7 +1,7 @@
-import {BenchmarkFunction, BenchmarkResult, FixedInterestBenchmark} from "./benchmark.type";
-import {RebasedDepotValue} from "../computed/rebased-depot-value.type";
-import {CashFlow, getCashFlows} from "./get-cash-flows";
-import {addMonths, differenceInDays, differenceInMonths, getDate, getMonth, getYear, parseISO} from "date-fns";
+import {BenchmarkFunction, BenchmarkResult, FixedInterestBenchmark} from './benchmark.type';
+import {RebasedDepotValue} from '../computed/rebased-depot-value.type';
+import {CashFlow, getCashFlows} from './get-cash-flows';
+import {addMonths, differenceInDays, differenceInMonths, getDate, getMonth, getYear, parseISO} from 'date-fns';
 
 export const fixedInterestBenchmark: BenchmarkFunction<FixedInterestBenchmark>
   = (benchmark: FixedInterestBenchmark, depotValues: RebasedDepotValue[]): BenchmarkResult => {

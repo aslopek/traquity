@@ -5,7 +5,7 @@ import {AppState} from '../../../../store/app.state';
 import {SecurityActions} from '../../../../store/security/security.actions';
 import {SecurityCreate} from '../../../../gen/api/security';
 import {HistoricalSecurityPriceConfigCreate} from '../../../../gen/api/historical-security-price';
-import {DividendAnnouncementConfigCreate} from "../../../../gen/api/notification/dividend-announcement";
+import {DividendAnnouncementConfigCreate} from '../../../../gen/api/notification/dividend-announcement';
 
 export function persist(signalStore: ReadableSignalStore<AddSecurityWizardState, AddSecurityWizardComputed>, globalStore: Store<AppState>): void {
   const masterData: SecurityCreate | null = signalStore.masterData();

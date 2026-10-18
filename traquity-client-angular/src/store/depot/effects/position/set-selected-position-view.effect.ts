@@ -1,14 +1,14 @@
-import {Actions, ofType} from "@ngrx/effects";
-import {ConfigApi} from "../../../../gen/api/configuration";
-import {Action, Store} from "@ngrx/store";
-import {AppState} from "../../../app.state";
-import {catchError, map, Observable, of, switchMap} from "rxjs";
-import {DepotActions, SetSelectedPositionViewActionArgs} from "../../depot.actions";
-import {concatLatestFrom} from "@ngrx/operators";
-import {PositionView} from "../../depot.state";
-import {selectedPositionView} from "../../depot.selector";
-import {clientId} from "../../../client-id";
-import {positionSelectedView} from "../../depot-config-keys";
+import {Actions, ofType} from '@ngrx/effects';
+import {ConfigApi} from '../../../../gen/api/configuration';
+import {Action, Store} from '@ngrx/store';
+import {AppState} from '../../../app.state';
+import {catchError, map, Observable, of, switchMap} from 'rxjs';
+import {DepotActions, SetSelectedPositionViewActionArgs} from '../../depot.actions';
+import {concatLatestFrom} from '@ngrx/operators';
+import {PositionView} from '../../depot.state';
+import {selectedPositionView} from '../../depot.selector';
+import {clientId} from '../../../client-id';
+import {positionSelectedView} from '../../depot-config-keys';
 
 export type SetSelectedPositionViewEffectArgs = {
   actions$: Actions

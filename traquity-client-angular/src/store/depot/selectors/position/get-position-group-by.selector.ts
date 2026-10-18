@@ -1,5 +1,5 @@
-import {DepotState} from "../../depot.state";
-import {PositionGroupBy} from "../../position-grouping/position-group.type";
+import {DepotState} from '../../depot.state';
+import {PositionGroupBy} from '../../position-grouping/position-group.type';
 
 export type GetPositionGroupByState = {
   position: Pick<DepotState['position'], 'groupBy'>

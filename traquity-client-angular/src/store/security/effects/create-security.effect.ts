@@ -3,7 +3,7 @@ import {Action} from '@ngrx/store';
 import {catchError, concatMap, forkJoin, from, map, mergeMap, Observable, of} from 'rxjs';
 import {SecurityApi, SecurityLogoApi, SecurityRead} from '../../../gen/api/security';
 import {CreateSecurityActionArgs, SecurityActions} from '../security.actions';
-import {DividendAnnouncementConfigApi} from "../../../gen/api/notification/dividend-announcement";
+import {DividendAnnouncementConfigApi} from '../../../gen/api/notification/dividend-announcement';
 
 export type CreateSecurityEffectArgs = {
   actions$: Actions

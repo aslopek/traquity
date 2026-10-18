@@ -6,7 +6,7 @@ const BASE64_PATTERN = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/
  * A base64 string decoding to exactly `byteLength` bytes - narrower than `expect.any(String)`. Extending Jest's own
  * `AsymmetricMatcher` (rather than a duck-typed `{asymmetricMatch, toString}` object) is what tags the instance with
  * the `$$typeof` symbol `pretty-format` keys its diff rendering off of: without it, a failing match prints the raw
- * object (`Object {"asymmetricMatch": [Function], ...}`) instead of calling `toString()` for a readable
+ * object (`Object {'asymmetricMatch': [Function], ...}`) instead of calling `toString()` for a readable
  * `Base64Of(16)`.
  *
  * @extends {AsymmetricMatcher<number>}

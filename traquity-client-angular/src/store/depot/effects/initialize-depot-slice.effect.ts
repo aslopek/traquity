@@ -4,8 +4,8 @@ import {firstValueFrom, Observable, switchMap} from 'rxjs';
 import {Action} from '@ngrx/store';
 import {DepotActions} from '../depot.actions';
 import {AppActions} from '../../app.actions';
-import {ConfigApi} from "../../../gen/api/configuration";
-import {clientId} from "../../client-id";
+import {ConfigApi} from '../../../gen/api/configuration';
+import {clientId} from '../../client-id';
 import {
   depotConfigPrefix,
   dividendAggregationTimespan,
@@ -17,11 +17,11 @@ import {
   positionUseBuyIn,
   selectedDepotIds,
   selectedTabIndex
-} from "../depot-config-keys";
-import {DepotState, DividendView, PositionView} from "../depot.state";
-import {Timespan} from "../../../common/types/timespan";
-import {positionGroupByValues} from "../position-grouping/position-group-attributes";
-import {PositionGroupBy} from "../position-grouping/position-group.type";
+} from '../depot-config-keys';
+import {DepotState, DividendView, PositionView} from '../depot.state';
+import {Timespan} from '../../../common/types/timespan';
+import {positionGroupByValues} from '../position-grouping/position-group-attributes';
+import {PositionGroupBy} from '../position-grouping/position-group.type';
 
 export type InitializeDepotsSliceEffectArgs = {
   actions$: Actions,

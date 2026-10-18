@@ -1,29 +1,29 @@
-import {undecorated} from "./undecorated";
+import {undecorated} from './undecorated';
 
 /** Month names and abbreviations as German and English documents print them, in calendar order. */
 const MONTH_NAMES: string[][] = [
-  ["januar", "january", "jan"],
-  ["februar", "february", "feb"],
-  ["märz", "maerz", "march", "mär", "mar", "mrz"],
-  ["april", "apr"],
-  ["mai", "may"],
-  ["juni", "june", "jun"],
-  ["juli", "july", "jul"],
-  ["august", "aug"],
-  ["september", "sept", "sep"],
-  ["oktober", "october", "okt", "oct"],
-  ["november", "nov"],
-  ["dezember", "december", "dez", "dec"],
+  ['januar', 'january', 'jan'],
+  ['februar', 'february', 'feb'],
+  ['märz', 'maerz', 'march', 'mär', 'mar', 'mrz'],
+  ['april', 'apr'],
+  ['mai', 'may'],
+  ['juni', 'june', 'jun'],
+  ['juli', 'july', 'jul'],
+  ['august', 'aug'],
+  ['september', 'sept', 'sep'],
+  ['oktober', 'october', 'okt', 'oct'],
+  ['november', 'nov'],
+  ['dezember', 'december', 'dez', 'dec'],
 ];
 
 const MONTH_BY_NAME: Map<string, number> = new Map(MONTH_NAMES.flatMap(
   (names: string[], index: number): [string, number][] => names.map((name: string): [string, number] => [name, index + 1])));
 
 /** The names longest first, so a full name wins the alternation against the abbreviation it begins with. */
-const MONTH_NAME: string = [...MONTH_BY_NAME.keys()].sort((a: string, b: string): number => b.length - a.length).join("|");
+const MONTH_NAME: string = [...MONTH_BY_NAME.keys()].sort((a: string, b: string): number => b.length - a.length).join('|');
 
 /** What may stand between the components of a date printed with a month name, including nothing at all. */
-const GAP: string = "[-./, ]*";
+const GAP: string = '[-./, ]*';
 
 /** The time of an ISO timestamp, which carries a date the notation states exactly. */
 const ISO_TIME: RegExp = /t\d{1,2}:\d{2}(?::\d{2})?(?:[.,]\d+)?(?:z|[+-]\d{2}:?\d{2})?$/;
@@ -71,7 +71,7 @@ type DateParts = {
  * @returns the readings, or nothing at all where the text is none of those notations.
  */
 export function readingsOfDate(text: string): string[] {
-  const normalized: string = undecorated(text.trim().toLowerCase().replace(/\s+/g, " ")).replace(ISO_TIME, "");
+  const normalized: string = undecorated(text.trim().toLowerCase().replace(/\s+/g, ' ')).replace(ISO_TIME, '');
   return [...new Set(partsOf(normalized)
     .map(dateOf)
     .filter((date: string | null): date is string => date != null))];
@@ -92,10 +92,10 @@ function dateOf(parts: DateParts): string | null {
     return null;
   }
   return [
-    String(parts.year).padStart(4, "0"),
-    String(parts.month).padStart(2, "0"),
-    String(parts.day).padStart(2, "0")
-  ].join("-");
+    String(parts.year).padStart(4, '0'),
+    String(parts.month).padStart(2, '0'),
+    String(parts.day).padStart(2, '0')
+  ].join('-');
 }
 
 /**
@@ -120,7 +120,7 @@ function partsOf(text: string): DateParts[] {
     const second: number = Number(yearLast[3]);
     const year: number = yearOf(yearLast[4]);
     const dayFirst: DateParts = {day: first, month: second, year};
-    return yearLast[2] === "." ? [dayFirst] : [dayFirst, {day: second, month: first, year}];
+    return yearLast[2] === '.' ? [dayFirst] : [dayFirst, {day: second, month: first, year}];
   }
 
   const dayMonthName: RegExpExecArray | null = DAY_MONTH_NAME.exec(text);

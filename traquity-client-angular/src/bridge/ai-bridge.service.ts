@@ -1,5 +1,5 @@
-import {Inject, Injectable} from "@angular/core";
-import {defer, from, Observable} from "rxjs";
+import {Inject, Injectable} from '@angular/core';
+import {defer, from, Observable} from 'rxjs';
 import {
   AiActivateOutcome,
   AiDownloadOutcome,
@@ -9,14 +9,14 @@ import {
   AiRemoveOutcome,
   ElectronAiState,
   TraQuityAiBridge
-} from "./ai-bridge.type";
-import {BRIDGE_HOST, BridgeHost} from "./bridge-host.token";
+} from './ai-bridge.type';
+import {BRIDGE_HOST, BridgeHost} from './bridge-host.token';
 
 /**
  * Wraps the `ai:*` channels of the `window.traquityAi` `contextBridge` surface: an `available` flag plus one
  * wrapper per channel, each deferring the bridge call until subscription.
  */
-@Injectable({providedIn: "root"})
+@Injectable({providedIn: 'root'})
 export class AiBridgeService {
 
   private readonly bridge: TraQuityAiBridge | null;
@@ -63,7 +63,7 @@ export class AiBridgeService {
 
   private requireBridge(): TraQuityAiBridge {
     if (this.bridge == null) {
-      throw new Error("The traquity bridge is not available");
+      throw new Error('The traquity bridge is not available');
     }
     return this.bridge;
   }

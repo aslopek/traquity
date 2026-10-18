@@ -1,20 +1,20 @@
-import {Component, inject} from "@angular/core";
-import {TitleToolbarComponent} from "../../../common/components/title-toolbar/title-toolbar.component";
-import {SecurityGroupRead} from "../../../gen/api/configuration-security-group";
-import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
-import {MatButton} from "@angular/material/button";
-import {WarnIconComponent} from "../../../common/components/warn-icon/warn-icon.component";
-import {ReadableSecurityGroupStore} from "../store/security-group.store";
+import {Component, inject} from '@angular/core';
+import {TitleToolbarComponent} from '../../../common/components/title-toolbar/title-toolbar.component';
+import {SecurityGroupRead} from '../../../gen/api/configuration-security-group';
+import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
+import {MatButton} from '@angular/material/button';
+import {WarnIconComponent} from '../../../common/components/warn-icon/warn-icon.component';
+import {ReadableSecurityGroupStore} from '../store/security-group.store';
 
 @Component({
-  selector: "app-delete-security-group-dialog",
+  selector: 'app-delete-security-group-dialog',
   imports: [
     MatButton,
     WarnIconComponent,
     TitleToolbarComponent
   ],
-  templateUrl: "./delete-security-group-dialog.component.html",
-  styleUrl: "./delete-security-group-dialog.component.scss",
+  templateUrl: './delete-security-group-dialog.component.html',
+  styleUrl: './delete-security-group-dialog.component.scss',
 })
 export class DeleteSecurityGroupDialog {
 

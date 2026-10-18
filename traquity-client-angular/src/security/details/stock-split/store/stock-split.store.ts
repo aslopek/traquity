@@ -1,13 +1,13 @@
-import {StockSplit, StockSplitApi} from "../../../../gen/api/security";
-import {ReadableSignalStore, WritableSignalStore} from "../../../../common/types/signal-store.type";
-import {signalStore, withComputed, withMethods, withState} from "@ngrx/signals";
-import {inject} from "@angular/core";
-import {loadStockSplitState} from "./methods/load-stock-splits";
-import {addStockSplit} from "./methods/add-stock-split";
-import {setStockSplitParams} from "./methods/set-stock-split-params";
-import {creationParamsValid} from "./computed/creation-params-valid";
-import {exDate} from "./computed/ex-date";
-import {multiplier} from "./computed/multiplier";
+import {StockSplit, StockSplitApi} from '../../../../gen/api/security';
+import {ReadableSignalStore, WritableSignalStore} from '../../../../common/types/signal-store.type';
+import {signalStore, withComputed, withMethods, withState} from '@ngrx/signals';
+import {inject} from '@angular/core';
+import {loadStockSplitState} from './methods/load-stock-splits';
+import {addStockSplit} from './methods/add-stock-split';
+import {setStockSplitParams} from './methods/set-stock-split-params';
+import {creationParamsValid} from './computed/creation-params-valid';
+import {exDate} from './computed/ex-date';
+import {multiplier} from './computed/multiplier';
 
 export type StockSplitComputed = {
   creationParamsValid: () => boolean

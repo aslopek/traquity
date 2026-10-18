@@ -1,7 +1,7 @@
-import {computed, Signal} from "@angular/core";
-import {ReadableSignalStore} from "../../../../../common/types/signal-store.type";
-import {TransactionType} from "../../../../../gen/api/depot-transaction";
-import {TransactionPdfImportState} from "../transaction-pdf-import.type";
+import {computed, Signal} from '@angular/core';
+import {ReadableSignalStore} from '../../../../../common/types/signal-store.type';
+import {TransactionType} from '../../../../../gen/api/depot-transaction';
+import {TransactionPdfImportState} from '../transaction-pdf-import.type';
 
 export type TransactionTypeCount = {
   transactionType: TransactionType

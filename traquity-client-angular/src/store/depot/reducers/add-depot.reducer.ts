@@ -1,6 +1,6 @@
-import {DepotState} from "../depot.state";
-import {AddDepotSuccessActionArgs} from "../depot.actions";
-import {tabIndexTransactions} from "../depot-tabs";
+import {DepotState} from '../depot.state';
+import {AddDepotSuccessActionArgs} from '../depot.actions';
+import {tabIndexTransactions} from '../depot-tabs';
 
 export function addDepotReducer(state: Readonly<DepotState>, actionArgs: AddDepotSuccessActionArgs): DepotState {
   const {depot} = actionArgs;

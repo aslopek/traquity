@@ -1,13 +1,13 @@
-import {catchError, map, Observable, of, switchMap} from "rxjs";
-import {Actions, ofType} from "@ngrx/effects";
-import {ConfigApi} from "../../../gen/api/configuration";
-import {Action, Store} from "@ngrx/store";
-import {AppState} from "../../app.state";
-import {DepotActions, ToggleDepotSelectionActionArgs} from "../depot.actions";
-import {clientId} from "../../client-id";
-import {selectedDepotIds as selectedDepotIdsConfigKey} from "../depot-config-keys";
-import {concatLatestFrom} from "@ngrx/operators";
-import {selectedDepotIds} from "../depot.selector";
+import {catchError, map, Observable, of, switchMap} from 'rxjs';
+import {Actions, ofType} from '@ngrx/effects';
+import {ConfigApi} from '../../../gen/api/configuration';
+import {Action, Store} from '@ngrx/store';
+import {AppState} from '../../app.state';
+import {DepotActions, ToggleDepotSelectionActionArgs} from '../depot.actions';
+import {clientId} from '../../client-id';
+import {selectedDepotIds as selectedDepotIdsConfigKey} from '../depot-config-keys';
+import {concatLatestFrom} from '@ngrx/operators';
+import {selectedDepotIds} from '../depot.selector';
 
 export type ChangeDepotSelectionEffectArgs = {
   actions$: Actions

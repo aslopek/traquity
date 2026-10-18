@@ -85,7 +85,7 @@ function authStateOf(entry) {
 
 /**
  * Verifies a candidate against an entry, locally and synchronously. A pending entry has nothing to verify against and
- * yields `false` too, so a `false` means "not proven" rather than "wrong password" - only `authStateOf` tells the two
+ * yields `false` too, so a `false` means 'not proven' rather than 'wrong password' - only `authStateOf` tells the two
  * apart.
  *
  * @param {unknown} entry
@@ -135,7 +135,7 @@ function matchesScryptRecord(record, candidate) {
 /**
  * The bounds above are meant to make a rejected hashing unreachable. This exists because they mirror a rule
  * enforced inside a bundled crypto library, and the specs only ever observe Node's copy of it while the shipped app
- * runs Electron's (see `../LLM.md`): should the two ever disagree, a record must read as "does not verify" rather
+ * runs Electron's (see `../LLM.md`): should the two ever disagree, a record must read as 'does not verify' rather
  * than throw out of the startup path. The failure is swallowed rather than logged - nothing here may surface a
  * candidate password, not even inside an error.
  *
@@ -189,8 +189,8 @@ function isWithinResourceBounds(record) {
  * The memory scrypt allocates for these parameters: `128 * blockSize * (cost + parallelization + 2)`, the formula
  * both scrypt implementations behind `scryptSync` apply when validating `maxmem` - OpenSSL, which Node bundles and
  * the specs therefore run against, and BoringSSL, which Electron bundles and the shipped app therefore runs against.
- * Bound and `maxmem` are derived from the very same expression on purpose - that is what makes "within bounds" mean
- * "`scryptSync` will run this" rather than an estimate a hand-edited record can slip past into an exception.
+ * Bound and `maxmem` are derived from the very same expression on purpose - that is what makes 'within bounds' mean
+ * '`scryptSync` will run this' rather than an estimate a hand-edited record can slip past into an exception.
  *
  * @param {ScryptParameters} parameters
  * @returns {number}

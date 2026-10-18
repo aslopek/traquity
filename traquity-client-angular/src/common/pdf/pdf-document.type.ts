@@ -31,7 +31,7 @@ export type PdfCellBox = {
   height: number
 };
 
-export type PdfNumberSign = "-" | "+";
+export type PdfNumberSign = '-' | '+';
 
 export type PdfToken = {
   /**

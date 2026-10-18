@@ -7,7 +7,7 @@ import {Dividends} from '../../../gen/api/depot-dividend';
 import {DepotComposition} from '../../../gen/api/depot-position';
 import {depotPositionFactory} from '../../../testing/depot-position.factory';
 import {performanceFactory} from '../../../testing/performance.factory';
-import {initialState} from "../depot.reducer";
+import {initialState} from '../depot.reducer';
 
 describe('setPerformanceDataReducer', (): void => {
   let positions: DepotComposition;

@@ -1,6 +1,6 @@
 import {beforeEach, describe, expect, it} from '@jest/globals';
 import {parseDataSource} from './parse-data-source.util';
-import {MultiUrlDataSource, SingleUrlDataSource} from "./data-source.type";
+import {MultiUrlDataSource, SingleUrlDataSource} from './data-source.type';
 
 describe('parseDataSource', () => {
 

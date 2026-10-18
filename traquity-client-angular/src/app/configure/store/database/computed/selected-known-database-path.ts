@@ -1,7 +1,7 @@
-import {computed, Signal} from "@angular/core";
-import {ReadableSignalStore} from "../../../../../common/types/signal-store.type";
-import {AuthState} from "../../../../../bridge/startup-bridge.type";
-import {ConfigureStoreState} from "../../configure.store";
+import {computed, Signal} from '@angular/core';
+import {ReadableSignalStore} from '../../../../../common/types/signal-store.type';
+import {AuthState} from '../../../../../bridge/startup-bridge.type';
+import {ConfigureStoreState} from '../../configure.store';
 
 /**
  * The selected path, narrowed to the selections the known-databases list contains: the path itself while the selection

@@ -7,7 +7,7 @@ const crypto = require('node:crypto');
  * is why the armor is kept verbatim rather than as extracted modulus/exponent hex, nobody can eyeball-diff those.
  *
  * Fingerprint `6DC3 636D AE53 4049 C8B9 4623 A122 542A B04F 24E3`, RSA 4096, created 2019-12-05, user id
- * "Amazon Services LLC (Amazon Corretto release) <corretto-team@amazon.com>", documented at
+ * 'Amazon Services LLC (Amazon Corretto release) <corretto-team@amazon.com>', documented at
  * https://docs.aws.amazon.com/corretto/latest/corretto-25-ug/generic-linux-install.html.
  */
 const ARMORED_PUBLIC_KEY = `-----BEGIN PGP PUBLIC KEY BLOCK-----

@@ -9,15 +9,15 @@ import {
 import {DividendAnnouncementActions} from './dividend-announcement.actions';
 import {Store} from '@ngrx/store';
 import {AppState} from '../app.state';
-import {AppActions} from "../app.actions";
+import {AppActions} from '../app.actions';
 import {
   setDividendAnnouncementDataSource,
   SetDividendAnnouncementDataSourceEffectArgs
-} from "./effects/set-dividend-announcement-data-source.effect";
+} from './effects/set-dividend-announcement-data-source.effect';
 import {
   deleteDividendAnnouncementDataSource,
   DeleteDividendAnnouncementDataSourceEffectArgs
-} from "./effects/delete-dividend-announcement-data-source.effect";
+} from './effects/delete-dividend-announcement-data-source.effect';
 
 /** Interval between two dividend announcement requests in milliseconds. */
 const dividendAnnouncementReloadInterval: number = 10000;

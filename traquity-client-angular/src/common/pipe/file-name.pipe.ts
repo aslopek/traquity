@@ -1,6 +1,6 @@
-import {Pipe, PipeTransform} from "@angular/core";
+import {Pipe, PipeTransform} from '@angular/core';
 
-@Pipe({name: "fileName"})
+@Pipe({name: 'fileName'})
 export class FileNamePipe implements PipeTransform {
 
   transform(path: string | null, extension?: string): string {

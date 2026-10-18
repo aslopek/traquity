@@ -1,18 +1,18 @@
-import {AuthState} from "../../../../bridge/startup-bridge.type";
-import {StartupPhase} from "../startup.store";
+import {AuthState} from '../../../../bridge/startup-bridge.type';
+import {StartupPhase} from '../startup.store';
 
 /**
- * The single source of truth for "which URL belongs to which phase", so the mapping is never encoded a second time.
+ * The single source of truth for 'which URL belongs to which phase', so the mapping is never encoded a second time.
  * `booting` has no URL of its own and yields `null`: it is the shell at `/`.
  */
 export function startupRouteFor(phase: StartupPhase): string | null {
   switch (phase) {
-    case "unlock":
-      return "/unlock";
-    case "configure":
-      return "/configure";
-    case "insecure":
-      return "/insecure";
+    case 'unlock':
+      return '/unlock';
+    case 'configure':
+      return '/configure';
+    case 'insecure':
+      return '/insecure';
     default:
       return null;
   }
@@ -23,5 +23,5 @@ export function startupRouteFor(phase: StartupPhase): string | null {
  * the configuration screen.
  */
 export function phaseAfterFailedStart(startedFrom: AuthState): StartupPhase {
-  return startedFrom === "pending" ? "unlock" : "configure";
+  return startedFrom === 'pending' ? 'unlock' : 'configure';
 }

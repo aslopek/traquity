@@ -1,22 +1,22 @@
-import {Component, computed, inject, input, InputSignal, Signal} from "@angular/core";
-import {MatIconModule} from "@angular/material/icon";
-import {MatTooltipModule} from "@angular/material/tooltip";
-import {Store} from "@ngrx/store";
-import {AppState} from "../../store/app.state";
-import {hideAbsoluteValues} from "../../store/app-config/app-config.selector";
-import {PerformanceLabelComponent} from "../../common/components/performance-label/performance-label.component";
-import {ObfuscatedValueComponent} from "../../common/components/obfuscated-value/obfuscated-value.component";
-import {TqCurrencyPipe} from "../../common/pipe/tq-currency.pipe";
-import {CostBasisBreakdownPipe} from "./cost-basis-breakdown.pipe";
-import {LoadPerformanceBreakdownArgs} from "./store/effects/load-performance-breakdown";
-import {PerformanceBreakdownStore, ReadablePerformanceBreakdownStore} from "./store/performance-breakdown.store";
+import {Component, computed, inject, input, InputSignal, Signal} from '@angular/core';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {Store} from '@ngrx/store';
+import {AppState} from '../../store/app.state';
+import {hideAbsoluteValues} from '../../store/app-config/app-config.selector';
+import {PerformanceLabelComponent} from '../../common/components/performance-label/performance-label.component';
+import {ObfuscatedValueComponent} from '../../common/components/obfuscated-value/obfuscated-value.component';
+import {TqCurrencyPipe} from '../../common/pipe/tq-currency.pipe';
+import {CostBasisBreakdownPipe} from './cost-basis-breakdown.pipe';
+import {LoadPerformanceBreakdownArgs} from './store/effects/load-performance-breakdown';
+import {PerformanceBreakdownStore, ReadablePerformanceBreakdownStore} from './store/performance-breakdown.store';
 
 @Component({
-  selector: "app-performance-breakdown",
+  selector: 'app-performance-breakdown',
   imports: [MatIconModule, MatTooltipModule, TqCurrencyPipe, PerformanceLabelComponent, ObfuscatedValueComponent, CostBasisBreakdownPipe],
   providers: [PerformanceBreakdownStore, TqCurrencyPipe],
-  templateUrl: "./performance-breakdown.component.html",
-  styleUrl: "./performance-breakdown.component.scss",
+  templateUrl: './performance-breakdown.component.html',
+  styleUrl: './performance-breakdown.component.scss',
 })
 export class PerformanceBreakdownComponent {
   readonly depotIds: InputSignal<number[]> = input.required();

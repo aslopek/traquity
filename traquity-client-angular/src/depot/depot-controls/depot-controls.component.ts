@@ -1,17 +1,17 @@
-import {Component, Signal} from "@angular/core";
-import {MatIconModule} from "@angular/material/icon";
-import {MatTooltipModule} from "@angular/material/tooltip";
-import {firstValueFrom} from "rxjs";
-import {TqIconComponent} from "../../common/components/tq-icon/tq-icon.component";
-import {DepotLogoApi, DepotRead} from "../../gen/api/depot";
-import {Store} from "@ngrx/store";
-import {AppState} from "../../store/app.state";
-import {selectedDepots} from "../../store/depot/depot.selector";
-import {DepotLogoUrlPipe} from "../../common/pipe/depot-logo-url.pipe";
-import {DepotSelectComponent} from "../depot-select/depot-select.component";
+import {Component, Signal} from '@angular/core';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {firstValueFrom} from 'rxjs';
+import {TqIconComponent} from '../../common/components/tq-icon/tq-icon.component';
+import {DepotLogoApi, DepotRead} from '../../gen/api/depot';
+import {Store} from '@ngrx/store';
+import {AppState} from '../../store/app.state';
+import {selectedDepots} from '../../store/depot/depot.selector';
+import {DepotLogoUrlPipe} from '../../common/pipe/depot-logo-url.pipe';
+import {DepotSelectComponent} from '../depot-select/depot-select.component';
 
 @Component({
-  selector: "app-depot-controls",
+  selector: 'app-depot-controls',
   imports: [
     DepotSelectComponent,
     MatIconModule,
@@ -19,8 +19,8 @@ import {DepotSelectComponent} from "../depot-select/depot-select.component";
     TqIconComponent,
     DepotLogoUrlPipe,
   ],
-  templateUrl: "depot-controls.component.html",
-  styleUrls: ["depot-controls.component.scss"],
+  templateUrl: 'depot-controls.component.html',
+  styleUrls: ['depot-controls.component.scss'],
 })
 export class DepotControlsComponent {
   protected readonly selectedDepots: Signal<DepotRead[]>;

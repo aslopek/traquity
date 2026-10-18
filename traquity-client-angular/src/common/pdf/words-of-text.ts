@@ -10,5 +10,5 @@ const SEPARATOR: RegExp = /[^\S\u00A0\u202F]+/;
  * @returns the words, with no empty one among them.
  */
 export function wordsOf(text: string): string[] {
-  return text.split(SEPARATOR).filter((word: string): boolean => word !== "");
+  return text.split(SEPARATOR).filter((word: string): boolean => word !== '');
 }

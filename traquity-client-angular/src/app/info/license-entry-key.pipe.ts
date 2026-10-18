@@ -1,9 +1,9 @@
-import {Pipe, PipeTransform} from "@angular/core";
+import {Pipe, PipeTransform} from '@angular/core';
 
 export type LicenseSection = 'frontend' | 'backend';
 
 @Pipe({
-  name: "licenseEntryKey",
+  name: 'licenseEntryKey',
   standalone: true
 })
 export class LicenseEntryKeyPipe implements PipeTransform {

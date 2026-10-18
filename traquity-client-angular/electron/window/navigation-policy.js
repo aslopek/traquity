@@ -4,7 +4,7 @@
  *
  * Both are default-deny, and both exist because the URLs in question are not this app's own strings. A renderer
  * displays what a database, an HTTP response or a user typed, so a link's target is data - and a URL handed to the
- * shell is opened by whatever the OS has registered for its scheme, which for `file:` is "run this". A navigation is
+ * shell is opened by whatever the OS has registered for its scheme, which for `file:` is 'run this'. A navigation is
  * the same problem one level up: a window that leaves its own document keeps the preload's bridge, so the page it
  * lands on inherits every IPC channel this app exposes.
  *

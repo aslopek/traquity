@@ -1,4 +1,4 @@
-import {DepotState, PositionView} from "../../depot.state";
+import {DepotState, PositionView} from '../../depot.state';
 
 export type GetSelectedPositionViewState = {
   position: Pick<DepotState['position'], 'selectedView'>

@@ -1,7 +1,7 @@
-import {Pipe, PipeTransform} from "@angular/core";
-import {TqCurrencyPipe} from "../../common/pipe/tq-currency.pipe";
-import {TqPercentPipe} from "../../common/pipe/tq-percent.pipe";
-import {PositionGroup} from "../../store/depot/position-grouping/position-group.type";
+import {Pipe, PipeTransform} from '@angular/core';
+import {TqCurrencyPipe} from '../../common/pipe/tq-currency.pipe';
+import {TqPercentPipe} from '../../common/pipe/tq-percent.pipe';
+import {PositionGroup} from '../../store/depot/position-grouping/position-group.type';
 
 @Pipe({
   name: 'positionGroupText',

@@ -1,4 +1,4 @@
-import {PdfCell, PdfDocument} from "./pdf-document.type";
+import {PdfCell, PdfDocument} from './pdf-document.type';
 
 /**
  * Every cell of a document, in the order its pages print them: page by page, row by row, and left to right within

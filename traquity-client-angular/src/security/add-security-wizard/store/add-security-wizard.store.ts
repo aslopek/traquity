@@ -9,10 +9,10 @@ import {setMasterData} from './methods/set-master-data';
 import {setLogo} from './methods/set-logo';
 import {HistoricalSecurityPriceConfigCreate} from '../../../gen/api/historical-security-price';
 import {setHistoricalSecurityPriceConfig} from './methods/set-historical-security-price-config';
-import {DividendAnnouncementConfigCreate} from "../../../gen/api/notification/dividend-announcement";
-import {setDividendAnnouncementConfig} from "./methods/set-dividend-announcement-config";
-import {masterDataStepOk} from "./computed/master-data-step-ok";
-import {allStepsOk} from "./computed/all-steps-ok";
+import {DividendAnnouncementConfigCreate} from '../../../gen/api/notification/dividend-announcement';
+import {setDividendAnnouncementConfig} from './methods/set-dividend-announcement-config';
+import {masterDataStepOk} from './computed/master-data-step-ok';
+import {allStepsOk} from './computed/all-steps-ok';
 
 export type AddSecurityWizardComputed = {
   allStepsOk: () => boolean

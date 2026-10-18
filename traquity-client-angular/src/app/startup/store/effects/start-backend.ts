@@ -1,12 +1,12 @@
-import {Router} from "@angular/router";
-import {RxMethod, rxMethod} from "@ngrx/signals/rxjs-interop";
-import {catchError, EMPTY, exhaustMap, Observable, pipe, tap} from "rxjs";
-import {WritableSignalStore} from "../../../../common/types/signal-store.type";
-import {StartupBridgeService} from "../../../../bridge/startup-bridge.service";
-import {BackendStartOutcome} from "../../../../bridge/startup-bridge.type";
-import {applyStartOutcome} from "../methods/apply-start-outcome";
-import {enterBooting} from "../methods/enter-booting";
-import {StartupComputed, StartupStoreState} from "../startup.store";
+import {Router} from '@angular/router';
+import {RxMethod, rxMethod} from '@ngrx/signals/rxjs-interop';
+import {catchError, EMPTY, exhaustMap, Observable, pipe, tap} from 'rxjs';
+import {WritableSignalStore} from '../../../../common/types/signal-store.type';
+import {StartupBridgeService} from '../../../../bridge/startup-bridge.service';
+import {BackendStartOutcome} from '../../../../bridge/startup-bridge.type';
+import {applyStartOutcome} from '../methods/apply-start-outcome';
+import {enterBooting} from '../methods/enter-booting';
+import {StartupComputed, StartupStoreState} from '../startup.store';
 
 export function startBackend(signalStore: WritableSignalStore<StartupStoreState, StartupComputed>,
                              bridge: Pick<StartupBridgeService, 'startBackend'>,

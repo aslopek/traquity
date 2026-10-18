@@ -1,11 +1,11 @@
-import {DepotApi, DepotRead} from "../../../gen/api/depot";
-import {Actions, ofType} from "@ngrx/effects";
-import {catchError, map, Observable, of, switchMap} from "rxjs";
-import {Action, Store} from "@ngrx/store";
-import {DeleteDepotActionArgs, DepotActions} from "../depot.actions";
-import {concatLatestFrom} from "@ngrx/operators";
-import {depots} from "../depot.selector";
-import {AppState} from "../../app.state";
+import {DepotApi, DepotRead} from '../../../gen/api/depot';
+import {Actions, ofType} from '@ngrx/effects';
+import {catchError, map, Observable, of, switchMap} from 'rxjs';
+import {Action, Store} from '@ngrx/store';
+import {DeleteDepotActionArgs, DepotActions} from '../depot.actions';
+import {concatLatestFrom} from '@ngrx/operators';
+import {depots} from '../depot.selector';
+import {AppState} from '../../app.state';
 
 export type DeleteDepotEffectArgs = {
   actions$: Actions

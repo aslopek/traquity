@@ -1,11 +1,11 @@
-import {RxMethod, rxMethod} from "@ngrx/signals/rxjs-interop";
-import {catchError, exhaustMap, Observable, of, pipe, tap} from "rxjs";
-import {WritableSignalStore} from "../../../../../common/types/signal-store.type";
-import {StartupBridgeService} from "../../../../../bridge/startup-bridge.service";
-import {JavaVerification} from "../../../../../bridge/startup-bridge.type";
-import {ConfigureStoreState} from "../../configure.store";
-import {startJavaVerification} from "../methods/start-java-verification";
-import {setJavaSetting} from "../methods/set-java-setting";
+import {RxMethod, rxMethod} from '@ngrx/signals/rxjs-interop';
+import {catchError, exhaustMap, Observable, of, pipe, tap} from 'rxjs';
+import {WritableSignalStore} from '../../../../../common/types/signal-store.type';
+import {StartupBridgeService} from '../../../../../bridge/startup-bridge.service';
+import {JavaVerification} from '../../../../../bridge/startup-bridge.type';
+import {ConfigureStoreState} from '../../configure.store';
+import {startJavaVerification} from '../methods/start-java-verification';
+import {setJavaSetting} from '../methods/set-java-setting';
 
 /** What is being verified, and the signature to keep alongside it once the verification lands. */
 export type JavaSettingToVerify = {

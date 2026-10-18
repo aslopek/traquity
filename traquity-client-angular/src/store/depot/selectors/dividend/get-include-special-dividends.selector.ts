@@ -1,4 +1,4 @@
-import {DepotState} from "../../depot.state";
+import {DepotState} from '../../depot.state';
 
 export type GetIncludeSpecialDividendsState = {
   dividend: Pick<DepotState['dividend'], 'includeSpecialDividends'>

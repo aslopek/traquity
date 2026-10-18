@@ -1,12 +1,12 @@
-import {Signal} from "@angular/core";
-import {RxMethod, rxMethod} from "@ngrx/signals/rxjs-interop";
-import {catchError, exhaustMap, filter, Observable, of, pipe, tap} from "rxjs";
-import {WritableSignalStore} from "../../../../../common/types/signal-store.type";
-import {StartupBridgeService} from "../../../../../bridge/startup-bridge.service";
-import {JavaPickResult} from "../../../../../bridge/startup-bridge.type";
-import {ConfigureStoreState} from "../../configure.store";
-import {rejectJavaPick} from "../methods/reject-java-pick";
-import {setJavaSetting} from "../methods/set-java-setting";
+import {Signal} from '@angular/core';
+import {RxMethod, rxMethod} from '@ngrx/signals/rxjs-interop';
+import {catchError, exhaustMap, filter, Observable, of, pipe, tap} from 'rxjs';
+import {WritableSignalStore} from '../../../../../common/types/signal-store.type';
+import {StartupBridgeService} from '../../../../../bridge/startup-bridge.service';
+import {JavaPickResult} from '../../../../../bridge/startup-bridge.type';
+import {ConfigureStoreState} from '../../configure.store';
+import {rejectJavaPick} from '../methods/reject-java-pick';
+import {setJavaSetting} from '../methods/set-java-setting';
 
 export function pickJavaPath(signalStore: WritableSignalStore<ConfigureStoreState>,
                              bridge: Pick<StartupBridgeService, 'pickJava'>,
@@ -16,7 +16,7 @@ export function pickJavaPath(signalStore: WritableSignalStore<ConfigureStoreStat
 
 /**
  * Opens the native picker for a java binary, starting from the current setting, and verifies whatever was picked. A
- * successful pick becomes the current setting; a rejected one is recorded under "Custom path…" alone -
+ * successful pick becomes the current setting; a rejected one is recorded under 'Custom path…' alone -
  * `setJavaSetting` is deliberately not reached for that branch, so the status line stays exactly as it was. A
  * rejected call changes nothing and, like a cancelled dialog, leaves the picker usable for the next attempt.
  */

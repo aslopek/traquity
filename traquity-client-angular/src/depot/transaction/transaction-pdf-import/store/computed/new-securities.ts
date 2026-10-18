@@ -1,6 +1,6 @@
-import {computed, Signal} from "@angular/core";
-import {SecurityCreate, SecurityType} from "../../../../../gen/api/security";
-import {NewSecurityRow} from "./new-security-rows";
+import {computed, Signal} from '@angular/core';
+import {SecurityCreate, SecurityType} from '../../../../../gen/api/security';
+import {NewSecurityRow} from './new-security-rows';
 
 export function newSecurities(newSecurityRowsSignal: Signal<NewSecurityRow[]>): Signal<SecurityCreate[]> {
   return computed((): SecurityCreate[] => newSecurityRowsSignal().map((row: NewSecurityRow): SecurityCreate => {

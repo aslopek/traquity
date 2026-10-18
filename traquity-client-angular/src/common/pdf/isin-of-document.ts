@@ -1,7 +1,7 @@
-import {cellsOf} from "./cells-of-document";
-import {PdfDocument} from "./pdf-document.type";
-import {undecorated} from "./undecorated";
-import {wordsOf} from "./words-of-text";
+import {cellsOf} from './cells-of-document';
+import {PdfDocument} from './pdf-document.type';
+import {undecorated} from './undecorated';
+import {wordsOf} from './words-of-text';
 
 /**
  * Two letters for the country, nine alphanumeric characters for the national number, one check digit — the shape

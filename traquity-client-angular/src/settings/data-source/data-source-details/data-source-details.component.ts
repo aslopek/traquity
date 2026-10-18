@@ -2,16 +2,16 @@ import {Component, computed, inject, input, InputSignal, signal, Signal, Writabl
 import {CommonModule} from '@angular/common';
 import {MatTableModule} from '@angular/material/table';
 import {MatIconModule} from '@angular/material/icon';
-import {DataSourceStore, ReadableDataSourceStore} from "../store/data-source.store";
-import {AnyDataSource, DataSourceVariant, MultiUrlDataSource, SingleUrlDataSource} from "../data-source.type";
-import {parseDataSource, ParsedDataSource} from "../parse-data-source.util";
-import {TqDecimalPipe} from "../../../common/pipe/tq-decimal.pipe";
-import {ScriptTokenizerPipe} from "./tokenize-script.pipe";
-import {MatButton} from "@angular/material/button";
-import {Store} from "@ngrx/store";
-import {AppState} from "../../../store/app.state";
-import {SecurityActions} from "../../../store/security/security.actions";
-import {DividendAnnouncementActions} from "../../../store/dividend-announcement/dividend-announcement.actions";
+import {DataSourceStore, ReadableDataSourceStore} from '../store/data-source.store';
+import {AnyDataSource, DataSourceVariant, MultiUrlDataSource, SingleUrlDataSource} from '../data-source.type';
+import {parseDataSource, ParsedDataSource} from '../parse-data-source.util';
+import {TqDecimalPipe} from '../../../common/pipe/tq-decimal.pipe';
+import {ScriptTokenizerPipe} from './tokenize-script.pipe';
+import {MatButton} from '@angular/material/button';
+import {Store} from '@ngrx/store';
+import {AppState} from '../../../store/app.state';
+import {SecurityActions} from '../../../store/security/security.actions';
+import {DividendAnnouncementActions} from '../../../store/dividend-announcement/dividend-announcement.actions';
 
 type UrlPatternRow = {
   timespanInDays?: number
@@ -46,7 +46,7 @@ const emptyDividendAnnouncementDataSource: SingleUrlDataSource = {
 } as const;
 
 @Component({
-  selector: "app-data-source-details",
+  selector: 'app-data-source-details',
   imports: [
     CommonModule,
     MatTableModule,
@@ -55,8 +55,8 @@ const emptyDividendAnnouncementDataSource: SingleUrlDataSource = {
     ScriptTokenizerPipe,
     MatButton
   ],
-  templateUrl: "./data-source-details.component.html",
-  styleUrl: "./data-source-details.component.scss",
+  templateUrl: './data-source-details.component.html',
+  styleUrl: './data-source-details.component.scss',
 })
 export class DataSourceDetailsComponent {
 

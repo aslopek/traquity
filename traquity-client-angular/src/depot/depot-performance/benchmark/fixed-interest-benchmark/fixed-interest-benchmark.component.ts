@@ -5,11 +5,11 @@ import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
 import {MatSlideToggleModule} from '@angular/material/slide-toggle';
 import {MatRadioModule} from '@angular/material/radio';
-import {FixedInterestBenchmark} from "../../store/benchmark/benchmark.type";
-import {FieldTree, form, max, min, required, SchemaPathTree,} from "@angular/forms/signals";
-import {MatTooltip} from "@angular/material/tooltip";
-import {DepotPerformanceStore, ReadableDepotPerformanceStore} from "../../store/depot-performance.store";
-import {RebasedDepotValue} from "../../store/computed/rebased-depot-value.type";
+import {FixedInterestBenchmark} from '../../store/benchmark/benchmark.type';
+import {FieldTree, form, max, min, required, SchemaPathTree,} from '@angular/forms/signals';
+import {MatTooltip} from '@angular/material/tooltip';
+import {DepotPerformanceStore, ReadableDepotPerformanceStore} from '../../store/depot-performance.store';
+import {RebasedDepotValue} from '../../store/computed/rebased-depot-value.type';
 
 export type FixedInterestBenchmarkMode = 'fixedInterest.cashFlowBased' | 'fixedInterest.intervalBased';
 

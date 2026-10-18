@@ -1,15 +1,15 @@
-import {inject} from "@angular/core";
-import {Router} from "@angular/router";
-import {signalStore, withComputed, withMethods, withState} from "@ngrx/signals";
-import {RxMethod} from "@ngrx/signals/rxjs-interop";
-import {ReadableSignalStore, WritableSignalStore} from "../../../common/types/signal-store.type";
-import {StartupBridgeService} from "../../../bridge/startup-bridge.service";
-import {AuthState, StartupMode, StartupState} from "../../../bridge/startup-bridge.type";
-import {startBackend} from "./effects/start-backend";
-import {enterConfigure} from "./methods/enter-configure";
-import {enterUnlock} from "./methods/enter-unlock";
-import {DatabaseSelection, selectDatabase} from "./methods/select-database";
-import {setStartupState} from "./methods/set-startup-state";
+import {inject} from '@angular/core';
+import {Router} from '@angular/router';
+import {signalStore, withComputed, withMethods, withState} from '@ngrx/signals';
+import {RxMethod} from '@ngrx/signals/rxjs-interop';
+import {ReadableSignalStore, WritableSignalStore} from '../../../common/types/signal-store.type';
+import {StartupBridgeService} from '../../../bridge/startup-bridge.service';
+import {AuthState, StartupMode, StartupState} from '../../../bridge/startup-bridge.type';
+import {startBackend} from './effects/start-backend';
+import {enterConfigure} from './methods/enter-configure';
+import {enterUnlock} from './methods/enter-unlock';
+import {DatabaseSelection, selectDatabase} from './methods/select-database';
+import {setStartupState} from './methods/set-startup-state';
 
 /** Where the app currently is, distinct from `mode` (what the main process computed at start - see below). */
 export type StartupPhase = 'booting' | 'configure' | 'insecure' | 'unlock';
@@ -44,7 +44,7 @@ export const initialState: StartupStoreState = {
 export type ReadableStartupStore = ReadableSignalStore<StartupStoreState, StartupComputed, StartupMethods>;
 
 export const StartupStore = signalStore(
-  {providedIn: "root"},
+  {providedIn: 'root'},
   withState(initialState),
   withComputed((): StartupComputed => ({})),
   withMethods((signalStore: WritableSignalStore<StartupStoreState, StartupComputed>,

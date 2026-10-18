@@ -1,6 +1,6 @@
-import {DatabaseSelection} from "../../../startup/store/methods/select-database";
-import {ReadableStartupStore} from "../../../startup/store/startup.store";
-import {nextStartupStep, SelectionOrigin, StartupStep} from "./next-startup-step";
+import {DatabaseSelection} from '../../../startup/store/methods/select-database';
+import {ReadableStartupStore} from '../../../startup/store/startup.store';
+import {nextStartupStep, SelectionOrigin, StartupStep} from './next-startup-step';
 
 export type ContinuableStartupStore = Pick<ReadableStartupStore, 'enterUnlock' | 'selectDatabase' | 'startBackend'>;
 

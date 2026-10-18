@@ -1,7 +1,7 @@
-import {inject} from "@angular/core";
-import {CanActivateFn, Router, UrlTree} from "@angular/router";
-import {startupRouteFor} from "./store/routing/startup-route";
-import {ReadableStartupStore, StartupStore} from "./store/startup.store";
+import {inject} from '@angular/core';
+import {CanActivateFn, Router, UrlTree} from '@angular/router';
+import {startupRouteFor} from './store/routing/startup-route';
+import {ReadableStartupStore, StartupStore} from './store/startup.store';
 
 /**
  * Guards the shell route. The decision itself is `startupRouteFor`, which is pure and spec'd.

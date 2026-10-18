@@ -1,11 +1,11 @@
-import {WritableSignalStore} from "../../../../common/types/signal-store.type";
-import {SecurityGroupState} from "../security-group.store";
-import {SecurityGroupApi} from "../../../../gen/api/configuration-security-group";
-import {catchError, EMPTY, Observable, take} from "rxjs";
-import {patchState} from "@ngrx/signals";
-import {Store} from "@ngrx/store";
-import {AppState} from "../../../../store/app.state";
-import {DepotActions} from "../../../../store/depot/depot.actions";
+import {WritableSignalStore} from '../../../../common/types/signal-store.type';
+import {SecurityGroupState} from '../security-group.store';
+import {SecurityGroupApi} from '../../../../gen/api/configuration-security-group';
+import {catchError, EMPTY, Observable, take} from 'rxjs';
+import {patchState} from '@ngrx/signals';
+import {Store} from '@ngrx/store';
+import {AppState} from '../../../../store/app.state';
+import {DepotActions} from '../../../../store/depot/depot.actions';
 
 export function deleteSecurityGroup(signalStore: WritableSignalStore<SecurityGroupState>,
                                     securityGroupApi: SecurityGroupApi,

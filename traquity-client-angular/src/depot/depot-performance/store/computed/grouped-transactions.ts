@@ -1,7 +1,7 @@
-import {TransactionRead, TransactionType} from "../../../../gen/api/depot-transaction";
-import {ReadableSignalStore} from "../../../../common/types/signal-store.type";
-import {DepotPerformanceState} from "../depot-performance.store";
-import {computed, Signal} from "@angular/core";
+import {TransactionRead, TransactionType} from '../../../../gen/api/depot-transaction';
+import {ReadableSignalStore} from '../../../../common/types/signal-store.type';
+import {DepotPerformanceState} from '../depot-performance.store';
+import {computed, Signal} from '@angular/core';
 
 export type TransactionWithCashFlow = TransactionRead & {
   /** Signed net value. */

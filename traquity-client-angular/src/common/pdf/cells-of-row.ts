@@ -1,4 +1,4 @@
-import {PdfCellBox, PdfRun, PdfRunRow} from "./pdf-document.type";
+import {PdfCellBox, PdfRun, PdfRunRow} from './pdf-document.type';
 
 /** Gap below which two runs on one baseline are one word, joined with no space between them. */
 const GLUE: number = 0.12;
@@ -36,7 +36,7 @@ export function cellsOfRow(row: PdfRunRow): PdfCellBox[] {
       const gap: number = run.x - (cell.x + cell.width);
       const scale: number = Math.max(run.height, cell.height);
       if (gap <= CELL * scale) {
-        cell.text += (gap <= GLUE * scale ? "" : " ") + run.text;
+        cell.text += (gap <= GLUE * scale ? '' : ' ') + run.text;
         cell.width = run.x + run.width - cell.x;
         cell.height = Math.max(cell.height, run.height);
         continue;
@@ -48,7 +48,7 @@ export function cellsOfRow(row: PdfRunRow): PdfCellBox[] {
 
   return cells.map((cell: PdfCellBox): PdfCellBox => ({
     ...cell,
-    text: cell.text.replace(/\s+/g, " ").trim()
+    text: cell.text.replace(/\s+/g, ' ').trim()
   }));
 }
 

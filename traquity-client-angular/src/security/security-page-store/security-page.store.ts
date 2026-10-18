@@ -8,9 +8,9 @@ import {loadPage} from './methods/load-page';
 import {initialize} from './methods/initialize';
 import {search} from './methods/search';
 import {hoverSecurity} from './methods/hover-security';
-import {Actions, ofType} from "@ngrx/effects";
-import {SecurityActions} from "../../store/security/security.actions";
-import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
+import {Actions, ofType} from '@ngrx/effects';
+import {SecurityActions} from '../../store/security/security.actions';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 
 type Computed = {};
 

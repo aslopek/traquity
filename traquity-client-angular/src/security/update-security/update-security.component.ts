@@ -1,21 +1,21 @@
-import {AfterViewInit, Component, inject, Inject,} from "@angular/core";
-import {MatButtonModule} from "@angular/material/button";
-import {MatIconModule} from "@angular/material/icon";
-import {MatTabsModule} from "@angular/material/tabs";
-import {TitleToolbarComponent} from "../../common/components/title-toolbar/title-toolbar.component";
-import {SecurityMasterDataComponent} from "../details/security-master-data/security-master-data.component";
-import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
-import {ReadableUpdateSecurityStore, updateSecurityStore,} from "./store/update-security.store";
-import {HistoricalPriceConfigComponent} from "../historical-price/historical-price-config/historical-price-config.component";
-import {StockSplitComponent} from "../details/stock-split/stock-split.component";
-import {DividendAnnouncementConfigComponent} from "../details/dividend-announcement/dividend-announcement-config.component";
+import {AfterViewInit, Component, inject, Inject,} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTabsModule} from '@angular/material/tabs';
+import {TitleToolbarComponent} from '../../common/components/title-toolbar/title-toolbar.component';
+import {SecurityMasterDataComponent} from '../details/security-master-data/security-master-data.component';
+import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
+import {ReadableUpdateSecurityStore, updateSecurityStore,} from './store/update-security.store';
+import {HistoricalPriceConfigComponent} from '../historical-price/historical-price-config/historical-price-config.component';
+import {StockSplitComponent} from '../details/stock-split/stock-split.component';
+import {DividendAnnouncementConfigComponent} from '../details/dividend-announcement/dividend-announcement-config.component';
 
 export type UpdateSecurityDialogData = {
   securityId: number;
 };
 
 @Component({
-  selector: "app-update-security",
+  selector: 'app-update-security',
   imports: [
     MatButtonModule,
     MatTabsModule,
@@ -27,8 +27,8 @@ export type UpdateSecurityDialogData = {
     DividendAnnouncementConfigComponent,
   ],
   providers: [updateSecurityStore],
-  templateUrl: "update-security.component.html",
-  styleUrls: ["update-security.component.scss"],
+  templateUrl: 'update-security.component.html',
+  styleUrls: ['update-security.component.scss'],
 })
 export class UpdateSecurityComponent implements AfterViewInit {
   protected readonly securityId: number;

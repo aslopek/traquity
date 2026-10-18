@@ -1,12 +1,12 @@
-import {ReadableSignalStore, WritableSignalStore} from "../../../common/types/signal-store.type";
-import {signalStore, withComputed, withMethods, withState} from "@ngrx/signals";
-import {Store} from "@ngrx/store";
-import {AppState} from "../../../store/app.state";
-import {inject, Signal} from "@angular/core";
-import {RxMethod} from "@ngrx/signals/rxjs-interop";
-import {DepotPerformancePositionApi, PositionPerformance} from "../../../gen/api/depot-performance";
-import {relativePerformance} from "./computed/relative-performance";
-import {loadPerformanceBreakdown, LoadPerformanceBreakdownArgs} from "./effects/load-performance-breakdown";
+import {ReadableSignalStore, WritableSignalStore} from '../../../common/types/signal-store.type';
+import {signalStore, withComputed, withMethods, withState} from '@ngrx/signals';
+import {Store} from '@ngrx/store';
+import {AppState} from '../../../store/app.state';
+import {inject, Signal} from '@angular/core';
+import {RxMethod} from '@ngrx/signals/rxjs-interop';
+import {DepotPerformancePositionApi, PositionPerformance} from '../../../gen/api/depot-performance';
+import {relativePerformance} from './computed/relative-performance';
+import {loadPerformanceBreakdown, LoadPerformanceBreakdownArgs} from './effects/load-performance-breakdown';
 
 export type PerformanceBreakdownState = {
   performance: PositionPerformance | null
@@ -14,7 +14,7 @@ export type PerformanceBreakdownState = {
 };
 
 export type PerformanceBreakdownComputed = {
-  relativePerformance: Signal<number | "infinity" | null>
+  relativePerformance: Signal<number | 'infinity' | null>
 };
 
 export type PerformanceBreakdownMethods = {

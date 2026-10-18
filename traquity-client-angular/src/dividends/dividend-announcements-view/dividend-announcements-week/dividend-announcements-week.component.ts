@@ -1,12 +1,12 @@
-import {Component, input, InputSignal, OnChanges, SimpleChanges,} from "@angular/core";
-import {DividendAnnouncementRead} from "../../../gen/api/notification/dividend-announcement";
-import {DividendAnnouncementComponent} from "../dividend-announcement/dividend-announcement.component";
+import {Component, input, InputSignal, OnChanges, SimpleChanges,} from '@angular/core';
+import {DividendAnnouncementRead} from '../../../gen/api/notification/dividend-announcement';
+import {DividendAnnouncementComponent} from '../dividend-announcement/dividend-announcement.component';
 
 @Component({
-  selector: "app-dividend-announcements-week",
+  selector: 'app-dividend-announcements-week',
   imports: [DividendAnnouncementComponent],
-  templateUrl: "./dividend-announcements-week.component.html",
-  styleUrl: "./dividend-announcements-week.component.scss",
+  templateUrl: './dividend-announcements-week.component.html',
+  styleUrl: './dividend-announcements-week.component.scss',
 })
 export class DividendAnnouncementsWeekComponent implements OnChanges {
   dividendAnnouncements: InputSignal<DividendAnnouncementRead[]> =

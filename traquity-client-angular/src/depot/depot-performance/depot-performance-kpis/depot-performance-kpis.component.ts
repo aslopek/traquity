@@ -1,26 +1,26 @@
-import {Component, inject, Signal} from "@angular/core";
-import {DepotPerformanceStore, ReadableDepotPerformanceStore} from "../store/depot-performance.store";
-import {TqCurrencyPipe} from "../../../common/pipe/tq-currency.pipe";
-import {TqDatePipe} from "../../../common/pipe/tq-date.pipe";
-import {TqPercentPipe} from "../../../common/pipe/tq-percent.pipe";
-import {Store} from "@ngrx/store";
-import {AppState} from "../../../store/app.state";
-import {selectedDepotCurrency} from "../../../store/depot/depot.selector";
-import {hideAbsoluteValues} from "../../../store/app-config/app-config.selector";
-import {ObfuscatedValueComponent} from "../../../common/components/obfuscated-value/obfuscated-value.component";
-import {DataRanges} from "../store/computed/data-ranges";
-import {DepotPerformanceKpis} from "../store/computed/depot-performance-kpis";
+import {Component, inject, Signal} from '@angular/core';
+import {DepotPerformanceStore, ReadableDepotPerformanceStore} from '../store/depot-performance.store';
+import {TqCurrencyPipe} from '../../../common/pipe/tq-currency.pipe';
+import {TqDatePipe} from '../../../common/pipe/tq-date.pipe';
+import {TqPercentPipe} from '../../../common/pipe/tq-percent.pipe';
+import {Store} from '@ngrx/store';
+import {AppState} from '../../../store/app.state';
+import {selectedDepotCurrency} from '../../../store/depot/depot.selector';
+import {hideAbsoluteValues} from '../../../store/app-config/app-config.selector';
+import {ObfuscatedValueComponent} from '../../../common/components/obfuscated-value/obfuscated-value.component';
+import {DataRanges} from '../store/computed/data-ranges';
+import {DepotPerformanceKpis} from '../store/computed/depot-performance-kpis';
 
 @Component({
-  selector: "app-depot-performance-kpis",
+  selector: 'app-depot-performance-kpis',
   imports: [
     TqCurrencyPipe,
     TqPercentPipe,
     ObfuscatedValueComponent,
     TqDatePipe
   ],
-  templateUrl: "./depot-performance-kpis.component.html",
-  styleUrl: "./depot-performance-kpis.component.scss",
+  templateUrl: './depot-performance-kpis.component.html',
+  styleUrl: './depot-performance-kpis.component.scss',
 })
 export class DepotPerformanceKpisComponent {
 

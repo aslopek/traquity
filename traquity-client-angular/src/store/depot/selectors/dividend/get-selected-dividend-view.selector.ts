@@ -1,4 +1,4 @@
-import {DepotState, DividendView} from "../../depot.state";
+import {DepotState, DividendView} from '../../depot.state';
 
 export type GetSelectedDividendViewState = {
   dividend: Pick<DepotState['dividend'], 'selectedView'>

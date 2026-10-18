@@ -1,8 +1,8 @@
-import {Router} from "@angular/router";
-import {patchState} from "@ngrx/signals";
-import {WritableSignalStore} from "../../../../common/types/signal-store.type";
-import {startupRouteFor} from "../routing/startup-route";
-import {StartupComputed, StartupStoreState} from "../startup.store";
+import {Router} from '@angular/router';
+import {patchState} from '@ngrx/signals';
+import {WritableSignalStore} from '../../../../common/types/signal-store.type';
+import {startupRouteFor} from '../routing/startup-route';
+import {StartupComputed, StartupStoreState} from '../startup.store';
 
 /**
  * The mirror image of `enterConfigure`, for the way back: a selection whose password can only be proven is handed to

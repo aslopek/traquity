@@ -1,14 +1,14 @@
-import {Component, computed, effect, inject, Signal, signal, WritableSignal} from "@angular/core";
-import {MatFormFieldModule} from "@angular/material/form-field";
-import {MatInputModule} from "@angular/material/input";
-import {MatButtonModule} from "@angular/material/button";
-import {Store} from "@ngrx/store";
-import {DataSourceStore, ReadableDataSourceStore} from "../store/data-source.store";
-import {DataSourceWithId, MultiUrlDataSource, SingleUrlDataSource} from "../data-source.type";
-import {AppState} from "../../../store/app.state";
-import {SecurityActions} from "../../../store/security/security.actions";
-import {DividendAnnouncementActions} from "../../../store/dividend-announcement/dividend-announcement.actions";
-import {findMaskedValue, maskedValueCarriers, withMaskedValue} from "./mask-value.util";
+import {Component, computed, effect, inject, Signal, signal, WritableSignal} from '@angular/core';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatButtonModule} from '@angular/material/button';
+import {Store} from '@ngrx/store';
+import {DataSourceStore, ReadableDataSourceStore} from '../store/data-source.store';
+import {DataSourceWithId, MultiUrlDataSource, SingleUrlDataSource} from '../data-source.type';
+import {AppState} from '../../../store/app.state';
+import {SecurityActions} from '../../../store/security/security.actions';
+import {DividendAnnouncementActions} from '../../../store/dividend-announcement/dividend-announcement.actions';
+import {findMaskedValue, maskedValueCarriers, withMaskedValue} from './mask-value.util';
 
 function isMultiUrlDataSource(dataSource: DataSourceWithId): dataSource is DataSourceWithId & MultiUrlDataSource {
   return dataSource.urlPatterns != null;
@@ -19,14 +19,14 @@ function isSingleUrlDataSource(dataSource: DataSourceWithId): dataSource is Data
 }
 
 @Component({
-  selector: "app-data-source-api-key",
+  selector: 'app-data-source-api-key',
   imports: [
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule
   ],
-  templateUrl: "./data-source-api-key.component.html",
-  styleUrl: "./data-source-api-key.component.scss",
+  templateUrl: './data-source-api-key.component.html',
+  styleUrl: './data-source-api-key.component.scss',
 })
 export class DataSourceApiKeyComponent {
 

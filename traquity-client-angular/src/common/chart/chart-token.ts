@@ -1,4 +1,4 @@
-import {withAlpha} from "./with-alpha";
+import {withAlpha} from './with-alpha';
 
 /**
  * Reads a design token off the document root so a canvas-rendered chart paints with the same value the DOM
@@ -6,8 +6,8 @@ import {withAlpha} from "./with-alpha";
  * from — echarts then falls back to its own default for that option.
  */
 export function chartToken(name: string): string {
-  if (typeof getComputedStyle !== "function" || typeof document === "undefined") {
-    return "";
+  if (typeof getComputedStyle !== 'function' || typeof document === 'undefined') {
+    return '';
   }
 
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();

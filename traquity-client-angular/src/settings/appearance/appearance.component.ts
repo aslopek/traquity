@@ -1,18 +1,18 @@
-import {AsyncPipe} from "@angular/common";
-import {Component, inject} from "@angular/core";
-import {FormsModule} from "@angular/forms";
-import {MatSlideToggle} from "@angular/material/slide-toggle";
-import {MatFormField, MatLabel} from "@angular/material/form-field";
-import {MatOption, MatSelect, MatSelectChange,} from "@angular/material/select";
-import {Store} from "@ngrx/store";
-import {Observable, take} from "rxjs";
-import {AppCurrencyLocale, AppDateFormat, AppDecimalLocale,} from "../../store/app-config/app-config-keys";
-import {AppConfigActions} from "../../store/app-config/app-config.actions";
-import {getCurrencyLocale, getDateFormat, getDecimalLocale, hideAbsoluteValues, isDevModeActive,} from "../../store/app-config/app-config.selector";
-import {AppState} from "../../store/app.state";
+import {AsyncPipe} from '@angular/common';
+import {Component, inject} from '@angular/core';
+import {FormsModule} from '@angular/forms';
+import {MatSlideToggle} from '@angular/material/slide-toggle';
+import {MatFormField, MatLabel} from '@angular/material/form-field';
+import {MatOption, MatSelect, MatSelectChange,} from '@angular/material/select';
+import {Store} from '@ngrx/store';
+import {Observable, take} from 'rxjs';
+import {AppCurrencyLocale, AppDateFormat, AppDecimalLocale,} from '../../store/app-config/app-config-keys';
+import {AppConfigActions} from '../../store/app-config/app-config.actions';
+import {getCurrencyLocale, getDateFormat, getDecimalLocale, hideAbsoluteValues, isDevModeActive,} from '../../store/app-config/app-config.selector';
+import {AppState} from '../../store/app.state';
 
 @Component({
-  selector: "app-appearance",
+  selector: 'app-appearance',
   imports: [
     MatFormField,
     MatLabel,
@@ -22,8 +22,8 @@ import {AppState} from "../../store/app.state";
     FormsModule,
     AsyncPipe,
   ],
-  templateUrl: "./appearance.component.html",
-  styleUrl: "./appearance.component.scss",
+  templateUrl: './appearance.component.html',
+  styleUrl: './appearance.component.scss',
 })
 export class AppearanceComponent {
   private readonly store: Store<AppState> = inject(Store);

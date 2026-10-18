@@ -1,7 +1,7 @@
-import {InjectionToken} from "@angular/core";
-import {TraQuityAiBridge} from "./ai-bridge.type";
-import {TraQuityFileBridge} from "./file-bridge.type";
-import {TraQuityStartupBridge} from "./startup-bridge.type";
+import {InjectionToken} from '@angular/core';
+import {TraQuityAiBridge} from './ai-bridge.type';
+import {TraQuityFileBridge} from './file-bridge.type';
+import {TraQuityStartupBridge} from './startup-bridge.type';
 
 export type BridgeHost = {
   traquity?: TraQuityStartupBridge

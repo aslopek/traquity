@@ -1,6 +1,6 @@
-import {WritableSignalStore} from "../../../../common/types/signal-store.type";
-import {DataSourceState} from "../data-source.store";
-import {patchState} from "@ngrx/signals";
+import {WritableSignalStore} from '../../../../common/types/signal-store.type';
+import {DataSourceState} from '../data-source.store';
+import {patchState} from '@ngrx/signals';
 
 export function selectDataSourceId(signalStore: WritableSignalStore<DataSourceState>, id: number | null): void {
   const currentId: number | null = signalStore.selectedDataSourceId();

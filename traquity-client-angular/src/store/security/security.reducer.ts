@@ -4,9 +4,9 @@ import {SecurityActions} from './security.actions';
 import {SecurityState} from './security.state';
 import {overwriteHistoricalSecurityPriceConfig} from './reducers/overwrite-historical-security-price-config.reducer';
 import {overwriteSecurities} from './reducers/overwrite-securities.reducer';
-import {overwriteHistoricalSecurityPriceDataSources} from "./reducers/overwrite-historical-security-price-data-sources.reducer";
-import {setHistoricalSecurityPriceDataSource} from "./reducers/add-historical-security-price-data-source.reducer";
-import {deleteHistoricalSecurityPriceDataSource} from "./reducers/delete-historical-security-price-data-source.reducer";
+import {overwriteHistoricalSecurityPriceDataSources} from './reducers/overwrite-historical-security-price-data-sources.reducer';
+import {setHistoricalSecurityPriceDataSource} from './reducers/add-historical-security-price-data-source.reducer';
+import {deleteHistoricalSecurityPriceDataSource} from './reducers/delete-historical-security-price-data-source.reducer';
 
 const initialState: SecurityState = {
   securities: {},

@@ -1,12 +1,12 @@
-import {AggregatedDividends, getAggregatedDividends} from "./computed/get-aggregated-dividends";
-import {ReadableSignalStore} from "../../../common/types/signal-store.type";
-import {signalStore, withComputed, withMethods, withState} from "@ngrx/signals";
-import {Store} from "@ngrx/store";
-import {AppState} from "../../../store/app.state";
-import {computed, inject, Signal} from "@angular/core";
-import {Dividends} from "../../../gen/api/depot-dividend";
-import {dividendAggregationTimespan, dividends, useDividendGrossValues} from "../../../store/depot/depot.selector";
-import {Timespan} from "../../../common/types/timespan";
+import {AggregatedDividends, getAggregatedDividends} from './computed/get-aggregated-dividends';
+import {ReadableSignalStore} from '../../../common/types/signal-store.type';
+import {signalStore, withComputed, withMethods, withState} from '@ngrx/signals';
+import {Store} from '@ngrx/store';
+import {AppState} from '../../../store/app.state';
+import {computed, inject, Signal} from '@angular/core';
+import {Dividends} from '../../../gen/api/depot-dividend';
+import {dividendAggregationTimespan, dividends, useDividendGrossValues} from '../../../store/depot/depot.selector';
+import {Timespan} from '../../../common/types/timespan';
 
 export type DividendStoreComputed = {
   aggregatedDividends: Signal<AggregatedDividends>

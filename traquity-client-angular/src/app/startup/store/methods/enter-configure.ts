@@ -1,8 +1,8 @@
-import {Router} from "@angular/router";
-import {patchState} from "@ngrx/signals";
-import {WritableSignalStore} from "../../../../common/types/signal-store.type";
-import {startupRouteFor} from "../routing/startup-route";
-import {StartupComputed, StartupStoreState} from "../startup.store";
+import {Router} from '@angular/router';
+import {patchState} from '@ngrx/signals';
+import {WritableSignalStore} from '../../../../common/types/signal-store.type';
+import {startupRouteFor} from '../routing/startup-route';
+import {StartupComputed, StartupStoreState} from '../startup.store';
 
 export function enterConfigure(signalStore: WritableSignalStore<StartupStoreState, StartupComputed>,
                                router: Pick<Router, 'navigate'>): void {

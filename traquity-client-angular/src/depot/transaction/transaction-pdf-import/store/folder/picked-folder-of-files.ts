@@ -1,5 +1,5 @@
-import {isPdf} from "../../../transaction-pdf/imported-file";
-import {PickedPdfFile} from "../transaction-pdf-import.type";
+import {isPdf} from '../../../transaction-pdf/imported-file';
+import {PickedPdfFile} from '../transaction-pdf-import.type';
 
 export type PickedFolder = {
   /** The picked folder's fully qualified path or `null` if the directory is empty. */
@@ -28,7 +28,7 @@ export function pickedFolderOfFiles(files: File[], pathOf: (file: File) => strin
 
 function separatorOf(files: File[], pathOf: (file: File) => string): string {
   const absolute: string | undefined = files.map(pathOf).find((path: string): boolean => path.length > 0);
-  return absolute !== undefined && absolute.includes("\\") ? "\\" : "/";
+  return absolute !== undefined && absolute.includes('\\') ? '\\' : '/';
 }
 
 function folderPathOf(files: File[], pathOf: (file: File) => string, separator: string): string {
@@ -49,13 +49,13 @@ function pathOfFile(file: File, pathOf: (file: File) => string, separator: strin
 }
 
 function relativePathOf(file: File, separator: string): string {
-  return file.webkitRelativePath.split("/").join(separator);
+  return file.webkitRelativePath.split('/').join(separator);
 }
 
 function relativeToFolderOf(file: File, separator: string): string {
-  return file.webkitRelativePath.split("/").slice(1).join(separator);
+  return file.webkitRelativePath.split('/').slice(1).join(separator);
 }
 
 function firstSegmentOf(file: File): string {
-  return file.webkitRelativePath.split("/")[0];
+  return file.webkitRelativePath.split('/')[0];
 }

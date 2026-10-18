@@ -1,9 +1,9 @@
-import {ReadableSignalStore} from "../../../../common/types/signal-store.type";
-import {AuthState} from "../../../../bridge/startup-bridge.type";
-import {ReadableStartupStore} from "../../../startup/store/startup.store";
-import {ConfigureStoreState} from "../configure.store";
-import {authStateIn} from "../known-databases";
-import {ContinuableStartupStore, continueStartup} from "../routing/continue-startup";
+import {ReadableSignalStore} from '../../../../common/types/signal-store.type';
+import {AuthState} from '../../../../bridge/startup-bridge.type';
+import {ReadableStartupStore} from '../../../startup/store/startup.store';
+import {ConfigureStoreState} from '../configure.store';
+import {authStateIn} from '../known-databases';
+import {ContinuableStartupStore, continueStartup} from '../routing/continue-startup';
 
 export type DiscardAndStartSlice = Pick<ConfigureStoreState, 'knownDatabases'>;
 

@@ -1,19 +1,19 @@
-import {beforeEach, describe, expect, it} from "@jest/globals";
-import {ExtractedTransaction} from "../../../../../bridge/ai-bridge.type";
-import {TransactionType} from "../../../../../gen/api/depot-transaction";
-import {SecurityRead} from "../../../../../gen/api/security";
-import {SecuritiesByIsin} from "../../../../../store/security/selectors/get-securities-by-isin.selector";
-import {securityReadFactory} from "../../../../../testing/security-read.factory";
-import {prefillOfExtraction, PrefillResult} from "./prefill-of-extraction";
-import {TransactionPrefill} from "../transaction-import.type";
+import {beforeEach, describe, expect, it} from '@jest/globals';
+import {ExtractedTransaction} from '../../../../../bridge/ai-bridge.type';
+import {TransactionType} from '../../../../../gen/api/depot-transaction';
+import {SecurityRead} from '../../../../../gen/api/security';
+import {SecuritiesByIsin} from '../../../../../store/security/selectors/get-securities-by-isin.selector';
+import {securityReadFactory} from '../../../../../testing/security-read.factory';
+import {prefillOfExtraction, PrefillResult} from './prefill-of-extraction';
+import {TransactionPrefill} from '../transaction-import.type';
 
-const FILE_NAME: string = "settlement.pdf";
+const FILE_NAME: string = 'settlement.pdf';
 
 function extractedFactory(overrides: Partial<ExtractedTransaction> = {}): ExtractedTransaction {
   return {
-    transactionType: "SELL",
-    date: "2024-02-02",
-    time: "14:05:00",
+    transactionType: 'SELL',
+    date: '2024-02-02',
+    time: '14:05:00',
     securityCountOriginal: 10,
     grossValue: 1700,
     tax: 25.32,
@@ -22,7 +22,7 @@ function extractedFactory(overrides: Partial<ExtractedTransaction> = {}): Extrac
   };
 }
 
-describe("prefillOfExtraction", (): void => {
+describe('prefillOfExtraction', (): void => {
   let apple: SecurityRead;
   let securitiesByIsin: SecuritiesByIsin;
   let transaction: ExtractedTransaction;
@@ -35,28 +35,28 @@ describe("prefillOfExtraction", (): void => {
     isin = apple.isin;
   });
 
-  it("offers every field in the notation its own input carries", (): void => {
+  it('offers every field in the notation its own input carries', (): void => {
     expect(prefillOfExtraction(transaction, isin, securitiesByIsin, FILE_NAME).prefill).toEqual({
       transactionType: TransactionType.SELL,
       isSpecialDividend: false,
       securityId: apple.id,
       date: new Date(2024, 1, 2),
-      time: "14:05",
-      securityCountOriginal: "10",
-      grossValue: "1700",
-      tax: "25.32",
-      fee: "4.9",
+      time: '14:05',
+      securityCountOriginal: '10',
+      grossValue: '1700',
+      tax: '25.32',
+      fee: '4.9',
     } satisfies TransactionPrefill);
   });
 
-  it("says which document the values came from", (): void => {
+  it('says which document the values came from', (): void => {
     expect(prefillOfExtraction(transaction, isin, securitiesByIsin, FILE_NAME).message).toEqual({
-      kind: "info",
+      kind: 'info',
       text: `Filled from ${FILE_NAME}.`,
     });
   });
 
-  it("empties a field the document did not state", (): void => {
+  it('empties a field the document did not state', (): void => {
     transaction = extractedFactory({time: undefined, tax: undefined, fee: undefined});
 
     const result: PrefillResult = prefillOfExtraction(transaction, isin, securitiesByIsin, FILE_NAME);
@@ -66,91 +66,91 @@ describe("prefillOfExtraction", (): void => {
       isSpecialDividend: false,
       securityId: apple.id,
       date: new Date(2024, 1, 2),
-      time: "",
-      securityCountOriginal: "10",
-      grossValue: "1700",
-      tax: "",
-      fee: "",
+      time: '',
+      securityCountOriginal: '10',
+      grossValue: '1700',
+      tax: '',
+      fee: '',
     } satisfies TransactionPrefill);
   });
 
-  it("keeps a stated zero, which is a printed line and not an absent one", (): void => {
+  it('keeps a stated zero, which is a printed line and not an absent one', (): void => {
     transaction = extractedFactory({tax: 0});
 
-    expect(prefillOfExtraction(transaction, isin, securitiesByIsin, FILE_NAME).prefill.tax).toBe("0");
+    expect(prefillOfExtraction(transaction, isin, securitiesByIsin, FILE_NAME).prefill.tax).toBe('0');
   });
 
-  describe("dividends", (): void => {
+  describe('dividends', (): void => {
     beforeEach((): void => {
-      transaction = extractedFactory({transactionType: "DIVIDEND"});
+      transaction = extractedFactory({transactionType: 'DIVIDEND'});
     });
 
-    it("fills the type the form offers", (): void => {
+    it('fills the type the form offers', (): void => {
       expect(prefillOfExtraction(transaction, isin, securitiesByIsin, FILE_NAME).prefill.transactionType)
         .toBe(TransactionType.DIVIDEND);
     });
 
-    it("leaves the special-dividend checkbox to the user", (): void => {
+    it('leaves the special-dividend checkbox to the user', (): void => {
       expect(prefillOfExtraction(transaction, isin, securitiesByIsin, FILE_NAME).prefill.isSpecialDividend).toBe(false);
     });
   });
 
-  describe("an ISIN no security carries", (): void => {
+  describe('an ISIN no security carries', (): void => {
     beforeEach((): void => {
-      isin = "US0000PHANT7";
+      isin = 'US0000PHANT7';
     });
 
-    it("fills no security", (): void => {
+    it('fills no security', (): void => {
       expect(prefillOfExtraction(transaction, isin, securitiesByIsin, FILE_NAME).prefill.securityId).toBeNull();
     });
 
-    it("says which ISIN was not found", (): void => {
+    it('says which ISIN was not found', (): void => {
       expect(prefillOfExtraction(transaction, isin, securitiesByIsin, FILE_NAME).message).toEqual({
-        kind: "warning",
-        text: "No security with ISIN US0000PHANT7 is known. Please pick the security yourself.",
+        kind: 'warning',
+        text: 'No security with ISIN US0000PHANT7 is known. Please pick the security yourself.',
       });
     });
 
-    it("fills every other field all the same", (): void => {
+    it('fills every other field all the same', (): void => {
       expect(prefillOfExtraction(transaction, isin, securitiesByIsin, FILE_NAME).prefill).toEqual({
         transactionType: TransactionType.SELL,
         isSpecialDividend: false,
         securityId: null,
         date: new Date(2024, 1, 2),
-        time: "14:05",
-        securityCountOriginal: "10",
-        grossValue: "1700",
-        tax: "25.32",
-        fee: "4.9",
+        time: '14:05',
+        securityCountOriginal: '10',
+        grossValue: '1700',
+        tax: '25.32',
+        fee: '4.9',
       } satisfies TransactionPrefill);
     });
   });
 
-  describe("a document stating no ISIN", (): void => {
+  describe('a document stating no ISIN', (): void => {
     beforeEach((): void => {
       isin = undefined;
     });
 
-    it("fills no security", (): void => {
+    it('fills no security', (): void => {
       expect(prefillOfExtraction(transaction, isin, securitiesByIsin, FILE_NAME).prefill.securityId).toBeNull();
     });
 
-    it("says the document named none", (): void => {
+    it('says the document named none', (): void => {
       expect(prefillOfExtraction(transaction, isin, securitiesByIsin, FILE_NAME).message).toEqual({
-        kind: "warning",
+        kind: 'warning',
         text: `${FILE_NAME} named no ISIN that could be read. Please pick the security yourself.`,
       });
     });
   });
 
-  it("offers a value the form rejects as it was extracted, leaving the verdict to the form", (): void => {
+  it('offers a value the form rejects as it was extracted, leaving the verdict to the form', (): void => {
     transaction = extractedFactory({grossValue: -4375});
 
-    expect(prefillOfExtraction(transaction, isin, securitiesByIsin, FILE_NAME).prefill.grossValue).toBe("-4375");
+    expect(prefillOfExtraction(transaction, isin, securitiesByIsin, FILE_NAME).prefill.grossValue).toBe('-4375');
   });
 
-  it("fills no date it cannot read", (): void => {
-    transaction = extractedFactory({date: "not-a-date"});
+  it('fills no date it cannot read', (): void => {
+    transaction = extractedFactory({date: 'not-a-date'});
 
     expect(prefillOfExtraction(transaction, isin, securitiesByIsin, FILE_NAME).prefill.date).toBeNull();
   });

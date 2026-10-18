@@ -1,17 +1,17 @@
-import {Component, computed, input, InputSignal, Signal} from "@angular/core";
-import {MatProgressBarModule} from "@angular/material/progress-bar";
-import {TqByteSizePipe} from "../../pipe/tq-byte-size.pipe";
-import {TqDecimalPipe} from "../../pipe/tq-decimal.pipe";
-import {TqPercentPipe} from "../../pipe/tq-percent.pipe";
-import {DownloadProgressPipe} from "./download-progress.pipe";
-import {downloadBarValue, isDownloadIndeterminate} from "./download-progress.util";
+import {Component, computed, input, InputSignal, Signal} from '@angular/core';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {TqByteSizePipe} from '../../pipe/tq-byte-size.pipe';
+import {TqDecimalPipe} from '../../pipe/tq-decimal.pipe';
+import {TqPercentPipe} from '../../pipe/tq-percent.pipe';
+import {DownloadProgressPipe} from './download-progress.pipe';
+import {downloadBarValue, isDownloadIndeterminate} from './download-progress.util';
 
 @Component({
-  selector: "app-download-progress",
+  selector: 'app-download-progress',
   imports: [DownloadProgressPipe, MatProgressBarModule],
   providers: [TqDecimalPipe, TqByteSizePipe, TqPercentPipe],
-  templateUrl: "download-progress.component.html",
-  styleUrl: "download-progress.component.scss",
+  templateUrl: 'download-progress.component.html',
+  styleUrl: 'download-progress.component.scss',
 })
 export class DownloadProgressComponent {
 

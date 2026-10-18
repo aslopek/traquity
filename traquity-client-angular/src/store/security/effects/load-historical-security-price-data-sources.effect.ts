@@ -1,10 +1,10 @@
-import {Actions, ofType} from "@ngrx/effects";
-import {HistoricalSecurityPriceDataSourceApi, HistoricalSecurityPriceDataSourceRead} from "../../../gen/api/historical-security-price";
-import {Action, Store} from "@ngrx/store";
-import {AppState} from "../../app.state";
-import {catchError, map, Observable, of, switchMap} from "rxjs";
-import {SecurityActions} from "../security.actions";
-import {AppActions} from "../../app.actions";
+import {Actions, ofType} from '@ngrx/effects';
+import {HistoricalSecurityPriceDataSourceApi, HistoricalSecurityPriceDataSourceRead} from '../../../gen/api/historical-security-price';
+import {Action, Store} from '@ngrx/store';
+import {AppState} from '../../app.state';
+import {catchError, map, Observable, of, switchMap} from 'rxjs';
+import {SecurityActions} from '../security.actions';
+import {AppActions} from '../../app.actions';
 
 export type LoadHistoricalSecurityPriceDataSourcesEffectArgs = {
   actions$: Actions

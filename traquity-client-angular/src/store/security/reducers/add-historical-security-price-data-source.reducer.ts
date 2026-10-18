@@ -1,7 +1,7 @@
-import {SecurityState} from "../security.state";
-import {SetHistoricalSecurityPriceDataSourceDoneActionArgs} from "../security.actions";
-import {DataSourceWithId} from "../../../settings/data-source/data-source.type";
-import {HistoricalSecurityPriceDataSourceRead} from "../../../gen/api/historical-security-price";
+import {SecurityState} from '../security.state';
+import {SetHistoricalSecurityPriceDataSourceDoneActionArgs} from '../security.actions';
+import {DataSourceWithId} from '../../../settings/data-source/data-source.type';
+import {HistoricalSecurityPriceDataSourceRead} from '../../../gen/api/historical-security-price';
 
 export function setHistoricalSecurityPriceDataSource(state: Readonly<SecurityState>,
                                                      args: SetHistoricalSecurityPriceDataSourceDoneActionArgs): SecurityState {

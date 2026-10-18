@@ -1,10 +1,10 @@
-import {RxMethod, rxMethod} from "@ngrx/signals/rxjs-interop";
-import {catchError, debounceTime, filter, Observable, of, pipe, switchMap, tap} from "rxjs";
-import {WritableSignalStore} from "../../../../common/types/signal-store.type";
-import {StartupBridgeService} from "../../../../bridge/startup-bridge.service";
-import {ReadableStartupStore} from "../../../startup/store/startup.store";
-import {setPasswordMatches} from "../methods/set-password-matches";
-import {UnlockState} from "../unlock.store";
+import {RxMethod, rxMethod} from '@ngrx/signals/rxjs-interop';
+import {catchError, debounceTime, filter, Observable, of, pipe, switchMap, tap} from 'rxjs';
+import {WritableSignalStore} from '../../../../common/types/signal-store.type';
+import {StartupBridgeService} from '../../../../bridge/startup-bridge.service';
+import {ReadableStartupStore} from '../../../startup/store/startup.store';
+import {setPasswordMatches} from '../methods/set-password-matches';
+import {UnlockState} from '../unlock.store';
 
 /**
  * `scryptSync` runs synchronously in the Electron main process (cost 16384 ≈ tens of milliseconds of blocked main

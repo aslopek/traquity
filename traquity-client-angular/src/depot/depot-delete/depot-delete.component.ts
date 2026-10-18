@@ -1,22 +1,22 @@
-import {Component, Inject, Signal, signal,} from "@angular/core";
-import {ReactiveFormsModule} from "@angular/forms";
-import {MatButtonModule} from "@angular/material/button";
-import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
-import {MatFormFieldModule} from "@angular/material/form-field";
-import {MatIconModule} from "@angular/material/icon";
-import {MatInputModule} from "@angular/material/input";
-import {DepotRead} from "../../gen/api/depot";
-import {TitleToolbarComponent} from "../../common/components/title-toolbar/title-toolbar.component";
-import {Store} from "@ngrx/store";
-import {AppState} from "../../store/app.state";
-import {DepotActions} from "../../store/depot/depot.actions";
+import {Component, Inject, Signal, signal,} from '@angular/core';
+import {ReactiveFormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {DepotRead} from '../../gen/api/depot';
+import {TitleToolbarComponent} from '../../common/components/title-toolbar/title-toolbar.component';
+import {Store} from '@ngrx/store';
+import {AppState} from '../../store/app.state';
+import {DepotActions} from '../../store/depot/depot.actions';
 
 export type DepotDeleteComponentDialogData = {
   depot: DepotRead;
 };
 
 @Component({
-  selector: "app-depot-delete",
+  selector: 'app-depot-delete',
   imports: [
     MatButtonModule,
     MatFormFieldModule,
@@ -25,8 +25,8 @@ export type DepotDeleteComponentDialogData = {
     ReactiveFormsModule,
     TitleToolbarComponent,
   ],
-  templateUrl: "./depot-delete.component.html",
-  styleUrl: "./depot-delete.component.scss",
+  templateUrl: './depot-delete.component.html',
+  styleUrl: './depot-delete.component.scss',
 })
 export class DepotDeleteComponent {
   protected readonly depot: Signal<DepotRead>;

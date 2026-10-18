@@ -5,8 +5,8 @@ import {
   HistoricalSecurityPriceConfigRead,
   HistoricalSecurityPriceDataSourceRead
 } from '../../gen/api/historical-security-price';
-import {DividendAnnouncementConfigCreate} from "../../gen/api/notification/dividend-announcement";
-import {MultiUrlDataSource} from "../../settings/data-source/data-source.type";
+import {DividendAnnouncementConfigCreate} from '../../gen/api/notification/dividend-announcement';
+import {MultiUrlDataSource} from '../../settings/data-source/data-source.type';
 
 export type SetSecuritiesActionArgs = {
   securities: SecurityRead[]

@@ -1,6 +1,6 @@
-import {Timespan} from "../../common/types/timespan";
-import {DepotState, DividendView, PositionView} from "./depot.state";
-import {PositionGroupBy} from "./position-grouping/position-group.type";
+import {Timespan} from '../../common/types/timespan';
+import {DepotState, DividendView, PositionView} from './depot.state';
+import {PositionGroupBy} from './position-grouping/position-group.type';
 
 export const depotConfigPrefix = 'depot';
 

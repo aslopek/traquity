@@ -1,13 +1,13 @@
-import {Actions, ofType} from "@ngrx/effects";
-import {ConfigApi} from "../../../../gen/api/configuration";
-import {Action, Store} from "@ngrx/store";
-import {AppState} from "../../../app.state";
-import {catchError, map, Observable, of, switchMap} from "rxjs";
-import {dividendUseGrossValues as dividendUseGrossValuesConfigKey} from "../../depot-config-keys";
-import {useDividendGrossValues as useDividendGrossValuesSelector} from "../../depot.selector";
-import {clientId} from "../../../client-id";
-import {DepotActions, SetUseDividendGrossValuesActionArgs} from "../../depot.actions";
-import {concatLatestFrom} from "@ngrx/operators";
+import {Actions, ofType} from '@ngrx/effects';
+import {ConfigApi} from '../../../../gen/api/configuration';
+import {Action, Store} from '@ngrx/store';
+import {AppState} from '../../../app.state';
+import {catchError, map, Observable, of, switchMap} from 'rxjs';
+import {dividendUseGrossValues as dividendUseGrossValuesConfigKey} from '../../depot-config-keys';
+import {useDividendGrossValues as useDividendGrossValuesSelector} from '../../depot.selector';
+import {clientId} from '../../../client-id';
+import {DepotActions, SetUseDividendGrossValuesActionArgs} from '../../depot.actions';
+import {concatLatestFrom} from '@ngrx/operators';
 
 export type UseDividendGrossValuesEffectArgs = {
   actions$: Actions

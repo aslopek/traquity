@@ -1,6 +1,6 @@
-import {patchState} from "@ngrx/signals";
-import {WritableSignalStore} from "../../../../../common/types/signal-store.type";
-import {ConfigureStoreState} from "../../configure.store";
+import {patchState} from '@ngrx/signals';
+import {WritableSignalStore} from '../../../../../common/types/signal-store.type';
+import {ConfigureStoreState} from '../../configure.store';
 
 /**
  * Adopts a not-yet-existing file. This is the one place in the app that produces the `created` origin, and with it

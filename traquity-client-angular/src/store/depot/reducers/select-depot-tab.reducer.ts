@@ -1,6 +1,6 @@
-import {DepotState} from "../depot.state";
-import {SelectDepotTabActionArgs} from "../depot.actions";
-import {tabIndexDividends, tabIndexPerformance, tabIndexPositions, tabIndexTransactions} from "../depot-tabs";
+import {DepotState} from '../depot.state';
+import {SelectDepotTabActionArgs} from '../depot.actions';
+import {tabIndexDividends, tabIndexPerformance, tabIndexPositions, tabIndexTransactions} from '../depot-tabs';
 
 export function selectDepotTabReducer(state: Readonly<DepotState>, actionArgs: SelectDepotTabActionArgs): DepotState {
   const tab = actionArgs.tab.tab;

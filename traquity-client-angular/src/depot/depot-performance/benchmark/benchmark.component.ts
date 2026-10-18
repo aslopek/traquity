@@ -1,22 +1,22 @@
-import {Component, computed, inject, Signal, signal, WritableSignal} from "@angular/core";
-import {FixedInterestBenchmarkComponent, FixedInterestBenchmarkMode} from "./fixed-interest-benchmark/fixed-interest-benchmark.component";
-import {Benchmark} from "../store/benchmark/benchmark.type";
-import {DepotPerformanceStore, ReadableDepotPerformanceStore} from "../store/depot-performance.store";
-import {MatButton} from "@angular/material/button";
-import {MatButtonToggle, MatButtonToggleGroup} from "@angular/material/button-toggle";
+import {Component, computed, inject, Signal, signal, WritableSignal} from '@angular/core';
+import {FixedInterestBenchmarkComponent, FixedInterestBenchmarkMode} from './fixed-interest-benchmark/fixed-interest-benchmark.component';
+import {Benchmark} from '../store/benchmark/benchmark.type';
+import {DepotPerformanceStore, ReadableDepotPerformanceStore} from '../store/depot-performance.store';
+import {MatButton} from '@angular/material/button';
+import {MatButtonToggle, MatButtonToggleGroup} from '@angular/material/button-toggle';
 
 type BenchmarkMode = FixedInterestBenchmarkMode;
 
 @Component({
-  selector: "app-benchmark",
+  selector: 'app-benchmark',
   imports: [
     FixedInterestBenchmarkComponent,
     MatButton,
     MatButtonToggle,
     MatButtonToggleGroup
   ],
-  templateUrl: "./benchmark.component.html",
-  styleUrl: "./benchmark.component.scss",
+  templateUrl: './benchmark.component.html',
+  styleUrl: './benchmark.component.scss',
 })
 export class BenchmarkComponent {
 

@@ -1,11 +1,11 @@
-import {Component, computed, input, InputSignal, Signal,} from "@angular/core";
-import {CountryPipe} from "../../pipe/country.pipe";
+import {Component, computed, input, InputSignal, Signal,} from '@angular/core';
+import {CountryPipe} from '../../pipe/country.pipe';
 
 @Component({
-  selector: "app-flag-icon",
+  selector: 'app-flag-icon',
   imports: [CountryPipe],
-  templateUrl: "./flag-icon.component.html",
-  styleUrl: "./flag-icon.component.scss",
+  templateUrl: './flag-icon.component.html',
+  styleUrl: './flag-icon.component.scss',
 })
 export class FlagIconComponent {
   readonly countryCode: InputSignal<string> = input.required<string>();

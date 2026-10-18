@@ -1,5 +1,5 @@
-import {DepotState} from "../../depot.state";
-import {DepotPerformance} from "../../../../gen/api/depot-performance";
+import {DepotState} from '../../depot.state';
+import {DepotPerformance} from '../../../../gen/api/depot-performance';
 
 export type GetDepotPerformanceState = {
   performance: Pick<DepotState['performance'], 'performance'>

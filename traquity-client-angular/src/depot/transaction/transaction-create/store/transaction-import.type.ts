@@ -1,7 +1,7 @@
-import {TransactionType} from "../../../../gen/api/depot-transaction";
+import {TransactionType} from '../../../../gen/api/depot-transaction';
 
 /** How prominently the dialog states what happened: a note, something to check, or a refusal. */
-export type ImportMessageKind = "info" | "warning" | "error";
+export type ImportMessageKind = 'info' | 'warning' | 'error';
 
 export type ImportMessage = {
   kind: ImportMessageKind

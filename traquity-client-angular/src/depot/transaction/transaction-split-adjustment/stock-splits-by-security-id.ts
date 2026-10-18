@@ -1,5 +1,5 @@
-import {catchError, concatMap, from, map, Observable, of, toArray} from "rxjs";
-import {StockSplit, StockSplitApi} from "../../../gen/api/security";
+import {catchError, concatMap, from, map, Observable, of, toArray} from 'rxjs';
+import {StockSplit, StockSplitApi} from '../../../gen/api/security';
 
 type SecuritySplits = [securityId: number, stockSplits: StockSplit[]];
 

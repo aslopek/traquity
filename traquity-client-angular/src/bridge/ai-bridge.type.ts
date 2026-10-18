@@ -1,4 +1,4 @@
-import {DocumentToken} from "../common/pdf/tokens-of-document";
+import {DocumentToken} from '../common/pdf/tokens-of-document';
 
 export type CatalogueEntry = {
   key: string

@@ -1,25 +1,25 @@
-import {ReadableSignalStore, WritableSignalStore} from "../../../common/types/signal-store.type";
-import {signalStore, withComputed, withHooks, withMethods, withState} from "@ngrx/signals";
-import {Store} from "@ngrx/store";
-import {AppState} from "../../../store/app.state";
-import {computed, inject, Signal} from "@angular/core";
-import {DataRange} from "../../../common/types/data-range";
-import {setDataRange} from "./methods/set-data-range";
-import {extendedInternalRateOfReturn} from "./computed/extended-internal-rate-of-return";
-import {depotValues, DepotValuesResult} from "./computed/depot-values";
-import {RebasedDepotValue} from "./computed/rebased-depot-value.type";
-import {DepotPerformanceKpis, depotPerformanceKpis} from "./computed/depot-performance-kpis";
-import {DataRanges, dataRanges} from "./computed/data-ranges";
-import {setShowInvestedCapital} from "./methods/set-show-invested-capital";
-import {setAddCashToAbsoluteValue} from "./methods/set-add-cash-to-absolute-value";
-import {selectedDepotIds} from "../../../store/depot/depot.selector";
-import {loadTransactions, LoadTransactionsArgs} from "./effects/load-transactions";
-import {TransactionApi, TransactionRead} from "../../../gen/api/depot-transaction";
-import {RxMethod} from "@ngrx/signals/rxjs-interop";
-import {groupedTransaction, TransactionGroup} from "./computed/grouped-transactions";
-import {Benchmark, BenchmarkResult} from "./benchmark/benchmark.type";
-import {setBenchmark} from "./methods/set-benchmark";
-import {benchmarkResult} from "./computed/benchmark-result";
+import {ReadableSignalStore, WritableSignalStore} from '../../../common/types/signal-store.type';
+import {signalStore, withComputed, withHooks, withMethods, withState} from '@ngrx/signals';
+import {Store} from '@ngrx/store';
+import {AppState} from '../../../store/app.state';
+import {computed, inject, Signal} from '@angular/core';
+import {DataRange} from '../../../common/types/data-range';
+import {setDataRange} from './methods/set-data-range';
+import {extendedInternalRateOfReturn} from './computed/extended-internal-rate-of-return';
+import {depotValues, DepotValuesResult} from './computed/depot-values';
+import {RebasedDepotValue} from './computed/rebased-depot-value.type';
+import {DepotPerformanceKpis, depotPerformanceKpis} from './computed/depot-performance-kpis';
+import {DataRanges, dataRanges} from './computed/data-ranges';
+import {setShowInvestedCapital} from './methods/set-show-invested-capital';
+import {setAddCashToAbsoluteValue} from './methods/set-add-cash-to-absolute-value';
+import {selectedDepotIds} from '../../../store/depot/depot.selector';
+import {loadTransactions, LoadTransactionsArgs} from './effects/load-transactions';
+import {TransactionApi, TransactionRead} from '../../../gen/api/depot-transaction';
+import {RxMethod} from '@ngrx/signals/rxjs-interop';
+import {groupedTransaction, TransactionGroup} from './computed/grouped-transactions';
+import {Benchmark, BenchmarkResult} from './benchmark/benchmark.type';
+import {setBenchmark} from './methods/set-benchmark';
+import {benchmarkResult} from './computed/benchmark-result';
 
 export type DepotPerformanceComputed = {
   benchmarkResult: Signal<BenchmarkResult | [BenchmarkResult, BenchmarkResult] | null>

@@ -3,7 +3,7 @@
  * `#rrggbb`) can be re-alpha'd; anything else is returned unchanged.
  */
 export function withAlpha(color: string, alpha: number): string {
-  if (!color.startsWith("#")) {
+  if (!color.startsWith('#')) {
     return color;
   }
 

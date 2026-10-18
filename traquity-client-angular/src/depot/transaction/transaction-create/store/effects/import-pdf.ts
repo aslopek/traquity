@@ -1,15 +1,15 @@
-import {patchState} from "@ngrx/signals";
-import {RxMethod, rxMethod} from "@ngrx/signals/rxjs-interop";
-import {EMPTY, Observable, OperatorFunction, pipe, switchMap} from "rxjs";
-import {AiBridgeService} from "../../../../../bridge/ai-bridge.service";
-import {PdfExtractionFailure} from "../../../../../common/pdf/extract-pdf";
-import {WritableSignalStore} from "../../../../../common/types/signal-store.type";
-import {SecuritiesByIsin} from "../../../../../store/security/selectors/get-securities-by-isin.selector";
-import {extractTransactionOfPdf, PdfTransactionOutcome} from "../../../transaction-pdf/extract-transaction-of-pdf";
-import {ImportedFile, isPdf} from "../../../transaction-pdf/imported-file";
-import {prefillOfExtraction, PrefillResult} from "./prefill-of-extraction";
-import {TransactionImportComputed, TransactionImportState} from "../transaction-import.store";
-import {ImportMessage} from "../transaction-import.type";
+import {patchState} from '@ngrx/signals';
+import {RxMethod, rxMethod} from '@ngrx/signals/rxjs-interop';
+import {EMPTY, Observable, OperatorFunction, pipe, switchMap} from 'rxjs';
+import {AiBridgeService} from '../../../../../bridge/ai-bridge.service';
+import {PdfExtractionFailure} from '../../../../../common/pdf/extract-pdf';
+import {WritableSignalStore} from '../../../../../common/types/signal-store.type';
+import {SecuritiesByIsin} from '../../../../../store/security/selectors/get-securities-by-isin.selector';
+import {extractTransactionOfPdf, PdfTransactionOutcome} from '../../../transaction-pdf/extract-transaction-of-pdf';
+import {ImportedFile, isPdf} from '../../../transaction-pdf/imported-file';
+import {prefillOfExtraction, PrefillResult} from './prefill-of-extraction';
+import {TransactionImportComputed, TransactionImportState} from '../transaction-import.store';
+import {ImportMessage} from '../transaction-import.type';
 
 export type ImportPdfArgs = {
   file: ImportedFile
@@ -24,7 +24,7 @@ export type ImportPdfArgs = {
  * What a bridge call that reached no outcome at all is answered with. Such a call carries no message of its own,
  * and it names no document, since the parse already succeeded.
  */
-const EXTRACTION_REFUSED: string = "The extraction could not be started. See traquity.log for the reason.";
+const EXTRACTION_REFUSED: string = 'The extraction could not be started. See traquity.log for the reason.';
 
 /**
  * One document, from the file the user handed over to the values the form offers. The parse happens here, so a file
@@ -40,11 +40,11 @@ export function importPdfPipeline(signalStore: WritableSignalStore<TransactionIm
   return pipe(
     switchMap((args: ImportPdfArgs): Observable<void> => {
       if (!isPdf(args.file)) {
-        return finish(signalStore, {kind: "error", text: "Only PDF files can be imported."});
+        return finish(signalStore, {kind: 'error', text: 'Only PDF files can be imported.'});
       }
       const modelKey: string | null = args.modelKey;
       if (modelKey == null) {
-        return finish(signalStore, {kind: "error", text: "No AI model is active."});
+        return finish(signalStore, {kind: 'error', text: 'No AI model is active.'});
       }
 
       patchState(signalStore, {busy: true, message: null, prefill: null});
@@ -59,15 +59,15 @@ export function importPdfPipeline(signalStore: WritableSignalStore<TransactionIm
 function apply(signalStore: WritableSignalStore<TransactionImportState, TransactionImportComputed>,
                outcome: PdfTransactionOutcome, args: ImportPdfArgs): Observable<void> {
   switch (outcome.status) {
-    case "unread":
-      return finish(signalStore, {kind: "error", text: `${args.file.name} could not be read.`});
-    case "parseFailed":
-      return finish(signalStore, {kind: "error", text: messageOfFailure(outcome.failure, args.file.name)});
-    case "refused":
-      return finish(signalStore, {kind: "error", text: EXTRACTION_REFUSED});
-    case "failed":
-      return finish(signalStore, {kind: "error", text: outcome.message});
-    case "extracted": {
+    case 'unread':
+      return finish(signalStore, {kind: 'error', text: `${args.file.name} could not be read.`});
+    case 'parseFailed':
+      return finish(signalStore, {kind: 'error', text: messageOfFailure(outcome.failure, args.file.name)});
+    case 'refused':
+      return finish(signalStore, {kind: 'error', text: EXTRACTION_REFUSED});
+    case 'failed':
+      return finish(signalStore, {kind: 'error', text: outcome.message});
+    case 'extracted': {
       const result: PrefillResult = prefillOfExtraction(outcome.transaction, outcome.isin, args.securitiesByIsin, args.file.name);
       patchState(signalStore, {busy: false, message: result.message, prefill: result.prefill});
       return EMPTY;
@@ -84,17 +84,17 @@ function finish(signalStore: WritableSignalStore<TransactionImportState, Transac
 
 function messageOfFailure(failure: PdfExtractionFailure, fileName: string): string {
   switch (failure.reason) {
-    case "notAPdf":
-      return "Only PDF files can be imported.";
-    case "noTextLayer":
+    case 'notAPdf':
+      return 'Only PDF files can be imported.';
+    case 'noTextLayer':
       return `${fileName} carries no readable text.`;
-    case "tooManyPages":
+    case 'tooManyPages':
       return `${fileName} has ${failure.pages} pages, and at most ${failure.maximum} can be read.`;
-    case "tooManyRuns":
+    case 'tooManyRuns':
       return `${fileName} carries more text than can be read.`;
-    case "outOfTime":
+    case 'outOfTime':
       return `${fileName} took too long to read.`;
-    case "unreadable":
+    case 'unreadable':
       return `${fileName} could not be read.`;
   }
 }

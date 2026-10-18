@@ -1,7 +1,7 @@
-import {ExtractedTransaction} from "../../../../../bridge/ai-bridge.type";
-import {TransactionType} from "../../../../../gen/api/depot-transaction";
-import {SecuritiesByIsin} from "../../../../../store/security/selectors/get-securities-by-isin.selector";
-import {ImportMessage, TransactionPrefill} from "../transaction-import.type";
+import {ExtractedTransaction} from '../../../../../bridge/ai-bridge.type';
+import {TransactionType} from '../../../../../gen/api/depot-transaction';
+import {SecuritiesByIsin} from '../../../../../store/security/selectors/get-securities-by-isin.selector';
+import {ImportMessage, TransactionPrefill} from '../transaction-import.type';
 
 export type PrefillResult = {
   prefill: TransactionPrefill
@@ -18,7 +18,7 @@ export function prefillOfExtraction(transaction: ExtractedTransaction, isin: str
       isSpecialDividend: false,
       securityId,
       date: dateOf(transaction.date),
-      time: transaction.time == null ? "" : transaction.time.slice(0, 5),
+      time: transaction.time == null ? '' : transaction.time.slice(0, 5),
       securityCountOriginal: numberOf(transaction.securityCountOriginal),
       grossValue: numberOf(transaction.grossValue),
       tax: numberOf(transaction.tax),
@@ -30,29 +30,29 @@ export function prefillOfExtraction(transaction: ExtractedTransaction, isin: str
 
 function messageOf(isin: string | undefined, securityId: number | null, fileName: string): ImportMessage {
   if (isin == null) {
-    return {kind: "warning", text: `${fileName} named no ISIN that could be read. Please pick the security yourself.`};
+    return {kind: 'warning', text: `${fileName} named no ISIN that could be read. Please pick the security yourself.`};
   }
   if (securityId == null) {
     return {
-      kind: "warning",
+      kind: 'warning',
       text: `No security with ISIN ${isin} is known. Please pick the security yourself.`,
     };
   }
-  return {kind: "info", text: `Filled from ${fileName}.`};
+  return {kind: 'info', text: `Filled from ${fileName}.`};
 }
 
 /**
  * The extracted type is one of the app's own, so this is a lookup and never a parse. An unknown value leaves the
  * field empty, which the form's own `required` rule then reports.
  */
-function transactionTypeOf(extracted: ExtractedTransaction["transactionType"]): TransactionType | null {
+function transactionTypeOf(extracted: ExtractedTransaction['transactionType']): TransactionType | null {
   const known: TransactionType[] = Object.values(TransactionType);
   return known.find((transactionType: TransactionType): boolean => transactionType === extracted) ?? null;
 }
 
 /** A `yyyy-MM-dd` date as a local `Date`, so the picker shows the day the document printed and not the one before. */
 function dateOf(date: string): Date | null {
-  const parts: number[] = date.split("-").map(Number);
+  const parts: number[] = date.split('-').map(Number);
   if (parts.length !== 3 || parts.some((part: number): boolean => !Number.isFinite(part))) {
     return null;
   }
@@ -60,5 +60,5 @@ function dateOf(date: string): Date | null {
 }
 
 function numberOf(value: number | undefined): string {
-  return value == null ? "" : String(value);
+  return value == null ? '' : String(value);
 }

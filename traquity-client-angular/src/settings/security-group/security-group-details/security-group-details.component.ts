@@ -1,18 +1,18 @@
-import {Component, computed, effect, inject, Signal, signal, WritableSignal} from "@angular/core";
-import {MatFormFieldModule} from "@angular/material/form-field";
-import {MatInputModule} from "@angular/material/input";
-import {MatChipsModule} from "@angular/material/chips";
-import {MatAutocompleteModule, MatAutocompleteSelectedEvent} from "@angular/material/autocomplete";
-import {MatButtonModule} from "@angular/material/button";
-import {MatIconModule} from "@angular/material/icon";
-import {Store} from "@ngrx/store";
-import {FieldTree, form, FormField, minLength, required, SchemaPathTree} from "@angular/forms/signals";
-import {ReadableSecurityGroupStore, SecurityGroupStore} from "../store/security-group.store";
-import {SecurityGroupRead} from "../../../gen/api/configuration-security-group";
-import {AppState} from "../../../store/app.state";
-import {securitiesById as securitiesByIdSelector} from "../../../store/security/security.selector";
-import {SecuritiesById} from "../../../store/security/security.state";
-import {SecurityNamePipe} from "../../../common/pipe/security-name.pipe";
+import {Component, computed, effect, inject, Signal, signal, WritableSignal} from '@angular/core';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatChipsModule} from '@angular/material/chips';
+import {MatAutocompleteModule, MatAutocompleteSelectedEvent} from '@angular/material/autocomplete';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
+import {Store} from '@ngrx/store';
+import {FieldTree, form, FormField, minLength, required, SchemaPathTree} from '@angular/forms/signals';
+import {ReadableSecurityGroupStore, SecurityGroupStore} from '../store/security-group.store';
+import {SecurityGroupRead} from '../../../gen/api/configuration-security-group';
+import {AppState} from '../../../store/app.state';
+import {securitiesById as securitiesByIdSelector} from '../../../store/security/security.selector';
+import {SecuritiesById} from '../../../store/security/security.state';
+import {SecurityNamePipe} from '../../../common/pipe/security-name.pipe';
 
 type MemberOption = {
   id: number
@@ -25,7 +25,7 @@ type FormModel = {
 };
 
 @Component({
-  selector: "app-security-group-details",
+  selector: 'app-security-group-details',
   imports: [
     MatFormFieldModule,
     MatInputModule,
@@ -36,8 +36,8 @@ type FormModel = {
     FormField,
     SecurityNamePipe
   ],
-  templateUrl: "./security-group-details.component.html",
-  styleUrl: "./security-group-details.component.scss",
+  templateUrl: './security-group-details.component.html',
+  styleUrl: './security-group-details.component.scss',
 })
 export class SecurityGroupDetailsComponent {
 

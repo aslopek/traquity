@@ -1,5 +1,5 @@
-import {DividendAnnouncementState} from "../dividend-announcement.state";
-import {DataSourceWithId} from "../../../settings/data-source/data-source.type";
+import {DividendAnnouncementState} from '../dividend-announcement.state';
+import {DataSourceWithId} from '../../../settings/data-source/data-source.type';
 
 export type GetDividendAnnouncementDataSourcesState = Pick<DividendAnnouncementState, 'dataSources'>;
 

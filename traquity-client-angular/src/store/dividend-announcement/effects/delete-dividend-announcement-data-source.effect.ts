@@ -1,12 +1,12 @@
-import {Actions, ofType} from "@ngrx/effects";
-import {DividendAnnouncementDataSourceApi} from "../../../gen/api/notification/dividend-announcement";
-import {Action, Store} from "@ngrx/store";
-import {AppState} from "../../app.state";
-import {catchError, map, Observable, of, switchMap} from "rxjs";
-import {DeleteDividendAnnouncementDataSourceActionArgs, DividendAnnouncementActions} from "../dividend-announcement.actions";
-import {concatLatestFrom} from "@ngrx/operators";
-import {DataSourceWithId} from "../../../settings/data-source/data-source.type";
-import {getDividendAnnouncementDataSource} from "../dividend-announcement.selector";
+import {Actions, ofType} from '@ngrx/effects';
+import {DividendAnnouncementDataSourceApi} from '../../../gen/api/notification/dividend-announcement';
+import {Action, Store} from '@ngrx/store';
+import {AppState} from '../../app.state';
+import {catchError, map, Observable, of, switchMap} from 'rxjs';
+import {DeleteDividendAnnouncementDataSourceActionArgs, DividendAnnouncementActions} from '../dividend-announcement.actions';
+import {concatLatestFrom} from '@ngrx/operators';
+import {DataSourceWithId} from '../../../settings/data-source/data-source.type';
+import {getDividendAnnouncementDataSource} from '../dividend-announcement.selector';
 
 export type DeleteDividendAnnouncementDataSourceEffectArgs = {
   actions$: Actions

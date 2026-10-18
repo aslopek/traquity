@@ -2,10 +2,10 @@ import {createFeatureSelector, createSelector, MemoizedSelector} from '@ngrx/sto
 import {DividendAnnouncementDataSourceRead, DividendAnnouncementRead} from '../../gen/api/notification/dividend-announcement';
 import {DividendAnnouncementState} from './dividend-announcement.state';
 import {AppState, dividendAnnouncementSlice} from '../app.state';
-import {DataSourceWithId} from "../../settings/data-source/data-source.type";
-import {isAppConfigLoaded} from "../app-config/app-config.selector";
-import {getDividendAnnouncementDataSourcesSelector} from "./selectors/get-dividend-announcement-data-sources.selector";
-import {getDividendAnnouncementDataSourceSelector} from "./selectors/get-dividend-announcement-data-source.selector";
+import {DataSourceWithId} from '../../settings/data-source/data-source.type';
+import {isAppConfigLoaded} from '../app-config/app-config.selector';
+import {getDividendAnnouncementDataSourcesSelector} from './selectors/get-dividend-announcement-data-sources.selector';
+import {getDividendAnnouncementDataSourceSelector} from './selectors/get-dividend-announcement-data-source.selector';
 
 const dividendAnnouncementSelector: MemoizedSelector<AppState, DividendAnnouncementState>
   = createFeatureSelector<DividendAnnouncementState>(dividendAnnouncementSlice);

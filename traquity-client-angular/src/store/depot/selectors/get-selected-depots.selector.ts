@@ -1,5 +1,5 @@
-import {DepotState} from "../depot.state";
-import {DepotRead} from "../../../gen/api/depot";
+import {DepotState} from '../depot.state';
+import {DepotRead} from '../../../gen/api/depot';
 
 export type GetSelectedDepotsState = Pick<DepotState, 'depots' | 'selectedDepotIds'>;
 

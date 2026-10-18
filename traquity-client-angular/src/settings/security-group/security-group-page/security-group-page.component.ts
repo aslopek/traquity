@@ -1,13 +1,13 @@
-import {Component, inject} from "@angular/core";
-import {ReadableSecurityGroupStore, SecurityGroupStore} from "../store/security-group.store";
-import {SecurityGroupCardComponent} from "../security-group-card/security-group-card.component";
-import {SecurityGroupDetailsComponent} from "../security-group-details/security-group-details.component";
-import {MatDialog} from "@angular/material/dialog";
-import {DeleteSecurityGroupDialog} from "../delete-security-group-dialog/delete-security-group-dialog.component";
-import {SecurityGroupRead} from "../../../gen/api/configuration-security-group";
+import {Component, inject} from '@angular/core';
+import {ReadableSecurityGroupStore, SecurityGroupStore} from '../store/security-group.store';
+import {SecurityGroupCardComponent} from '../security-group-card/security-group-card.component';
+import {SecurityGroupDetailsComponent} from '../security-group-details/security-group-details.component';
+import {MatDialog} from '@angular/material/dialog';
+import {DeleteSecurityGroupDialog} from '../delete-security-group-dialog/delete-security-group-dialog.component';
+import {SecurityGroupRead} from '../../../gen/api/configuration-security-group';
 
 @Component({
-  selector: "app-security-group-page",
+  selector: 'app-security-group-page',
   imports: [
     SecurityGroupCardComponent,
     SecurityGroupDetailsComponent
@@ -15,8 +15,8 @@ import {SecurityGroupRead} from "../../../gen/api/configuration-security-group";
   providers: [
     SecurityGroupStore
   ],
-  templateUrl: "./security-group-page.component.html",
-  styleUrl: "./security-group-page.component.scss",
+  templateUrl: './security-group-page.component.html',
+  styleUrl: './security-group-page.component.scss',
 })
 export class SecurityGroupPageComponent {
 
@@ -31,11 +31,11 @@ export class SecurityGroupPageComponent {
     }
 
     this.dialog.open(DeleteSecurityGroupDialog, {
-      height: "10%",
-      width: "25%",
-      minHeight: "10em",
-      minWidth: "20em",
-      panelClass: "mat-app-background",
+      height: '10%',
+      width: '25%',
+      minHeight: '10em',
+      minWidth: '20em',
+      panelClass: 'mat-app-background',
       autoFocus: false,
       disableClose: true,
       data: {

@@ -1,19 +1,19 @@
-import {Component, inject, OnInit, Signal} from "@angular/core";
-import {MatIconButton} from "@angular/material/button";
-import {MatIcon} from "@angular/material/icon";
-import {MatTooltip} from "@angular/material/tooltip";
-import {GithubRelease} from "./github-release.type";
-import {UpdateCheckService} from "./update-check.service";
+import {Component, inject, OnInit, Signal} from '@angular/core';
+import {MatIconButton} from '@angular/material/button';
+import {MatIcon} from '@angular/material/icon';
+import {MatTooltip} from '@angular/material/tooltip';
+import {GithubRelease} from './github-release.type';
+import {UpdateCheckService} from './update-check.service';
 
 @Component({
-  selector: "app-update-indicator",
+  selector: 'app-update-indicator',
   imports: [
     MatIconButton,
     MatIcon,
     MatTooltip,
   ],
-  templateUrl: "update-indicator.component.html",
-  styleUrl: "update-indicator.component.scss",
+  templateUrl: 'update-indicator.component.html',
+  styleUrl: 'update-indicator.component.scss',
 })
 export class UpdateIndicatorComponent implements OnInit {
 
@@ -25,6 +25,6 @@ export class UpdateIndicatorComponent implements OnInit {
   }
 
   protected openNewTab(url: string): void {
-    window.open(url, "_blank");
+    window.open(url, '_blank');
   }
 }

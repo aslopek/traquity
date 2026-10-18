@@ -150,7 +150,7 @@ describe('backendProcess', () => {
     expect(stringifiedEnv).not.toContain('from-the-config-file');
   });
 
-  it("drops a database password inherited from the app's own environment", async () => {
+  it('drops a database password inherited from the app\'s own environment', async () => {
     process.env['TQ_DB_FILE_PASSWORD'] = 'from-the-shell';
 
     await backendProcess.start(password);
@@ -256,13 +256,13 @@ describe('backendProcess', () => {
     expect(childStdinWrite.mock.calls).toEqual([[Buffer.from('\n', 'utf8'), expect.any(Function)]]);
   });
 
-  it("leaves the child's stdin open", async () => {
+  it('leaves the child\'s stdin open', async () => {
     await backendProcess.start(password);
 
     expect(childStdinEnd).not.toHaveBeenCalled();
   });
 
-  it("leaves the child's stdin open for a passwordless database", async () => {
+  it('leaves the child\'s stdin open for a passwordless database', async () => {
     await backendProcess.start('');
 
     expect(childStdinEnd).not.toHaveBeenCalled();
@@ -403,7 +403,7 @@ describe('backendProcess', () => {
   });
 
   describe('stop', () => {
-    it("closes the child's stdin and does not kill it", async () => {
+    it('closes the child\'s stdin and does not kill it', async () => {
       await backendProcess.start(password);
 
       const stopped = backendProcess.stop();

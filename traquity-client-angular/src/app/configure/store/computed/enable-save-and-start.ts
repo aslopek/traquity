@@ -1,4 +1,4 @@
-import {computed, Signal} from "@angular/core";
+import {computed, Signal} from '@angular/core';
 
 /**
  * The frame's aggregate: one term per section, so that a section reporting itself incomplete blocks finishing without

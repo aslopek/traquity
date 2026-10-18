@@ -76,7 +76,7 @@ describe('extractMaskedValue', (): void => {
 
   // the argument is long enough that a pattern backtracking exponentially over it would not finish, so this also guards the linear parse
   it('returns null for an unterminated masked value', (): void => {
-    urlPattern = `https://stock.api/prices?key=#mask(${"'".repeat(40)}`;
+    urlPattern = `https://stock.api/prices?key=#mask(${'\''.repeat(40)}`;
 
     expect(extractMaskedValue(urlPattern)).toBeNull();
   });

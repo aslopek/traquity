@@ -1,5 +1,5 @@
 import {AiState} from '../ai.state';
-import {ElectronAiState, ModelEntry} from "../../../bridge/ai-bridge.type";
+import {ElectronAiState, ModelEntry} from '../../../bridge/ai-bridge.type';
 
 function resolveActiveModel(models: Record<string, ModelEntry>): Record<string, ModelEntry> {
   const activeKeys: string[] = Object.entries(models).filter(([, model]) => model.active).map(([key]) => key);

@@ -1,7 +1,7 @@
-import {computed, Signal} from "@angular/core";
-import {SecurityGroupRead} from "../../../../gen/api/configuration-security-group";
-import {SecurityGroupState} from "../security-group.store";
-import {ReadableSignalStore} from "../../../../common/types/signal-store.type";
+import {computed, Signal} from '@angular/core';
+import {SecurityGroupRead} from '../../../../gen/api/configuration-security-group';
+import {SecurityGroupState} from '../security-group.store';
+import {ReadableSignalStore} from '../../../../common/types/signal-store.type';
 
 export function selectedSecurityGroup(signalStore: ReadableSignalStore<SecurityGroupState>): Signal<SecurityGroupRead | null> {
   const selectedSecurityGroupIdSignal: Signal<number | 'new' | null> = signalStore.selectedSecurityGroupId;

@@ -1,7 +1,7 @@
-import {isinOfDocument} from "./isin-of-document";
-import {PdfDocument} from "./pdf-document.type";
-import {renderPdfDocument} from "./render-pdf-document";
-import {DocumentToken, tokensOfDocument} from "./tokens-of-document";
+import {isinOfDocument} from './isin-of-document';
+import {PdfDocument} from './pdf-document.type';
+import {renderPdfDocument} from './render-pdf-document';
+import {DocumentToken, tokensOfDocument} from './tokens-of-document';
 
 /** Everything a document parsed as transaction contains. */
 export type PdfTransactionReading = {

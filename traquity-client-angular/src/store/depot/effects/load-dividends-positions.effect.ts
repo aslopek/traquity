@@ -1,13 +1,13 @@
-import {Action, Store} from "@ngrx/store";
-import {AppState} from "../../app.state";
-import {Actions, ofType} from "@ngrx/effects";
-import {DividendApi, Dividends} from "../../../gen/api/depot-dividend";
-import {catchError, forkJoin, map, Observable, of, switchMap} from "rxjs";
-import {ActionsTriggeringPerformanceDataReload, DepotActions} from "../depot.actions";
-import {concatLatestFrom} from "@ngrx/operators";
-import {includeSpecialDividends, selectedDepotIds} from "../depot.selector";
-import {DepotComposition, DepotPositionApi} from "../../../gen/api/depot-position";
-import {DepotPerformanceIncomeApi, IncomeType, Performance} from "../../../gen/api/depot-performance";
+import {Action, Store} from '@ngrx/store';
+import {AppState} from '../../app.state';
+import {Actions, ofType} from '@ngrx/effects';
+import {DividendApi, Dividends} from '../../../gen/api/depot-dividend';
+import {catchError, forkJoin, map, Observable, of, switchMap} from 'rxjs';
+import {ActionsTriggeringPerformanceDataReload, DepotActions} from '../depot.actions';
+import {concatLatestFrom} from '@ngrx/operators';
+import {includeSpecialDividends, selectedDepotIds} from '../depot.selector';
+import {DepotComposition, DepotPositionApi} from '../../../gen/api/depot-position';
+import {DepotPerformanceIncomeApi, IncomeType, Performance} from '../../../gen/api/depot-performance';
 
 export type LoadDividendsPositionsEffectArgs = {
   actions$: Actions

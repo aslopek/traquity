@@ -1,4 +1,4 @@
-import {PdfCell, PdfDocument, PdfPage} from "./pdf-document.type";
+import {PdfCell, PdfDocument, PdfPage} from './pdf-document.type';
 
 export type RenderPdfDocumentOptions = {
   /** Page numbers to render, or `null` for all of them. */
@@ -20,9 +20,9 @@ export function renderPdfDocument(document: PdfDocument, options: RenderPdfDocum
       lines.push(`--- page ${page.number} ---`);
     }
     for (const row of page.rows) {
-      lines.push(row.cells.map((cell: PdfCell): string => cell.text).join("  |  "));
+      lines.push(row.cells.map((cell: PdfCell): string => cell.text).join('  |  '));
     }
   }
 
-  return lines.join("\n").trim();
+  return lines.join('\n').trim();
 }

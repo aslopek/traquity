@@ -1,21 +1,21 @@
-import {patchState} from "@ngrx/signals";
-import {RxMethod, rxMethod} from "@ngrx/signals/rxjs-interop";
-import {Store} from "@ngrx/store";
+import {patchState} from '@ngrx/signals';
+import {RxMethod, rxMethod} from '@ngrx/signals/rxjs-interop';
+import {Store} from '@ngrx/store';
 import {
   catchError, concat, concatMap, defer, EMPTY, finalize, from, map, Observable, OperatorFunction, pipe, switchMap, tap
-} from "rxjs";
-import {WritableSignalStore} from "../../../../../common/types/signal-store.type";
-import {AppState} from "../../../../../store/app.state";
-import {DepotActions} from "../../../../../store/depot/depot.actions";
-import {SecurityActions} from "../../../../../store/security/security.actions";
-import {SecuritiesByIsin} from "../../../../../store/security/selectors/get-securities-by-isin.selector";
-import {SecurityApi, SecurityCreate, SecurityRead, StockSplit, StockSplitApi} from "../../../../../gen/api/security";
-import {TransactionApi, TransactionCreate} from "../../../../../gen/api/depot-transaction";
-import {ReadableTransactionPageStore} from "../../../transaction-store/transaction-page.store";
-import {splitAdjustedCount} from "../../../transaction-split-adjustment/split-adjusted-count";
-import {stockSplitsBySecurityId} from "../../../transaction-split-adjustment/stock-splits-by-security-id";
-import {CollectedTransaction, TransactionPdfImportState} from "../transaction-pdf-import.type";
-import {TransactionPdfImportComputed} from "../transaction-pdf-import.store";
+} from 'rxjs';
+import {WritableSignalStore} from '../../../../../common/types/signal-store.type';
+import {AppState} from '../../../../../store/app.state';
+import {DepotActions} from '../../../../../store/depot/depot.actions';
+import {SecurityActions} from '../../../../../store/security/security.actions';
+import {SecuritiesByIsin} from '../../../../../store/security/selectors/get-securities-by-isin.selector';
+import {SecurityApi, SecurityCreate, SecurityRead, StockSplit, StockSplitApi} from '../../../../../gen/api/security';
+import {TransactionApi, TransactionCreate} from '../../../../../gen/api/depot-transaction';
+import {ReadableTransactionPageStore} from '../../../transaction-store/transaction-page.store';
+import {splitAdjustedCount} from '../../../transaction-split-adjustment/split-adjusted-count';
+import {stockSplitsBySecurityId} from '../../../transaction-split-adjustment/stock-splits-by-security-id';
+import {CollectedTransaction, TransactionPdfImportState} from '../transaction-pdf-import.type';
+import {TransactionPdfImportComputed} from '../transaction-pdf-import.store';
 
 export type RunImportArgs = {
   depotId: number
@@ -37,7 +37,7 @@ export function runImportPipeline(signalStore: ImportStore, globalStore: Store<A
   return pipe(
     switchMap((args: RunImportArgs): Observable<void> => {
       patchState(signalStore, {
-        phase: "importing",
+        phase: 'importing',
         importDone: 0,
         securitiesCreated: 0,
         transactionsCreated: 0,
@@ -133,7 +133,7 @@ function importTransaction(signalStore: ImportStore, transactionApi: Transaction
 }
 
 function finish(signalStore: ImportStore, globalStore: Store<AppState>, transactionPageStore: ReadableTransactionPageStore): void {
-  patchState(signalStore, {phase: "imported"});
+  patchState(signalStore, {phase: 'imported'});
   globalStore.dispatch(DepotActions.reloadDepots());
   transactionPageStore.reloadFirstPage();
 }

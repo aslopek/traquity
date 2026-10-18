@@ -1,6 +1,6 @@
-import {patchState} from "@ngrx/signals";
-import {WritableSignalStore} from "../../../../../common/types/signal-store.type";
-import {ConfigureStoreState} from "../../configure.store";
+import {patchState} from '@ngrx/signals';
+import {WritableSignalStore} from '../../../../../common/types/signal-store.type';
+import {ConfigureStoreState} from '../../configure.store';
 
 /**
  * Seeds the selection from the database the app started against, resetting the origin to `unchanged`: seeding is not

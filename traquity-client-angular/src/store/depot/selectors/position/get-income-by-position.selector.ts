@@ -1,4 +1,4 @@
-import {DepotState, IncomeByPosition} from "../../depot.state";
+import {DepotState, IncomeByPosition} from '../../depot.state';
 
 export type GetIncomeByPositionState = {
   position: Pick<DepotState['position'], 'incomeByPosition'>

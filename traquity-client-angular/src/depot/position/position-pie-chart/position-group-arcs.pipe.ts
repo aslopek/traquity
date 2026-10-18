@@ -1,7 +1,7 @@
-import {Pipe, PipeTransform} from "@angular/core";
-import {PositionGroup} from "../../../store/depot/position-grouping/position-group.type";
-import {PositionGroupTextPipe} from "../position-group-text.pipe";
-import {positionPieChartGeometry} from "./position-pie-chart-geometry";
+import {Pipe, PipeTransform} from '@angular/core';
+import {PositionGroup} from '../../../store/depot/position-grouping/position-group.type';
+import {PositionGroupTextPipe} from '../position-group-text.pipe';
+import {positionPieChartGeometry} from './position-pie-chart-geometry';
 
 export type PositionGroupArc = {
   id: string

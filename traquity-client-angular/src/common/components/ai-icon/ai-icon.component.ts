@@ -1,12 +1,12 @@
-import {Component} from "@angular/core";
-import {MatIcon} from "@angular/material/icon";
+import {Component} from '@angular/core';
+import {MatIcon} from '@angular/material/icon';
 
 @Component({
-  selector: "app-ai-icon",
+  selector: 'app-ai-icon',
   imports: [
     MatIcon
   ],
-  templateUrl: "./ai-icon.component.html",
+  templateUrl: './ai-icon.component.html',
 })
 export class AiIconComponent {
 }

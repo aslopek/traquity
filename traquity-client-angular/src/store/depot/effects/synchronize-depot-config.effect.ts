@@ -1,12 +1,12 @@
-import {Actions, ofType} from "@ngrx/effects";
-import {ConfigApi} from "../../../gen/api/configuration";
-import {catchError, forkJoin, map, Observable, of, switchMap} from "rxjs";
-import {Action, Store} from "@ngrx/store";
-import {DepotActions, SyncDepotConfigActionArgs} from "../depot.actions";
-import {AppState, depotSlice} from "../../app.state";
-import {clientId} from "../../client-id";
-import {concatLatestFrom} from "@ngrx/operators";
-import {DepotState} from "../depot.state";
+import {Actions, ofType} from '@ngrx/effects';
+import {ConfigApi} from '../../../gen/api/configuration';
+import {catchError, forkJoin, map, Observable, of, switchMap} from 'rxjs';
+import {Action, Store} from '@ngrx/store';
+import {DepotActions, SyncDepotConfigActionArgs} from '../depot.actions';
+import {AppState, depotSlice} from '../../app.state';
+import {clientId} from '../../client-id';
+import {concatLatestFrom} from '@ngrx/operators';
+import {DepotState} from '../depot.state';
 
 export type SynchronizeDepotConfigEffectArgs = {
   actions$: Actions

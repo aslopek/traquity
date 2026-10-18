@@ -1,21 +1,21 @@
-import {Component, inject, Signal} from "@angular/core";
-import {MatButtonModule} from "@angular/material/button";
-import {MatIcon} from "@angular/material/icon";
-import {MatStepperNext} from "@angular/material/stepper";
-import {Store} from "@ngrx/store";
-import {FileBridgeService} from "../../../../../bridge/file-bridge.service";
-import {AppState} from "../../../../../store/app.state";
-import {getActiveModel} from "../../../../../store/ai/ai.selector";
-import {ActiveModel} from "../../../../../store/ai/selectors/get-active-model.selector";
-import {selectedDepotCurrency} from "../../../../../store/depot/depot.selector";
-import {PickedFolder, pickedFolderOfFiles} from "../../store/folder/picked-folder-of-files";
-import {ReadableTransactionPdfImportStore, TransactionPdfImportStore} from "../../store/transaction-pdf-import.store";
+import {Component, inject, Signal} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIcon} from '@angular/material/icon';
+import {MatStepperNext} from '@angular/material/stepper';
+import {Store} from '@ngrx/store';
+import {FileBridgeService} from '../../../../../bridge/file-bridge.service';
+import {AppState} from '../../../../../store/app.state';
+import {getActiveModel} from '../../../../../store/ai/ai.selector';
+import {ActiveModel} from '../../../../../store/ai/selectors/get-active-model.selector';
+import {selectedDepotCurrency} from '../../../../../store/depot/depot.selector';
+import {PickedFolder, pickedFolderOfFiles} from '../../store/folder/picked-folder-of-files';
+import {ReadableTransactionPdfImportStore, TransactionPdfImportStore} from '../../store/transaction-pdf-import.store';
 
 @Component({
-  selector: "app-folder-step",
+  selector: 'app-folder-step',
   imports: [MatButtonModule, MatStepperNext, MatIcon],
-  templateUrl: "./folder-step.component.html",
-  styleUrl: "./folder-step.component.scss"
+  templateUrl: './folder-step.component.html',
+  styleUrl: './folder-step.component.scss'
 })
 export class FolderStepComponent {
   protected readonly store: ReadableTransactionPdfImportStore = inject(TransactionPdfImportStore);
@@ -31,13 +31,13 @@ export class FolderStepComponent {
       const folder: PickedFolder = pickedFolderOfFiles(Array.from(files), (file: File): string => this.fileBridge.pathForFile(file));
       this.store.setFolder(folder);
     }
-    input.value = "";
+    input.value = '';
   }
 
   protected startExtraction(): void {
     this.store.extractFolder({
       currency: this.depotCurrency(),
-      modelKey: this.activeModel()?.key ?? ""
+      modelKey: this.activeModel()?.key ?? ''
     });
   }
 }

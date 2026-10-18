@@ -28,7 +28,7 @@ const {verdictsFor} = require('../ai/machine-capability.js');
  * prompts and grammars is made behind `extractTransaction`. A refused request is logged here, since a rejected
  * `invoke` carries no outcome to name the field in.
  *
- * A TLS-overridden environment registers none of these channels: "nothing can be done" is then enforced by
+ * A TLS-overridden environment registers none of these channels: 'nothing can be done' is then enforced by
  * architecture instead of left to each handler to refuse.
  *
  * Every channel is registered behind `isTrustedSender`.

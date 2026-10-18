@@ -2,7 +2,7 @@ import {ReadableSignalStore} from '../../../../common/types/signal-store.type';
 import {UpdateSecurityState} from '../update-security.store';
 import {masterDataValid} from './master-data-valid';
 import {historicalSecurityPriceConfigValid} from './historical-security-price-config-valid';
-import {dividendAnnouncementConfigValid} from "./dividend-announcement-config-valid";
+import {dividendAnnouncementConfigValid} from './dividend-announcement-config-valid';
 
 export function enableOkAndApply(signalStore: ReadableSignalStore<UpdateSecurityState>): boolean {
   // master data

@@ -7,12 +7,12 @@
 /**
  * @typedef {Object} CatalogueRecord
  * @property {string} key
- * @property {string} description human-readable label, e.g. "Qwen 3.5 4B Q4"
+ * @property {string} description human-readable label, e.g. 'Qwen 3.5 4B Q4'
  * @property {number} sizeBytes
  * @property {string} license
  * @property {number} requiredVram bytes of VRAM a machine capability probe (`machine-capability.js`) must report free on a
  *   recognized GPU backend for this entry to verdict `ok`
- * @property {string} repo the Hugging Face repo, e.g. "bartowski/Qwen_Qwen3.5-4B-GGUF"
+ * @property {string} repo the Hugging Face repo, e.g. 'bartowski/Qwen_Qwen3.5-4B-GGUF'
  * @property {string} revision the pinned commit this app downloads from
  * @property {string} file the file name within `repo`@`revision`
  * @property {string} sha256 the pinned digest of `file`, as lowercase hex - the LFS OID Hugging Face reports for it

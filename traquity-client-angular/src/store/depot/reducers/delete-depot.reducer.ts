@@ -1,6 +1,6 @@
-import {DepotState} from "../depot.state";
-import {DeleteDepotSuccessActionArgs} from "../depot.actions";
-import {DepotRead} from "../../../gen/api/depot";
+import {DepotState} from '../depot.state';
+import {DeleteDepotSuccessActionArgs} from '../depot.actions';
+import {DepotRead} from '../../../gen/api/depot';
 
 export function deleteDepotReducer(state: Readonly<DepotState>, actionArgs: DeleteDepotSuccessActionArgs): DepotState {
   const {depotId} = actionArgs;

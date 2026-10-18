@@ -1,12 +1,12 @@
-import {RxMethod, rxMethod} from "@ngrx/signals/rxjs-interop";
-import {catchError, EMPTY, map, Observable, pipe, switchMap, tap} from "rxjs";
-import {patchState} from "@ngrx/signals";
-import {Store} from "@ngrx/store";
-import {WritableSignalStore} from "../../../../common/types/signal-store.type";
-import {AppState} from "../../../../store/app.state";
-import {NotificationActions} from "../../../../store/notification/notification.actions";
-import {DepotPerformancePositionApi, PositionPerformance} from "../../../../gen/api/depot-performance";
-import {initialState, PerformanceBreakdownState} from "../performance-breakdown.store";
+import {RxMethod, rxMethod} from '@ngrx/signals/rxjs-interop';
+import {catchError, EMPTY, map, Observable, pipe, switchMap, tap} from 'rxjs';
+import {patchState} from '@ngrx/signals';
+import {Store} from '@ngrx/store';
+import {WritableSignalStore} from '../../../../common/types/signal-store.type';
+import {AppState} from '../../../../store/app.state';
+import {NotificationActions} from '../../../../store/notification/notification.actions';
+import {DepotPerformancePositionApi, PositionPerformance} from '../../../../gen/api/depot-performance';
+import {initialState, PerformanceBreakdownState} from '../performance-breakdown.store';
 
 export type LoadPerformanceBreakdownArgs = {
   depotIds: number[]

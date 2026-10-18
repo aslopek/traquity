@@ -1,11 +1,11 @@
-import {DataSourceWithId} from "../data-source.type";
-import {ReadableSignalStore, WritableSignalStore} from "../../../common/types/signal-store.type";
-import {signalStore, withComputed, withMethods, withState} from "@ngrx/signals";
-import {selectDataSourceId} from "./methods/select-data-source-id";
-import {setDataSources} from "./methods/set-data-sources";
-import {Signal} from "@angular/core";
-import {selectedDatasource} from "./computed/selected-datasource";
-import {selectedDataSourceIsPreconfigured} from "./computed/selected-data-source-is-preconfigured";
+import {DataSourceWithId} from '../data-source.type';
+import {ReadableSignalStore, WritableSignalStore} from '../../../common/types/signal-store.type';
+import {signalStore, withComputed, withMethods, withState} from '@ngrx/signals';
+import {selectDataSourceId} from './methods/select-data-source-id';
+import {setDataSources} from './methods/set-data-sources';
+import {Signal} from '@angular/core';
+import {selectedDatasource} from './computed/selected-datasource';
+import {selectedDataSourceIsPreconfigured} from './computed/selected-data-source-is-preconfigured';
 
 export type DataSourceComputed = {
   selectedDataSource: Signal<DataSourceWithId | null>

@@ -1,11 +1,11 @@
-import {Actions, ofType} from "@ngrx/effects";
-import {DividendApi, Dividends} from "../../../../gen/api/depot-dividend";
-import {Action, Store} from "@ngrx/store";
-import {AppState} from "../../../app.state";
-import {catchError, map, Observable, of, switchMap} from "rxjs";
-import {DepotActions, SetIncludeSpecialDividendsActionArgs} from "../../depot.actions";
-import {concatLatestFrom} from "@ngrx/operators";
-import {includeSpecialDividends, selectedDepotIds} from "../../depot.selector";
+import {Actions, ofType} from '@ngrx/effects';
+import {DividendApi, Dividends} from '../../../../gen/api/depot-dividend';
+import {Action, Store} from '@ngrx/store';
+import {AppState} from '../../../app.state';
+import {catchError, map, Observable, of, switchMap} from 'rxjs';
+import {DepotActions, SetIncludeSpecialDividendsActionArgs} from '../../depot.actions';
+import {concatLatestFrom} from '@ngrx/operators';
+import {includeSpecialDividends, selectedDepotIds} from '../../depot.selector';
 
 export type LoadDividendsEffectArgs = {
   actions$: Actions

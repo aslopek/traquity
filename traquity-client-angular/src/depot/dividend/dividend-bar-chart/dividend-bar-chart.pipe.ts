@@ -1,31 +1,31 @@
-import {inject, Pipe, PipeTransform} from "@angular/core";
-import {AggregatedDividends} from "../store/computed/get-aggregated-dividends";
+import {inject, Pipe, PipeTransform} from '@angular/core';
+import {AggregatedDividends} from '../store/computed/get-aggregated-dividends';
 import type {BarSeriesOption} from 'echarts';
-import {EChartsOption} from "echarts";
-import {chartToken} from "../../../common/chart/chart-token";
-import {TqCurrencyPipe} from "../../../common/pipe/tq-currency.pipe";
+import {EChartsOption} from 'echarts';
+import {chartToken} from '../../../common/chart/chart-token';
+import {TqCurrencyPipe} from '../../../common/pipe/tq-currency.pipe';
 
 @Pipe({
-  name: "dividendBarChart",
+  name: 'dividendBarChart',
 })
 export class DividendBarChartPipe implements PipeTransform {
 
   private readonly tqCurrencyPipe: TqCurrencyPipe = inject(TqCurrencyPipe);
   private readonly seriesColors: string[] = [
-    chartToken("--tq-series-1"),
-    chartToken("--tq-series-2"),
-    chartToken("--tq-series-3"),
-    chartToken("--tq-series-4"),
-    chartToken("--tq-series-5"),
-    chartToken("--tq-series-6")
+    chartToken('--tq-series-1'),
+    chartToken('--tq-series-2'),
+    chartToken('--tq-series-3'),
+    chartToken('--tq-series-4'),
+    chartToken('--tq-series-5'),
+    chartToken('--tq-series-6')
   ];
-  private readonly surfaceColor: string = chartToken("--tq-surface-raised");
-  private readonly borderColor: string = chartToken("--tq-border");
-  private readonly textColor: string = chartToken("--tq-text");
-  private readonly mutedTextColor: string = chartToken("--tq-text-muted");
-  private readonly tooltipColor: string = chartToken("--tq-glass-bg");
-  private readonly tooltipCss: string = `box-shadow: ${chartToken("--tq-shadow-2")};`
-    + ` border-radius: ${chartToken("--tq-radius-md")}; backdrop-filter: ${chartToken("--tq-glass-blur")};`;
+  private readonly surfaceColor: string = chartToken('--tq-surface-raised');
+  private readonly borderColor: string = chartToken('--tq-border');
+  private readonly textColor: string = chartToken('--tq-text');
+  private readonly mutedTextColor: string = chartToken('--tq-text-muted');
+  private readonly tooltipColor: string = chartToken('--tq-glass-bg');
+  private readonly tooltipCss: string = `box-shadow: ${chartToken('--tq-shadow-2')};`
+    + ` border-radius: ${chartToken('--tq-radius-md')}; backdrop-filter: ${chartToken('--tq-glass-blur')};`;
 
   transform(dividends: AggregatedDividends, hideAbsoluteValues: boolean, currency: string): EChartsOption {
     const seriesLabels: string[] = dividends.years.map((year: number) => `${year}`);

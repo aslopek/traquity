@@ -1,6 +1,6 @@
-import {Pipe, PipeTransform} from "@angular/core";
-import {TqCurrencyPipe} from "../../common/pipe/tq-currency.pipe";
-import {PositionPerformance} from "../../gen/api/depot-performance";
+import {Pipe, PipeTransform} from '@angular/core';
+import {TqCurrencyPipe} from '../../common/pipe/tq-currency.pipe';
+import {PositionPerformance} from '../../gen/api/depot-performance';
 
 @Pipe({
   name: 'costBasisBreakdown',

@@ -1,14 +1,14 @@
-import {Actions, ofType} from "@ngrx/effects";
-import {ConfigApi} from "../../../../gen/api/configuration";
-import {Action, Store} from "@ngrx/store";
-import {AppState} from "../../../app.state";
-import {catchError, map, Observable, of, switchMap} from "rxjs";
-import {selectedDividendView} from "../../depot.selector";
-import {dividendSelectedView} from "../../depot-config-keys";
-import {DepotActions, SetSelectedDividendViewActionArgs} from "../../depot.actions";
-import {concatLatestFrom} from "@ngrx/operators";
-import {DividendView} from "../../depot.state";
-import {clientId} from "../../../client-id";
+import {Actions, ofType} from '@ngrx/effects';
+import {ConfigApi} from '../../../../gen/api/configuration';
+import {Action, Store} from '@ngrx/store';
+import {AppState} from '../../../app.state';
+import {catchError, map, Observable, of, switchMap} from 'rxjs';
+import {selectedDividendView} from '../../depot.selector';
+import {dividendSelectedView} from '../../depot-config-keys';
+import {DepotActions, SetSelectedDividendViewActionArgs} from '../../depot.actions';
+import {concatLatestFrom} from '@ngrx/operators';
+import {DividendView} from '../../depot.state';
+import {clientId} from '../../../client-id';
 
 export type SetSelectedDividendViewEffectArgs = {
   actions$: Actions

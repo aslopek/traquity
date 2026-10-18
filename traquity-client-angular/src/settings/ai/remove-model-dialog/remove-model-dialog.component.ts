@@ -1,11 +1,11 @@
-import {Component, inject} from "@angular/core";
-import {MatIcon} from "@angular/material/icon";
-import {MatButton} from "@angular/material/button";
-import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
-import {Store} from "@ngrx/store";
-import {TitleToolbarComponent} from "../../../common/components/title-toolbar/title-toolbar.component";
-import {AiActions} from "../../../store/ai/ai.actions";
-import {AppState} from "../../../store/app.state";
+import {Component, inject} from '@angular/core';
+import {MatIcon} from '@angular/material/icon';
+import {MatButton} from '@angular/material/button';
+import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
+import {Store} from '@ngrx/store';
+import {TitleToolbarComponent} from '../../../common/components/title-toolbar/title-toolbar.component';
+import {AiActions} from '../../../store/ai/ai.actions';
+import {AppState} from '../../../store/app.state';
 
 export type RemoveModelDialogData = {
   key: string
@@ -13,14 +13,14 @@ export type RemoveModelDialogData = {
 };
 
 @Component({
-  selector: "app-remove-model-dialog",
+  selector: 'app-remove-model-dialog',
   imports: [
     MatButton,
     TitleToolbarComponent,
     MatIcon
   ],
-  templateUrl: "./remove-model-dialog.component.html",
-  styleUrl: "./remove-model-dialog.component.scss",
+  templateUrl: './remove-model-dialog.component.html',
+  styleUrl: './remove-model-dialog.component.scss',
 })
 export class RemoveModelDialog {
 

@@ -1,27 +1,27 @@
-import {Component, computed, DestroyRef, input, InputSignal, Signal, signal, WritableSignal,} from "@angular/core";
-import {SecurityCreate} from "../../../gen/api/security";
-import {HistoricalSecurityPriceConfigCreate} from "../../../gen/api/historical-security-price";
-import {DividendAnnouncementConfigCreate, DividendAnnouncementDataSourceRead,} from "../../../gen/api/notification/dividend-announcement";
-import {MatIcon} from "@angular/material/icon";
-import {MatChipRow, MatChipSet} from "@angular/material/chips";
-import {Store} from "@ngrx/store";
-import {AppState} from "../../../store/app.state";
-import {getAllDataSources} from "../../../store/dividend-announcement/dividend-announcement.selector";
-import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
-import {DataSourceWithId} from "../../../settings/data-source/data-source.type";
-import {getHistoricalSecurityPriceDataSources} from "../../../store/security/security.selector";
-import {SecurityTypeDisplayNamePipe} from "../../../common/pipe/security-type-display-name.pipe";
+import {Component, computed, DestroyRef, input, InputSignal, Signal, signal, WritableSignal,} from '@angular/core';
+import {SecurityCreate} from '../../../gen/api/security';
+import {HistoricalSecurityPriceConfigCreate} from '../../../gen/api/historical-security-price';
+import {DividendAnnouncementConfigCreate, DividendAnnouncementDataSourceRead,} from '../../../gen/api/notification/dividend-announcement';
+import {MatIcon} from '@angular/material/icon';
+import {MatChipRow, MatChipSet} from '@angular/material/chips';
+import {Store} from '@ngrx/store';
+import {AppState} from '../../../store/app.state';
+import {getAllDataSources} from '../../../store/dividend-announcement/dividend-announcement.selector';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {DataSourceWithId} from '../../../settings/data-source/data-source.type';
+import {getHistoricalSecurityPriceDataSources} from '../../../store/security/security.selector';
+import {SecurityTypeDisplayNamePipe} from '../../../common/pipe/security-type-display-name.pipe';
 
 @Component({
-  selector: "app-summary",
+  selector: 'app-summary',
   imports: [
     MatIcon,
     MatChipSet,
     MatChipRow,
     SecurityTypeDisplayNamePipe,
   ],
-  templateUrl: "./summary.component.html",
-  styleUrl: "./summary.component.scss",
+  templateUrl: './summary.component.html',
+  styleUrl: './summary.component.scss',
 })
 export class SummaryComponent {
 

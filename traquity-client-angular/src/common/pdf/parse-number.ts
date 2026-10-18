@@ -1,5 +1,5 @@
-import {PdfNumberSign} from "./pdf-document.type";
-import {undecorated} from "./undecorated";
+import {PdfNumberSign} from './pdf-document.type';
+import {undecorated} from './undecorated';
 
 export type ParsedNumber = {
   /** The magnitude, with no thousands separators and with any booking sign removed. */
@@ -51,34 +51,34 @@ const MAXIMUM_DECIMALS: number = 20;
  * @returns the readings, or nothing at all where the text is no number.
  */
 export function readingsOfNumber(text: string): ParsedNumber[] {
-  const trimmed: string = text.trim().replace(SYMBOL, "");
+  const trimmed: string = text.trim().replace(SYMBOL, '');
   const braced: boolean = BRACED.test(trimmed);
 
-  let digitsAndSeparators: string = undecorated(braced ? trimmed.replace(BRACED, "$1") : trimmed, {keepSign: true});
-  let sign: PdfNumberSign | null = braced ? "-" : null;
-  if (digitsAndSeparators.endsWith("-") || digitsAndSeparators.endsWith("+")) {
+  let digitsAndSeparators: string = undecorated(braced ? trimmed.replace(BRACED, '$1') : trimmed, {keepSign: true});
+  let sign: PdfNumberSign | null = braced ? '-' : null;
+  if (digitsAndSeparators.endsWith('-') || digitsAndSeparators.endsWith('+')) {
     sign = sign ?? digitsAndSeparators.slice(-1) as PdfNumberSign;
     digitsAndSeparators = digitsAndSeparators.slice(0, -1);
   }
-  if (digitsAndSeparators.startsWith("-") || digitsAndSeparators.startsWith("+")) {
+  if (digitsAndSeparators.startsWith('-') || digitsAndSeparators.startsWith('+')) {
     sign = sign ?? digitsAndSeparators[0] as PdfNumberSign;
     digitsAndSeparators = digitsAndSeparators.slice(1);
   }
-  digitsAndSeparators = digitsAndSeparators.replace(GROUPING_ONLY, "");
+  digitsAndSeparators = digitsAndSeparators.replace(GROUPING_ONLY, '');
 
   if (!NUMBER.test(digitsAndSeparators)) {
     return [];
   }
 
-  const cut: number = Math.max(digitsAndSeparators.lastIndexOf("."), digitsAndSeparators.lastIndexOf(","));
+  const cut: number = Math.max(digitsAndSeparators.lastIndexOf('.'), digitsAndSeparators.lastIndexOf(','));
   if (cut < 0) {
-    return readings([{integerPart: digitsAndSeparators, fraction: ""}], sign);
+    return readings([{integerPart: digitsAndSeparators, fraction: ''}], sign);
   }
 
   const head: string = digitsAndSeparators.slice(0, cut);
   const tail: string = digitsAndSeparators.slice(cut + 1);
   const separators: number = (digitsAndSeparators.match(/[.,]/g) ?? []).length;
-  const grouped: { integerPart: string, fraction: string } = {integerPart: digitsAndSeparators, fraction: ""};
+  const grouped: { integerPart: string, fraction: string } = {integerPart: digitsAndSeparators, fraction: ''};
   const fractional: { integerPart: string, fraction: string } = {integerPart: head, fraction: tail};
 
   if (tail.length !== 3) {
@@ -87,7 +87,7 @@ export function readingsOfNumber(text: string): ParsedNumber[] {
   if (separators > 1) {
     return readings([grouped], sign);
   }
-  return readings(head === "0" ? [fractional] : [grouped, fractional], sign);
+  return readings(head === '0' ? [fractional] : [grouped, fractional], sign);
 }
 
 /**
@@ -106,7 +106,7 @@ export function parseNumber(text: string): ParsedNumber | null {
 function readings(split: { integerPart: string, fraction: string }[], sign: PdfNumberSign | null): ParsedNumber[] {
   return split
     .map(({integerPart, fraction}): ParsedNumber => ({
-      magnitude: Number(`${integerPart.replace(/[.,]/g, "")}.${fraction || "0"}`),
+      magnitude: Number(`${integerPart.replace(/[.,]/g, '')}.${fraction || '0'}`),
       sign,
       digits: Math.min(fraction.length, MAXIMUM_DECIMALS)
     }))

@@ -1,33 +1,33 @@
-import {inject, Pipe, PipeTransform} from "@angular/core";
-import {EChartsOption} from "echarts";
-import {TqCurrencyPipe} from "../../../common/pipe/tq-currency.pipe";
-import {TqDatePipe} from "../../../common/pipe/tq-date.pipe";
-import {TqPercentPipe} from "../../../common/pipe/tq-percent.pipe";
-import {HistoricalSecurityPrice} from "../../../gen/api/historical-security-price";
-import {chartToken, chartTokenAlpha} from "../../../common/chart/chart-token";
-import {escapeHtml} from "../../../common/chart/escape-html";
+import {inject, Pipe, PipeTransform} from '@angular/core';
+import {EChartsOption} from 'echarts';
+import {TqCurrencyPipe} from '../../../common/pipe/tq-currency.pipe';
+import {TqDatePipe} from '../../../common/pipe/tq-date.pipe';
+import {TqPercentPipe} from '../../../common/pipe/tq-percent.pipe';
+import {HistoricalSecurityPrice} from '../../../gen/api/historical-security-price';
+import {chartToken, chartTokenAlpha} from '../../../common/chart/chart-token';
+import {escapeHtml} from '../../../common/chart/escape-html';
 
 @Pipe({
-  name: "historicalPriceChart",
+  name: 'historicalPriceChart',
 })
 export class HistoricalPriceChartPipe implements PipeTransform {
 
   private readonly tqCurrencyPipe: TqCurrencyPipe = inject(TqCurrencyPipe);
   private readonly tqDatePipe: TqDatePipe = inject(TqDatePipe);
   private readonly tqPercentPipe: TqPercentPipe = inject(TqPercentPipe);
-  private readonly borderColor: string = chartToken("--tq-border");
-  private readonly axisLabelColor: string = chartToken("--tq-text-faint");
-  private readonly tooltipColor: string = chartToken("--tq-glass-bg");
-  private readonly tooltipCss: string = `box-shadow: ${chartToken("--tq-shadow-2")};`
-    + ` border-radius: ${chartToken("--tq-radius-md")}; backdrop-filter: ${chartToken("--tq-glass-blur")};`;
-  private readonly textColor: string = chartToken("--tq-text");
-  private readonly mutedTextColor: string = chartToken("--tq-text-muted");
-  private readonly positiveColor: string = chartToken("--tq-positive-soft");
-  private readonly negativeColor: string = chartToken("--tq-negative-soft");
-  private readonly positiveFillTop: string = chartTokenAlpha("--tq-positive", 0.18);
-  private readonly positiveFillBottom: string = chartTokenAlpha("--tq-positive", 0);
-  private readonly negativeFillTop: string = chartTokenAlpha("--tq-negative", 0.18);
-  private readonly negativeFillBottom: string = chartTokenAlpha("--tq-negative", 0);
+  private readonly borderColor: string = chartToken('--tq-border');
+  private readonly axisLabelColor: string = chartToken('--tq-text-faint');
+  private readonly tooltipColor: string = chartToken('--tq-glass-bg');
+  private readonly tooltipCss: string = `box-shadow: ${chartToken('--tq-shadow-2')};`
+    + ` border-radius: ${chartToken('--tq-radius-md')}; backdrop-filter: ${chartToken('--tq-glass-blur')};`;
+  private readonly textColor: string = chartToken('--tq-text');
+  private readonly mutedTextColor: string = chartToken('--tq-text-muted');
+  private readonly positiveColor: string = chartToken('--tq-positive-soft');
+  private readonly negativeColor: string = chartToken('--tq-negative-soft');
+  private readonly positiveFillTop: string = chartTokenAlpha('--tq-positive', 0.18);
+  private readonly positiveFillBottom: string = chartTokenAlpha('--tq-positive', 0);
+  private readonly negativeFillTop: string = chartTokenAlpha('--tq-negative', 0.18);
+  private readonly negativeFillBottom: string = chartTokenAlpha('--tq-negative', 0);
 
   transform(prices: HistoricalSecurityPrice[], percent: boolean): EChartsOption {
     if (!prices || prices.length === 0) {

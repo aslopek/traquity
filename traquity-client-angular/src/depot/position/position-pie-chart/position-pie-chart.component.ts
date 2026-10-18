@@ -1,32 +1,32 @@
-import {Component, inject, OnDestroy, Signal, signal, WritableSignal,} from "@angular/core";
-import {MatDialog} from "@angular/material/dialog";
-import {Store} from "@ngrx/store";
-import {NgxEchartsDirective} from "ngx-echarts";
-import {TqIconComponent} from "../../../common/components/tq-icon/tq-icon.component";
-import {SecurityLogoUrlPipe} from "../../../common/pipe/security-logo-url.pipe";
-import {TqCurrencyPipe} from "../../../common/pipe/tq-currency.pipe";
-import {TqDecimalPipe} from "../../../common/pipe/tq-decimal.pipe";
-import {TqPercentPipe} from "../../../common/pipe/tq-percent.pipe";
-import {openPositionDialog} from "../position-dialog/open-position-dialog";
-import {PositionDialogData} from "../position-dialog/position-dialog.component";
+import {Component, inject, OnDestroy, Signal, signal, WritableSignal,} from '@angular/core';
+import {MatDialog} from '@angular/material/dialog';
+import {Store} from '@ngrx/store';
+import {NgxEchartsDirective} from 'ngx-echarts';
+import {TqIconComponent} from '../../../common/components/tq-icon/tq-icon.component';
+import {SecurityLogoUrlPipe} from '../../../common/pipe/security-logo-url.pipe';
+import {TqCurrencyPipe} from '../../../common/pipe/tq-currency.pipe';
+import {TqDecimalPipe} from '../../../common/pipe/tq-decimal.pipe';
+import {TqPercentPipe} from '../../../common/pipe/tq-percent.pipe';
+import {openPositionDialog} from '../position-dialog/open-position-dialog';
+import {PositionDialogData} from '../position-dialog/position-dialog.component';
 import {
   depotBreakdownDialogData,
   groupBreakdownDialogData,
   openPerformanceBreakdownDialog,
-} from "../../performance-breakdown/performance-breakdown-dialog/open-performance-breakdown-dialog";
-import {hideAbsoluteValues} from "../../../store/app-config/app-config.selector";
-import {ECElementEvent, ECharts} from "echarts/core";
-import {AppState} from "../../../store/app.state";
+} from '../../performance-breakdown/performance-breakdown-dialog/open-performance-breakdown-dialog';
+import {hideAbsoluteValues} from '../../../store/app-config/app-config.selector';
+import {ECElementEvent, ECharts} from 'echarts/core';
+import {AppState} from '../../../store/app.state';
 import {
   groupedPositions, positions, selectedDepotCurrency, selectedDepotIds, usePositionBuyInValues,
-} from "../../../store/depot/depot.selector";
-import {Positions} from "../../../store/depot/depot.state";
-import {GroupedPositions, PositionGroup} from "../../../store/depot/position-grouping/position-group.type";
-import {PositionPieChartPipe} from "./position-pie-chart.pipe";
-import {PositionGroupTextPipe} from "../position-group-text.pipe";
-import {PositionGroupArc, PositionGroupArcsPipe} from "./position-group-arcs.pipe";
-import {PositionPieChartGeometry, positionPieChartGeometry} from "./position-pie-chart-geometry";
-import {DepotPosition} from "../../../gen/api/depot-position";
+} from '../../../store/depot/depot.selector';
+import {Positions} from '../../../store/depot/depot.state';
+import {GroupedPositions, PositionGroup} from '../../../store/depot/position-grouping/position-group.type';
+import {PositionPieChartPipe} from './position-pie-chart.pipe';
+import {PositionGroupTextPipe} from '../position-group-text.pipe';
+import {PositionGroupArc, PositionGroupArcsPipe} from './position-group-arcs.pipe';
+import {PositionPieChartGeometry, positionPieChartGeometry} from './position-pie-chart-geometry';
+import {DepotPosition} from '../../../gen/api/depot-position';
 
 type HoverPoint = {
   x: number
@@ -34,12 +34,12 @@ type HoverPoint = {
 };
 
 @Component({
-  selector: "app-position-pie-chart",
+  selector: 'app-position-pie-chart',
   imports: [TqCurrencyPipe, TqPercentPipe, TqDecimalPipe, NgxEchartsDirective, PositionPieChartPipe, PositionGroupArcsPipe,
     TqIconComponent, SecurityLogoUrlPipe],
   providers: [TqCurrencyPipe, TqDecimalPipe, TqPercentPipe, PositionGroupTextPipe, PositionGroupArcsPipe, SecurityLogoUrlPipe],
-  templateUrl: "./position-pie-chart.component.html",
-  styleUrl: "./position-pie-chart.component.scss",
+  templateUrl: './position-pie-chart.component.html',
+  styleUrl: './position-pie-chart.component.scss',
 })
 export class PositionPieChartComponent implements OnDestroy {
   private chartInstance: ECharts | null = null;
@@ -81,7 +81,7 @@ export class PositionPieChartComponent implements OnDestroy {
   }
 
   protected onChartMouseOver(event: ECElementEvent): void {
-    if (event.componentType !== "series" || event.dataIndex == null || event.event == null) {
+    if (event.componentType !== 'series' || event.dataIndex == null || event.event == null) {
       return;
     }
 
@@ -100,7 +100,7 @@ export class PositionPieChartComponent implements OnDestroy {
   }
 
   protected onChartClick(event: ECElementEvent): void {
-    if (event.componentType !== "series" || event.dataIndex == null) {
+    if (event.componentType !== 'series' || event.dataIndex == null) {
       return;
     }
 

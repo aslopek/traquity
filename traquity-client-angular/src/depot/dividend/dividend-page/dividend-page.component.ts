@@ -1,13 +1,13 @@
-import {Component, computed, Signal,} from "@angular/core";
-import {MatButtonModule} from "@angular/material/button";
-import {MatButtonToggleModule} from "@angular/material/button-toggle";
-import {MatSlideToggleChange, MatSlideToggleModule,} from "@angular/material/slide-toggle";
-import {MatIconModule} from "@angular/material/icon";
-import {MatTooltipModule} from "@angular/material/tooltip";
-import html2canvas from "html2canvas-pro";
-import {Timespan} from "../../../common/types/timespan";
-import {Store} from "@ngrx/store";
-import {AppState} from "../../../store/app.state";
+import {Component, computed, Signal,} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatSlideToggleChange, MatSlideToggleModule,} from '@angular/material/slide-toggle';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import html2canvas from 'html2canvas-pro';
+import {Timespan} from '../../../common/types/timespan';
+import {Store} from '@ngrx/store';
+import {AppState} from '../../../store/app.state';
 import {
   dividendAggregationTimespan,
   includeSpecialDividends,
@@ -15,16 +15,16 @@ import {
   selectedDepotIds,
   selectedDividendView,
   useDividendGrossValues,
-} from "../../../store/depot/depot.selector";
-import {dividendStore} from "../store/dividend.store";
-import {DividendBarChartComponent} from "../dividend-bar-chart/dividend-bar-chart.component";
-import {DividendYieldTableComponent} from "../dividend-yield-table/dividend-yield-table.component";
-import {DepotActions} from "../../../store/depot/depot.actions";
+} from '../../../store/depot/depot.selector';
+import {dividendStore} from '../store/dividend.store';
+import {DividendBarChartComponent} from '../dividend-bar-chart/dividend-bar-chart.component';
+import {DividendYieldTableComponent} from '../dividend-yield-table/dividend-yield-table.component';
+import {DepotActions} from '../../../store/depot/depot.actions';
 
-type SelectedDividendView = "barchart" | "table";
+type SelectedDividendView = 'barchart' | 'table';
 
 @Component({
-  selector: "app-dividend-page",
+  selector: 'app-dividend-page',
   imports: [
     MatSlideToggleModule,
     MatIconModule,
@@ -35,8 +35,8 @@ type SelectedDividendView = "barchart" | "table";
     DividendYieldTableComponent,
   ],
   providers: [dividendStore],
-  templateUrl: "./dividend-page.component.html",
-  styleUrl: "./dividend-page.component.scss",
+  templateUrl: './dividend-page.component.html',
+  styleUrl: './dividend-page.component.scss',
 })
 export class DividendPageComponent {
   protected readonly aggregationTimespan: Signal<Timespan>;
@@ -55,7 +55,7 @@ export class DividendPageComponent {
     this.selectedView = store.selectSignal(selectedDividendView);
     this.useGrossValues = store.selectSignal(useDividendGrossValues);
     this.showDiagramControls = computed(
-      (): boolean => this.selectedView() === "barchart",
+      (): boolean => this.selectedView() === 'barchart',
     );
   }
 
@@ -87,15 +87,15 @@ export class DividendPageComponent {
 
   protected downloadImage(): void {
     const chart: HTMLDivElement = document.getElementById(
-      "dividend-view-container",
+      'dividend-view-container',
     ) as HTMLDivElement;
-    chart.classList.add("mat-app-background", "padding");
+    chart.classList.add('mat-app-background', 'padding');
     html2canvas(chart as HTMLElement).then((canvas) => {
-      const link: HTMLAnchorElement = document.createElement("a");
-      link.download = "dividends.png";
+      const link: HTMLAnchorElement = document.createElement('a');
+      link.download = 'dividends.png';
       link.href = canvas.toDataURL();
       link.click();
     });
-    chart.classList.remove("mat-app-background", "padding");
+    chart.classList.remove('mat-app-background', 'padding');
   }
 }

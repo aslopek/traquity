@@ -1,18 +1,18 @@
-import {Component, DestroyRef, inject,} from "@angular/core";
-import {MatIcon} from "@angular/material/icon";
-import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
-import {MatAccordion, MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle,} from "@angular/material/expansion";
-import {LetDirective} from "@ngrx/component";
-import {select, Store} from "@ngrx/store";
-import {Observable} from "rxjs";
-import {TqDatePipe} from "../../common/pipe/tq-date.pipe";
-import {DividendAnnouncementRead} from "../../gen/api/notification/dividend-announcement";
-import {getAllDividendAnnouncements} from "../../store/dividend-announcement/dividend-announcement.selector";
-import {DividendAnnouncementsWeekComponent} from "./dividend-announcements-week/dividend-announcements-week.component";
-import {AppState} from "../../store/app.state";
+import {Component, DestroyRef, inject,} from '@angular/core';
+import {MatIcon} from '@angular/material/icon';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {MatAccordion, MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle,} from '@angular/material/expansion';
+import {LetDirective} from '@ngrx/component';
+import {select, Store} from '@ngrx/store';
+import {Observable} from 'rxjs';
+import {TqDatePipe} from '../../common/pipe/tq-date.pipe';
+import {DividendAnnouncementRead} from '../../gen/api/notification/dividend-announcement';
+import {getAllDividendAnnouncements} from '../../store/dividend-announcement/dividend-announcement.selector';
+import {DividendAnnouncementsWeekComponent} from './dividend-announcements-week/dividend-announcements-week.component';
+import {AppState} from '../../store/app.state';
 
 @Component({
-  selector: "app-dividend-announcements-view",
+  selector: 'app-dividend-announcements-view',
   imports: [
     DividendAnnouncementsWeekComponent,
     MatAccordion,
@@ -23,8 +23,8 @@ import {AppState} from "../../store/app.state";
     LetDirective,
     MatIcon,
   ],
-  templateUrl: "./dividend-announcements-view.component.html",
-  styleUrl: "./dividend-announcements-view.component.scss",
+  templateUrl: './dividend-announcements-view.component.html',
+  styleUrl: './dividend-announcements-view.component.scss',
 })
 export class DividendAnnouncementsViewComponent {
   private readonly store: Store<AppState> = inject(Store);
@@ -55,7 +55,7 @@ export class DividendAnnouncementsViewComponent {
           timeZoneOffset = firstDayOfWeek.getTimezoneOffset() * 60000;
           firstDayOfWeek = new Date(firstDayOfWeek.getTime() - timeZoneOffset);
 
-          key = firstDayOfWeek.toISOString().split("T")[0];
+          key = firstDayOfWeek.toISOString().split('T')[0];
           if (!grouped[key]) {
             grouped[key] = [];
           }

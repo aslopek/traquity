@@ -6,9 +6,9 @@ import {SecurityCreate} from '../../../../gen/api/security';
 import {SecurityActions, UpdateSecurityActionArgs} from '../../../../store/security/security.actions';
 import {HistoricalSecurityPriceConfigCreate} from '../../../../gen/api/historical-security-price';
 import {setUntouched} from './set-untouched';
-import {DividendAnnouncementConfigApi} from "../../../../gen/api/notification/dividend-announcement";
-import {DividendAnnouncementConfigChangedEvent} from "../../../details/dividend-announcement/dividend-announcement-config.component";
-import {catchError, EMPTY, Observable, take} from "rxjs";
+import {DividendAnnouncementConfigApi} from '../../../../gen/api/notification/dividend-announcement';
+import {DividendAnnouncementConfigChangedEvent} from '../../../details/dividend-announcement/dividend-announcement-config.component';
+import {catchError, EMPTY, Observable, take} from 'rxjs';
 
 export function persist(signalStore: WritableSignalStore<UpdateSecurityState, UpdateSecurityComputed>,
                         globalStore: Store<AppState>,

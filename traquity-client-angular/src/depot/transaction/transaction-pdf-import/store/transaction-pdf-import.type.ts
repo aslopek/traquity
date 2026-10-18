@@ -1,7 +1,7 @@
-import {TransactionCreate} from "../../../../gen/api/depot-transaction";
-import {ImportedFile} from "../../transaction-pdf/imported-file";
+import {TransactionCreate} from '../../../../gen/api/depot-transaction';
+import {ImportedFile} from '../../transaction-pdf/imported-file';
 
-export type PdfImportPhase = "folder" | "extracting" | "extracted" | "importing" | "imported";
+export type PdfImportPhase = 'folder' | 'extracting' | 'extracted' | 'importing' | 'imported';
 
 /** One PDF the picker listed, named by its fully qualified path. */
 export type PickedPdfFile = {
@@ -10,7 +10,7 @@ export type PickedPdfFile = {
 };
 
 /** What a document stated, less the security it is to be booked on. */
-export type PdfTransactionDraft = Omit<TransactionCreate, "securityId">;
+export type PdfTransactionDraft = Omit<TransactionCreate, 'securityId'>;
 
 /** One document that yielded a complete transaction including the security identified by its ISIN. */
 export type CollectedTransaction = {
@@ -44,7 +44,7 @@ export type TransactionPdfImportState = {
 export const initialState: TransactionPdfImportState = {
   folder: null,
   files: [],
-  phase: "folder",
+  phase: 'folder',
   filesDone: 0,
   currentPath: null,
   collected: [],

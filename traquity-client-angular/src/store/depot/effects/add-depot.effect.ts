@@ -1,8 +1,8 @@
-import {Actions, ofType} from "@ngrx/effects";
-import {DepotApi, DepotRead} from "../../../gen/api/depot";
-import {catchError, concatMap, map, Observable, of} from "rxjs";
-import {Action} from "@ngrx/store";
-import {AddDepotActionArgs, DepotActions} from "../depot.actions";
+import {Actions, ofType} from '@ngrx/effects';
+import {DepotApi, DepotRead} from '../../../gen/api/depot';
+import {catchError, concatMap, map, Observable, of} from 'rxjs';
+import {Action} from '@ngrx/store';
+import {AddDepotActionArgs, DepotActions} from '../depot.actions';
 
 export type AddDepotEffectArgs = {
   actions$: Actions

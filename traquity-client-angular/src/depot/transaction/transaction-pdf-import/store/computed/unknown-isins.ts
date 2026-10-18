@@ -1,7 +1,7 @@
-import {computed, Signal} from "@angular/core";
-import {ReadableSignalStore} from "../../../../../common/types/signal-store.type";
-import {SecuritiesByIsin} from "../../../../../store/security/selectors/get-securities-by-isin.selector";
-import {TransactionPdfImportState} from "../transaction-pdf-import.type";
+import {computed, Signal} from '@angular/core';
+import {ReadableSignalStore} from '../../../../../common/types/signal-store.type';
+import {SecuritiesByIsin} from '../../../../../store/security/selectors/get-securities-by-isin.selector';
+import {TransactionPdfImportState} from '../transaction-pdf-import.type';
 
 export function unknownIsins(signalStore: ReadableSignalStore<TransactionPdfImportState>,
                              securitiesByIsinSignal: Signal<SecuritiesByIsin>): Signal<string[]> {
