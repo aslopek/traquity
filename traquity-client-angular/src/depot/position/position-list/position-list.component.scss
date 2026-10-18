@@ -1,5 +1,11 @@
 $group-gutter-width: 2.5rem;
 
+:host {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .position-list {
   display: flex;
   flex-direction: column;
