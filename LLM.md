@@ -1,322 +1,197 @@
 # LLM.md
 
-This file provides guidance to LLM coding agents (Claude Code, etc.) when working with code in this repository.
+Guidance for LLM coding agents (Claude Code, etc.) working in this repository.
 
 ## Repository overview
 
-TraQuity is a portfolio-tracking desktop app. This is a monorepo; three parts matter:
+TraQuity is a portfolio-tracking desktop app. Monorepo, three parts:
 
-- **traquity-api** — OpenAPI 3 specs, the source of truth for every HTTP API. One YAML file per domain.
-- **traquity-client-angular** — Angular + NgRx frontend, packaged as the Electron desktop app that ships to users. Generates its API
-  client (`typescript-angular` generator) from `traquity-api` into `src/gen/api/`.
-- **traquity-server-spring** — Spring Boot backend implementing the same APIs. Generates server-side delegate interfaces (`spring`
-  generator) from `traquity-api` at build time into `target/generated-sources/openapi`.
-- **openapigen/** ignore it - it's just the shared cache dir for the `openapi-generator-cli` jar (`storageDir` in both `openapitools.json`
-  files).
+- `traquity-api` — OpenAPI specs. Source of truth for every HTTP API. One YAML file per domain.
+- `traquity-client-angular` — Angular + NgRx frontend, packaged as the Electron desktop app. Generates its API client from
+  `traquity-api` into `src/gen/api/`.
+- `traquity-server-spring` — Spring Boot backend implementing the same APIs.
 
-See `traquity-api/LLM.md`, `traquity-client-angular/LLM.md`, `traquity-client-angular/electron/LLM.md` (the Electron main process) and
-`traquity-server-spring/LLM.md` for details specific to each part.
+Read the part's own `LLM.md` before changing anything there: `traquity-api/LLM.md`, `traquity-client-angular/LLM.md`,
+`traquity-client-angular/electron/LLM.md`, `traquity-server-spring/LLM.md`.
 
 ## Code style
 
-Line length is capped at 140 characters per line, project-wide (all three parts). Language-specific code styles are defined in the
-respective `LLM.md` files.
+Line length: 140 characters, project-wide and in all file types. Language specifics live in each part's own `LLM.md`.
 
 ## Testing: nothing under test witnesses itself
 
-Frameworks, file layout and everything else about testing live in each part's own `LLM.md`. One rule spans all three parts, because it is
-about what an assertion proves rather than about any framework:
-
-**An assertion never obtains the value it checks through the code under test.** Act with the unit under test, then assert against something
-that unit did not produce: the state it wrote, the collaborator it called, the response it returned. The moment a `THEN` calls back into the
-same unit — a sibling method of the registry/store/service just exercised, a selector or computed belonging to the reducer or Signal Store
-under test, a `GET` endpoint reading back what the `POST` under test wrote — the test stops showing that the behavior is right. It shows
-that two parts of one implementation agree with each other, and they agree just as readily when both are wrong. Such a test also stops
-localizing anything: one broken reader then fails every test of every writer.
+- Never assert a result using the same unit under test. Act on the unit, then assert against something it did not produce: state it
+  wrote, a collaborator it called, a response it returned.
+- Arrange the same way: never set up fixture state via a service call or a `POST`. Use mocks, direct SQL/inserts, or hand-built
+  literals.
+- A part's own `LLM.md` may add a stricter version of this rule (e.g. Spring: never call an endpoint to arrange DB state for a test).
 
 ```js
-// wrong - `recordProvenStart` is confirmed by `stateOf` and `verify`, two readers out of the very module under test
+// wrong — stateOf/verify are readers from the module under test
 registry.recordProvenStart(databasePath, password);
 expect(registry.stateOf(databasePath)).toBe('scrypt');
-expect(registry.verify(databasePath, password)).toBe(true);
 
-// right - the config object it wrote into is inspected directly, and one assertion states what landed where
+// right — assert the state it wrote
 registry.recordProvenStart(databasePath, password);
 expect(config.auth).toEqual({[databasePath]: {scrypt: {/* ... */}}});
 ```
 
-Arranging is not exempt from this either — it is the same rationale, inverted. Using a service call or a `POST` to write fixture state into
-the database is just as bad as using a `GET` or a service call to read it back out for the assertion: **one broken reader then fails every
-test of every writer**, and one broken writer then fails every test that arranges through it. Arrange with mocks, direct SQL/inserts, or
-hand-built JSON/literal objects instead of calling production code that shares implementation with the unit under test.
-
-What the rule does not forbid:
-
-- **Calling the unit is the act**, always. `stateOf` and `verify` above each get tests of their own, in which that call *is* the act and the
-  arranged config is what the result is measured against — that is where they are covered, and it is why they need not be dragged into
-  someone else's assertion.
-- **Reading through a collaborator** the spec is not about: a different module, with its own spec, reached for because the plain state
-  cannot carry the claim (a persisted hash whose salt is random needs `auth.js`'s `verifyPassword` to be tied back to its password). Prefer
-  the plain state assertion, take this route only where the state alone cannot express what is claimed, and never route it back through the
-  unit under test.
-
-Where a part's `LLM.md` spells out a case of this, the specific rule stands alongside this one rather than replacing it — Spring's "never
-call an endpoint to prepare database state for a test" is the arrange-side twin of it.
-
 ## Assertion precision
 
-Two further traps make an assertion prove less than it looks like it does — neither is about *what* the assertion reads, like the rule
-above, but about *how loosely* it reads it:
-
-- **A type-only check where a value check is cheap.** `expect.any(String)` (or the AssertJ equivalent) passes for any string, including a
-  wrong one. When the domain gives you a checkable shape — a base64 string decoding to an exact byte length, a UUID, an ISO date — assert
-  that shape instead of just its type. Reach for a custom matcher (Jest's `AsymmetricMatcher`, an AssertJ `Condition`) when the built-in
-  matchers can't express it, and give that matcher a spec of its own the moment it carries real logic (a regex, a decode-and-compare) rather
-  than just wrapping a literal — test-only code is not exempt from "logic gets a test" just because nothing ships it. Where a part keeps
-  reusable test infrastructure (`src/testing/` in the Angular client, `electron/testing/` in the Electron main process), a matcher used by
-  more than one spec belongs there, colocated with the data factories.
-- **Comparing a value to itself.** An "unchanged" assertion of the shape `expect(afterTheAct).toBe(theArrangedValue)` (or `.toEqual(...)`)
-  proves nothing when `afterTheAct` and `theArrangedValue` are the same mutable object reference — a future implementation that mutates that
-  object in place changes both sides identically, and the assertion stays green throughout. Capture an independent expected value *before*
-  the act (a fresh literal, or a snapshot taken up front) and assert against that instead. Keeping `toBe` against the live reference
-  alongside it still earns its place when identity itself is part of the claim ("no reassignment happened") — that and "the content is
-  still correct" are two different questions, and asserting both takes two assertions.
+- Never use a type-only check (`expect.any(String)`) where a concrete value is cheap to check. Assert the exact shape: decoded byte
+  length, UUID, ISO date.
+- Write a custom matcher when no built-in expresses the shape. Give it its own test once it carries real logic (regex, decode-and-compare).
+- Never compare a value to itself through a shared mutable reference — capture the expected value independently, before the act.
+- Keep an identity (`toBe`) check only when identity itself is part of the claim, as a second assertion alongside a content check.
 
 ## Domain separation beats DRY
 
-When DRY and domain separation conflict, domain separation wins — in both directions:
-
-- Breaking DRY (a new endpoint, service, or parallel implementation) is only justified when it carves out a genuine domain, never for a
-  representation/presentation concern of data a tier already has. Serialization/formatting/labeling belongs to the tier that presents the
-  data (usually the Angular client); prefer composing existing endpoints over adding server surface.
-- Conversely, duplication that preserves domain separation is accepted. Example: test data factories stay one per type — a handwritten
-  domain type and a generated API type each keep their own factory, even when the two are structurally near-identical. Don't couple them
-  (e.g. by spreading one into the other) just to deduplicate their defaults.
-- Within domains, DRY applies.
+- Domain separation wins over DRY.
+- Never add server/service surface for a presentation concern (serialization, formatting, labeling) — that belongs to the presenting
+  layer.
+- Duplicate per-domain test data factories even when near-identical. Never couple one type's factory to another's to save lines.
+- Within one domain, DRY as normal.
 
 ## Dependency inversion binds the docs too
 
-Dependency inversion is a rule about knowledge, not merely about `import` statements — and a doc comment carries knowledge just as an
-import does. A unit that must not depend on its callers must not *describe* them either: **a comment on a function, class, module or type
-explains what that unit does, what its parameters and return value mean, and which invariants it upholds — never who calls it, in what
-order, from which screen, or what a downstream consumer will later do with the result.** This holds in all three parts, for every comment
-form (JSDoc, Javadoc, `//`), and it holds for callers the code has today just as much as for the ones a story happens to mention. A
-test name falls under it too: it states what that test asserts on its own, never "the same way" as the test above it, which stops being
-true the moment that neighbor is edited or deleted.
-
-Naming the caller in prose is worse than importing it, because nothing checks it. The compiler catches a stale import; a comment claiming
-"this runs on both finish buttons so the unlock screen's `OK` gates correctly" survives every rename, every new caller and the deletion of
-that screen, and then actively misinforms the next reader. It also re-couples what the code took care to decouple: the module now cannot be
-read, moved or reused without the reader believing they need the caller's context.
-
-Where the knowledge is real, write it down where it belongs:
-
-- **A reason a caller has for calling** belongs to the caller — put it there, next to the call, where it is about that caller's own
-  behavior.
-- **A rule spanning two screens or two tiers** belongs to the story's acceptance criteria, and to whichever `LLM.md` documents that seam,
-  not to a helper that happens to sit on the path between them.
-- **An invariant the unit itself upholds** is fair game and stays: express it as a property of the unit's own contract ("returns the
-  selection re-read from the config, so a discarded `auth` entry reads as `pending`"), phrased so it is verifiable from the unit's own
-  signature and body.
-
-What this does not forbid: naming a *seam the unit itself owns* is part of its contract, not a caller reference — an IPC handler may name
-the channel it serves, a delegate implementation the endpoint it fulfills, a preload script the bridge key it exposes. The test is whether
-the statement stays true when every existing caller is deleted. If it does, it is the unit's contract; if it doesn't, it is a caller's
-business.
+- A comment documents the unit's own contract — never who calls it, in what order, or what a caller does with the result.
+- Put caller-specific reasoning next to the call site, not in the callee's doc.
+- A rule spanning tiers or screens belongs in the story's acceptance criteria and the relevant `LLM.md`.
+- Test every such doc: does it stay true if every current caller is deleted? If not, rewrite it as a property of the unit's own
+  contract.
 
 ## Documentation
 
-When creating documentation (ADRs or any other Markdown files, JavaDoc, JSDoc, code comments etc.), write in a normal, direct, and modern
-tone. Completely avoid pompous phrases, archaic sentence structures, rhetorical flourishes, and that preachy, textbook-like lecture tone.
-Explain things short, crisp, and straight to the point.
+Write in plain, direct, modern language. No pompous or pseudo-intellectual phrasing, no lecturing. Keep it concise and to the point.
+
+Documentation (JavaDoc, JSDoc etc.) describes a class, method, function, interface, enum etc. Comments are prose attached to code.
+
+Public methods and functions are to be documented. Others receive documentation if and only if the purpose of the unit is not
+self-explanatory.
+
+Comments must be used sparsely and only for non-obvious code or when reasoning why any of the given rules are broken.
+
+Avoid mentioning stories and acceptance criteria in docs or comments.
 
 ## Outbound requests are disclosed in the app
 
-The app tells the user, in the About dialog's `Transparency` tab, every server it contacts that this project does not run itself — who
-receives the request, when it happens, and what it carries. That text is
-`traquity-client-angular/src/app/privacy/privacy-notice/privacy-notice.component.html`, and it is a claim about the code in all three
-parts: the renderer's update check, the Electron main process's JDK download and AI model download, and the backend's exchange-rate and
-market-data fetches are all listed there.
-
-**A change that makes the app contact a recipient the notice does not name updates the notice in the same change**, in whichever part the
-request lives. The same goes for a change to *when* an existing request happens (a poll where there was one request per start, say). A
-recipient added to the code and not to the notice makes the notice false.
+- Every server contacted that this project does not run itself is listed in the About dialog's Transparency tab
+  (`traquity-client-angular/src/app/privacy/privacy-notice/privacy-notice.component.html`): who, when, what.
+- Keep it in sync when changing how the app interacts with third parties.
 
 ## Dependency licensing
 
-This project is MIT-licensed. Only add a new dependency (npm or Maven, in any of the three parts) if its license is compatible with that —
-permissive licenses (MIT, BSD, Apache-2.0, ISC, 0BSD, BlueOak-1.0.0, OFL-1.1 for fonts, etc.) are fine. Do not add a dependency under a
-copyleft license (GPL/AGPL/LGPL) or a source-available/non-OSI license (e.g. BSL, FSL, Commons Clause) without explicitly flagging it and
-getting confirmation first — check the dependency's own `package.json` `license` field (npm) or its POM's `<licenses>` block (Maven,
-inherited from its parent POM if not set directly) before adding it.
+- MIT project. Only add permissive-licensed dependencies: MIT, BSD, Apache-2.0, ISC, 0BSD, BlueOak-1.0.0, OFL-1.1 (fonts).
+- Copyleft or source-available licenses (GPL/AGPL/LGPL, BSL, FSL, Commons Clause) need explicit confirmation first. Check the
+  license before adding anything.
+- Keep the shipped third-party license notice up to date with the actual dependency set — adding, removing, or bumping a
+  dependency that changes its license updates the notice in the same change.
 
 ## How the pieces fit together at runtime
 
-The Electron app (`traquity-client-angular`) is the shipped product. `app.on('ready')` opens its single `BrowserWindow` on the built
-Angular app immediately — it does not wait for Java to resolve, ask for a password or spawn the backend first. The Angular shell reads a
-computed startup mode over an IPC bridge and, once past any unlock/configure screen, triggers the backend start itself via that same bridge.
-In `configure` mode the shell renders the configuration screen, where the user picks or creates the database file and, for a newly created
-one, defines its password; finishing there continues the very same startup flow in the same window, without a relaunch. `electron/main.js`
-then spawns a bundled Java process running the Spring Boot backend (`backend.jar`) as a child process and reports back whether it became
-reachable. The database password reaches that child over its stdin — as the first line — instead of through its environment; the stream
-then stays open for the run, and closing it is the shutdown request. The backend listens on port `23726` (H2 console on `29232`), backed
-by a local encrypted H2 file database whose path is configurable via `TQ_DB_FILE_PATH`. See `traquity-client-angular/electron/LLM.md` for
-the boot order in full.
+- Electron ships the product. The window opens on `ready` immediately.
+- The Angular shell reads startup mode over an IPC bridge, then triggers backend start the same way.
+- `configure` mode renders a screen for picking/creating the DB file and its password; finishing continues startup in the same window.
+- The main process spawns the bundled Java process (`backend.jar`) as a child process.
+- The DB password goes in as the first line of the child's stdin; closing that stream is the shutdown request.
+- Backend listens on `23726` (H2 console `29232`), backed by a H2 DB. Path configurable via `TQ_DB_FILE_PATH`.
+- Full boot order: `traquity-client-angular/electron/LLM.md`.
+- `forge.config.js` copies the built Spring jar into `resources/backend.jar` during packaging. Run `mvn package` before any Electron
+  package/make build.
 
-`forge.config.js` copies `traquity-server-spring/target/traquity-server-spring-<version>.jar` into
-`traquity-client-angular/resources/backend.jar` during electron-forge packaging — the Spring backend must be built (`mvn package`) before
-an Electron package/make build.
+## Making an API change
 
-## Making an API change (cross-cutting workflow)
-
-1. Edit/add the relevant OpenAPI YAML in `traquity-api/`.
+1. Edit/add the OpenAPI YAML in `traquity-api/`.
 2. Regenerate the Angular client: `cd traquity-client-angular && npm run generate`.
-3. Rebuild the Spring backend: `cd traquity-server-spring && mvn generate-sources` (or `compile`/`package`) — the
-   `openapi-generator-maven-plugin` runs in the `generate-sources` phase and produces one delegate interface per domain (e.g.
-   `DepotApiDelegate`), implemented by a package-private `*Controller`.
-4. Keep the `@openapitools/openapi-generator-cli` version in sync across `traquity-api/package.json`'s devDependency and
-   `traquity-client-angular/package.json`'s devDependency.
-5. Keep `traquity-api/openapitools.json`, `traquity-client-angular/openapitools.json` and the plugin version in
-   `traquity-server-spring/pom.xml` in sync when bumping.
+3. Rebuild Spring: `cd traquity-server-spring && mvn generate-sources` (or `compile`/`package`).
+4. Keep the `@openapitools/openapi-generator-cli` version in sync across both `package.json` files.
+5. Keep both `openapitools.json` files and the Maven plugin version in sync when bumping.
 
-Upon adding a new API spec file in step one, the following steps must be conducted before continuing to generate code:
+New spec file — before step 2:
 
-1. Add a test script to `traquity-api/package.json` and reference the test script in `scripts.test`
-2. Add a generator to `traquity-client-angular/openapitools.json`
-3. Add an execution to plugin `org.openapitools.openapi-generator-maven-plugin` in `traquity-server-spring/pom.xml`
-
-## Commands and per-part architecture
-
-Commands (build, run, test) and architecture details for each part live in that part's own
-`LLM.md` — read the one for the part you're working in before making changes there.
+1. Add a test script to `traquity-api/package.json`, referenced from `scripts.test`.
+2. Add a generator entry to `traquity-client-angular/openapitools.json`.
+3. Add an execution for `openapi-generator-maven-plugin` in `traquity-server-spring/pom.xml`.
 
 ## Git
 
-Use `gh` and `git` commands to interact with the GitHub repository.
-
-Use of any read-only `git` or `gh` commands (e.g. `git status`, `git diff`, reviewing PRs) is permitted.
-
-You may create, edit and delete files in the local working tree. That is how you hand work to me: I review it as a `git diff` before any of
-it becomes a commit.
-
-What you may never do is move anything out of the working tree and into the repository or onto GitHub. That includes, but is not limited to:
-staging (`git add`), creating/amending commits, pushing, creating/deleting branches or tags, and creating, deleting or commenting on PRs,
-issues and releases. Keep the most important rule in mind: anything going into this repository - code, text, PRs, issues etc. - is my
-responsibility and fully owned by me. The working tree is yours to work in; the commit is mine, and I am the only one who makes it.
+- Use `gh`/`git`. Read-only commands always fine. Writing to the local or remote git repository, issues, PRs etc. is prohibited.
+- Create, edit, delete files in the working tree freely — that is the handoff; review happens via `git diff`.
+- Never stage, commit, push, create/delete branches or tags, or touch PRs, issues, releases. The working tree is yours; the commit
+  is mine.
 
 ### PR reviews
 
-When I ask you to do a PR review, first check source and target branch:
+- Check source → target first.
+  - `anything` → `next-release`: a feature, bug fix etc.
+  - `next-release` → `main`: a release.
+  - Anything else → `main`: flag it.
+- Sanity-check a `next-release` → `main` PR:
+  - Everything in `CHANGELOG.md`'s `[Unreleased]` is actually in the PR.
+  - Nothing in the commits is missing from `[Unreleased]` (Bug/Feature/NFR issues belong there; issues tagged only "technical
+    improvement" don't).
+  - `LLM.md`/`README.md`/`USER_MANUAL.md` updated if needed.
 
-- Merging from `next-release` to `main` is done in preparation of a release.
-- When a PR merges from any other branch to `main` you have to flag this to me, since the HEAD of `main` is supposed to always represent the
-  latest release (what is bundled therein - documentation may update the HEAD without a release).
-- You may assume that code on `next-release` has already been reviewed through other PRs, but a quick sanity check should include:
-    - Is everything mentioned on `CHANGELOG.md`'s `[Unreleased]` Section actually contained in the PR?
-    - Is anything missing in the `[Unreleased]` section, that's actually on the list of commits to be merged?
-  - Bug/Feature/NFR issues are worth mentioning in the `CHANGELOG.md`. issues tagged only as `technical improvement` don't get
-      mentioned.
-    - Do any of the other Markdown files in this repository (e.g. `LLM.md` files, `README.md`, `USER_MANUAL.md`) have to be updated to
-      reflect
-      the changes to be merged?
+## Drafting and reporting
 
-## Drafting and Reporting
-
-Larger output such as plans, PR reviews etc. go to the `.scratchpad` directory as Markdown files.
-
-When I ask you to draft stories, you first create a directory in `.scratchpad`. Within this directory you put for every story a separate
-file. Use the following files as templates:
-
-- bugs: `.github/ISSUE_TEMPLATE/bug_report.md`
-- features: `.github/ISSUE_TEMPLATE/feature_request.md`
-- NFRs: `.github/ISSUE_TEMPLATE/non_functional_requirement_request.md`
-
-If it makes sense to provide multiple stories, create a meta file in the directory. This may be turned into an epic and contain things like
-architectural decision records (ADRs), story map and other useful information.
+- Larger output (plans, PR reviews) goes to `.scratchpad` as Markdown.
+- Stories
+  - one directory per story set
+  - one file per story, using the templates in `.github/ISSUE_TEMPLATE/` (bug/feature/NFR)
+  - write stories from a user's perspective only; don't include implementation details - these are part of separate implementation plans
+- Multiple stories: add a meta file for ADRs, story map, shared context.
 
 ### Mockups
 
-A story that adds or changes a screen gets a mockup in the story's directory, sharing the story's number prefix.
-
-Draw one panel per state the ACs describe (empty, invalid, warning, error, populated, menu open …), caption each panel with the ACs it
-shows, and take colors and typography from `traquity-client-angular/src/styles.scss` rather than inventing a palette. Panels that show
-placeholders for sections a later story adds are worth keeping — they make the boundary between the stories visible.
+- A story adding or changing a screen gets a mockup in its directory, sharing the story's number prefix.
+- One panel per state the ACs describe, each captioned with the ACs it shows.
+- Colors/typography from `traquity-client-angular/src/styles.scss` — never invent a palette.
+- Keep placeholder panels for sections a later story adds.
 
 ### Acceptance criteria
 
-An acceptance criterion describes **one linear scenario** in `GIVEN` / `WHEN` / `THEN` blocks. All three blocks are always present.
-
-Not every AC has a trigger, though: when the `GIVEN` alone already establishes the state being asserted — a control that is simply
-shown, a rendered result, an invariant such as "this string is in no file" — write `**WHEN:** -`. Keep the line with the dash rather
-than dropping it, so a missing trigger reads as deliberate instead of forgotten. Name a `WHEN` whenever something actually happens: a
-user action, a render pass, an app start, an IPC call, an incoming HTTP request or response, events etc..
-
-Chain as many clauses per block as the scenario needs, using `AND` lines. An `AND` always belongs to the block above it — after `GIVEN`
-it adds a precondition, after `WHEN` a further step of the trigger, after `THEN` a further assertion. Prefer several short `AND` lines
-over one sentence cramming everything in with commas:
+- One linear scenario per AC: `GIVEN` / `WHEN` / `THEN`, all three always present.
+- No trigger: write `**WHEN:** -`. Keep the dash so "no trigger" reads as deliberate.
+- Chain clauses with `AND` lines, each belonging to the block above it. Prefer several short `AND` lines over one comma-cramming
+  sentence.
+- No branching inside an AC. Split any "if it succeeded / if it failed" or alternative-outcome `AND` into its own AC: same `GIVEN`,
+  different `WHEN`, `THEN` derived from exactly that.
+- Same for a `GIVEN` offering alternative setups — split into two ACs. A parameterized clause covering equivalent inputs of one rule
+  stays one AC; if the outcome differs per input, split it.
+- Cover the unevaluable states of any "if and only if" gate with their own AC — e.g. a hash-comparison gate needs an AC for "no
+  stored hash yet".
+- `GIVEN` carries only preconditions the `THEN` depends on. Flip each clause — drop it if the outcome doesn't change.
+- A story depending on a single-runtime environment names that precondition once in the description, repeated as a `GIVEN` clause in
+  every AC that needs it.
+- `WHEN` is observable at the moment it happens — never reconstructed from history.
+- Bound negative assertions to the artifact the story controls (e.g. "no changes written to the config file" instead of "nothing is written
+ to disk").
+- An AC asserts outcomes only up to its own story's boundary. Where the scenario continues into another story's territory, name that
+  story — never duplicate its contract. Refer to the story, never to specific ACs (renumbering breaks references).
+- A story changing existing behavior gets ACs only for invariants its change could plausibly break — never a restatement of
+  untouched behavior.
+- Number ACs consecutively (`AC1`, `AC2`, …), each with a short title naming what the `THEN` asserts, not the intent. Name controls
+  the way the UI labels them.
+- Never use specific values (string examples, number examples etc.) when writing ACs. Use abstract placeholders and formulas.
 
 ```
-**AC3: Correct password unlocks into the splash**
-**GIVEN:** the unlock screen for a database with a stored hash for password `secret`
+**AC1: Correct password unlocks into the splash**
+**GIVEN:** the unlock screen for a database with a stored hash for a `password`
 **AND:** a backend that is not running yet
-**WHEN:** the user enters `secret`
+**WHEN:** the user enters the `password`
 **AND:** confirms
 **THEN:** the backend is started with that password
 **AND:** the splash screen shows
 ```
 
-What must **not** happen is branching inside an AC: no scenario may fork into "if it succeeded … / if it failed …", and no `AND` may
-introduce an alternative outcome ("AND: entering a wrong password instead …", "AND: cancelling yields …", "AND WHEN: …"). Each branch
-becomes its own AC — typically the same `GIVEN` setup with a different `WHEN`, and a `THEN` derived from exactly that:
-
-- happy path: **GIVEN** a password-protected database … **WHEN** the correct password is provided … **THEN** it opens …
-- unhappy path: **GIVEN** a password-protected database … **WHEN** a wrong password is provided … **THEN** the error appears …
-
-The same goes for a `GIVEN` that offers alternative setups ("… or `null` with no `java` on the `PATH`") — two setups, two ACs. A
-genuinely parameterized clause covering equivalent inputs of *one* rule stays a single AC (e.g. "WHEN it is renamed to `con`,
-`foo:bar` or a name containing a path separator" → all rejected the same way). The `THEN` decides which case you have: if the outcome
-differs per input, they are separate ACs, and a `THEN` naming two different follow-ups is the symptom of a merge that should not have
-happened — "the configuration screen shows … AND the unlock screen does not ask again" describes two rules and reads as a contradiction.
-
-A rule phrased as "if and only if" needs the states in which its condition cannot be evaluated covered by an AC of their own. "OK is
-enabled if and only if the input matches the stored hash" silently means "never enabled" for a database that has no stored hash yet —
-there is nothing to compare against. Whenever an AC gates a control or a transition on a comparison, ask which states lack the thing
-being compared to, and give them their own AC.
-
-A `GIVEN` carries only the preconditions the `THEN` actually depends on. Flip each clause: if the outcome stays the same, drop it.
-Over-specified setups quietly exclude the paths that matter — "an app run that has not shown the splash screen yet" excludes every
-retry, although a retry behaves identically.
-
-Where a whole story depends on an environment that exists in only one runtime, name that precondition once in the description and then
-repeat it as a `GIVEN` clause in every AC that needs it — e.g. "the startup bridge is available" for the `contextBridge` API the Electron
-preload exposes. It survives the flip test precisely because the outcome without it is *unspecified* rather than the same, and stating it
-per AC is what makes that deliberate: the other runtime then needs no ACs, and no code. A screen may well be openable under `ng serve` to
-look at its layout without the story promising anything about what it does there.
-
-A `WHEN` is an event observable at the moment it happens, not a condition reconstructed from history. "the spawned process exits" is
-observable; "the spawned process exits without ever having become reachable" makes the implementation track a past that changes
-nothing about the outcome.
-
-A negative assertion names what it is about. "Nothing is written to the disk" is untestable and, in an Electron app, plainly false —
-creating the window alone writes caches. "No changes to the config file are written to the disk" is checkable. The same goes for
-"never", "no file", "no request": bound them to the artifact the story controls.
-
-An AC asserts outcomes up to its own story's boundary. Where a scenario continues into behavior another story or component owns, name
-that owner rather than re-specifying its mechanics — `**AND:** making the app appear once the backend responds is left to the splash
-screen` instead of a `THEN` that duplicates the splash screen's contract. Referring to another story as the continuation is fine;
-asserting how it works internally is not, because the two copies drift apart the moment one story is reworked. Do not refer to specific ACs,
-only the story, since refining the ACs in a story may change numbering. Negative assertions about another story's triggers fall under the
-same rule: "no unlock screen shows while the startup mode is `boot` or `configure`" belongs to the story that computes the mode, not to the
-unlock screen's own story, which only has to get its own rendering right.
-
-A story that changes existing behavior models that behavior for exactly one purpose: an invariant its own change could plausibly break.
-"The four page routes keep their paths under the new parent route" and "the last opened page is still restored" earn their place when the
-story re-parents those routes and moves the subscription that restores the page — they are regression guards. An AC restating behavior the
-change does not touch is noise: no implementation can fail it, and it competes for attention with the ones that can. Such an AC also must
-not measure against unstated history — "the page shows as before" is not checkable, "the page shows with the header and the side menu around
-it" is.
-
-Keep the ACs numbered consecutively (`AC1`, `AC2`, …), each with a short title that names what the `THEN` asserts rather than the intent
-behind it: an AC titled "A correct password unlocks into the splash" whose `THEN` only enables a button promises something it never checks —
-then either the title or the `THEN` is wrong. Name controls the way the UI labels them (the `OK` button, not "the confirm control"), so that
-an AC and the screen it describes stay searchable against each other.
+```
+**AC2: A sale the oldest lot covers takes its cost basis from that lot alone**
+**GIVEN:** a position of a single security with lots `L1 … Ln`, `n >= 1`
+**AND:** its opened `Sell Simulation` with `Fees Reduce the Taxable Gain` and `Buy Taxes Reduce the Taxable Gain` on
+**WHEN:** the user enters `s <= c1` shares, a price of `p`, `t` tax-free gains, a tax rate of `r` and a fee of `f`
+**THEN:** `Gross Value` shows `s × p`
+**AND:** `Taxable Gain` shows `(s × p − f − ((b1 + f1 + x1) × (s ÷ c1))) × (1 − (t ÷ 100))`, so buy-in, buy fee and buy tax are all taken at
+the share `s ÷ c1` of the lot
+**AND:** `Taxes` show `max(0, Taxable Gain × (r ÷ 100))`
+**AND:** `Net Value` shows `s × p − f − Taxes`
+```

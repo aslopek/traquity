@@ -1,445 +1,223 @@
 # LLM.md
 
-This file provides guidance to LLM coding agents (Claude Code, etc.) when working with code in this repository.
+Guidance for LLM coding agents (Claude Code, etc.) working in this package.
 
 ## What this package is
 
-The Angular + NgRx frontend, packaged as the Electron desktop app that ships to users. See the root `LLM.md` for how this fits together with
-`traquity-api` and `traquity-server-spring`.
+Angular + NgRx frontend, packaged as the Electron desktop app. Root `LLM.md` covers how this fits with `traquity-api` and
+`traquity-server-spring`.
 
 ## Commands
 
-- `npm run generate` — regenerate all API clients in `src/gen/api/*` from `../traquity-api` (config in `openapitools.json` +
-  `api/openapi-config.json`). Run this after any spec change; `src/gen` is otherwise untouched by hand.
-- `npm run serve` — `ng serve` at `http://localhost:4200`; requires the Spring backend running separately (e.g. `mvn spring-boot:run` in
-  `traquity-server-spring`).
-- `npm run build` — `clean` (dist/electron-out/gen) + `generate` + `ng build --base-href ./` + `licenses:generate`.
-- `npm run watch` — incremental dev build (`ng build --watch --configuration development`), no dev server.
-- `npm run electron:start` — run the packaged desktop shell locally via electron-forge (spawns the bundled backend jar from
-  `resources/backend.jar`).
-- `npm run electron:pack` — build an unpacked app. `forge.config.js`'s `generateAssets` hook copies
-  `../traquity-server-spring/target/traquity-server-spring-<version>.jar` into `resources/backend.jar`, so the Spring backend must
-  already be built (`mvn package`). Ignore `electron:make` script.
-- `npm run licenses:generate` — collect licenses of packaged dependencies into a JSON file.
-- `npm run licenses:check` — verify license compatibility of dependencies.
-- `npm run test` — run all tests: `test:angular` first, then `test:electron`. Each runs standalone as well.
-- `npm run test:angular` — the Angular suite (config in `jest.angular.config.ts`, uses `ts-jest`).
-- `npm run test:electron` — type-checks `electron/` (`tsconfig.electron.json`) and then runs its specs (`jest.electron.config.ts`).
-- `npx jest <path-to-spec>` runs a single file in either suite (`jest.config.ts` aggregates both).
+- `npm run generate` — regenerate API clients in `src/gen/api/*` from `../traquity-api`. Run after any spec change. Never touch
+  `src/gen` by hand.
+- `npm run serve` — `ng serve` at `http://localhost:4200`; needs a backend running separately.
+- `npm run build` — clean + generate + `ng build` + license generation.
+- `npm run electron:start` — run the packaged desktop shell locally.
+- `npm run electron:pack` — build an unpacked app. Needs `../traquity-server-spring` already built (`mvn clean package`) — packaging
+  copies the jar into `resources/backend.jar`. Ignore `electron:make`.
+- `npm run licenses:generate` / `licenses:check` — collect / verify licenses of packaged dependencies.
+- `npm run test` — `test:angular` + `test:electron`; each runs standalone too. `npx jest <path>` runs one file.
 
 ## Architecture
 
-- **Electron shell**: the Electron main process lives in `electron/` (entry point `electron/main.js`) and is the packaged desktop shell —
-  it owns `traquity.config.json`, resolves Java, spawns the Spring backend jar as a child process and opens the `BrowserWindow` on the
-  built Angular app. The backend is spawned only on an IPC call the renderer makes after opening, never before the window exists — see
-  `electron/LLM.md` for its architecture, typing regime, testing and the boot order.
-- **The bridge to the main process**: `src/bridge/` is the renderer's only door to the main process, over the `contextBridge` globals
-  `electron/preload.js` exposes: `window.traquity` for the startup/configuration/java channels, `window.traquityAi` for the `ai:*`
-  channels, and `window.traquityFiles` for resolving a picked `File`'s fully qualified path. One service per global —
-  `StartupBridgeService`, `AiBridgeService`, `FileBridgeService` — each shaped the same way: an `available` flag plus one wrapper per
-  channel, deferring the bridge call until subscription so a channel reads as an observable like everything else in the app.
-  `FileBridgeService.pathForFile` is the one exception: it is synchronous and returns a value, since `traquityFiles` answers it inside the
-  preload itself and registers no IPC channel at all. All three reach their global through the shared `BRIDGE_HOST` injection token, which
-  resolves `globalThis` and never `window` directly, so the node-environment jest suite can inject a stub. The folder sits beside
-  `src/store/` and `src/gen/` instead of under `src/app/`, because a bridge is consumed wherever its channels belong: `AiBridgeService`
-  serves the global `ai` slice (`src/store/ai/`) and the AI settings section (`src/settings/ai/`), neither of which is app-shell chrome. A
-  further channel on an existing global becomes another wrapper on that global's service, never a reach into `window.traquity` from
-  somewhere else; a new `contextBridge` global gets its own service and its own type file here.
-- **Startup screens and the app shell**: `AppComponent` is just a `<router-outlet>` plus the trigger that starts the backend immediately
-  for a passwordless database (`boot` mode). The chrome (header, side menu, splash gate, the initial global-store loads) lives in
-  `ShellComponent` (`src/app/shell/`), mounted under the root route behind `startupPhaseGuard`. `/unlock` (`src/app/unlock/`) is the real
-  unlock screen, with its own screen-scoped Signal Store (`src/app/unlock/store/`) verifying a typed password against the stored hash over
-  the bridge and driving `StartupStore.startBackend`. `/configure` (`src/app/configure/`) is the configuration screen: a frame of stacked,
-  independently titled sections — not a wizard — around a screen-scoped `ConfigureStore` that `ConfigureComponent` provides and each
-  section component injects. The frame owns the notices, the two finish buttons and the handover back to the startup flow; a section
-  contributes its controls, one `*Valid` computed aggregated by `enableSaveAndStart`, and its slice of `ConfigurationChanges`. "Save &
-  start" persists every section in a single `config:apply` write, "Discard & start" writes nothing and continues with the config as it was,
-  and `store/routing/next-startup-step.ts` is the one place either of them decides what follows (a backend start with the password defined
-  here, or the unlock screen for a file whose password can only be proven). Adding a section therefore means adding a component, a slice
-  and one term in `enableSaveAndStart` — the frame itself is not touched. That split is what the store's folders express: a section's own
-  computeds/effects/methods sit under `store/<section>/` (`store/database/computed|effects|methods`, and
-  `store/java/computed|effects|methods`), while `store/computed|effects|methods` hold only the frame's own. The same split shapes the
-  store's types, as a reading aid only: private `Frame*`/`Database*`/`Java*` slices that the exported
-  `ConfigureStoreState`/`ConfigureComputed`/`ConfigureMethods` intersect back into one flat object. `/unlock`, `/configure` and `/insecure`
-  (`src/app/insecure/`, admitted while the startup mode is `insecure` — see `electron/LLM.md`'s boot order for the
-  `NODE_TLS_REJECT_UNAUTHORIZED` guard that produces it) are three sibling top-level routes with no chrome, rendered instead of the shell
-  while the startup mode the main process computed calls for one of them.
-  `src/app/startup/` holds the startup flow itself. `StartupStore` (a root-provided `@ngrx/signals` Signal Store, not a global-store slice —
-  it is read by an app initializer, a route guard and both startup screens) holds the startup mode, phase, database path, the database's
-  `authState` (what gates the unlock screen's `OK` button: only a stored `scrypt` record demands a local match) and the `startFailed` flag
-  (set on a failed `backend:start`, cleared on the next attempt), and drives the `backend:start` call. `selectDatabase` is what keeps
-  `databasePath`/`authState` correct once the configuration screen switches databases — the two arrive once from `startup:getState` and
-  describe the database the app *started* against — and `enterUnlock` sits alongside `enterConfigure`/`enterBooting` as the way back into
-  the unlock screen. Both `/unlock` and `/configure` route on one shared `startFailed` flag, not one each. `startup.initializer.ts`
-  resolves the startup state from the bridge before the router's first navigation, which is what lets `startupPhaseGuard` decide
-  synchronously which route to admit. In browser dev mode (`ng serve`, no bridge) none of this activates: the guard admits the shell
-  immediately and the app loads. The Settings page (`src/settings/settings-page/`) carries a bridge-gated action, shown only while the
-  bridge is available, that writes the one-shot `configureOnNextStart` flag and relaunches the app through `StartupBridgeService`.
-- **Two kinds of state, kept strictly separate** — see the dedicated sections below for each:
-  - The **global NgRx store** (`src/store/`) holds only data that's genuinely shared/global (loaded entities, cross-screen config) — never
-    screen-local drafts or UI-only state.
-  - **NgRx Signal Stores**, one per feature/dialog/wizard, colocated under that feature's own `store/` subfolder
-    (e.g. `src/depot/depot-performance/store/`, `src/security/update-security/store/`), hold everything else: form drafts, wizard/tab
-    progress, UI toggles, derived view state. A Signal Store can be shared by several components at once.
-- **Feature folders** under `src/` (`depot`, `dividends`, `security`, `settings`) hold routed page/feature components and consume the global
-  store + generated API clients directly, or a local Signal Store where one exists; `src/common` holds cross-feature building blocks (shared
-  components, `tq-*` pipes for currency/date/decimal/percent formatting, the `ReadableSignalStore`/ `WritableSignalStore` types,
-  `pdf/`, `file-drop/`); `src/app` holds app-shell chrome (header incl. notifications, database connection dialog, splash screen, license,
-  info, privacy).
-- **The About dialog and the transparency note**: `src/app/info/` is the About dialog, two `mat-tab`s — `About` (version, license,
-  third-party software; the tab that opens) and `Transparency`, which renders `PrivacyNoticeComponent` from `src/app/privacy/`. That
-  component is static text and renders before a backend exists, which is what lets the note be read from every screen.
-  `src/app/info/about-button/` is the icon that opens the dialog, which is why the header, `/unlock` and `/configure` all open the same
-  dialog with the same size; `/insecure` deliberately offers none. The note is a disclosure, not a consent: nothing gates on it, and the
-  root `LLM.md` states the rule that keeps its text true.
-- **Telling the user that something failed**: dispatch `NotificationActions.addError({message})` from the `notification` slice
-  (`src/store/notification/`). `src/app/snackbar/` renders the notifications as a stack inside the shell, each dismissable, which dispatches
-  `removeNotification`. The message is the finished user-facing sentence and is authored where the failure is caught; the slice stores it
-  unchanged. Putting the screen back into a state that matches what it shows is the dispatcher's own job on top of the notification (if
-  applicable).
-- **Custom Pipes**: Use the aforementioned custom pipes instead of angular default pipes. In addition, there are pipes for specific purposes
-  which must be used instead of accessing raw properties:
-  - `country.pipe.ts`: displaying country flag emojis
-  - `depot-logo-url.pipe.ts`: use in conjunction with `<img>` for displaying a depot's logo
-  - `file-preview.pipe.ts`: use for displaying files (e.g. images or other content) inserted by the user. Be aware that the user may
-    unknowingly insert attacker-controlled content such as malicious PDF.
-  - `security-logo-url.pipe.ts`: use in conjunction with `<img>` for displaying a security's logo
-  - `security-name.pipe.ts`: use to display security names. Unlike security groups, it is not allowed to access raw `security.name` property
-    for this purpose.
-  - `security-symbols.pipe.ts`: use to concatenate all `security.symbols` for displaying.
-  - `security-type-display-name.pipe.ts`: use to display a human-readable name for the given `SecurityType`. It must never be rendered raw.
-  - `transaction-type-display-icon.pipe.ts`: use in conjunction with `<mat-icon>` for displaying an icon for the given `TransactionType`
-  - `transaction-type-display-name.pipe.ts`: use to display a human-readable name for the given `TransactionType`
-- **Generated API clients** (`src/gen/api/<domain>/`): one Angular service class per spec (e.g. `DepotApi`, `ConfigApi`, `DividendApi`),
-  injected directly into effects/Signal Store code — there is no handwritten HTTP layer on top (exception: GitHub update check).
-- Charts use `ngx-echarts` with `echarts/core` and only the chart types/components registered in `app.config.ts` (`BarChart`, `LineChart`,
-  `PieChart`, `Grid`/`Legend`/`Tooltip`, `SVGRenderer`) — add new echarts features to that `echarts.use([...])` call, not ad hoc per
-  component.
-- **Derived state belongs in the store, rendered artifacts belong in pipes.** The line is drawn by what the thing *is*, not by
-  where its inputs come from:
-  - **Deriving is what selectors and computeds are for** — keep doing it there. A global-store selector
-    (`selectors/<name>.selector.ts`) or a Signal Store computed (`store/computed/<name>.ts`) may filter, join, aggregate, sort
-    and reshape domain data as much as a screen needs, including combining several slices or merging local signals with global
-    selectors (`depot-performance/store/computed/depot-values.ts` is the reference).
-  - **A rendered artifact never lives in a store** — not in a slice's state, not in a selector, not in a Signal Store computed.
-    That means an echarts options object, SVG geometry (path/arc data drawn as chart chrome), a composed label/tooltip string:
-    anything whose shape is dictated by the thing that draws it rather than by the domain.
-  - **A pure custom pipe is the seam between the two**: it takes the derived state and produces the rendered artifact, in the
-    template. Never build one in a component field, a component method, a component-level `computed()`, or an inline template
-    expression. A component-level `computed()` stays fine for plain local logic (a disabled flag, which branch to render) — just
-    never for an artifact.
-  - **Chart options** for echarts get one dedicated pipe per chart (e.g. `dividend-bar-chart.pipe.ts`,
-    `position-pie-chart.pipe.ts`).
-  - When several bindings need the same pipe result, bind it once with `@let` instead of repeating the pipe expression. Chain
-    pipes in the template rather than precomputing a value in the component.
-  - A pipe that needs formatting injects the `tq*` pipes (see `position-pie-chart.pipe.ts`); the consuming component then lists
-    them in its `providers`. Pipes may inject other pipes the same way.
-  - Pass everything a pipe needs as an argument. A pure pipe re-runs only when its arguments change identity, so a signal it
-    reads on its own (e.g. `hideAbsoluteValues`) can change without the rendered text ever being recomputed.
+- **Electron shell**: main process in `electron/` (`electron/main.js`). Owns config, resolves Java, spawns the backend jar, opens
+  the window. Backend spawns only on an IPC call from the renderer, after the window opens. See `electron/LLM.md`.
+- **Bridge to the main process**: `src/bridge/` is the renderer's only door to the main process, over `contextBridge` globals.
+  One service per global, each an `available` flag plus one wrapper per channel, deferring the IPC call until subscription so it
+  reads as an observable. Lives beside `src/store/`/`src/gen/`, not under `src/app/` — a bridge is consumed wherever its channels
+  belong, not just by app-shell code. A new channel on an existing global is a new wrapper on that global's service, never a
+  direct reach into another service's global. A new `contextBridge` global gets its own service and type file.
+  - Every one of these services reaches its global through the shared `BRIDGE_HOST` injection token, which resolves
+    `globalThis` and never `window` directly — that is what lets the node-environment jest suite inject a stub.
+- **Startup screens and the app shell**: `AppComponent` is a router outlet plus the trigger that starts the backend immediately
+  for a passwordless database. Shell chrome (header, side menu, splash, initial global-store loads) lives in `ShellComponent`,
+  behind `startupPhaseGuard`.
+  - Unlock, configure and an insecure-mode screen are sibling top-level routes with no chrome, shown instead of the shell while
+    the startup mode calls for one.
+  - The configure screen is a frame of independently titled sections (not a wizard) around a screen-scoped store. The frame owns
+    the notices and the two finish buttons; a section contributes its own controls/validity/config slice. Adding a section means
+    adding a component, a slice, and one term in the frame's aggregate validity — never touching the frame itself.
+  - A dedicated startup store (not a global-store slice) holds startup mode/phase/database info and drives the backend-start
+    call; an app initializer resolves it before the router's first navigation so routing can decide synchronously. In browser
+    dev mode (no bridge), none of this activates — the shell is admitted immediately.
+  - The Settings page carries a bridge-gated relaunch action, shown only while the bridge is available.
+- **Two kinds of state, kept strictly separate**:
+  - Global NgRx store (`src/store/`): only genuinely shared data (loaded entities, cross-screen config). Never screen-local
+    drafts or UI-only state.
+  - NgRx Signal Stores, one per feature/dialog/wizard, colocated under that feature's `store/` subfolder: form drafts, wizard
+    progress, UI toggles, derived view state. One instance can serve several components.
+- **Feature folders** under `src/` hold routed page/feature components, consuming the global store + generated API clients
+  directly, or a local Signal Store where one exists. `src/common` holds cross-feature building blocks. `src/app` holds app-shell
+  chrome.
+- **About dialog / transparency note**: the About dialog renders the privacy notice as static text, before a backend exists, so
+  it's readable from every screen. It's a disclosure, not a consent gate. Root `LLM.md` holds the rule that keeps its text true.
+- **Error notifications**: dispatch an error action from the notification slice; the snackbar renders them as a dismissable
+  stack. The message is the finished user-facing sentence, authored where the failure is caught — the slice stores it unchanged.
+  Putting the screen back into a consistent state is the dispatcher's job, not the slice's.
+- **Custom `tq-*` pipes are mandatory over raw property access** for: country flags, a depot/security logo URL (with `<img>`),
+  user-inserted file previews (treat as attacker-controlled content), security names, security symbols, security/transaction
+  type display names and icons. Never render these fields raw.
+- **Generated API clients** (`src/gen/api/<domain>/`): one Angular service per spec, injected directly into
+  effects/Signal Store code. No handwritten HTTP layer on top, except the GitHub update check.
+- **Charts**: `ngx-echarts`, only the types/components registered centrally in `app.config.ts`. Add new echarts features there,
+  never ad hoc per component.
+- **Derived state belongs in the store; rendered artifacts belong in pipes.** The split is by what the thing *is*:
+  - Selectors/computeds may filter, join, aggregate, sort, reshape — as much as a screen needs.
+  - A rendered artifact (echarts options, SVG geometry, a composed label/tooltip string) never lives in a store — not in state,
+    not in a selector, not in a computed.
+  - A pure custom pipe is the seam: derived state in, rendered artifact out, bound in the template. Never build one in a
+    component field, method, `computed()`, or inline template expression. A component-level `computed()` stays fine for plain
+    local logic (a disabled flag, which branch to render).
+  - One dedicated pipe per chart for chart options.
+  - Bind a repeated pipe result once with `@let`. Chain pipes in the template; don't precompute in the component.
+  - A pipe needing formatting injects the `tq*` pipes itself; the consuming component lists them in its `providers`.
+  - Pass everything a pipe needs as an argument, not a signal it reads on its own — a pure pipe only re-runs when its arguments'
+    identity changes.
 
 ## Global NgRx store conventions
 
-Treat the `security` slice (`src/store/security/`) as the canonical template for any new or extended slice:
-
-- Top level: `<slice>.state.ts`, `<slice>.actions.ts` (one `createActionGroup`, with a named `*ActionArgs` type exported per action that
-  takes props), `<slice>.reducer.ts`, `<slice>.selector.ts`.
-- `effects/` subfolder — one file per action, exporting a function that takes `actions$` (+ whatever API/store deps it needs) and returns
-  the effect; `<slice>.effects.ts` only wires these into `createEffect(...)` calls, it never contains effect logic itself.
-- **An effect stays pure rxjs — no `async`, no `await`, no `Promise`, no `firstValueFrom`.** Everything an effect needs is already an
-  `Observable` (the generated API clients, `store.select(...)`), so compose it with operators: `switchMap`/`concatMap`/`mergeMap` returning
-  the API call, `map` to the success action, `catchError` to the error action, `concatLatestFrom` for store reads. This is a testability
-  rule as much as a style one — a `Promise` resolves on the real microtask queue, which rxjs virtual time cannot observe, so an `async`
-  callback makes the effect untestable with marbles and gives up on asserting timing and cancellation (see `Testing` below).
-  `set-position-group-by.effect.ts` is the reference. Several older effects predate this rule and wrap `firstValueFrom` in an `async`
-  helper — don't copy them; a change to one of them is a good opportunity to convert it.
-- `reducers/` subfolder — one pure function per state transition (e.g. `overwrite-security.reducer.ts`), composed with `on(...)` in
-  `<slice>.reducer.ts`.
-- `selectors/` subfolder — one function per derived value, following **dependency inversion**: each selector file declares its own minimal
-  input type as a `Pick<SliceState, '...'>` (e.g.
-  `GetHistoricalSecurityPriceConfigState = Pick<SecurityState, 'historicalSecurityPriceConfigs'>`) containing only the fields it actually
-  reads, and the function is typed against that, not against the full `SliceState`. `<slice>.selector.ts` then composes
-  `createFeatureSelector` + `createSelector` with these functions to produce the public `MemoizedSelector<AppState, T>` exports. New
-  selectors must follow this pattern (some older selectors in this codebase predate it and take the full state directly — don't copy those).
-- Only put data in a slice's state if it's genuinely global (needed across unrelated components/screens or persisted/loaded once and read
-  from many places). Everything else belongs in a Signal Store.
-- **If two domains interact with each other, dependency inversion must be used.** A domain in this sense is a global-store slice. Say
-  domain A performs an action (whether pure or with side effects) and Domain B needs to adjust after A is done. Then A does not dispatch
-  one of B's actions, it rather dispatches a (`...Done` | `...Success` | `...Error`) action from its own domain. B listens to these
-  actions in a dedicated `<verb>-<noun>-on.effect.ts` and reacts appropriately (see `depot/effects/reload-depots-on.effect.ts` and
-  `security/effects/load-securities-on.effect.ts` for the pattern, including how to add further triggering actions). This rule is scoped
-  to global-store slices only: components and Signal Stores are not domains and may dispatch any slice's actions directly.
-- **Dependency inversion governs writing, not reading.** A slice's `<slice>.selector.ts` may compose another slice's public selectors
-  (e.g. `createSelector(positions, securitiesById, ...)`): that is a pure, memoized read which creates none of the ordering or
-  control-flow coupling the rule above exists to prevent, and it is the normal way to derive data spanning two domains — prefer it over
-  joining the two slices in a component. Two constraints: read only along the direction the domain data already points (a depot position
-  carries `securityIds`, so depot → security, never the reverse), and keep the composing selector in the slice that does the reaching, so
-  a pair of slices never imports one another in both directions. The composed pure function then takes the already-derived values as its
-  parameters instead of a `Pick<SliceState, '...'>`, which is the same minimal-input principle.
+- One actions/reducer/selector/state file per slice, effects in one file per action (never piled into the slice's `.effects.ts`,
+  which only wires them up).
+- **An effect stays pure rxjs** — no `async`/`await`/`Promise`/`firstValueFrom`. Compose with `switchMap`/`concatMap`/`mergeMap`
+  → `map`/`catchError`, `concatLatestFrom` for store reads. An `async` effect can't be tested with marbles and can't assert
+  timing/cancellation. Older effects wrapping `firstValueFrom` predate this — don't copy them; converting one is a good use of a
+  touching change.
+- One pure reducer function per state transition, composed with `on(...)`.
+- **Selectors follow dependency inversion**: each selector function is typed against a minimal `Pick<SliceState, '...'>` of only
+  the fields it reads, never the full slice state. Some older selectors take the full state — don't copy those.
+- Put data in a slice's state only if it's genuinely global. Everything else belongs in a Signal Store.
+- **Cross-domain writes use dependency inversion; reads don't.** A domain here is a global-store slice. If slice A acts and slice
+  B must adjust, A dispatches its own outcome action — never one of B's; B listens via its own effect. This is scoped to
+  global-store slices: components and Signal Stores aren't domains and may dispatch any slice's actions directly. A slice's
+  selector may freely compose another slice's public selectors (a pure, memoized read creates none of the ordering coupling the
+  write-side rule prevents) — but only along the direction the domain data already points, and the composing selector lives in
+  the slice doing the reaching, so no pair of slices imports each other both ways.
 
 ## Signal Stores (component/feature-local state)
 
-Use `@ngrx/signals` (`signalStore`) for state scoped to a component or a small subtree — form drafts, wizard steps, dialog/tab state,
-UI-only toggles. Never put this in the global store, and never duplicate global data into a Signal Store's own state — read it live via
-`globalStore.selectSignal(...)` instead.
-
-**`depot-performance/store/` is the newest Signal Store in the codebase and the canonical reference for current architecture rules** (some
-older stores, e.g. `add-security-wizard.store.ts` / `update-security.store.ts`, predate parts of this pattern — prefer the
-`depot-performance` style for new work). Its file layout:
-
-- `<name>.store.ts` — defines `<Name>State`, `<Name>Computed`, `<Name>Methods` types, `initialState`, and the store itself via
-  `signalStore(withState(...), withComputed(...), withMethods(...), withHooks(...))`. Exports a
-  `Readable<Name>Store = ReadableSignalStore<State, Computed, Methods>` type alias for consumers that only read state/call methods.
-- `computed/<name>.ts` — one exported function per computed signal. Takes `ReadableSignalStore<State>` (and, when it needs global data, the
-  injected `Store<AppState>`) as parameters and returns an explicitly-typed `Signal<T>`. This is where local state and global-store
-  selectors get combined (see `computed/depot-values.ts`, which merges the store's own `dataRange`/`addCashToAbsoluteValue` signals with the
-  global `depotPerformance` selector).
-- `methods/<name>.ts` — one exported function per mutation, taking `WritableSignalStore<State, Computed>` plus its own args and calling
-  `patchState(...)`.
-- `effects/<name>.ts` — one exported function per side-effecting `rxMethod`, hooked up in `withHooks.onInit`. The pure-rxjs rule from the
-  global store's `effects/` applies here too: compose operators, never `async`/`await`/`firstValueFrom`.
-- Domain-specific helper types/logic that don't fit `computed`/`methods`/`effects` get their own subfolder (see `benchmark/` in
-  `depot-performance/store/`).
-
-Always type the `withComputed`/`withMethods` factory parameters explicitly using `ReadableSignalStore<...>` / `WritableSignalStore<...>`
-from `src/common/types/signal-store.type.ts` — never let them be inferred, and never pass the raw store class type around.
-
-**One Signal Store instance can serve several components at once**: provide it once in a
-container component's `providers: [XStore]`, then have descendant components
-`inject(XStore)` directly (typed as `Readable<X>Store`). Examples:
-
-- `DepotPerformanceComponent` provides `DepotPerformanceStore`; its children (`DataRangeSelectionComponent`,
-  `DepotPerformanceKpisComponent`, `DepotPerformanceChartComponent`, `TransactionOverviewComponent`, `BenchmarkComponent`) each
-  `inject(DepotPerformanceStore)` independently.
-- The "Create Security Wizard" (`AddSecurityWizardComponent`) provides `addSecurityWizardStore` once, shared across its wizard steps.
-- The Edit Security Modal (`UpdateSecurityComponent`) provides `updateSecurityStore` once, shared across its tabs.
+- `@ngrx/signals` (`signalStore`) for state scoped to a component or small subtree. Never put this in the global store, and
+  never duplicate global data into one — read it live via the global store.
+- One exported function per computed/method/effect, under `computed/`/`methods/`/`effects/` in the store's own folder; the store
+  file itself only composes `withState`/`withComputed`/`withMethods`/`withHooks`. Always type the factory parameters explicitly
+  with the project's `ReadableSignalStore`/`WritableSignalStore` types — never inferred, never the raw store class.
+- One Signal Store instance can serve several components: provide it once in a container, have descendants inject it read-only.
 
 ## TypeScript conventions
 
-- Strict typing throughout; avoid inferred types wherever practical — annotate function return types, `const` bindings holding non-trivial
-  values, and store/selector/effect parameters explicitly (as in all examples above).
-- When no existing type fits exactly, define a new, narrowly-scoped one (e.g. a `Get<X>State` selector input, an
-  `<X>ActionArgs`/`<X>EffectArgs` type) rather than widening an existing type or leaving it inferred.
-- Use `type` over `interface`. Use `interface` if and only if there is a class implementing the interface.
-- **Barrel files are forbidden.** Never add an `index.ts` that re-exports a folder's modules; import every symbol from the module that
-  declares it. (`src/gen/api/*` is generated code and exempt.)
-- **Doc comments obey dependency inversion** (root `LLM.md`, "Dependency inversion binds the docs too"): a selector, computed, method,
-  effect or store helper documents its own contract, never which component or screen calls it, in which order the callers run, or what
-  another slice/screen does with the result afterwards.
-- **If present, a function's JSDoc states each parameter via `@param` and the return value via `@returns`**, never folded into prose, so a
-  parameter rename or a changed return type leaves an outdated tag to catch instead of a sentence that silently stays wrong. Not every
-  function needs JSDoc; having functions without it is fine.
-- **Input from outside the program is defined exactly once, as a zod schema, and its static type is inferred from that same schema** —
-  the renderer's half of the boundary rule `electron/LLM.md` states in full. The case here is a file the user imports: the data source
-  configuration files are described by `src/settings/data-source/data-source.schema.ts`, mirroring
-  `HistoricalSecurityPriceDataSourceCreate` and `DividendAnnouncementDataSourceCreate` of the API specs, and every type in
-  `data-source.type.ts` is a `z.infer` over it. `JSON.parse` returns `any`, so its result goes straight into a `safeParse` and never
-  flows on untyped; a hand-rolled type predicate over parsed JSON is what the schema replaces. Data arriving over HTTP is not this
-  case — a generated API client already types it. Everything the app constructs itself stays a plain `type`.
+- Strict typing throughout. Avoid inferred types for function return types, non-trivial `const` bindings, and
+  store/selector/effect parameters.
+- When no existing type fits, define a new narrowly-scoped one instead of widening or leaving inferred.
+- `type` over `interface`. `interface` if and only if a class `implements` it.
+- **Barrel files are forbidden.** Never add an `index.ts` re-export. Generated code is exempt.
+- Doc comments obey dependency inversion (root `LLM.md`) — document the unit's own contract, never its callers.
+- JSDoc, if present, states every parameter via `@param` and the return via `@returns` — never folded into prose. Not every
+  function needs JSDoc.
+- **Input from outside the program is defined exactly once, as a zod schema, with its static type inferred from that schema** —
+  the renderer's half of the boundary rule `electron/LLM.md` states in full. Applies to anything the user hands the app to
+  parse (e.g. imported config files). Not to API responses — a generated client already types those. Everything the app
+  constructs itself stays a plain `type`.
 
 ## Date display
 
-- The user-configured date format and locale live in the app-config slice (`getDateFormat`/`getDateLocale` selectors). `TqDatePipe`
-  (`src/common/pipe/tq-date.pipe.ts`) applies them — always display dates through it, never through Angular's raw `date` pipe.
-- `mat-datepicker` inputs get the same formatting via `TqDateAdapter` (`src/common/date/tq-date-adapter.ts`, delegates to `TqDatePipe`),
-  provided app-wide as the `DateAdapter` in `app.config.ts`. New date pickers therefore need only `MatDatepickerModule` in the component's
-  `imports` and inherit the configured format automatically. Never import `MatNativeDateModule` (or use `provideNativeDateAdapter`) at
-  component level — a standalone component's NgModule imports contribute providers to the component injector, so it would silently shadow
-  `TqDateAdapter` with the native adapter for that subtree. `MatNativeDateModule` belongs in `app.config.ts` only.
-- Keep datepicker inputs `readonly` with click-to-open (see `stock-split.component.html`): `TqDateAdapter` only overrides `format()`, so
-  typed input would fall through to the native `parse()` and not respect the configured format.
+- Always display dates through the project's date pipe, which applies the user-configured format/locale. Never Angular's raw
+  `date` pipe.
+- `mat-datepicker` gets the same formatting through the project's date adapter, provided app-wide. A new date picker needs only
+  the Material datepicker module in its own imports — never import the native date adapter module at component level; it
+  silently shadows the project's adapter for that subtree.
+- Keep datepicker inputs read-only with click-to-open — the adapter only overrides formatting, not parsing.
 
 ## PDF extraction (`src/common/pdf/`)
 
-A PDF is parsed **in the UI** (`architecture/ai.md` ADR-008), through the five stages of ADR-009: text runs, runs joined on one
-baseline, rows clustered by baseline, cells split by gap, and what each cell's words are. `extract-pdf.ts` is the pdf.js adapter and the
-only module importing the library; everything else is pure and has a spec of its own. `render-pdf-document.ts` turns the model into the
-one-line-per-row text a language model reads, `tokens-of-document.ts` states every value the document states (id, kind, text as printed,
-normalized value, label, currency), `isin-of-document.ts` the security it names where it names exactly one, and `label-of-token.ts` holds
-the one rule for what names a value.
-
-**The currency is an input and never a lookup** (ADR-009). `extractPdf` takes the one code amounts may be denoted in — the depot's, the same
-one the extraction request carries — and `classify-cells.ts` marks an amount only where exactly that code stands beside it.
-
-**This package is the only place a page's notation is read** (ADR-013). Each reader has two levels over one implementation: `readingsOf<X>`
-enumerates every reading, the likelier one first, since a notation is often genuinely ambiguous (`1.005` is a thousand and five or a
-fraction, `03/04` is March 4th or April 3rd); `parse<X>` takes the first of them, which is what a token carries. A notation added here
-reaches the grammar with no second edit anywhere, and one missing here is missing everywhere.
-
-Three things are load-bearing. **The tolerances in the geometry stages are tuned constants**, and no unit test can tell a good split from a
-bad one, so one changed by hand is a regression the suite cannot catch. The parse is **bounded** by page count, run count and a time
-budget, because a hang here blocks the window. And `configure-pdf-worker.ts` is called once from `app.config.ts`: the worker is emitted as
-a chunk of this build (`pdf.worker.ts` plus a relative `new URL(..., import.meta.url)`), so `script-src 'self'` covers it and
-`index.html`'s CSP needs no directive added.
-
-`pdfjs-dist` is a **devDependency**, where every UI library sits.
-
-**`src/depot/transaction/transaction-pdf/` is the shared one-document pipeline both PDF importers call** (the *Add Transaction* dialog's
-single-file import and the folder-import wizard): it reaches the AI bridge, which is why it sits beside `transaction-create/` and
-`transaction-pdf-import/` instead of in `src/common/pdf/`. `src/common/pdf/` stays parse-only — nothing in it knows AI or a bridge exists.
+- A PDF is parsed **in the UI**, not sent to a server for parsing.
+- One module is the only `pdf.js` adapter; everything else downstream is pure and independently testable.
+- **The currency is an input, never a lookup** — extraction takes the one code amounts may be denoted in, and only marks an
+  amount where exactly that code stands beside it.
+- **This package is the only place a page's notation is read.** Each reader exposes every plausible reading of an ambiguous
+  token (likeliest first) and a second step that commits to the first one. A notation added here reaches the whole pipeline
+  with no second edit elsewhere.
+- The geometry-stage tolerances are tuned constants with no unit test that can tell a good split from a bad one — a hand
+  change here is an uncaught regression.
+- The parse is bounded (page count, run count, time budget) — an unbounded parse can hang the window.
+- `pdfjs-dist` is a devDependency, like every UI library.
+- The shared one-document PDF-import pipeline (used by both PDF import entry points) reaches the AI bridge; `src/common/pdf/`
+  itself stays parse-only and knows nothing about AI or a bridge.
 
 ## Directives
 
-`src/common/file-drop/` is the first and so far only directive. Two things about it are the pattern: it decides nothing about the files it
-emits — which types are acceptable and what a refusal says belong to the caller rendering the message — and its boundary is a plain
-`@Input`/`@Output` pair, because `input()` and `output()` need an injection context and the test suite runs in a node environment with no
-TestBed.
+Decide nothing in a directive about the data it emits — validation and messaging belong to the caller. Keep the directive's
+boundary a plain `@Input`/`@Output` pair, not `input()`/`output()`, if the directive's spec must run outside a TestBed/injection
+context.
 
 ## Templates
 
-- Only the modern control-flow syntax (`@if`/`@else`/`@for`/`@switch`). `*ngIf`/`*ngFor`/`*ngSwitch` must not be used in new or edited
-  templates.
+- Only modern control flow (`@if`/`@else`/`@for`/`@switch`). Never `*ngIf`/`*ngFor`/`*ngSwitch` in new or edited templates.
 - New components are always standalone.
-- Tag line-wrapping rule: a tag is "too long" if at least one of the following is true:
-  - it has more than one attribute
-  - exactly one attribute together with at least one child
-  - more than one child.
-    A tag that is not too long (meets none of above conditions) stays on one line. Otherwise: the first attribute stays on the opening-tag
-    line, every further attribute gets its own line, every child gets its own line, and the closing tag gets its own line. Example (from
-    `data-range-selection.component.html`):
-  ```html
-  <mat-button-toggle (click)="setDataRange('max')"
-                     [checked]="dataRange() === 'max'">
-    Max
-  </mat-button-toggle>
-  ```
+- A tag is "too long" when it has more than one attribute, or one attribute plus a child, or more than one child. A tag that
+  isn't too long stays on one line; otherwise: first attribute on the opening-tag line, every further attribute and every child
+  on its own line, closing tag on its own line.
 
 ## Styling (SCSS units)
 
-**`styleguide.md` is the binding reference for how this app looks** — which file a value belongs in, the `--tq-*` tokens, the `.tq-*`
-utility classes, the Material overrides, and what a component's own `.scss` may hold. Read it before writing any styling. The unit rules
-below apply on top of it:
+`styleguide.md` is the binding reference for how this app looks — read it before writing any styling. On top of it:
 
-- Use `rem` for CSS lengths (font-size, padding, margin, gap, width/height, border-radius, border-width, letter-spacing, etc.) in every
-  `.scss` file and inline template style. Never write `px` or `em` — use `rem` from the start rather than authoring in `px`/`em` and
-  converting later.
-- The only accepted exception is a value that must deliberately scale with the font-size of the *same element it's declared on* (e.g. a
-  `border-radius`/`padding` pair that keeps a pill/badge shape proportional to that badge's own `font-size`, itself set in `em`) — see
-  `performance-label.component.scss` and the `.performance-positive`/`.performance-negative` rules in `position-list.component.scss` for the
-  pattern. Add a one-line comment explaining the coupling when you use it, and don't reach for it otherwise.
-- Avoid inline styling. Only if it supports readability, this is allowed. E.g. when dividing `width` among columns.
+- Use `rem` for every CSS length. Never `px`/`em` — don't author in `px` and convert later.
+- Exception: a value that must scale with the *same element's own* font-size (itself in `em`) — add a one-line comment
+  explaining the coupling, and don't reach for this otherwise.
+- Avoid inline styling. Allowed only where it aids readability (e.g. dividing width among columns).
 
 ## Fonts
 
-All families the app renders are **bundled, never fetched at runtime**. They enter the build through `angular.json`'s `styles` array (the
-two package stylesheets) and `src/fonts/noto-color-emoji-flags.scss` (the one hand-written `@font-face`), and `ng build` emits the
-referenced files into `dist/traquity/browser/media/`. `index.html` links no stylesheet and the CSP grants `font-src 'self'` only, so a
-remote font cannot load even if one is added by accident.
-
-Three reasons this is a rule rather than a preference, in the order they bite:
-
-- `<mat-icon>` renders **ligatures** (`app.config.ts`'s `setDefaultFontSetClass`), so an icon whose font did not load shows its own
-  name as text.
-- A request per start tells a third party when this app runs, which is the opposite of what the README promises.
-- `country.pipe.ts` maps a country code into `U+1F1E6`-`U+1F1FF` and nothing else, so the `@font-face` for Noto Color Emoji carries
-  a `unicode-range` of exactly that — a 5.5 MB color font has no business being consulted for any other character.
-
-Adding or changing a font means: import it in `angular.json`'s `styles`, keep it in `dependencies`, and **never subset or otherwise
-modify the file** — under OFL-1.1 a modified font may not keep its reserved name. Attribution needs no action:
-`scripts/generate-third-party-licenses.js` collects any package a stylesheet references, so the import itself is what puts the license into
-the "About" dialog. `forge.config.js` keeps the font binaries under `node_modules` out of the package — they are build input, and the copies
-in `dist/` are the ones that ship.
+- Every rendered font family is **bundled, never fetched at runtime** — through the Angular build's styles array, nothing via a
+  linked stylesheet. The CSP grants `font-src 'self'` only.
+- Reasons this matters: icon ligatures render as text if the font fails to load; a runtime font fetch tells a third party when
+  the app runs, against the privacy notice; the emoji font's `unicode-range` is scoped to exactly what the app needs rendered.
+- Adding/changing a font: import it in the build's styles array, keep it a `dependency`, and never subset or modify the file
+  (OFL-1.1 forbids a modified font keeping its reserved name). Check if the attribution mechanism holds for the new font.
 
 ## Testing
 
-Electron main-process specs live under `electron/`, with their own jest config and their own conventions on top of the ones below — see
-`electron/LLM.md`.
+Electron main-process specs live under `electron/` with their own config and conventions — see `electron/LLM.md`.
 
-`ts-jest` caps its optional `@babel/core` peer at `<8` while Angular pulls `@babel/core@8`, so `package.json`'s `overrides` block lifts
-that one range. `ts-jest` is configured without `babelConfig` and never loads babel here; `babel-jest` is the transform that does, and it
-accepts 8. Drop the override once `ts-jest` widens the range.
+`package.json`'s `overrides` block lifts one range on purpose: `ts-jest` caps its optional `@babel/core` peer at `<8` while
+Angular pulls `@babel/core@8`. `ts-jest` is configured without `babelConfig` and never loads babel here; `babel-jest` is the
+transform that does, and it accepts 8. Keep the override until `ts-jest` widens the range.
 
-The focus on testing in the angular app is on logic. Use `jest` to test:
+Testing here focuses on logic: NgRx effects/reducers/selectors, Signal Store effects/methods/computeds, pipes (instantiate
+directly, no TestBed), and components only where logic genuinely lives there (prefer pushing logic into a store instead).
 
-- NgRx global store
-  - effect functions (contents of `src/store/<slice>/effects`)
-  - reducer functions (contents of `src/store/<slice>/reducers`)
-  - selector functions (contents of `src/store/<slice>/selectors`)
-- signal stores
-  - effect functions (contents of `<path>/store/effects`)
-  - method functions (contents of `<path>/store/methods`)
-  - computed functions (contents of `<path>/store/computed`)
-  - if applicable, contents of other subdirectories
-- angular pipes: `*.pipe.ts` — instantiate the pipe directly with mocked constructor deps, no TestBed; see `security-name.pipe.spec.ts`
-  for the pattern (including mocking a `Store` whose `selectSignal` serves several selectors, dispatched by selector identity)
-- If important for the logic, components may also have a unit test; however logic should preferably reside in global or signal stores
-- **Effects are tested with marble testing** (rxjs `TestScheduler`), and so is any other observable logic that resolves purely through rxjs
-  operators/schedulers. Marbles are what makes timing and cancellation assertable at all — that a `switchMap` drops an in-flight request
-  when the next action arrives is invisible to a `firstValueFrom` assertion. See `set-position-group-by.effect.spec.ts` for the pattern:
-  - Create every marble (`cold`/`hot`) **inside** `scheduler.run(...)`. Outside it a different frame factor applies, so marbles built in
-    `beforeEach` silently don't line up with the ones in the expectation.
-  - Feed the effect a hot action stream that never completes (`new Actions(hot(...))`), so the expectation sees the effect's own emissions
-    and nothing else.
-  - Declare the values of the **input** stream once in `beforeEach` as the spec's marble alphabet — including the letters only some tests
-    need (an action carrying a different payload, an action the effect must ignore) — and let each test pick letters instead of rebuilding
-    the value map. The **expected** values are not part of that alphabet: they are what the test asserts, so they stay inline at the call
-    site, even when that repeats them across tests. A reader must never have to scroll up to learn what a test claims.
-  - Keep the marble strings (action stream, API response) themselves as part of the `beforeEach` baseline, so a test alters one precondition
-    by assigning one string, and share the `scheduler.run(...)` call through a small local helper. Prefer altering the marble string over
-    altering the alphabet: the changed precondition then shows up in the test's own line rather than in a value the test only references.
-  - Space the response marble far enough from the action marble that no two events land on the same frame — emissions scheduled on the same
-    frame are ordered by scheduling order, which turns the assertion into a coin flip.
-  - After a marble test passes, break its expected marble once and check that it fails for the expected reason: a wrong-but-passing
-    expectation is the normal failure mode of marble tests.
-- In every `*.spec.ts` file, import exactly the jest symbols being used (`afterEach`, `beforeAll`, `beforeEach`, `describe`, `expect`,
-  `it`, `jest`, ...) explicitly from `@jest/globals` — never rely on ambient globals, and don't import symbols the file doesn't use.
-- Testing philosophy
-  - Use mocks wherever possible over real instances of dependencies and function arguments.
-  - **A collaborator reached through a plain `import` is a dependency like any other — mock it with `jest.mock()`.** Nothing about a
-    module-level function makes it part of the unit under test: leaving it real turns the spec into a test of the combination, and the
-    assertions then have to reach past the unit's own boundary to that collaborator's collaborators Assert the handover instead: that the
-    unit called the collaborator, with which arguments, how often — and never what the real collaborator would have done next.
-    `discard-and-start.spec.ts` is the reference.
-    - Mechanics: `jest.mock('<path>', () => ({<fn>: jest.fn()}))` at the top of the file, the mocked function's signature as a local
-      `type`, and a `let <fn>Mock: jest.Mock<Signature>` assigned from the imported binding in `beforeEach()`. Module mocks live for the
-      whole file, so reset it there too, or call counts leak from one test into the next.
-  - **A call assertion states both what and how often**: every `toHaveBeenCalledWith(...)` is accompanied by a `toHaveBeenCalledTimes(n)`
-    on the same mock, and every `toHaveBeenCalledTimes(n)` by the arguments of those calls. Each half alone leaves the other free: `With`
-    passes as long as *one* of the calls matched, so a unit calling a collaborator three times when it should call it once stays green;
-    `Times` passes for the right number of entirely wrong calls. Together they are one claim about the handover. `not.toHaveBeenCalled()`
-    is exempt — it already says both — and is what a zero count is written as, never `toHaveBeenCalledTimes(0)`. A collaborator taking no
-    arguments gets `toHaveBeenCalledWith()`, which asserts exactly that none were passed; there is no such thing as a mock too small for
-    the pairing.
-  - For **n > 1 calls**, don't write n `toHaveBeenCalledWith(...)` lines: assert the whole log at once with
-    `expect(fn.mock.calls).toEqual([[...], [...]])`. One array literal covers count, arguments and order, and order is usually part of what
-    the test claims (a directory removed before the rename that replaces it, not after). This is the same "prefer one `toEqual` on the whole
-    expected result" rule the assertion list below states, applied to a mock's calls.
-  - `beforeEach()` sets up the baseline. The **first test function** in the file is the baseline case itself - no extra arrange, just act +
-    assert. Every other test changes exactly one precondition in its own arrange step, then does act + assert.
-  - **A complex object shared across a `describe()`'s tests is declared `let` at `describe()` scope and assigned inside `beforeEach()`,
-    never `const`.** A `const` initialized in the `describe()` body (or in a nested one) is one mutable object instance reused by
-    reference across every test in that block; a mutation by one test, or by the code under test, then leaks into the next test's arrange
-    step, and the leak only shows up as a failure that depends on run order. Assigning a fresh instance in `beforeEach()` gives every test
-    its own copy. This applies to any complex/mutable object — plain objects, arrays, factory-produced fixtures, mocks — a primitive
-    (`string`, `number`, `boolean`) is fine as `const` at `describe()` scope, since it cannot be mutated in place. File-scope `const`
-    fixtures leak the same way and across every `describe()` in the file on top of that, so a mutable one moves into the `describe()`'s
-    `let` + `beforeEach()` as well.
-  - Use nested `describe()` if you want multiple tests with the same alteration from the baseline: the shared alteration goes into the
-    nested `describe()`'s own `beforeEach()` — never into the `describe()` body, which runs at collection time, before any `beforeEach()`.
-    E.g. if tests only make sense if they alter n > 1 preconditions, then the nested `describe()`'s `beforeEach()` may alter up to n-1
-    preconditions and each test case alters exactly one in its own arrange step.
-  - **The baseline state of a store is always the store's own `initialState`**, shallow-copied — `state = {...initialState}` for a global
-    store slice, the Signal Store's `initialState` for a Signal Store. Never hand-build a full state object in `beforeEach()`: it
-    duplicates defaults the store already declares and drifts the moment the state type gains a field.
-  - A nested `describe()`'s `beforeEach()` (or a test's own arrange step) then spreads over that baseline and overwrites **only the
-    properties that differ from `initialState`**, so every value a test sets is by definition a precondition that test depends on. That
-    keeps the setup short and makes what a test actually varies readable at a glance.
-  - TypeScript conventions set forth in this file (line length, strong type safety etc.) also apply for tests.
-  - use `toBe(...)` whenever referential equality is important - e.g. when a reducer returns the input state
-  - Prefer test data factories over verbose inline object initializers. Once a generated/domain type is used by more than one spec, add a
-    `<name>Factory(overrides?: Partial<Type>): Type` function for it in `src/testing/` (one file per type, e.g. `security-read.factory.ts`),
-    returning a fresh object with sensible defaults and spreading `overrides` last so individual tests only specify the fields they care
-    about.
-  - Prefer the tightest true invariant over a type-only check (`expect.any(String)` passes for any string, including a wrong one) whenever
-    the domain gives you something cheap to check. When no built-in matcher expresses it, write a custom asymmetric matcher: a class
-    extending `expect`'s exported `AsymmetricMatcher<T>` (`@extends {AsymmetricMatcher<T>}`), implementing `asymmetricMatch(other)`,
-    `toString()` **and** `toAsymmetricMatcher()` — the base class's own types mark `toAsymmetricMatcher` optional, but `pretty-format`'s
-    diff renderer throws without it on a failing match, and a plain `{asymmetricMatch, toString}` object (no `AsymmetricMatcher`
-    inheritance) prints as a raw `[Function]` dump on failure instead of the matcher's label, because only a real subclass carries the
-    `$$typeof` tag the renderer keys off. A matcher used by more than one spec gets its own file and its own spec in `src/testing/`,
-    alongside the data factories — it is logic, not a fixture.
-  - An expected value is written as an expression over the arranged fixtures, not a recomputed literal — `apple.buyInAbsolute +
-    microsoft.buyInAbsolute` instead of `150`, `apple.securityIds[0]` instead of `1`. A reader then verifies the assertion by looking at
-    the arrange step alone, never by re-doing the selector's/reducer's arithmetic in their head, and the test keeps passing for the right
-    reason when a fixture's value changes. This applies to full-object assertions too: prefer one `toEqual` on the whole expected
-    result/group over several narrow assertions on individual fields, so the test doubles as a complete, at-a-glance cross-check against
-    the arranged input.
+**Effects, and any other rxjs-resolved observable logic, are tested with marble testing** (`TestScheduler`) — it's what makes
+timing and cancellation assertable (e.g. that a `switchMap` drops an in-flight request).
+
+- Build every marble **inside** `scheduler.run(...)` — outside it, a different frame factor applies and marbles silently
+  misalign.
+- Feed the effect a hot, non-completing action stream, so the expectation sees only the effect's own emissions.
+- Declare the input stream's marble alphabet once in `beforeEach`. Keep expected-value marbles inline at the call site, even
+  when repetitive — a reader must never scroll up to learn what a test claims.
+- Space response marbles away from action marbles so no two events share a frame — same-frame ordering is a coin flip.
+- After writing a marble test, break its expectation once and confirm it fails for the right reason.
+
+Further conventions:
+
+- Import every jest symbol explicitly from `@jest/globals`. No ambient globals, no unused imports.
+- Mock every dependency and argument, including a plain module-level `import` — it's a dependency like any other. Assert the
+  handover (called, with what, how often) — never what the real collaborator would have done next.
+- **Pair every `toHaveBeenCalledWith` with a `toHaveBeenCalledTimes`, and vice versa** — each alone leaves a hole. Use
+  `not.toHaveBeenCalled()` for a zero count, never `toHaveBeenCalledTimes(0)`.
+- For more than one call on the same mock, assert the whole call log at once (`expect(fn.mock.calls).toEqual([...])`) — covers
+  count, arguments and order together.
+- `beforeEach` sets the baseline. The first test in a file *is* the baseline case — no extra arrange. Every other test changes
+  exactly one precondition in its own arrange step. Shared alterations for several tests go in a nested `describe`'s own
+  `beforeEach`, never its body (which runs at collection time).
+- **Any complex/mutable fixture shared across a `describe`'s tests is `let` + assigned in `beforeEach`, never `const`** — a
+  `const` is one mutable instance reused by reference, and a mutation in one test leaks into the next depending on run order.
+  Primitives are fine as `const`.
+- **A store's baseline test state is always its own `initialState`, shallow-copied** — never hand-built. A nested `describe` or a
+  test's arrange step overwrites only the properties that differ from that baseline.
+- Use `toBe` whenever referential equality is the actual claim (e.g. a reducer returning the input state unchanged).
+- Prefer test data factories (`src/testing/<name>.factory.ts`, `overrides?: Partial<Type>`) over verbose inline literals once a
+  type is used by more than one spec.
+- Prefer the tightest true invariant over a type-only check. Write a custom asymmetric matcher when no built-in expresses it; it
+  needs its own file and spec once shared across specs — it's logic, not a fixture.
+- Write expected values as expressions over the arranged fixtures, not recomputed literals — so the test still passes for the
+  right reason when a fixture's value changes, and a reader can verify the assertion from the arrange step alone.
