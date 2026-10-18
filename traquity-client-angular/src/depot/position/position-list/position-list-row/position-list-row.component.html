@@ -31,7 +31,8 @@
     }
 
     <div class="position-row__column"
-         style="width: 15%;">
+         style="width: 15%;"
+         [matTooltip]="pos.performanceAbsolute >= 0 ? 'Unrealized gains' : 'Unrealized losses'">
         @if (hideAbsoluteValues()) {
             <span class="tq-pill"
                   [class.tq-pill--positive]="pos.performanceRelative >= 0"
