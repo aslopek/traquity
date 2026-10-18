@@ -8,7 +8,7 @@ import {AppConfigState} from './app-config.state';
 export const AppConfigActions = createActionGroup({
   source: 'App',
   events: {
-    'Set App Config': props<Omit<AppConfigState, 'devModeActive'>>(),
+    'Set App Config': props<Omit<AppConfigState, 'devModeActive' | 'loaded'>>(),
 
     'Set Currency Locale': props<{ currencyLocale: string }>(),
     'Set Currency Locale Done': props<{ currencyLocale: string }>(),

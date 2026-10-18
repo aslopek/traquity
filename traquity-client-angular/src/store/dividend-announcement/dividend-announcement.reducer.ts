@@ -12,9 +12,6 @@ export const dividendAnnouncementReducer = createReducer(
   initialState,
 
   on(DividendAnnouncementActions.loadDividendAnnouncementsSuccess, (state, { dividendAnnouncements }) => {
-    if (state.dividendAnnouncements.length === dividendAnnouncements.length) {
-      return state;
-    }
     return {
       ...state,
       dividendAnnouncements

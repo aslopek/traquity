@@ -12,10 +12,11 @@ import {
 import { AppConfigActions } from './app-config.actions';
 import { AppConfigState } from './app-config.state';
 
-const initialState: AppConfigState = {
+export const initialState: AppConfigState = {
   dateFormat: AppDateFormat.default,
   devModeActive: false,
   hideAbsoluteValues: AppHideAbsoluteValues.default,
+  loaded: false,
   openPage: AppOpenPage.default,
   sideMenuOpen: AppSideMenuOpen.default,
   locales: {
@@ -32,7 +33,8 @@ export const appConfigReducer = createReducer(
   on(AppConfigActions.setAppConfig, (state, clientConfig) => {
     return {
       ...state,
-      ...clientConfig
+      ...clientConfig,
+      loaded: true
     };
   }),
 
