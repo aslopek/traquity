@@ -71,7 +71,15 @@
     </div>
 
     <div class="performance-breakdown__row performance-breakdown__row--sum">
-        <span class="tq-section-label">Total</span>
+        <span class="performance-breakdown__label--with-info tq-section-label">
+            Total
+            <mat-icon class="performance-breakdown__info"
+                      fontIcon="info"
+                      aria-hidden="false"
+                      aria-label="Covers the whole transaction history, including shares already sold. May differ from the position list, which only reflects currently held shares."
+                      matTooltip="Covers the whole transaction history, including shares already sold. May differ from the position list, which only reflects currently held shares.">
+            </mat-icon>
+        </span>
         <app-performance-label [performanceAbsolute]="performance.performanceAbsolute"
                                [performanceRelative]="performanceBreakdownStore.relativePerformance()!"
                                [currency]="performance.currency">
