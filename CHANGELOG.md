@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-10-18
+
 ### Added
 
 - A **Performance Breakdown** over the whole transaction history, including shares already sold. It shows buys, sells, dividends, taxes and
