@@ -1,10 +1,6 @@
 # TraQuity
 
-![TraQuity — local-first portfolio tracking for the desktop](./doc-assets/social-preview.png)
-
-Local-first portfolio tracking for the desktop. TraQuity keeps your complete investment
-history — depots, transactions, dividends, performance — in an AES-encrypted database on your
-own machine. No account, no cloud, no telemetry.
+![TraQuity — free and open source desktop portfolio tracking](./doc-assets/social-preview.png)
 
 ## Features
 

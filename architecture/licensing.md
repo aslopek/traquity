@@ -22,9 +22,9 @@ commit and were therefore never part of any pull request's diff.
 (FSL-1.1-ALv2, ALv2 Future License), and is named in `ci.yml`'s `allow-dependencies-licenses` so the license gate stops failing on it.
 
 **Rationale:** Liquibase was Apache-2.0 through 4.33.0 and relicensed to FSL-1.1-ALv2 from 5.0.1 on. What the FSL restricts is competing
-use, and TraQuity is a local-first portfolio tracker rather than a database change-management product, so the use this project makes of it
-is not the one the license sets out to prevent. Each FSL release additionally converts to Apache-2.0 two years after its publication. The
-library is consumed unmodified, as one jar among many inside `backend.jar`, and its full license text is bundled and served.
+use, and TraQuity is a desktop portfolio tracker, not a database change-management product, so the use this project makes of it is not
+the one the license sets out to prevent. Each FSL release additionally converts to Apache-2.0 two years after its publication. The library
+is consumed unmodified, as one jar among many inside `backend.jar`, and its full license text is bundled and served.
 
 **Consequences, accepted:**
 

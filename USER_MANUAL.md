@@ -1,6 +1,6 @@
 # TraQuity User Manual
 
-TraQuity is a local-first desktop application for tracking investment portfolios. It records depots, transactions, dividends and
+TraQuity is a free and opensource desktop application for tracking investment portfolios. It records depots, transactions, dividends and
 securities in a single encrypted database file on your own machine. There is no account and no cloud storage. The only outgoing network
 traffic is the market data you configure yourself, the European Central Bank exchange rates, an update check against GitHub, and — if you
 ask for them — a Java runtime download and an AI model download.
