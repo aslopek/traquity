@@ -69,7 +69,7 @@
     "@types/node": "^24.19.2",
     "date-fns": "^4.1.0",
     "echarts": "^6.0.0",
-    "electron": "^44.8.0",
+    "electron": "^44.9.1",
     "electron-squirrel-startup": "^1.0.0",
     "expect": "^30.5.2",
     "html2canvas-pro": "^2.5.2",
