@@ -149,6 +149,36 @@ class UpdateDividendAnnouncementDataSourceTest {
   }
 
   @Test
+  void updateUrlPattern_isinKeyed_ok() throws Exception {
+    requestBody.setUrlPattern("https://dividend.api/updated/#id(isin)");
+    runPositiveTestCase(101, 0, 0);
+  }
+
+  @Test
+  void updateUrlPattern_idSpellingsMixedInOneUrl_badRequest() throws Exception {
+    requestBody.setUrlPattern("https://dividend.api/updated/#id()/#id(isin)");
+    runNegativeTestCase(101, HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
+  void updateUrlPattern_unsupportedIdArgument_badRequest() throws Exception {
+    requestBody.setUrlPattern("https://dividend.api/updated/#id(wkn)");
+    runNegativeTestCase(101, HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
+  void updateUrlPattern_idArgumentWrongCase_badRequest() throws Exception {
+    requestBody.setUrlPattern("https://dividend.api/updated/#id(ISIN)");
+    runNegativeTestCase(101, HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
+  void updateRequestHeaders_headerValueDisagreesWithUrl_badRequest() throws Exception {
+    requestBody.getRequestHeaders().add(new RequestHeaderDto("x-isin", "#id(isin)"));
+    runNegativeTestCase(101, HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
   void updateRequestHeaders_addHeaders_ok() throws Exception {
     RequestHeaderDto header = new RequestHeaderDto("x-api-key", "the-api-key-value");
     requestBody.getRequestHeaders().add(header);

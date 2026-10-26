@@ -108,6 +108,45 @@ class CreateDividendAnnouncementDataSourceTest {
   }
 
   @Test
+  void createDataSource_isinKeyed_ok() throws Exception {
+    requestBody.setUrlPattern("https://api.dividend.com/#id(isin)/payments");
+    long dataSourceCount = dataSourceRepository.count();
+    MvcResult mvcResult = postDataSource().andExpect(status().isCreated()).andReturn();
+
+    verifyLocationHeader(mvcResult);
+    DividendAnnouncementDataSourceReadDto responseBody = objectMapper.readValue(mvcResult.getResponse().getContentAsString(),
+        DividendAnnouncementDataSourceReadDto.class);
+    verifyResponseBody(responseBody);
+
+    assertThat(dataSourceRepository.count()).isEqualTo(dataSourceCount + 1);
+    verifyDatabase(responseBody.getId());
+  }
+
+  @Test
+  void createDataSource_idSpellingsMixedInOneUrl_badRequest() throws Exception {
+    requestBody.setUrlPattern("https://api.dividend.com/#id()/#id(isin)/payments");
+    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
+  void createDataSource_unsupportedIdArgument_badRequest() throws Exception {
+    requestBody.setUrlPattern("https://api.dividend.com/#id(wkn)/payments");
+    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
+  void createDataSource_idArgumentWrongCase_badRequest() throws Exception {
+    requestBody.setUrlPattern("https://api.dividend.com/#id(ISIN)/payments");
+    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
+  void createDataSource_headerValueDisagreesWithUrl_badRequest() throws Exception {
+    requestBody.getRequestHeaders().add(new RequestHeaderDto("x-isin", "#id(isin)"));
+    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
   void createDataSource_urlPatternHasMultipleIdPatterns_ok() throws Exception {
     long dataSourceCount = dataSourceRepository.count();
     requestBody.setUrlPattern("https://api.dividend.com/#id()/payments/#id()");

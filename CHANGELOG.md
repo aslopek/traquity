@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A data source can identify a security by its ISIN with `#id(isin)` in the URL, and then needs no External Security ID.
+
 ### Fixed
 
 - The *Fixed Interest (Regular Investments)* benchmark on the *Depots / Performance* tab no longer invests an installment for the

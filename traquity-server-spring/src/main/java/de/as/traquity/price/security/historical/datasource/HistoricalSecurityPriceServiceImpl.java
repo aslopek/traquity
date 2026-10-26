@@ -5,6 +5,7 @@ import com.jayway.jsonpath.JsonPath;
 import de.as.traquity.common.error.BadRequestException;
 import de.as.traquity.common.error.ConflictException;
 import de.as.traquity.common.error.NotFoundException;
+import de.as.traquity.common.util.SecurityIdKeying;
 import de.as.traquity.common.util.ValueFormatService;
 import de.as.traquity.configuration.ServerConfigurationService;
 import java.time.ZoneId;
@@ -109,15 +110,9 @@ class HistoricalSecurityPriceDataSourceServiceImpl implements HistoricalSecurity
       nameOk = !dataSource.getName().isBlank();
     }
 
-    boolean urlPatternsOk = dataSource.getUrlPatterns() != null && !dataSource.getUrlPatterns().isEmpty();
-    if (urlPatternsOk) {
-      for (String pattern : dataSource.getUrlPatterns().values()) {
-        if (valueFormatService.countIdTemplates(pattern) == 0) {
-          urlPatternsOk = false;
-          break;
-        }
-      }
-    }
+    boolean urlPatternsOk = dataSource.getUrlPatterns() != null && !dataSource.getUrlPatterns().isEmpty()
+        && valueFormatService.keyingOf(dataSource.getUrlPatterns().values(), dataSource.getRequestHeaders().values())
+        != SecurityIdKeying.INVALID;
 
     boolean jsonPathDateOk = true;
     try {

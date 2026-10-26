@@ -19,12 +19,12 @@ class HistoricalSecurityPriceUpdater {
   @EventListener(ExchangeRateReadyEvent.class)
   void updateHistoricalPrices() {
     log.info("Start updating historical prices");
-    List<HistoricalSecurityPriceConfig> configs = historicalSecurityPriceService.getActiveConfigs();
-    for (HistoricalSecurityPriceConfig config : configs) {
+    List<Long> securityIds = historicalSecurityPriceService.getActiveConfigSecurityIds();
+    for (long securityId : securityIds) {
       try {
-        historicalSecurityPriceService.updatePrices(config.getSecurityId());
+        historicalSecurityPriceService.updatePrices(securityId);
       } catch (RuntimeException e) {
-        log.warn("Failed to update historical prices for security {}", config.getSecurityId(), e);
+        log.warn("Failed to update historical prices for security {}", securityId, e);
       }
     }
     log.info("Updating historical prices done");

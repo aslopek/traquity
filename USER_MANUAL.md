@@ -891,6 +891,7 @@ URL patterns and header values are templates. A function is written `#name(argum
 | Function                  | Replaced with                                                       |
 |---------------------------|---------------------------------------------------------------------|
 | `#id()`                   | The security's **External Security ID** for this data source        |
+| `#id(isin)`               | The security's **ISIN**                                             |
 | `#date()`                 | Today as `yyyy-MM-dd`                                               |
 | `#date(pattern)`          | Today, formatted with a Java date pattern, e.g. `#date(dd.MM.yyyy)` |
 | `#date(pattern,daysBack)` | The same, moved back by that many days, e.g. `#date(yyyy-MM-dd,30)` |
@@ -901,6 +902,11 @@ URL patterns and header values are templates. A function is written `#name(argum
 
 Put an API key into `#mask(...)` instead of writing it plainly: it is what keeps the key out of `traquity.log`, and for a preconfigured
 source it is also the place the **API Key** field writes to.
+
+`#id` has two spellings, and a data source commits to exactly one: every URL must contain at least one `#id()` or `#id(isin)`, and every
+`#id` template the source carries — in a URL or in a header value — must use that same spelling. A data source saved with both
+spellings, or with anything else, is refused. A data source keyed by `#id(isin)` needs no **External Security ID** at all: TraQuity
+substitutes the security's own ISIN instead.
 
 ## AI features
 

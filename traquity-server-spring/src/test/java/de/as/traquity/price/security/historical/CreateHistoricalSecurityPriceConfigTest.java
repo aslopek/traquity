@@ -188,6 +188,77 @@ class CreateHistoricalSecurityPriceConfigTest {
   }
 
   @Test
+  void createConfig_isinKeyedSource_withExternalSecurityId_storesNoIdentifier_ok() throws Exception {
+    HistoricalSecurityPriceConfigCreateDto config = new HistoricalSecurityPriceConfigCreateDto();
+    config.setDataSourceId(105L);
+    config.setExternalSecurityId("ignored-value");
+    config.setIsActive(false);
+
+    MvcResult mvcResult = postConfig(SecurityIds.QCOM, config).andExpect(status().isCreated()).andReturn();
+    HistoricalSecurityPriceConfigReadDto responseBody = objectMapper.readValue(
+        mvcResult.getResponse().getContentAsString(), HistoricalSecurityPriceConfigReadDto.class);
+    assertThat(responseBody.getExternalSecurityId()).isEqualTo("US7475251036");
+
+    HistoricalSecurityPriceConfigEntity configEntity = configRepository.findBySecurityId(SecurityIds.QCOM).orElseThrow();
+    assertThat(configEntity.getExternalSecurityId()).isNull();
+  }
+
+  @Test
+  void createConfig_isinKeyedSource_withoutExternalSecurityId_storesNoIdentifier_ok() throws Exception {
+    HistoricalSecurityPriceConfigCreateDto config = new HistoricalSecurityPriceConfigCreateDto();
+    config.setDataSourceId(105L);
+    config.setExternalSecurityId(null);
+    config.setIsActive(false);
+
+    MvcResult mvcResult = postConfig(SecurityIds.QCOM, config).andExpect(status().isCreated()).andReturn();
+    HistoricalSecurityPriceConfigReadDto responseBody = objectMapper.readValue(
+        mvcResult.getResponse().getContentAsString(), HistoricalSecurityPriceConfigReadDto.class);
+    assertThat(responseBody.getExternalSecurityId()).isEqualTo("US7475251036");
+
+    HistoricalSecurityPriceConfigEntity configEntity = configRepository.findBySecurityId(SecurityIds.QCOM).orElseThrow();
+    assertThat(configEntity.getExternalSecurityId()).isNull();
+  }
+
+  @Test
+  void createConfig_idKeyedSource_missingExternalSecurityId_badRequest() throws Exception {
+    HistoricalSecurityPriceConfigCreateDto config = new HistoricalSecurityPriceConfigCreateDto();
+    config.setDataSourceId(102L);
+    config.setExternalSecurityId(null);
+    config.setIsActive(false);
+
+    long configCount = configRepository.count();
+    MvcResult mvcResult = postConfig(SecurityIds.QCOM, config).andExpect(status().isBadRequest()).andReturn();
+    assertThat(mvcResult.getResponse().getContentLength()).isZero();
+    assertThat(configRepository.count()).isEqualTo(configCount);
+  }
+
+  @Test
+  void createConfig_idKeyedSource_blankExternalSecurityId_badRequest() throws Exception {
+    HistoricalSecurityPriceConfigCreateDto config = new HistoricalSecurityPriceConfigCreateDto();
+    config.setDataSourceId(102L);
+    config.setExternalSecurityId(" ");
+    config.setIsActive(false);
+
+    long configCount = configRepository.count();
+    MvcResult mvcResult = postConfig(SecurityIds.QCOM, config).andExpect(status().isBadRequest()).andReturn();
+    assertThat(mvcResult.getResponse().getContentLength()).isZero();
+    assertThat(configRepository.count()).isEqualTo(configCount);
+  }
+
+  @Test
+  void createConfig_unknownDataSourceId_badRequest() throws Exception {
+    HistoricalSecurityPriceConfigCreateDto config = new HistoricalSecurityPriceConfigCreateDto();
+    config.setDataSourceId(999L);
+    config.setExternalSecurityId("QCOM");
+    config.setIsActive(false);
+
+    long configCount = configRepository.count();
+    MvcResult mvcResult = postConfig(SecurityIds.QCOM, config).andExpect(status().isBadRequest()).andReturn();
+    assertThat(mvcResult.getResponse().getContentLength()).isZero();
+    assertThat(configRepository.count()).isEqualTo(configCount);
+  }
+
+  @Test
   void createConfig_configExistsAlready_conflict() throws Exception {
     long configCount = configRepository.count();
     HistoricalSecurityPriceConfigEntity before =

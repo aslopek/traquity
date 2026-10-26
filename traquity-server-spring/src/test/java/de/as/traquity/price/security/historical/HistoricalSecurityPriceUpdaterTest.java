@@ -5,6 +5,7 @@ import static integration.SecurityIds.AMZN;
 import static integration.SecurityIds.MAIN;
 import static java.time.Month.DECEMBER;
 import static java.time.Month.JANUARY;
+import static java.time.Month.JUNE;
 import static java.time.Month.NOVEMBER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -215,6 +216,38 @@ class HistoricalSecurityPriceUpdaterTest {
     assertThat(mainPrices.get(4).getDate()).isEqualTo(LocalDate.of(2024, JANUARY, 25));
     assertThat(mainPrices.get(4).getPrice()).isEqualByComparingTo("43.23");
     assertThat(mainPrices.get(4).getCurrency()).isEqualTo("USD");
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      UPDATE HISTORICAL_SECURITY_PRICE_CONFIG
+      SET IS_ACTIVE = TRUE
+      WHERE SECURITY_ID = (SELECT ID FROM SECURITY WHERE NAME = 'Equinix');
+      UPDATE HISTORICAL_SECURITY_PRICE_CONFIG
+      SET IS_ACTIVE = FALSE
+      WHERE SECURITY_ID != (SELECT ID FROM SECURITY WHERE NAME = 'Equinix');
+      """)
+  void updateHistoricalPrices_isinKeyedSource_ok() {
+    ResponseActions thirtyDaysRequest = respondWithFixture(mockServer,
+        "https://stock-price.api/v5/US29444U7000?range=30d",
+        "fixtures/historical-security-prices/data-source-105/eqix-30-days.json");
+    ResponseActions yearRequest = respondWithFixture(mockServer,
+        "https://stock-price.api/v5/US29444U7000?range=1y",
+        "fixtures/historical-security-prices/data-source-105/eqix-365-days.json");
+
+    subject.updateHistoricalPrices();
+
+    thirtyDaysRequest.andExpect(header("x-isin", "US29444U7000"));
+    yearRequest.andExpect(header("x-isin", "US29444U7000"));
+
+    List<HistoricalSecurityPriceEntity> prices = priceRepository
+        .findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(SecurityIds.EQIX, LocalDate.EPOCH);
+    assertThat(prices).hasSize(2);
+    assertThat(prices.getFirst().getDate()).isEqualTo(LocalDate.of(2023, JUNE, 1));
+    assertThat(prices.getFirst().getPrice()).isEqualByComparingTo(new BigDecimal("78.5"));
+    assertThat(prices.getLast().getDate()).isEqualTo(LocalDate.of(2023, DECEMBER, 15));
+    assertThat(prices.getLast().getPrice()).isEqualByComparingTo(new BigDecimal("85.21"));
   }
 
   private void verifyAmznPricesDecember2023() {

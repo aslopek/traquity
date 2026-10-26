@@ -47,6 +47,17 @@ class GetHistoricalSecurityPriceConfigTest {
   }
 
   @Test
+  void getConfig_dataSource105_isinKeyed_ok() throws Exception {
+    MvcResult mvcResult =
+        mockMvc.perform(get(String.format(ENDPOINT, SecurityIds.EQIX))).andExpect(status().isOk()).andReturn();
+    HistoricalSecurityPriceConfigReadDto config =
+        objectMapper.readValue(mvcResult.getResponse().getContentAsString(), HistoricalSecurityPriceConfigReadDto.class);
+    assertThat(config.getExternalSecurityId()).isEqualTo("US29444U7000");
+    assertThat(config.getIsActive()).isFalse();
+    assertThat(config.getVersion()).isZero();
+  }
+
+  @Test
   void getConfig_inactive_ok() throws Exception {
     MvcResult mvcResult =
         mockMvc.perform(get(String.format(ENDPOINT, SecurityIds.CRM))).andExpect(status().isOk()).andReturn();
