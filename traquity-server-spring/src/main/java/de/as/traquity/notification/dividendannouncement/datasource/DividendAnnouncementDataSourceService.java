@@ -15,8 +15,6 @@ public interface DividendAnnouncementDataSourceService {
 
   void deleteDataSource(long id) throws BadRequestException, ConflictException, NotFoundException;
 
-  boolean dataSourceExists(long id);
-
   List<DividendAnnouncementDataSource> getDataSources();
 
   DividendAnnouncementDataSource getDataSource(long id) throws NotFoundException;

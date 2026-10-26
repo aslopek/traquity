@@ -3,6 +3,8 @@ package de.as.traquity.notification.dividendannouncement.datasource;
 import static de.as.traquity.notification.dividendannouncement.api.model.DateFormatDto.CUSTOM_STRING;
 import static java.math.BigDecimal.ONE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.context.jdbc.SqlMergeMode.MergeMode.MERGE;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -77,7 +79,7 @@ class UpdateDividendAnnouncementDataSourceTest {
   @Test
   void wrongVersion_conflict() throws Exception {
     requestBody.setVersion(0L);
-    runNegativeTestCase(101, HttpStatus.CONFLICT);
+    runNegativeTestCase(101, CONFLICT);
   }
 
   @Test
@@ -85,13 +87,13 @@ class UpdateDividendAnnouncementDataSourceTest {
     RequestHeaderDto header = new RequestHeaderDto("x-api-key", "the-api-key-value");
     requestBody.getRequestHeaders().add(header);
     requestBody.setVersion(0L);
-    runNegativeTestCase(101, HttpStatus.CONFLICT);
+    runNegativeTestCase(101, CONFLICT);
   }
 
   @Test
   void missingVersion_badRequest() throws Exception {
     requestBody.setVersion(null);
-    runNegativeTestCase(101, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(101, BAD_REQUEST);
   }
 
   @Test
@@ -103,25 +105,25 @@ class UpdateDividendAnnouncementDataSourceTest {
   @Test
   void updateName_duplicateName_conflict() throws Exception {
     requestBody.setName("Dividend API v2"); // Name of existing ID 102
-    runNegativeTestCase(101, HttpStatus.CONFLICT);
+    runNegativeTestCase(101, CONFLICT);
   }
 
   @Test
   void updateName_missingName_badRequest() throws Exception {
     requestBody.setName(null);
-    runNegativeTestCase(101, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(101, BAD_REQUEST);
   }
 
   @Test
   void updateName_emptyName_badRequest() throws Exception {
     requestBody.setName("");
-    runNegativeTestCase(101, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(101, BAD_REQUEST);
   }
 
   @Test
   void updateName_blankName_badRequest() throws Exception {
     requestBody.setName(" ");
-    runNegativeTestCase(101, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(101, BAD_REQUEST);
   }
 
   @Test
@@ -133,19 +135,49 @@ class UpdateDividendAnnouncementDataSourceTest {
   @Test
   void updateUrlPattern_missingUrlPattern_badRequest() throws Exception {
     requestBody.setUrlPattern(null);
-    runNegativeTestCase(101, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(101, BAD_REQUEST);
   }
 
   @Test
   void updateUrlPattern_hasNoIdPattern_badRequest() throws Exception {
     requestBody.setUrlPattern("https://dividend.api/updated");
-    runNegativeTestCase(101, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(101, BAD_REQUEST);
   }
 
   @Test
   void updateUrlPattern_hasMultipleIdPatterns_ok() throws Exception {
     requestBody.setUrlPattern("https://dividend.api/updated/#id()/#id()");
     runPositiveTestCase(101, 0, 0);
+  }
+
+  @Test
+  void updateUrlPattern_isinKeyed_ok() throws Exception {
+    requestBody.setUrlPattern("https://dividend.api/updated/#id(isin)");
+    runPositiveTestCase(101, 0, 0);
+  }
+
+  @Test
+  void updateUrlPattern_idVariantsMixedInOneUrl_badRequest() throws Exception {
+    requestBody.setUrlPattern("https://dividend.api/updated/#id()/#id(isin)");
+    runNegativeTestCase(101, BAD_REQUEST);
+  }
+
+  @Test
+  void updateUrlPattern_unsupportedIdArgument_badRequest() throws Exception {
+    requestBody.setUrlPattern("https://dividend.api/updated/#id(wkn)");
+    runNegativeTestCase(101, BAD_REQUEST);
+  }
+
+  @Test
+  void updateUrlPattern_idArgumentWrongCase_badRequest() throws Exception {
+    requestBody.setUrlPattern("https://dividend.api/updated/#id(ISIN)");
+    runNegativeTestCase(101, BAD_REQUEST);
+  }
+
+  @Test
+  void updateRequestHeaders_headerValueDisagreesWithUrl_badRequest() throws Exception {
+    requestBody.getRequestHeaders().add(new RequestHeaderDto("x-isin", "#id(isin)"));
+    runNegativeTestCase(101, BAD_REQUEST);
   }
 
   @Test
@@ -214,7 +246,7 @@ class UpdateDividendAnnouncementDataSourceTest {
   @Test
   void updateRequestHeaders_missingRequestHeaders_badRequest() throws Exception {
     requestBody.setRequestHeaders(null);
-    runNegativeTestCase(101, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(101, BAD_REQUEST);
   }
 
   @Test
@@ -295,13 +327,13 @@ class UpdateDividendAnnouncementDataSourceTest {
   void updateCurrencyMappings_mappedCurrencyCodeNotSupported_badRequest() throws Exception {
     CurrencyMappingDto currencyMapping = new CurrencyMappingDto("DM", "DEM");
     requestBody.getCurrencyMappings().add(currencyMapping);
-    runNegativeTestCase(101, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(101, BAD_REQUEST);
   }
 
   @Test
   void updateCurrencyMappings_missingCurrencyMappings_badRequest() throws Exception {
     requestBody.setCurrencyMappings(null);
-    runNegativeTestCase(101, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(101, BAD_REQUEST);
   }
 
   @Test
@@ -313,13 +345,13 @@ class UpdateDividendAnnouncementDataSourceTest {
   @Test
   void updateJsonPathDate_missingJsonPathDate_badRequest() throws Exception {
     requestBody.setJsonPathDate(null);
-    runNegativeTestCase(101, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(101, BAD_REQUEST);
   }
 
   @Test
   void updateJsonPathDate_invalidJsonPathDate_badRequest() throws Exception {
     requestBody.setJsonPathDate("$.");
-    runNegativeTestCase(101, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(101, BAD_REQUEST);
   }
 
   @Test
@@ -331,13 +363,13 @@ class UpdateDividendAnnouncementDataSourceTest {
   @Test
   void updateJsonPathValue_missingJsonPathValue_badRequest() throws Exception {
     requestBody.setJsonPathValue(null);
-    runNegativeTestCase(101, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(101, BAD_REQUEST);
   }
 
   @Test
   void updateJsonPathValue_invalidJsonPathValue_badRequest() throws Exception {
     requestBody.setJsonPathValue("$.");
-    runNegativeTestCase(101, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(101, BAD_REQUEST);
   }
 
   @Test
@@ -355,7 +387,7 @@ class UpdateDividendAnnouncementDataSourceTest {
   @Test
   void updateJsonPathCurrency_invalidJsonPathCurrency_badRequest() throws Exception {
     requestBody.setJsonPathCurrency("$.");
-    runNegativeTestCase(101, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(101, BAD_REQUEST);
   }
 
   @Test
@@ -399,26 +431,26 @@ class UpdateDividendAnnouncementDataSourceTest {
   void updateRegexCurrencyWithNegativeGroup_badRequest() throws Exception {
     requestBody.setRegexCurrency("^.");
     requestBody.setRegexCurrencyGroup(-1);
-    runNegativeTestCase(101, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(101, BAD_REQUEST);
   }
 
   @Test
   void updateRegexGroupWithoutRegex_badRequest() throws Exception {
     requestBody.setRegexCurrency(null);
     requestBody.setRegexCurrencyGroup(5);
-    runNegativeTestCase(101, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(101, BAD_REQUEST);
   }
 
   @Test
   void updateRegexCurrency_empty_badRequest() throws Exception {
     requestBody.setRegexCurrency("");
-    runNegativeTestCase(101, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(101, BAD_REQUEST);
   }
 
   @Test
   void updateRegexCurrency_blank_badRequest() throws Exception {
     requestBody.setRegexCurrency(" ");
-    runNegativeTestCase(101, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(101, BAD_REQUEST);
   }
 
   private void runNegativeTestCase(long id, HttpStatus expectedStatus) throws Exception {

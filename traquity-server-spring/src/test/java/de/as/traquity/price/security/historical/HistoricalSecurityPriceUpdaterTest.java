@@ -2,9 +2,14 @@ package de.as.traquity.price.security.historical;
 
 import static integration.MockServerUtils.respondWithFixture;
 import static integration.SecurityIds.AMZN;
+import static integration.SecurityIds.CRM;
+import static integration.SecurityIds.EQIX;
 import static integration.SecurityIds.MAIN;
+import static integration.SecurityIds.PINS;
+import static java.time.LocalDate.EPOCH;
 import static java.time.Month.DECEMBER;
 import static java.time.Month.JANUARY;
+import static java.time.Month.JUNE;
 import static java.time.Month.NOVEMBER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -16,7 +21,6 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import de.as.traquity.exchangerates.CurrencyConversionRequest;
 import de.as.traquity.exchangerates.ExchangeRateService;
 import integration.IntegrationTest;
-import integration.SecurityIds;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
@@ -94,7 +98,7 @@ class HistoricalSecurityPriceUpdaterTest {
 
     // verify new PINS prices
     List<HistoricalSecurityPriceEntity> newPricesPins =
-        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(SecurityIds.PINS,
+        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(PINS,
             LocalDate.of(2023, DECEMBER, 13));
     assertThat(newPricesPins).hasSize(12);
     for (HistoricalSecurityPriceEntity entity : newPricesPins) {
@@ -103,8 +107,7 @@ class HistoricalSecurityPriceUpdaterTest {
     verifyPinsPricesDecember2023();
 
     // verify no prices for CRM were loaded, as the configuration is deactivated
-    assertThat(priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(SecurityIds.CRM,
-        LocalDate.EPOCH)).isEmpty();
+    assertThat(priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(CRM, EPOCH)).isEmpty();
 
     // verify nothing else has changed
     assertThat(priceRepository.count()).isEqualTo(historicalPricesCount + newPricesAmzn.size() + newPricesPins.size());
@@ -149,7 +152,7 @@ class HistoricalSecurityPriceUpdaterTest {
 
     // verify PINS prices
     List<HistoricalSecurityPriceEntity> allPricesPins =
-        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(SecurityIds.PINS, LocalDate.of(1970, JANUARY, 1));
+        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(PINS, LocalDate.of(1970, JANUARY, 1));
     assertThat(allPricesPins).hasSize(21);
 
     for (HistoricalSecurityPriceEntity entity : allPricesPins) {
@@ -167,8 +170,7 @@ class HistoricalSecurityPriceUpdaterTest {
     verifyPinsPricesDecember2023();
 
     // verify no prices for CRM were loaded, as the configuration is deactivated
-    assertThat(priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(SecurityIds.CRM,
-        LocalDate.EPOCH)).isEmpty();
+    assertThat(priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(CRM, EPOCH)).isEmpty();
 
     // verify nothing else has changed
     assertThat(priceRepository.count()).isEqualTo(allPricesAmzn.size() + allPricesPins.size());
@@ -217,6 +219,40 @@ class HistoricalSecurityPriceUpdaterTest {
     assertThat(mainPrices.get(4).getCurrency()).isEqualTo("USD");
   }
 
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      UPDATE HISTORICAL_SECURITY_PRICE_CONFIG
+      SET IS_ACTIVE = TRUE
+      WHERE SECURITY_ID = (SELECT ID FROM SECURITY WHERE NAME = 'Equinix');
+      UPDATE HISTORICAL_SECURITY_PRICE_CONFIG
+      SET IS_ACTIVE = FALSE
+      WHERE SECURITY_ID != (SELECT ID FROM SECURITY WHERE NAME = 'Equinix');
+      """)
+  void updateHistoricalPrices_isinKeyedSource_ok() {
+    ResponseActions thirtyDaysRequest = respondWithFixture(mockServer,
+        "https://stock-price.api/v5/US29444U7000?range=30d",
+        "fixtures/historical-security-prices/data-source-105/eqix-30-days.json");
+    ResponseActions yearRequest = respondWithFixture(mockServer,
+        "https://stock-price.api/v5/US29444U7000?range=1y",
+        "fixtures/historical-security-prices/data-source-105/eqix-365-days.json");
+
+    subject.updateHistoricalPrices();
+
+    thirtyDaysRequest.andExpect(header("x-isin", "US29444U7000"));
+    yearRequest.andExpect(header("x-isin", "US29444U7000"));
+
+    List<HistoricalSecurityPriceEntity> prices = priceRepository
+        .findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(EQIX, EPOCH);
+    assertThat(prices).hasSize(2);
+    assertThat(prices.getFirst().getDate()).isEqualTo(LocalDate.of(2023, JUNE, 1));
+    assertThat(prices.getFirst().getPrice()).isEqualByComparingTo(new BigDecimal("78.5"));
+    assertThat(prices.getFirst().getCurrency()).isEqualTo("USD");
+    assertThat(prices.getLast().getDate()).isEqualTo(LocalDate.of(2023, DECEMBER, 15));
+    assertThat(prices.getLast().getPrice()).isEqualByComparingTo(new BigDecimal("85.21"));
+    assertThat(prices.getLast().getCurrency()).isEqualTo("EUR");
+  }
+
   private void verifyAmznPricesDecember2023() {
     List<HistoricalSecurityPriceEntity> amznPricesDecember2023 =
         priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(AMZN,
@@ -242,8 +278,7 @@ class HistoricalSecurityPriceUpdaterTest {
 
   private void verifyPinsPricesDecember2023() {
     List<HistoricalSecurityPriceEntity> pinsPricesDecember2023 =
-        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(SecurityIds.PINS,
-            LocalDate.of(2023, DECEMBER, 1));
+        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(PINS, LocalDate.of(2023, DECEMBER, 1));
     assertThat(pinsPricesDecember2023).hasSize(20);
 
     assertThat(pinsPricesDecember2023.getFirst().getDate()).isEqualTo(LocalDate.of(2023, DECEMBER, 1));

@@ -1,7 +1,7 @@
 package de.as.traquity.price.security.historical;
 
 import de.as.traquity.exchangerates.ExchangeRateReadyEvent;
-import java.util.List;
+import java.util.Collection;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -19,12 +19,12 @@ class HistoricalSecurityPriceUpdater {
   @EventListener(ExchangeRateReadyEvent.class)
   void updateHistoricalPrices() {
     log.info("Start updating historical prices");
-    List<HistoricalSecurityPriceConfig> configs = historicalSecurityPriceService.getActiveConfigs();
-    for (HistoricalSecurityPriceConfig config : configs) {
+    Collection<Long> securityIds = historicalSecurityPriceService.getActiveConfigSecurityIds();
+    for (long securityId : securityIds) {
       try {
-        historicalSecurityPriceService.updatePrices(config.getSecurityId());
+        historicalSecurityPriceService.updatePrices(securityId);
       } catch (RuntimeException e) {
-        log.warn("Failed to update historical prices for security {}", config.getSecurityId(), e);
+        log.warn("Failed to update historical prices for security {}", securityId, e);
       }
     }
     log.info("Updating historical prices done");

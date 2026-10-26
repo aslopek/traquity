@@ -2,6 +2,8 @@ package de.as.traquity.price.security.historical.datasource;
 
 import static de.as.traquity.price.security.historical.api.model.DateFormatDto.CUSTOM_STRING;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -82,43 +84,88 @@ class CreateHistoricalSecurityPriceDataSourceTest {
   @Test
   void createDataSource_duplicateName_conflict() throws Exception {
     requestBody.setName("Price API v1");
-    runNegativeTestCase(HttpStatus.CONFLICT);
+    runNegativeTestCase(CONFLICT);
   }
 
   @Test
   void createDataSource_missingName_badRequest() throws Exception {
     requestBody.setName(null);
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
   void createDataSource_emptyName_badRequest() throws Exception {
     requestBody.setName("");
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
   void createDataSource_blankName_badRequest() throws Exception {
     requestBody.setName(" ");
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
   void createDataSource_missingUrlPatterns_badRequest() throws Exception {
     requestBody.setUrlPatterns(null);
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
   void createDataSource_emptyUrlPatterns_badRequest() throws Exception {
     requestBody.setUrlPatterns(new LinkedList<>());
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
   void createDataSource_urlPatternHasNoIdPattern_badRequest() throws Exception {
     requestBody.getUrlPatterns().getFirst().setUrlPattern("https://price.com");
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
+  }
+
+  @Test
+  void createDataSource_isinKeyed_ok() throws Exception {
+    requestBody.getUrlPatterns().getFirst().setUrlPattern("https://new-price-api.com/#id(isin)");
+    long dataSourceCount = dataSourceRepository.count();
+    MvcResult mvcResult = postDataSource().andExpect(status().isCreated()).andReturn();
+
+    verifyLocationHeader(mvcResult);
+    HistoricalSecurityPriceDataSourceReadDto responseBody = objectMapper.readValue(mvcResult.getResponse().getContentAsString(),
+        HistoricalSecurityPriceDataSourceReadDto.class);
+    verifyResponseBody(responseBody);
+
+    assertThat(dataSourceRepository.count()).isEqualTo(dataSourceCount + 1);
+    verifyDatabase(responseBody.getId());
+  }
+
+  @Test
+  void createDataSource_idVariantsMixedAcrossTwoUrls_badRequest() throws Exception {
+    requestBody.getUrlPatterns().add(new HistoricalSecurityPriceUrlPatternDto(365, "https://new-price-api.com/#id(isin)"));
+    runNegativeTestCase(BAD_REQUEST);
+  }
+
+  @Test
+  void createDataSource_idVariantsMixedInOneUrl_badRequest() throws Exception {
+    requestBody.getUrlPatterns().getFirst().setUrlPattern("https://new-price-api.com/#id()/#id(isin)");
+    runNegativeTestCase(BAD_REQUEST);
+  }
+
+  @Test
+  void createDataSource_unsupportedIdArgument_badRequest() throws Exception {
+    requestBody.getUrlPatterns().getFirst().setUrlPattern("https://new-price-api.com/#id(wkn)");
+    runNegativeTestCase(BAD_REQUEST);
+  }
+
+  @Test
+  void createDataSource_idArgumentWrongCase_badRequest() throws Exception {
+    requestBody.getUrlPatterns().getFirst().setUrlPattern("https://new-price-api.com/#id(ISIN)");
+    runNegativeTestCase(BAD_REQUEST);
+  }
+
+  @Test
+  void createDataSource_headerValueDisagreesWithUrls_badRequest() throws Exception {
+    requestBody.getRequestHeaders().add(new RequestHeaderDto("x-isin", "#id(isin)"));
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
@@ -164,13 +211,13 @@ class CreateHistoricalSecurityPriceDataSourceTest {
   void createDataSource_mappedCurrencyCodeNotSupported_badRequest() throws Exception {
     CurrencyMappingDto currencyMapping = new CurrencyMappingDto("DM", "DEM");
     requestBody.getCurrencyMappings().add(currencyMapping);
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
   void createDataSource_missingCurrencyMappings_badRequest() throws Exception {
     requestBody.setCurrencyMappings(null);
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
@@ -196,31 +243,31 @@ class CreateHistoricalSecurityPriceDataSourceTest {
   @Test
   void createDataSource_missingRequestHeaders_badRequest() throws Exception {
     requestBody.setRequestHeaders(null);
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
   void createDataSource_missingJsonPathDate_badRequest() throws Exception {
     requestBody.setJsonPathDate(null);
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
   void createDataSource_invalidJsonPathDate_badRequest() throws Exception {
     requestBody.setJsonPathDate("$.");
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
   void createDataSource_missingJsonPathValue_badRequest() throws Exception {
     requestBody.setJsonPathValue(null);
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
   void createDataSource_invalidJsonPathValue_badRequest() throws Exception {
     requestBody.setJsonPathValue("$.");
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
@@ -241,7 +288,7 @@ class CreateHistoricalSecurityPriceDataSourceTest {
   @Test
   void createDataSource_invalidJsonPathCurrency_badRequest() throws Exception {
     requestBody.setJsonPathCurrency("$.");
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
@@ -279,26 +326,26 @@ class CreateHistoricalSecurityPriceDataSourceTest {
   void createDataSource_withRegexCurrencyAndNegativeGroup_badRequest() throws Exception {
     requestBody.setRegexCurrency("^.");
     requestBody.setRegexCurrencyGroup(-1);
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
   void createDataSource_regexCurrencyGroupWithoutRegex_badRequest() throws Exception {
     requestBody.setRegexCurrencyGroup(5);
     requestBody.setRegexCurrency(null);
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
   void createDataSource_emptyRegexCurrency() throws Exception {
     requestBody.setRegexCurrency("");
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
   void createDataSource_blankRegexCurrency() throws Exception {
     requestBody.setRegexCurrency(" ");
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
@@ -320,62 +367,62 @@ class CreateHistoricalSecurityPriceDataSourceTest {
   @Test
   void createDataSource_withMarketCloseTimes_invalidTime_missingSeconds_badRequest() throws Exception {
     requestBody.getMarketCloseTimes().add(new ZonedTimeDto("12:34", "Asia/Singapore"));
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
   void createDataSource_withMarketCloseTimes_invalidTime_hourOutOfRange_badRequest() throws Exception {
     requestBody.getMarketCloseTimes().add(new ZonedTimeDto("25:34:56", "Asia/Singapore"));
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
   void createDataSource_withMarketCloseTimes_invalidTime_minuteOutOfRange_badRequest() throws Exception {
     requestBody.getMarketCloseTimes().add(new ZonedTimeDto("12:60:56", "Asia/Singapore"));
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
   void createDataSource_withMarketCloseTimes_invalidTime_secondOutOfRange_badRequest() throws Exception {
     requestBody.getMarketCloseTimes().add(new ZonedTimeDto("12:34:60", "Asia/Singapore"));
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
   void createDataSource_withMarketCloseTimes_noTime_badRequest() throws Exception {
     requestBody.getMarketCloseTimes().add(new ZonedTimeDto(null, "Asia/Singapore"));
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
   void createDataSource_withMarketCloseTimes_invalidTimeZone() throws Exception {
     requestBody.getMarketCloseTimes().add(new ZonedTimeDto("12:34:56", "Frankfurt/Main"));
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
   void createDataSource_withMarketCloseTimes_noTimeZone() throws Exception {
     requestBody.getMarketCloseTimes().add(new ZonedTimeDto("12:34:56", null));
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
   void createDataSource_noMarketCloseTimesArray_badRequest() throws Exception {
     requestBody.setMarketCloseTimes(null);
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
   void createDataSource_marketCloseTimesArrayContainsNull_badRequest() throws Exception {
     requestBody.getMarketCloseTimes().add(null);
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   @Test
   void createDataSource_marketCloseTimesArrayContainsDuplicateTimeZones_badRequest() throws Exception {
     requestBody.getMarketCloseTimes().add(new ZonedTimeDto("12:34:56", "Asia/Singapore"));
     requestBody.getMarketCloseTimes().add(new ZonedTimeDto("12:34:57", "Asia/Singapore"));
-    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(BAD_REQUEST);
   }
 
   private void verifyLocationHeader(MvcResult mvcResult) throws Exception {
