@@ -1,0 +1,9 @@
+{
+  "currency": "USD",
+  "prices": [
+    {
+      "date": "2023-06-01",
+      "price": 78.5
+    }
+  ]
+}

@@ -11,6 +11,11 @@ public class SecurityIds {
   public static final long AAPL = 2;
 
   /**
+   * AMD
+   */
+  public static final long AMD = 17;
+
+  /**
    * Amazon
    */
   public static final long AMZN = 13;
@@ -31,6 +36,11 @@ public class SecurityIds {
    * Danaher
    */
   public static final long DHR = 8;
+
+  /**
+   * Equinix
+   */
+  public static final long EQIX = 19;
 
   /**
    * Alphabet A
@@ -66,6 +76,11 @@ public class SecurityIds {
    * Nvidia
    */
   public static final long NVDA = 7;
+
+  /**
+   * Pfizer
+   */
+  public static final long PFE = 22;
 
   /**
    * Pinterest

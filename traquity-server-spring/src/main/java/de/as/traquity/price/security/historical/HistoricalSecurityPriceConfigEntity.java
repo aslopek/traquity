@@ -42,7 +42,7 @@ class HistoricalSecurityPriceConfigEntity {
   @Column(nullable = false)
   private Long dataSourceId;
 
-  @Column(nullable = false)
+  @Column
   private String externalSecurityId;
 
   @Column(name = "IS_ACTIVE", nullable = false)

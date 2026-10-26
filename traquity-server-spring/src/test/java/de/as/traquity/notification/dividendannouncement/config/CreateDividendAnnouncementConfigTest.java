@@ -1,5 +1,6 @@
 package de.as.traquity.notification.dividendannouncement.config;
 
+import static integration.SecurityIds.AMD;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -65,6 +66,24 @@ class CreateDividendAnnouncementConfigTest {
   }
 
   @Test
+  void createConfig_isinKeyedSource_withExternalSecurityId_ok() throws Exception {
+    requestBody.setDataSourceId(104L);
+    requestBody.setExternalSecurityId("ignored-value");
+    requestBody.setIsActive(false);
+
+    runIsinKeyedPositiveTestCase();
+  }
+
+  @Test
+  void createConfig_isinKeyedSource_withoutExternalSecurityId_ok() throws Exception {
+    requestBody.setDataSourceId(104L);
+    requestBody.setExternalSecurityId(null);
+    requestBody.setIsActive(false);
+
+    runIsinKeyedPositiveTestCase();
+  }
+
+  @Test
   void createConfig_duplicateSecurityId_conflict() throws Exception {
     runNegativeTestCase(1, HttpStatus.CONFLICT);
   }
@@ -108,6 +127,27 @@ class CreateDividendAnnouncementConfigTest {
   void createConfig_missingIsActive_badRequest() throws Exception {
     requestBody.setIsActive(null);
     runNegativeTestCase(18, HttpStatus.BAD_REQUEST);
+  }
+
+  private void runIsinKeyedPositiveTestCase() throws Exception {
+    long count = dividendAnnouncementConfigRepository.count();
+
+    MvcResult mvcResult = postConfig(AMD).andExpect(status().isCreated()).andReturn();
+
+    String locationHeader = mvcResult.getResponse().getHeader("Location");
+    assertThat(locationHeader).isEqualTo(String.format(ENDPOINT, AMD));
+
+    DividendAnnouncementConfigReadDto responseBody =
+        objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DividendAnnouncementConfigReadDto.class);
+    assertThat(responseBody.getDataSourceId()).isEqualTo(requestBody.getDataSourceId());
+    assertThat(responseBody.getExternalSecurityId()).isEqualTo("US0079031078");
+
+    assertThat(dividendAnnouncementConfigRepository.count()).isEqualTo(count + 1);
+    DividendAnnouncementConfigEntity entity = dividendAnnouncementConfigRepository.findBySecurityId(AMD).orElseThrow();
+    assertThat(entity.getDataSourceId()).isEqualTo(requestBody.getDataSourceId());
+    assertThat(entity.getExternalSecurityId()).isNull();
+    assertThat(entity.isActive()).isEqualTo(requestBody.getIsActive());
+    assertThat(entity.getVersion()).isZero();
   }
 
   void runNegativeTestCase(long securityId, HttpStatus expectedStatus) throws Exception {
