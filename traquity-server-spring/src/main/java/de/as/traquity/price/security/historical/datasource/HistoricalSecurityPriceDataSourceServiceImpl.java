@@ -1,5 +1,7 @@
 package de.as.traquity.price.security.historical.datasource;
 
+import static de.as.traquity.common.util.SecurityIdKeying.INVALID;
+
 import com.jayway.jsonpath.InvalidPathException;
 import com.jayway.jsonpath.JsonPath;
 import de.as.traquity.common.error.BadRequestException;
@@ -109,15 +111,8 @@ class HistoricalSecurityPriceDataSourceServiceImpl implements HistoricalSecurity
       nameOk = !dataSource.getName().isBlank();
     }
 
-    boolean urlPatternsOk = dataSource.getUrlPatterns() != null && !dataSource.getUrlPatterns().isEmpty();
-    if (urlPatternsOk) {
-      for (String pattern : dataSource.getUrlPatterns().values()) {
-        if (valueFormatService.countIdTemplates(pattern) == 0) {
-          urlPatternsOk = false;
-          break;
-        }
-      }
-    }
+    boolean urlPatternsOk = dataSource.getUrlPatterns() != null && !dataSource.getUrlPatterns().isEmpty()
+        && valueFormatService.keyingOf(dataSource.getUrlPatterns().values(), dataSource.getRequestHeaders().values()) != INVALID;
 
     boolean jsonPathDateOk = true;
     try {

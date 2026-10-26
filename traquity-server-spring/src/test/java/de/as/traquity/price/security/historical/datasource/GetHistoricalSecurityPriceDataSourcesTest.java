@@ -44,7 +44,7 @@ class GetHistoricalSecurityPriceDataSourcesTest {
 
     dataSources = dataSources.stream().filter(ds -> ds.getId() >= 101).toList();
 
-    assertThat(dataSources).hasSize(4);
+    assertThat(dataSources).hasSize(5);
 
     // Data Source 101
     HistoricalSecurityPriceDataSourceReadDto config = dataSources.getFirst();
@@ -193,6 +193,44 @@ class GetHistoricalSecurityPriceDataSourcesTest {
     assertThat(currencyMapping.getCurrencyKey()).isEqualTo("");
     assertThat(currencyMapping.getMappedCurrencyCode()).isEqualTo("USD");
     assertThat(currencyMapping.getMultiplier()).isNull();
+
+    // Data Source 105
+    config = dataSources.get(4);
+    assertThat(config.getId()).isEqualTo(105);
+    assertThat(config.getVersion()).isEqualTo(0);
+    assertThat(config.getName()).isEqualTo("Price API v5 (ISIN)");
+    assertThat(config.getJsonPathDate()).isEqualTo("$.prices[*].date");
+    assertThat(config.getJsonPathValue()).isEqualTo("$.prices[*].price");
+    assertThat(config.getJsonPathCurrency()).isEqualTo("$.currency");
+    assertThat(config.getRegexCurrency()).isNull();
+    assertThat(config.getRegexCurrencyGroup()).isNull();
+    assertThat(config.getCurrencyMappings()).isEmpty();
+
+    // Date Format
+    assertThat(config.getDateFormat()).isNotNull();
+    assertThat(config.getDateFormat().getFormat()).isEqualTo(CUSTOM_STRING);
+    assertThat(config.getDateFormat().getCustomPattern()).isEqualTo("yyyy-MM-dd");
+
+    // URLs
+    urlsSource = config.getUrlPatterns();
+    assertThat(urlsSource).hasSize(2);
+    Map<Integer, String> expectedIsinUrls = Map.of(
+        30, "https://stock-price.api/v5/#id(isin)?range=30d",
+        365, "https://stock-price.api/v5/#id(isin)?range=1y"
+    );
+    for (HistoricalSecurityPriceUrlPatternDto url : urlsSource) {
+      assertThat(expectedIsinUrls).containsKey(url.getTimespanInDays());
+      assertThat(url.getUrlPattern()).isEqualTo(expectedIsinUrls.get(url.getTimespanInDays()));
+    }
+
+    // Headers
+    List<RequestHeaderDto> isinHeaders = config.getRequestHeaders();
+    assertThat(isinHeaders).hasSize(1);
+    assertThat(isinHeaders.getFirst().getHeaderName()).isEqualTo("x-isin");
+    assertThat(isinHeaders.getFirst().getHeaderValue()).isEqualTo("#id(isin)");
+
+    // Market Close Times
+    assertThat(config.getMarketCloseTimes()).isEmpty();
   }
 
   @Test

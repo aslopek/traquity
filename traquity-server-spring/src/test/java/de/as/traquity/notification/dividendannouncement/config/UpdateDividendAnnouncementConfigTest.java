@@ -1,6 +1,10 @@
 package de.as.traquity.notification.dividendannouncement.config;
 
+import static integration.SecurityIds.PFE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -49,18 +53,18 @@ class UpdateDividendAnnouncementConfigTest {
   @Test
   void wrongVersion_conflict() throws Exception {
     requestBody.setVersion(0L);
-    runNegativeTestCase(3, HttpStatus.CONFLICT);
+    runNegativeTestCase(3, CONFLICT);
   }
 
   @Test
   void missingVersion_badRequest() throws Exception {
     requestBody.setVersion(null);
-    runNegativeTestCase(3, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(3, BAD_REQUEST);
   }
 
   @Test
   void securityIdDoesNotExist_notFound() throws Exception {
-    runNegativeTestCase(999, HttpStatus.NOT_FOUND);
+    runNegativeTestCase(999, NOT_FOUND);
   }
 
   @Test
@@ -72,13 +76,31 @@ class UpdateDividendAnnouncementConfigTest {
   @Test
   void updateDataSourceId_dataSourceDoesNotExist_badRequest() throws Exception {
     requestBody.setDataSourceId(999L);
-    runNegativeTestCase(3, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(3, BAD_REQUEST);
   }
 
   @Test
   void updateDataSourceId_missingDataSourceId_badRequest() throws Exception {
     requestBody.setDataSourceId(null);
-    runNegativeTestCase(3, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(3, BAD_REQUEST);
+  }
+
+  @Test
+  void updateDataSourceId_isinKeyedSource_withExternalSecurityId_ok() throws Exception {
+    requestBody.setDataSourceId(104L);
+    requestBody.setExternalSecurityId("ignored-value");
+    requestBody.setVersion(0L);
+    requestBody.setIsActive(false);
+    runPositiveIsinKeyedTestCase(PFE, "US7170811035");
+  }
+
+  @Test
+  void updateDataSourceId_isinKeyedSource_withoutExternalSecurityId_ok() throws Exception {
+    requestBody.setDataSourceId(104L);
+    requestBody.setExternalSecurityId(null);
+    requestBody.setVersion(0L);
+    requestBody.setIsActive(false);
+    runPositiveIsinKeyedTestCase(PFE, "US7170811035");
   }
 
   @Test
@@ -90,19 +112,19 @@ class UpdateDividendAnnouncementConfigTest {
   @Test
   void updateExternalSecurityId_missingExternalSecurityId_badRequest() throws Exception {
     requestBody.setExternalSecurityId(null);
-    runNegativeTestCase(3, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(3, BAD_REQUEST);
   }
 
   @Test
   void updateExternalSecurityId_emptyExternalSecurityId_badRequest() throws Exception {
     requestBody.setExternalSecurityId("");
-    runNegativeTestCase(3, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(3, BAD_REQUEST);
   }
 
   @Test
   void updateExternalSecurityId_blankExternalSecurityId_badRequest() throws Exception {
     requestBody.setExternalSecurityId(" ");
-    runNegativeTestCase(3, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(3, BAD_REQUEST);
   }
 
   @Test
@@ -114,7 +136,7 @@ class UpdateDividendAnnouncementConfigTest {
   @Test
   void update_missingActive_badRequest() throws Exception {
     requestBody.setIsActive(null);
-    runNegativeTestCase(3, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(3, BAD_REQUEST);
   }
 
   private void runNegativeTestCase(long securityId, HttpStatus expectedStatus) throws Exception {
@@ -142,6 +164,28 @@ class UpdateDividendAnnouncementConfigTest {
         dividendAnnouncementConfigRepository.findBySecurityId(securityId).orElseThrow();
     assertThat(entity.getDataSourceId()).isEqualTo(requestBody.getDataSourceId());
     assertThat(entity.getExternalSecurityId()).isEqualTo(requestBody.getExternalSecurityId());
+    assertThat(entity.isActive()).isEqualTo(requestBody.getIsActive());
+    assertThat(entity.getVersion()).isEqualTo(requestBody.getVersion() + 1);
+  }
+
+  private void runPositiveIsinKeyedTestCase(long securityId, String expectedIsin) throws Exception {
+    long count = dividendAnnouncementConfigRepository.count();
+
+    MvcResult mvcResult = putConfig(securityId).andExpect(status().isOk()).andReturn();
+
+    DividendAnnouncementConfigReadDto responseBody =
+        objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DividendAnnouncementConfigReadDto.class);
+    assertThat(responseBody.getSecurityId()).isEqualTo(securityId);
+    assertThat(responseBody.getDataSourceId()).isEqualTo(requestBody.getDataSourceId());
+    assertThat(responseBody.getExternalSecurityId()).isEqualTo(expectedIsin);
+    assertThat(responseBody.getIsActive()).isEqualTo(requestBody.getIsActive());
+    assertThat(responseBody.getVersion()).isEqualTo(requestBody.getVersion() + 1);
+
+    assertThat(dividendAnnouncementConfigRepository.count()).isEqualTo(count);
+    DividendAnnouncementConfigEntity entity =
+        dividendAnnouncementConfigRepository.findBySecurityId(securityId).orElseThrow();
+    assertThat(entity.getDataSourceId()).isEqualTo(requestBody.getDataSourceId());
+    assertThat(entity.getExternalSecurityId()).isNull();
     assertThat(entity.isActive()).isEqualTo(requestBody.getIsActive());
     assertThat(entity.getVersion()).isEqualTo(requestBody.getVersion() + 1);
   }

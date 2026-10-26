@@ -1,8 +1,21 @@
 package de.as.traquity.notification.dividendannouncement;
 
 import static integration.api.MockRestRequestMatchers.withoutHeader;
+import static java.time.Month.APRIL;
+import static java.time.Month.AUGUST;
+import static java.time.Month.DECEMBER;
+import static java.time.Month.FEBRUARY;
+import static java.time.Month.JUNE;
+import static java.time.Month.MARCH;
+import static java.time.Month.MAY;
+import static java.time.Month.OCTOBER;
+import static java.time.Month.SEPTEMBER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpMethod.GET;
+import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.test.context.jdbc.SqlMergeMode.MergeMode.MERGE;
+import static org.springframework.test.web.client.ExpectedCount.once;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -13,17 +26,15 @@ import integration.SecurityIds;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.Month;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.client.ExpectedCount;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.SqlMergeMode;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
@@ -86,9 +97,9 @@ class DividendAnnouncementServiceTest {
         }
         """;
     String requestUrlMsft = "https://dividend.api/v1/MSFT/dividends";
-    mockServer.expect(ExpectedCount.once(), requestTo(requestUrlMsft)).andExpect(method(HttpMethod.GET))
+    mockServer.expect(once(), requestTo(requestUrlMsft)).andExpect(method(GET))
         .andExpect(withoutHeader("x-header-a")).andExpect(withoutHeader("x-header-b"))
-        .andRespond(withStatus(HttpStatus.OK).body(responseMsft));
+        .andRespond(withStatus(OK).body(responseMsft));
 
     String responseAapl = """
         {
@@ -107,9 +118,9 @@ class DividendAnnouncementServiceTest {
         }
         """;
     String requestUrlAapl = "https://dividend.api/v1/AAPL/dividends";
-    mockServer.expect(ExpectedCount.once(), requestTo(requestUrlAapl)).andExpect(method(HttpMethod.GET))
+    mockServer.expect(once(), requestTo(requestUrlAapl)).andExpect(method(GET))
         .andExpect(withoutHeader("x-header-a")).andExpect(withoutHeader("x-header-b"))
-        .andRespond(withStatus(HttpStatus.OK).body(responseAapl));
+        .andRespond(withStatus(OK).body(responseAapl));
 
     // dates are epoch seconds: 2024-05-22, 2023-05-17, 2022-05-18, 2021-05-21
     String responseHag = """
@@ -131,9 +142,9 @@ class DividendAnnouncementServiceTest {
         }
         """;
     String requestUrlHag = "https://dividend.api/v2/DE000HAG0005/dividends";
-    mockServer.expect(ExpectedCount.once(), requestTo(requestUrlHag)).andExpect(method(HttpMethod.GET))
+    mockServer.expect(once(), requestTo(requestUrlHag)).andExpect(method(GET))
         .andExpect(header("x-header-a", "valueA")).andExpect(header("x-header-b", "valueB"))
-        .andRespond(withStatus(HttpStatus.OK).body(responseHag));
+        .andRespond(withStatus(OK).body(responseHag));
 
     // dates are epoch seconds: 2024-06-04, 2023-05-15, 2023-01-09
     String responseVow3 = """
@@ -153,9 +164,9 @@ class DividendAnnouncementServiceTest {
         }
         """;
     String requestUrlVow3 = "https://dividend.api/v2/DE0007664039/dividends";
-    mockServer.expect(ExpectedCount.once(), requestTo(requestUrlVow3)).andExpect(method(HttpMethod.GET))
+    mockServer.expect(once(), requestTo(requestUrlVow3)).andExpect(method(GET))
         .andExpect(header("x-header-a", "valueA")).andExpect(header("x-header-b", "valueB"))
-        .andRespond(withStatus(HttpStatus.OK).body(responseVow3));
+        .andRespond(withStatus(OK).body(responseVow3));
 
     // dates are epoch seconds: 2024-06-04, 2023-05-15, 2023-01-09
     String responseVow = """
@@ -175,9 +186,9 @@ class DividendAnnouncementServiceTest {
         }
         """;
     String requestUrlVow = "https://dividend.api/v2/DE0007664005/dividends";
-    mockServer.expect(ExpectedCount.once(), requestTo(requestUrlVow)).andExpect(method(HttpMethod.GET))
+    mockServer.expect(once(), requestTo(requestUrlVow)).andExpect(method(GET))
         .andExpect(header("x-header-a", "valueA")).andExpect(header("x-header-b", "valueB"))
-        .andRespond(withStatus(HttpStatus.OK).body(responseVow));
+        .andRespond(withStatus(OK).body(responseVow));
 
     String responseDeo = """
         {
@@ -194,8 +205,8 @@ class DividendAnnouncementServiceTest {
         }
         """;
     String requestUrlDeo = "https://dividend.api/v3/ext-id-diageo/dividend-payments";
-    mockServer.expect(ExpectedCount.once(), requestTo(requestUrlDeo)).andExpect(method(HttpMethod.GET))
-        .andRespond(withStatus(HttpStatus.OK).body(responseDeo));
+    mockServer.expect(once(), requestTo(requestUrlDeo)).andExpect(method(GET))
+        .andRespond(withStatus(OK).body(responseDeo));
 
     // act
     subject.updateDividendAnnouncements();
@@ -206,40 +217,72 @@ class DividendAnnouncementServiceTest {
     // MSFT
     List<DividendAnnouncementEntity> msft = all.stream().filter(e -> e.getSecurityId() == SecurityIds.MSFT).toList();
     assertThat(msft).hasSize(6);
-    verifyEntity(msft.getFirst(), 101, false, LocalDate.of(2023, Month.SEPTEMBER, 14), "0.68", "USD");
-    verifyEntity(msft.get(1), 101, false, LocalDate.of(2023, Month.DECEMBER, 14), "0.75", "USD");
-    verifyEntity(msft.get(2), 101, false, LocalDate.of(2024, Month.MARCH, 14), "0.75", "USD");
-    verifyEntity(msft.get(3), 101, true, LocalDate.of(2024, Month.MARCH, 14), "0.1", "USD");
-    verifyEntity(msft.get(4), 101, true, LocalDate.of(2024, Month.JUNE, 13), "0.75", "USD");
-    verifyEntity(msft.get(5), 101, true, LocalDate.of(2024, Month.SEPTEMBER, 12), "0.75", "USD");
+    verifyEntity(msft.getFirst(), 101, false, LocalDate.of(2023, SEPTEMBER, 14), "0.68", "USD");
+    verifyEntity(msft.get(1), 101, false, LocalDate.of(2023, DECEMBER, 14), "0.75", "USD");
+    verifyEntity(msft.get(2), 101, false, LocalDate.of(2024, MARCH, 14), "0.75", "USD");
+    verifyEntity(msft.get(3), 101, true, LocalDate.of(2024, MARCH, 14), "0.1", "USD");
+    verifyEntity(msft.get(4), 101, true, LocalDate.of(2024, JUNE, 13), "0.75", "USD");
+    verifyEntity(msft.get(5), 101, true, LocalDate.of(2024, SEPTEMBER, 12), "0.75", "USD");
 
     // AAPL
     List<DividendAnnouncementEntity> aapl = all.stream().filter(e -> e.getSecurityId() == SecurityIds.AAPL).toList();
     assertThat(aapl).hasSize(3);
-    verifyEntity(aapl.getFirst(), 101, true, LocalDate.of(2024, Month.FEBRUARY, 15), "0.24", "USD");
-    verifyEntity(aapl.get(1), 101, true, LocalDate.of(2024, Month.MAY, 16), "0.25", "USD");
-    verifyEntity(aapl.get(2), 101, true, LocalDate.of(2024, Month.AUGUST, 15), "0.25", "USD");
+    verifyEntity(aapl.getFirst(), 101, true, LocalDate.of(2024, FEBRUARY, 15), "0.24", "USD");
+    verifyEntity(aapl.get(1), 101, true, LocalDate.of(2024, MAY, 16), "0.25", "USD");
+    verifyEntity(aapl.get(2), 101, true, LocalDate.of(2024, AUGUST, 15), "0.25", "USD");
 
     // HAG
     List<DividendAnnouncementEntity> hag = all.stream().filter(e -> e.getSecurityId() == SecurityIds.HAG).toList();
     assertThat(hag).hasSize(1);
-    verifyEntity(hag.getFirst(), 102, false, LocalDate.of(2024, Month.MAY, 22), "0.40", "EUR");
+    verifyEntity(hag.getFirst(), 102, false, LocalDate.of(2024, MAY, 22), "0.40", "EUR");
 
     // VOW3
     List<DividendAnnouncementEntity> vow3 = all.stream().filter(e -> e.getSecurityId() == SecurityIds.VW_VZ).toList();
     assertThat(vow3).hasSize(1);
-    verifyEntity(vow3.getFirst(), 102, true, LocalDate.of(2024, Month.JUNE, 4), "9.06", "EUR");
+    verifyEntity(vow3.getFirst(), 102, true, LocalDate.of(2024, JUNE, 4), "9.06", "EUR");
 
     // VOW
     List<DividendAnnouncementEntity> vow = all.stream().filter(e -> e.getSecurityId() == SecurityIds.VW_STAMM).toList();
     assertThat(vow).hasSize(1);
-    verifyEntity(vow.getFirst(), 102, true, LocalDate.of(2024, Month.JUNE, 4), "9", "EUR");
+    verifyEntity(vow.getFirst(), 102, true, LocalDate.of(2024, JUNE, 4), "9", "EUR");
 
     // DEO
     List<DividendAnnouncementEntity> deo = all.stream().filter(e -> e.getSecurityId() == SecurityIds.DEO).toList();
     assertThat(deo).hasSize(2);
-    verifyEntity(deo.getFirst(), 103, true, LocalDate.of(2024, Month.APRIL, 17), "0.3205", "GBP");
-    verifyEntity(deo.get(1), 103, true, LocalDate.of(2024, Month.OCTOBER, 17), "0.4907", "GBP");
+    verifyEntity(deo.getFirst(), 103, true, LocalDate.of(2024, APRIL, 17), "0.3205", "GBP");
+    verifyEntity(deo.get(1), 103, true, LocalDate.of(2024, OCTOBER, 17), "0.4907", "GBP");
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      UPDATE DIVIDEND_ANNOUNCEMENT_CONFIG
+      SET IS_ACTIVE = TRUE
+      WHERE SECURITY_ID = (SELECT ID FROM SECURITY WHERE NAME = 'Pfizer');
+      UPDATE DIVIDEND_ANNOUNCEMENT_CONFIG
+      SET IS_ACTIVE = FALSE
+      WHERE SECURITY_ID != (SELECT ID FROM SECURITY WHERE NAME = 'Pfizer');
+      """)
+  void updateDividendAnnouncements_isinKeyedSource_ok() {
+    String responsePfe = """
+        {
+          "currency": "USD",
+          "payments": [
+            {"date": "2024-09-12", "dividendPayment": 0.42}
+          ]
+        }
+        """;
+    String requestUrlPfe = "https://dividend.api/v4/US7170811035/dividends";
+    mockServer.expect(once(), requestTo(requestUrlPfe)).andExpect(method(GET))
+        .andExpect(header("x-isin", "US7170811035"))
+        .andRespond(withStatus(OK).body(responsePfe));
+
+    subject.updateDividendAnnouncements();
+
+    List<DividendAnnouncementEntity> pfe = dividendAnnouncementRepository.findAllByOrderByPayDateAsc().stream()
+        .filter(e -> e.getSecurityId() == SecurityIds.PFE).toList();
+    assertThat(pfe).hasSize(1);
+    verifyEntity(pfe.getFirst(), 104, true, LocalDate.of(2024, SEPTEMBER, 12), "0.42", "USD");
   }
 
   void verifyEntity(DividendAnnouncementEntity entity, long expectedDataSourceId, boolean expectedIsNew,

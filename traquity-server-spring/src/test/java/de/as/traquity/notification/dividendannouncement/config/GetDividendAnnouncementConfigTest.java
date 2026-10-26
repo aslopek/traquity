@@ -1,5 +1,6 @@
 package de.as.traquity.notification.dividendannouncement.config;
 
+import static integration.SecurityIds.PFE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -33,6 +34,18 @@ class GetDividendAnnouncementConfigTest {
     assertThat(responseBody.getExternalSecurityId()).isEqualTo("DE000HAG0005");
     assertThat(responseBody.getIsActive()).isTrue();
     assertThat(responseBody.getVersion()).isEqualTo(1);
+  }
+
+  @Test
+  void getConfig_isinKeyed_ok() throws Exception {
+    MvcResult mvcResult = getConfig(PFE).andExpect(status().isOk()).andReturn();
+    DividendAnnouncementConfigReadDto responseBody =
+        objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DividendAnnouncementConfigReadDto.class);
+    assertThat(responseBody.getSecurityId()).isEqualTo(PFE);
+    assertThat(responseBody.getDataSourceId()).isEqualTo(104);
+    assertThat(responseBody.getExternalSecurityId()).isEqualTo("US7170811035");
+    assertThat(responseBody.getIsActive()).isFalse();
+    assertThat(responseBody.getVersion()).isEqualTo(0);
   }
 
   @Test
