@@ -320,23 +320,24 @@ components:
           nullable: false
           example: 2023-12-22
 
+    ExternalSecurityId:
+      type: string
+      nullable: false
+      minLength: 1
+      maxLength: 255
+      example: MSF
+
     HistoricalSecurityPriceConfigCreate:
       type: object
       nullable: false
       required:
         - dataSourceId
-        - externalSecurityId
         - isActive
       properties:
         dataSourceId:
           $ref: '#/components/schemas/Id'
         externalSecurityId:
-          description: identifies the security at the external data provider identified by dataSourceId
-          type: string
-          nullable: false
-          minLength: 1
-          maxLength: 255
-          example: MSF
+          $ref: '#/components/schemas/ExternalSecurityId'
         isActive:
           type: boolean
           nullable: false
@@ -360,9 +361,12 @@ components:
           nullable: false
           required:
             - securityId
+            - externalSecurityId
           properties:
             securityId:
               $ref: '#/components/schemas/Id'
+            externalSecurityId:
+              $ref: '#/components/schemas/ExternalSecurityId'
 
     CurrencyMapping:
       type: object
@@ -449,11 +453,15 @@ components:
           minimum: 1
         urlPattern:
           description: >
-            The string must contain at least one one '#id()' part, into which the security's property will be inserted
+            Must contain at least one '#id()', or at least one '#id(isin)'. Every URL assigned to a data source must have the same
+            placeholder for external security IDs. A mixture is not allowed. The placeholders will be replaced for contacting the data
+            source as follows:
+            - #id(): the configured external security ID
+            - #id(isin): the security's ISIN
           type: string
           nullable: false
           minLength: 1
-          example: https://stock.api/#id()/prices
+          example: https://stock.api/#id(isin)/prices
 
     ZonedTime:
       type: object
