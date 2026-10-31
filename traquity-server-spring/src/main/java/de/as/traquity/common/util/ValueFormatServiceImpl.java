@@ -1,14 +1,20 @@
 package de.as.traquity.common.util;
 
+import static de.as.traquity.common.util.SecurityIdKeying.INVALID;
+import static de.as.traquity.common.util.SecurityIdKeying.ISIN;
+import static de.as.traquity.common.util.SecurityIdKeying.STORED_ID;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
@@ -21,13 +27,13 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 class ValueFormatServiceImpl implements ValueFormatService {
 
-  private static final String ID_PATTERN = "#id()";
   private static final Pattern FUNCTION_PATTERN = Pattern.compile("#(uuid|date|rng|base64|mask|id)\\(([^()]*)\\)");
+  private static final Pattern ID_TEMPLATE_PATTERN = Pattern.compile("#id\\(([^()]*)\\)");
   private final Clock clock;
   private final Random rng = new SecureRandom();
 
   @Override
-  public FormattedValue formatValue(String value, String id) { // Parameter id hinzugefügt
+  public FormattedValue formatValue(String value, String id) {
     if (value == null) {
       return new FormattedValue("", Collections.emptySet());
     }
@@ -66,20 +72,46 @@ class ValueFormatServiceImpl implements ValueFormatService {
   }
 
   @Override
-  public int countIdTemplates(String value) {
+  public SecurityIdKeying keyingOf(Collection<String> urlPatterns, Collection<String> headerValues) {
+    if (urlPatterns == null || urlPatterns.isEmpty()) {
+      return INVALID;
+    }
+
+    Set<String> arguments = new HashSet<>();
+    for (String urlPattern : urlPatterns) {
+      List<String> idArguments = idArguments(urlPattern);
+      if (idArguments.isEmpty()) {
+        return INVALID;
+      }
+      arguments.addAll(idArguments);
+    }
+
+    if (headerValues != null) {
+      for (String headerValue : headerValues) {
+        arguments.addAll(idArguments(headerValue));
+      }
+    }
+
+    if (arguments.equals(Set.of(""))) {
+      return STORED_ID;
+    }
+    if (arguments.equals(Set.of("isin"))) {
+      return ISIN;
+    }
+    return INVALID;
+  }
+
+  private List<String> idArguments(String value) {
     if (value == null) {
-      return 0;
+      return List.of();
     }
 
-    int count = 0;
-    int index = 0;
-
-    while ((index = value.indexOf(ID_PATTERN, index)) != -1) {
-      count++;
-      index += ID_PATTERN.length();
+    List<String> arguments = new ArrayList<>();
+    Matcher matcher = ID_TEMPLATE_PATTERN.matcher(value);
+    while (matcher.find()) {
+      arguments.add(matcher.group(1).trim());
     }
-
-    return count;
+    return arguments;
   }
 
   private String executeFunction(String name, String args, String id) {

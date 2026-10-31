@@ -5,6 +5,7 @@ import com.jayway.jsonpath.JsonPath;
 import de.as.traquity.common.error.BadRequestException;
 import de.as.traquity.common.error.ConflictException;
 import de.as.traquity.common.error.NotFoundException;
+import de.as.traquity.common.util.SecurityIdKeying;
 import de.as.traquity.common.util.ValueFormatService;
 import de.as.traquity.configuration.ServerConfigurationService;
 import java.util.List;
@@ -90,11 +91,6 @@ class DividendAnnouncementDataSourceServiceImpl implements DividendAnnouncementD
     return mapper.fromEntity(entity);
   }
 
-  @Override
-  public boolean dataSourceExists(long id) {
-    return repository.existsById(id);
-  }
-
   private DividendAnnouncementDataSourceEntity persist(DividendAnnouncementDataSourceEntity entity)
       throws ConflictException {
     try {
@@ -112,7 +108,8 @@ class DividendAnnouncementDataSourceServiceImpl implements DividendAnnouncementD
     }
 
     boolean urlPatternOk = dataSource.getUrlPattern() != null
-        && valueFormatService.countIdTemplates(dataSource.getUrlPattern()) > 0;
+        && valueFormatService.keyingOf(List.of(dataSource.getUrlPattern()), dataSource.getRequestHeaders().values())
+        != SecurityIdKeying.INVALID;
 
     boolean jsonPathDateOk = true;
     try {

@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.as.traquity.notification.dividendannouncement.api.model.DividendAnnouncementConfigReadDto;
 import integration.IntegrationTest;
+import integration.SecurityIds;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
@@ -33,6 +34,18 @@ class GetDividendAnnouncementConfigTest {
     assertThat(responseBody.getExternalSecurityId()).isEqualTo("DE000HAG0005");
     assertThat(responseBody.getIsActive()).isTrue();
     assertThat(responseBody.getVersion()).isEqualTo(1);
+  }
+
+  @Test
+  void getConfig_isinKeyed_ok() throws Exception {
+    MvcResult mvcResult = getConfig(SecurityIds.PFE).andExpect(status().isOk()).andReturn();
+    DividendAnnouncementConfigReadDto responseBody =
+        objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DividendAnnouncementConfigReadDto.class);
+    assertThat(responseBody.getSecurityId()).isEqualTo(SecurityIds.PFE);
+    assertThat(responseBody.getDataSourceId()).isEqualTo(104);
+    assertThat(responseBody.getExternalSecurityId()).isEqualTo("US7170811035");
+    assertThat(responseBody.getIsActive()).isFalse();
+    assertThat(responseBody.getVersion()).isEqualTo(0);
   }
 
   @Test

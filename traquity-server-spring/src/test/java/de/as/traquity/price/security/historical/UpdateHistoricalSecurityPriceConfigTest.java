@@ -173,6 +173,90 @@ class UpdateHistoricalSecurityPriceConfigTest {
   }
 
   @Test
+  void updateDatasource_isinKeyedSource_withExternalSecurityId_storesNoIdentifier_ok() throws Exception {
+    HistoricalSecurityPriceConfigUpdateDto requestBody = new HistoricalSecurityPriceConfigUpdateDto();
+    requestBody.setDataSourceId(105L);
+    requestBody.setExternalSecurityId("ignored-value");
+    requestBody.setIsActive(false);
+    requestBody.setVersion(0L);
+
+    MvcResult mvcResult = putConfig(SecurityIds.EQIX, requestBody, null).andExpect(status().isOk()).andReturn();
+    HistoricalSecurityPriceConfigReadDto responseBody = objectMapper.readValue(
+        mvcResult.getResponse().getContentAsString(), HistoricalSecurityPriceConfigReadDto.class);
+    assertThat(responseBody.getExternalSecurityId()).isEqualTo("US29444U7000");
+
+    HistoricalSecurityPriceConfigEntity configEntity = configRepository.findBySecurityId(SecurityIds.EQIX).orElseThrow();
+    assertThat(configEntity.getExternalSecurityId()).isNull();
+    assertThat(configEntity.getVersion()).isOne();
+  }
+
+  @Test
+  void updateDatasource_isinKeyedSource_withoutExternalSecurityId_storesNoIdentifier_ok() throws Exception {
+    HistoricalSecurityPriceConfigUpdateDto requestBody = new HistoricalSecurityPriceConfigUpdateDto();
+    requestBody.setDataSourceId(105L);
+    requestBody.setExternalSecurityId(null);
+    requestBody.setIsActive(false);
+    requestBody.setVersion(0L);
+
+    MvcResult mvcResult = putConfig(SecurityIds.EQIX, requestBody, null).andExpect(status().isOk()).andReturn();
+    HistoricalSecurityPriceConfigReadDto responseBody = objectMapper.readValue(
+        mvcResult.getResponse().getContentAsString(), HistoricalSecurityPriceConfigReadDto.class);
+    assertThat(responseBody.getExternalSecurityId()).isEqualTo("US29444U7000");
+
+    HistoricalSecurityPriceConfigEntity configEntity = configRepository.findBySecurityId(SecurityIds.EQIX).orElseThrow();
+    assertThat(configEntity.getExternalSecurityId()).isNull();
+    assertThat(configEntity.getVersion()).isOne();
+  }
+
+  @Test
+  void updateDatasource_idKeyedSource_missingExternalSecurityId_badRequest() throws Exception {
+    HistoricalSecurityPriceConfigUpdateDto requestBody = new HistoricalSecurityPriceConfigUpdateDto();
+    requestBody.setDataSourceId(103L);
+    requestBody.setExternalSecurityId(null);
+    requestBody.setIsActive(false);
+    requestBody.setVersion(1L);
+
+    MvcResult mvcResult = putConfig(SecurityIds.CRM, requestBody, null).andExpect(status().isBadRequest()).andReturn();
+    assertThat(mvcResult.getResponse().getContentLength()).isZero();
+
+    HistoricalSecurityPriceConfigEntity configEntity = configRepository.findBySecurityId(SecurityIds.CRM).orElseThrow();
+    assertThat(configEntity.getExternalSecurityId()).isEqualTo("CRM");
+    assertThat(configEntity.getVersion()).isOne();
+  }
+
+  @Test
+  void updateDatasource_idKeyedSource_blankExternalSecurityId_badRequest() throws Exception {
+    HistoricalSecurityPriceConfigUpdateDto requestBody = new HistoricalSecurityPriceConfigUpdateDto();
+    requestBody.setDataSourceId(103L);
+    requestBody.setExternalSecurityId(" ");
+    requestBody.setIsActive(false);
+    requestBody.setVersion(1L);
+
+    MvcResult mvcResult = putConfig(SecurityIds.CRM, requestBody, null).andExpect(status().isBadRequest()).andReturn();
+    assertThat(mvcResult.getResponse().getContentLength()).isZero();
+
+    HistoricalSecurityPriceConfigEntity configEntity = configRepository.findBySecurityId(SecurityIds.CRM).orElseThrow();
+    assertThat(configEntity.getExternalSecurityId()).isEqualTo("CRM");
+    assertThat(configEntity.getVersion()).isOne();
+  }
+
+  @Test
+  void updateDatasource_unknownDataSourceId_badRequest() throws Exception {
+    HistoricalSecurityPriceConfigUpdateDto requestBody = new HistoricalSecurityPriceConfigUpdateDto();
+    requestBody.setDataSourceId(999L);
+    requestBody.setExternalSecurityId("CRM");
+    requestBody.setIsActive(false);
+    requestBody.setVersion(1L);
+
+    MvcResult mvcResult = putConfig(SecurityIds.CRM, requestBody, null).andExpect(status().isBadRequest()).andReturn();
+    assertThat(mvcResult.getResponse().getContentLength()).isZero();
+
+    HistoricalSecurityPriceConfigEntity configEntity = configRepository.findBySecurityId(SecurityIds.CRM).orElseThrow();
+    assertThat(configEntity.getDataSourceId()).isEqualTo(103L);
+    assertThat(configEntity.getVersion()).isOne();
+  }
+
+  @Test
   void updateDatasource_securityDoesNotExist_notFound() throws Exception {
     long configCount = configRepository.count();
     MvcResult mvcResult = putConfig(999, amznDataSource101, null).andExpect(status().isNotFound()).andReturn();

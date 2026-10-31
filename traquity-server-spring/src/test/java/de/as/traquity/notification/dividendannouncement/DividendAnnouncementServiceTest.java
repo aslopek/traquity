@@ -3,6 +3,7 @@ package de.as.traquity.notification.dividendannouncement;
 import static integration.api.MockRestRequestMatchers.withoutHeader;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.context.jdbc.SqlMergeMode.MergeMode.MERGE;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -23,6 +24,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.SqlMergeMode;
 import org.springframework.test.web.client.ExpectedCount;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
@@ -240,6 +243,38 @@ class DividendAnnouncementServiceTest {
     assertThat(deo).hasSize(2);
     verifyEntity(deo.getFirst(), 103, true, LocalDate.of(2024, Month.APRIL, 17), "0.3205", "GBP");
     verifyEntity(deo.get(1), 103, true, LocalDate.of(2024, Month.OCTOBER, 17), "0.4907", "GBP");
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      UPDATE DIVIDEND_ANNOUNCEMENT_CONFIG
+      SET IS_ACTIVE = TRUE
+      WHERE SECURITY_ID = (SELECT ID FROM SECURITY WHERE NAME = 'Pfizer');
+      UPDATE DIVIDEND_ANNOUNCEMENT_CONFIG
+      SET IS_ACTIVE = FALSE
+      WHERE SECURITY_ID != (SELECT ID FROM SECURITY WHERE NAME = 'Pfizer');
+      """)
+  void updateDividendAnnouncements_isinKeyedSource_ok() {
+    String responsePfe = """
+        {
+          "currency": "USD",
+          "payments": [
+            {"date": "2024-09-12", "dividendPayment": 0.42}
+          ]
+        }
+        """;
+    String requestUrlPfe = "https://dividend.api/v4/US7170811035/dividends";
+    mockServer.expect(ExpectedCount.once(), requestTo(requestUrlPfe)).andExpect(method(HttpMethod.GET))
+        .andExpect(header("x-isin", "US7170811035"))
+        .andRespond(withStatus(HttpStatus.OK).body(responsePfe));
+
+    subject.updateDividendAnnouncements();
+
+    List<DividendAnnouncementEntity> pfe = dividendAnnouncementRepository.findAllByOrderByPayDateAsc().stream()
+        .filter(e -> e.getSecurityId() == SecurityIds.PFE).toList();
+    assertThat(pfe).hasSize(1);
+    verifyEntity(pfe.getFirst(), 104, true, LocalDate.of(2024, Month.SEPTEMBER, 12), "0.42", "USD");
   }
 
   void verifyEntity(DividendAnnouncementEntity entity, long expectedDataSourceId, boolean expectedIsNew,

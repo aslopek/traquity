@@ -122,6 +122,51 @@ class CreateHistoricalSecurityPriceDataSourceTest {
   }
 
   @Test
+  void createDataSource_isinKeyed_ok() throws Exception {
+    requestBody.getUrlPatterns().getFirst().setUrlPattern("https://new-price-api.com/#id(isin)");
+    long dataSourceCount = dataSourceRepository.count();
+    MvcResult mvcResult = postDataSource().andExpect(status().isCreated()).andReturn();
+
+    verifyLocationHeader(mvcResult);
+    HistoricalSecurityPriceDataSourceReadDto responseBody = objectMapper.readValue(mvcResult.getResponse().getContentAsString(),
+        HistoricalSecurityPriceDataSourceReadDto.class);
+    verifyResponseBody(responseBody);
+
+    assertThat(dataSourceRepository.count()).isEqualTo(dataSourceCount + 1);
+    verifyDatabase(responseBody.getId());
+  }
+
+  @Test
+  void createDataSource_idSpellingsMixedAcrossTwoUrls_badRequest() throws Exception {
+    requestBody.getUrlPatterns().add(new HistoricalSecurityPriceUrlPatternDto(365, "https://new-price-api.com/#id(isin)"));
+    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
+  void createDataSource_idSpellingsMixedInOneUrl_badRequest() throws Exception {
+    requestBody.getUrlPatterns().getFirst().setUrlPattern("https://new-price-api.com/#id()/#id(isin)");
+    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
+  void createDataSource_unsupportedIdArgument_badRequest() throws Exception {
+    requestBody.getUrlPatterns().getFirst().setUrlPattern("https://new-price-api.com/#id(wkn)");
+    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
+  void createDataSource_idArgumentWrongCase_badRequest() throws Exception {
+    requestBody.getUrlPatterns().getFirst().setUrlPattern("https://new-price-api.com/#id(ISIN)");
+    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
+  void createDataSource_headerValueDisagreesWithUrls_badRequest() throws Exception {
+    requestBody.getRequestHeaders().add(new RequestHeaderDto("x-isin", "#id(isin)"));
+    runNegativeTestCase(HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
   void createDataSource_urlPatternHasMultipleIdPatterns_ok() throws Exception {
     long dataSourceCount = dataSourceRepository.count();
     requestBody.getUrlPatterns().getFirst().setUrlPattern("https://price.com/#id()/#id()");

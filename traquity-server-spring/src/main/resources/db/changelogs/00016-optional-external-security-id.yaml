@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 16
+      author: Armin Slopek
+      changes:
+        - dropNotNullConstraint:
+            tableName: HISTORICAL_SECURITY_PRICE_CONFIG
+            columnName: EXTERNAL_SECURITY_ID
+            columnDataType: VARCHAR(255)
+
+        - dropNotNullConstraint:
+            tableName: DIVIDEND_ANNOUNCEMENT_CONFIG
+            columnName: EXTERNAL_SECURITY_ID
+            columnDataType: VARCHAR(255)

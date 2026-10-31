@@ -14,6 +14,7 @@ import de.as.traquity.common.error.ConflictException;
 import de.as.traquity.common.error.InternalServerErrorException;
 import de.as.traquity.common.error.NotFoundException;
 import de.as.traquity.common.util.FormattedValue;
+import de.as.traquity.common.util.SecurityIdKeying;
 import de.as.traquity.common.util.ValueFormatService;
 import de.as.traquity.exchangerates.CurrencyConversionRequest;
 import de.as.traquity.exchangerates.ExchangeRateService;
@@ -21,6 +22,7 @@ import de.as.traquity.exchangerates.OutdatedExchangeRateException;
 import de.as.traquity.price.security.historical.datasource.HistoricalSecurityPriceDataSource;
 import de.as.traquity.price.security.historical.datasource.HistoricalSecurityPriceDataSourceService;
 import de.as.traquity.price.security.historical.datasource.HistoricalSecurityPriceMarketCloseTime;
+import de.as.traquity.security.SecurityIsinService;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.time.Clock;
@@ -63,6 +65,7 @@ class HistoricalSecurityPriceServiceImpl implements HistoricalSecurityPriceServi
   private final ExchangeRateService exchangeRateService;
   private final HistoricalSecurityPriceDataSourceService dataSourceService;
   private final ValueFormatService valueFormatService;
+  private final SecurityIsinService securityIsinService;
   private final RestTemplate restTemplate;
   private final MathContext mathContext;
   private final Clock clock;
@@ -153,9 +156,11 @@ class HistoricalSecurityPriceServiceImpl implements HistoricalSecurityPriceServi
 
   @Override
   public HistoricalSecurityPriceConfig getConfig(long securityId) throws NotFoundException {
-    HistoricalSecurityPriceConfigEntity config =
+    HistoricalSecurityPriceConfigEntity entity =
         configRepository.findBySecurityId(securityId).orElseThrow(NotFoundException::new);
-    return configMapper.fromEntity(config);
+    HistoricalSecurityPriceConfig config = configMapper.fromEntity(entity);
+    HistoricalSecurityPriceDataSource dataSource = dataSourceService.getDataSource(config.getDataSourceId());
+    return withReportedIdentifier(config, keyingOf(dataSource));
   }
 
   @Override
@@ -165,6 +170,8 @@ class HistoricalSecurityPriceServiceImpl implements HistoricalSecurityPriceServi
     if (configRepository.findBySecurityId(config.getSecurityId()).isPresent()) {
       throw new ConflictException();
     }
+
+    SecurityIdKeying keying = classifyAndNormalize(config);
 
     HistoricalSecurityPriceConfigEntity saved;
     try {
@@ -177,7 +184,7 @@ class HistoricalSecurityPriceServiceImpl implements HistoricalSecurityPriceServi
       updatePrices(config.getSecurityId());
     }
 
-    return configMapper.fromEntity(saved);
+    return withReportedIdentifier(configMapper.fromEntity(saved), keying);
   }
 
   @Override
@@ -186,20 +193,25 @@ class HistoricalSecurityPriceServiceImpl implements HistoricalSecurityPriceServi
     HistoricalSecurityPriceConfigEntity fromDb =
         configRepository.findBySecurityId(config.getSecurityId()).orElseThrow(NotFoundException::new);
 
+    SecurityIdKeying keying = classifyAndNormalize(config);
+
     HistoricalSecurityPriceConfigEntity updatedValues = configMapper.toEntity(config);
     updatedValues.setId(fromDb.getId());
 
+    HistoricalSecurityPriceConfigEntity saved;
     try {
-      return configMapper.fromEntity(configRepository.saveAndFlush(updatedValues));
+      saved = configRepository.saveAndFlush(updatedValues);
     } catch (ObjectOptimisticLockingFailureException e) {
       throw new ConflictException();
     } catch (DataIntegrityViolationException e) {
       throw new BadRequestException();
     }
+
+    return withReportedIdentifier(configMapper.fromEntity(saved), keying);
   }
 
-  List<HistoricalSecurityPriceConfig> getActiveConfigs() {
-    return configRepository.findAllByActiveIsTrue().stream().map(configMapper::fromEntity).toList();
+  List<Long> getActiveConfigSecurityIds() {
+    return configRepository.findAllByActiveIsTrue().stream().map(HistoricalSecurityPriceConfigEntity::getSecurityId).toList();
   }
 
   void deletePrices(long securityId) {
@@ -209,6 +221,7 @@ class HistoricalSecurityPriceServiceImpl implements HistoricalSecurityPriceServi
   void updatePrices(long securityId) throws InternalServerErrorException, NotFoundException {
     HistoricalSecurityPriceConfigEntity config = configRepository.findBySecurityId(securityId).orElseThrow(NotFoundException::new);
     HistoricalSecurityPriceDataSource dataSource = dataSourceService.getDataSource(config.getDataSourceId());
+    String reportedIdentifier = reportedIdentifier(securityId, keyingOf(dataSource), config.getExternalSecurityId());
     Optional<HistoricalSecurityPriceEntity> latestPrice = priceRepository.findFirstBySecurityIdOrderByDateDesc(securityId);
     LocalDate today = LocalDate.now(clock);
     Long missingDays = null;
@@ -239,7 +252,7 @@ class HistoricalSecurityPriceServiceImpl implements HistoricalSecurityPriceServi
     List<HistoricalSecurityPrice> response;
     Map<LocalDate, HistoricalSecurityPrice> newPrices = new HashMap<>();
     for (int key : keysToCall) {
-      response = loadPricesFromDataSource(urlPatterns.get(key), securityId, config.getExternalSecurityId(), dataSource);
+      response = loadPricesFromDataSource(urlPatterns.get(key), securityId, reportedIdentifier, dataSource);
       for (HistoricalSecurityPrice price : response) {
         if (!newPrices.containsKey(price.getDate())) {
           newPrices.put(price.getDate(), price);
@@ -254,6 +267,37 @@ class HistoricalSecurityPriceServiceImpl implements HistoricalSecurityPriceServi
         .toList();
     priceRepository.saveAll(entities);
     priceRepository.flush();
+  }
+
+  private SecurityIdKeying classifyAndNormalize(HistoricalSecurityPriceConfig config) throws BadRequestException {
+    HistoricalSecurityPriceDataSource dataSource;
+    try {
+      dataSource = dataSourceService.getDataSource(config.getDataSourceId());
+    } catch (NotFoundException e) {
+      throw new BadRequestException();
+    }
+
+    SecurityIdKeying keying = keyingOf(dataSource);
+    if (keying == SecurityIdKeying.ISIN) {
+      config.setExternalSecurityId(null);
+    } else if (config.getExternalSecurityId() == null || config.getExternalSecurityId().isBlank()) {
+      throw new BadRequestException();
+    }
+    return keying;
+  }
+
+  private SecurityIdKeying keyingOf(HistoricalSecurityPriceDataSource dataSource) {
+    return valueFormatService.keyingOf(dataSource.getUrlPatterns().values(), dataSource.getRequestHeaders().values());
+  }
+
+  private HistoricalSecurityPriceConfig withReportedIdentifier(HistoricalSecurityPriceConfig config, SecurityIdKeying keying)
+      throws NotFoundException {
+    config.setExternalSecurityId(reportedIdentifier(config.getSecurityId(), keying, config.getExternalSecurityId()));
+    return config;
+  }
+
+  private String reportedIdentifier(long securityId, SecurityIdKeying keying, String storedIdentifier) throws NotFoundException {
+    return keying == SecurityIdKeying.ISIN ? securityIsinService.getIsin(securityId) : storedIdentifier;
   }
 
   private List<HistoricalSecurityPrice> loadPricesFromDataSource(String urlPattern, long securityId, String externalSecurityId,

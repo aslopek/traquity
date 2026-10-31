@@ -6,7 +6,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import de.as.traquity.common.error.ConflictException;
+import de.as.traquity.common.util.ValueFormatService;
 import de.as.traquity.notification.dividendannouncement.datasource.DividendAnnouncementDataSourceService;
+import de.as.traquity.security.SecurityIsinService;
 import de.as.traquity.security.SecurityService;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,8 +24,8 @@ class DividendAnnouncementConfigServiceTest {
   void beforeEach() {
     dividendAnnouncementConfigRepository = mock(DividendAnnouncementConfigRepository.class);
     subject = new DividendAnnouncementConfigServiceImpl(dividendAnnouncementConfigRepository,
-        mock(DividendAnnouncementConfigMapper.class), mock(SecurityService.class),
-        mock(DividendAnnouncementDataSourceService.class));
+        mock(DividendAnnouncementConfigMapper.class), mock(SecurityService.class), mock(SecurityIsinService.class),
+        mock(DividendAnnouncementDataSourceService.class), mock(ValueFormatService.class));
   }
 
   @Test

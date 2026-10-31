@@ -1,5 +1,8 @@
 package de.as.traquity.common.util;
 
+import static de.as.traquity.common.util.SecurityIdKeying.INVALID;
+import static de.as.traquity.common.util.SecurityIdKeying.ISIN;
+import static de.as.traquity.common.util.SecurityIdKeying.STORED_ID;
 import static java.util.Locale.US;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -8,6 +11,8 @@ import static org.mockito.Mockito.when;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -141,23 +146,72 @@ class ValueFormatServiceTest {
   }
 
   @Test
-  void shouldReturnZeroForIdCount_whenInputIsNull() {
-    assertThat(subject.countIdTemplates(null)).isEqualTo(0);
+  void shouldClassifyAsStoredId_whenEveryIdTemplateIsEmpty() {
+    List<String> urlPatterns = List.of("https://api/v1/#id()/data", "https://api/v1/#id()/other");
+    List<String> headerValues = List.of("Bearer #id()");
+    assertThat(subject.keyingOf(urlPatterns, headerValues)).isEqualTo(STORED_ID);
   }
 
   @Test
-  void shouldReturnZeroForIdCount_whenNoIdTemplatePresent() {
-    assertThat(subject.countIdTemplates("Hello #uuid() and #mask(test)")).isEqualTo(0);
+  void shouldClassifyAsIsin_whenEveryIdTemplateIsIsin() {
+    List<String> urlPatterns = List.of("https://api/v1/#id(isin)/data", "https://api/v1/#id(isin)/other");
+    List<String> headerValues = List.of("Bearer #id(isin)");
+    assertThat(subject.keyingOf(urlPatterns, headerValues)).isEqualTo(ISIN);
   }
 
   @Test
-  void shouldCountSingleIdTemplate() {
-    assertThat(subject.countIdTemplates("user_#id()_data")).isEqualTo(1);
+  void shouldClassifyAsInvalid_whenUrlPatternsAreNull() {
+    assertThat(subject.keyingOf(null, null)).isEqualTo(INVALID);
   }
 
   @Test
-  void shouldCountMultipleIdTemplates() {
-    String input = "#id()_prefix_#id()_suffix_#id()";
-    assertThat(subject.countIdTemplates(input)).isEqualTo(3);
+  void shouldClassifyAsInvalid_whenUrlPatternsAreEmpty() {
+    assertThat(subject.keyingOf(List.of(), null)).isEqualTo(INVALID);
+  }
+
+  @Test
+  void shouldClassifyAsInvalid_whenAUrlPatternIsNull() {
+    List<String> urlPatterns = Arrays.asList("https://api/v1/#id()/data", null);
+    assertThat(subject.keyingOf(urlPatterns, null)).isEqualTo(INVALID);
+  }
+
+  @Test
+  void shouldClassifyAsInvalid_whenAUrlHasNoIdTemplate() {
+    assertThat(subject.keyingOf(List.of("https://api/v1/data"), null)).isEqualTo(INVALID);
+  }
+
+  @Test
+  void shouldClassifyAsInvalid_whenBothSpellingsAppearAcrossTwoUrls() {
+    List<String> urlPatterns = List.of("https://api/v1/#id()/data", "https://api/v1/#id(isin)/data");
+    assertThat(subject.keyingOf(urlPatterns, null)).isEqualTo(INVALID);
+  }
+
+  @Test
+  void shouldClassifyAsInvalid_whenBothSpellingsAppearInOneUrl() {
+    assertThat(subject.keyingOf(List.of("https://api/v1/#id()/#id(isin)/data"), null)).isEqualTo(INVALID);
+  }
+
+  @Test
+  void shouldClassifyAsInvalid_whenAnArgumentIsNeitherEmptyNorIsin() {
+    assertThat(subject.keyingOf(List.of("https://api/v1/#id(wkn)/data"), null)).isEqualTo(INVALID);
+  }
+
+  @Test
+  void shouldClassifyAsInvalid_whenIsinArgumentIsNotLowerCase() {
+    assertThat(subject.keyingOf(List.of("https://api/v1/#id(ISIN)/data"), null)).isEqualTo(INVALID);
+  }
+
+  @Test
+  void shouldClassifyUnaffectedByAHeaderValueWithNoIdTemplate() {
+    List<String> urlPatterns = List.of("https://api/v1/#id()/data");
+    List<String> headerValues = List.of("application/json");
+    assertThat(subject.keyingOf(urlPatterns, headerValues)).isEqualTo(STORED_ID);
+  }
+
+  @Test
+  void shouldClassifyAsInvalid_whenAHeaderValueDisagreesWithTheUrls() {
+    List<String> urlPatterns = List.of("https://api/v1/#id()/data");
+    List<String> headerValues = List.of("#id(isin)");
+    assertThat(subject.keyingOf(urlPatterns, headerValues)).isEqualTo(INVALID);
   }
 }

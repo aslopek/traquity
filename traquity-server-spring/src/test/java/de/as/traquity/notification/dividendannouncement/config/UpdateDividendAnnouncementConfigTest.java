@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.as.traquity.notification.dividendannouncement.api.model.DividendAnnouncementConfigReadDto;
 import de.as.traquity.notification.dividendannouncement.api.model.DividendAnnouncementConfigUpdateDto;
 import integration.IntegrationTest;
+import integration.SecurityIds;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,6 +80,42 @@ class UpdateDividendAnnouncementConfigTest {
   void updateDataSourceId_missingDataSourceId_badRequest() throws Exception {
     requestBody.setDataSourceId(null);
     runNegativeTestCase(3, HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
+  void updateDataSourceId_isinKeyedSource_withExternalSecurityId_storesNoIdentifier_ok() throws Exception {
+    requestBody.setDataSourceId(104L);
+    requestBody.setExternalSecurityId("ignored-value");
+    requestBody.setVersion(0L);
+    requestBody.setIsActive(false);
+
+    MvcResult mvcResult = putConfig(SecurityIds.PFE).andExpect(status().isOk()).andReturn();
+    DividendAnnouncementConfigReadDto responseBody =
+        objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DividendAnnouncementConfigReadDto.class);
+    assertThat(responseBody.getExternalSecurityId()).isEqualTo("US7170811035");
+
+    DividendAnnouncementConfigEntity entity =
+        dividendAnnouncementConfigRepository.findBySecurityId(SecurityIds.PFE).orElseThrow();
+    assertThat(entity.getExternalSecurityId()).isNull();
+    assertThat(entity.getVersion()).isOne();
+  }
+
+  @Test
+  void updateDataSourceId_isinKeyedSource_withoutExternalSecurityId_storesNoIdentifier_ok() throws Exception {
+    requestBody.setDataSourceId(104L);
+    requestBody.setExternalSecurityId(null);
+    requestBody.setVersion(0L);
+    requestBody.setIsActive(false);
+
+    MvcResult mvcResult = putConfig(SecurityIds.PFE).andExpect(status().isOk()).andReturn();
+    DividendAnnouncementConfigReadDto responseBody =
+        objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DividendAnnouncementConfigReadDto.class);
+    assertThat(responseBody.getExternalSecurityId()).isEqualTo("US7170811035");
+
+    DividendAnnouncementConfigEntity entity =
+        dividendAnnouncementConfigRepository.findBySecurityId(SecurityIds.PFE).orElseThrow();
+    assertThat(entity.getExternalSecurityId()).isNull();
+    assertThat(entity.getVersion()).isOne();
   }
 
   @Test

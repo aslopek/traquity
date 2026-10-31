@@ -391,7 +391,8 @@ VALUES (1, 'Pre Configured Dividend API', 'https://dividend.api/pre/#id()/divide
 INSERT INTO DIVIDEND_ANNOUNCEMENT_DATA_SOURCE(ID, NAME, URL_PATTERN, JSON_PATH_DATE, DATE_FORMAT, JSON_PATH_VALUE, JSON_PATH_CURRENCY, REGEX_CURRENCY, REGEX_CURRENCY_GROUP, CREATED_AT, UPDATED_AT, VERSION)
 VALUES (101, 'Dividend API v1', 'https://dividend.api/v1/#id()/dividends', '$.payments[*].date', 'yyyy-MM-dd', '$.payments[*].dividendPayment', '$.currency', null, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1),
        (102, 'Dividend API v2', 'https://dividend.api/v2/#id()/dividends', '$.dividends.dates[*]', 'TIMESTAMP_SECONDS', '$.dividends.amounts[*]', '$.dividends.amounts[*]', '^\S+', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
-       (103, 'Dividend API v3', 'https://dividend.api/v3/#id()/dividend-payments', '$.dividends.dates[*]', 'MM/dd/yyyy', '$.dividends.amounts[*]', '$.dividends.amounts[*]', '(.*)([A-Z]{2}([A-Za-z]|-?\$))$', 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+       (103, 'Dividend API v3', 'https://dividend.api/v3/#id()/dividend-payments', '$.dividends.dates[*]', 'MM/dd/yyyy', '$.dividends.amounts[*]', '$.dividends.amounts[*]', '(.*)([A-Z]{2}([A-Za-z]|-?\$))$', 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+       (104, 'Dividend API v4 (ISIN)', 'https://dividend.api/v4/#id(isin)/dividends', '$.payments[*].date', 'yyyy-MM-dd', '$.payments[*].dividendPayment', '$.currency', null, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
 
 ALTER TABLE DIVIDEND_ANNOUNCEMENT_DATA_SOURCE ALTER COLUMN ID RESTART WITH 110;
 
@@ -399,7 +400,8 @@ ALTER TABLE DIVIDEND_ANNOUNCEMENT_DATA_SOURCE ALTER COLUMN ID RESTART WITH 110;
 INSERT INTO DIVIDEND_ANNOUNCEMENT_DATA_SOURCE_REQUEST_HEADER(DATA_SOURCE_ID, HEADER_NAME, HEADER_VALUE)
 VALUES (101, 'x-auth', '#mask(#base64(hello:world))'),
        (102, 'x-header-a', 'valueA'),
-       (102, 'x-header-b', 'valueB');
+       (102, 'x-header-b', 'valueB'),
+       (104, 'x-isin', '#id(isin)');
 
 -- Dividend Announcements: Currency Mapping
 INSERT INTO DIVIDEND_ANNOUNCEMENT_DATA_SOURCE_CURRENCY_MAPPING (DATA_SOURCE_ID, CURRENCY_KEY, MAPPED_CURRENCY_CODE, MULTIPLIER)
@@ -415,7 +417,8 @@ VALUES (101, (SELECT ID FROM SECURITY WHERE NAME = 'Microsoft'), 'MSFT', TRUE, C
        (101, (SELECT ID FROM SECURITY WHERE NAME = 'Danaher'), 'DHR', FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1),
        (102, (SELECT ID FROM SECURITY WHERE NAME = 'Volkswagen VZ'), 'DE0007664039', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
        (102, (SELECT ID FROM SECURITY WHERE NAME = 'Volkswagen Stamm'), 'DE0007664005', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
-       (103, (SELECT ID FROM SECURITY WHERE NAME = 'Diageo'), 'ext-id-diageo', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+       (103, (SELECT ID FROM SECURITY WHERE NAME = 'Diageo'), 'ext-id-diageo', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+       (104, (SELECT ID FROM SECURITY WHERE NAME = 'Pfizer'), null, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
 
 -- Dividend Announcements
 INSERT INTO DIVIDEND_ANNOUNCEMENT(ID, DATA_SOURCE_ID, SECURITY_ID, IS_NEW, PAY_DATE, AMOUNT_PER_SHARE, CURRENCY, CREATED_AT)
@@ -440,7 +443,8 @@ INSERT INTO HISTORICAL_SECURITY_PRICE_DATA_SOURCE(ID, NAME, JSON_PATH_DATE, DATE
 VALUES (101, 'Price API v1', '$.prices[*].date', 'yyyy-MM-dd', '$.prices[*].price', '$.currency', null, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1),
        (102, 'Price API v2', '$.chart.timeline.timestamps[*]', 'TIMESTAMP_MILLISECONDS', '$.chart.timeline.dataset.values[*]', null, '([A-Z0-9]{4})$', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
        (103, 'Price API v3', '$.history.dates[*]', 'TIMESTAMP_SECONDS', '$.history.values[*]', '$.history.currencies[*]', '(.*)([A-Z]{2}([A-Za-z]|-?\$))$', 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
-       (104, 'Price API v4', '$.history.dates[*]', 'TIMESTAMP_SECONDS', '$.history.values[*]', null, '(?:\\.([A-Z0-9]+))?$', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+       (104, 'Price API v4', '$.history.dates[*]', 'TIMESTAMP_SECONDS', '$.history.values[*]', null, '(?:\\.([A-Z0-9]+))?$', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+       (105, 'Price API v5 (ISIN)', '$.prices[*].date', 'yyyy-MM-dd', '$.prices[*].price', '$.currency', null, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
 
 ALTER TABLE HISTORICAL_SECURITY_PRICE_DATA_SOURCE ALTER COLUMN ID RESTART WITH 110;
 
@@ -450,13 +454,16 @@ VALUES (101, 30, 'https://stock-price.api/v1/#id()?range=30d'),
        (101, 365, 'https://stock-price.api/v1/#id()?range=1y'),
        (102, 99999, 'https://stock-price.api/v2?isin=#id()'),
        (103, 99999, 'https://stock-price.api/v3/stocks/prices?id=#id()&range=MAX'),
-       (104, 99999, 'https://stock-price.api/v4/stocks/prices?id=#id()&range=MAX');
+       (104, 99999, 'https://stock-price.api/v4/stocks/prices?id=#id()&range=MAX'),
+       (105, 30, 'https://stock-price.api/v5/#id(isin)?range=30d'),
+       (105, 365, 'https://stock-price.api/v5/#id(isin)?range=1y');
 
 -- Historical Security Price Data Sources: Headers
 INSERT INTO HISTORICAL_SECURITY_PRICE_DATA_SOURCE_REQUEST_HEADER(DATA_SOURCE_ID, HEADER_NAME, HEADER_VALUE)
 VALUES (102, 'x-header-a', 'valueA'),
        (102, 'x-header-b', 'valueB'),
-       (102, 'x-header-c', 'secret-#mask(#base64(hello:world))');
+       (102, 'x-header-c', 'secret-#mask(#base64(hello:world))'),
+       (105, 'x-isin', '#id(isin)');
 
 -- Historical Security Price Data Sources: Currency Mappings
 INSERT INTO HISTORICAL_SECURITY_PRICE_DATA_SOURCE_CURRENCY_MAPPING (DATA_SOURCE_ID, CURRENCY_KEY, MAPPED_CURRENCY_CODE, MULTIPLIER)
@@ -477,4 +484,5 @@ INSERT INTO HISTORICAL_SECURITY_PRICE_CONFIG (SECURITY_ID, DATA_SOURCE_ID, EXTER
 VALUES ((SELECT ID FROM SECURITY WHERE NAME = 'Amazon'), 101, 'AMZN', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
        ((SELECT ID FROM SECURITY WHERE NAME = 'Pinterest'), 102, 'US72352L1061.XETR', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
        ((SELECT ID FROM SECURITY WHERE NAME = 'Salesforce'), 103, 'CRM', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1),
-       ((SELECT ID FROM SECURITY WHERE NAME = 'Main Street Capital'), 104, 'MAIN', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+       ((SELECT ID FROM SECURITY WHERE NAME = 'Main Street Capital'), 104, 'MAIN', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+       ((SELECT ID FROM SECURITY WHERE NAME = 'Equinix'), 105, null, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);

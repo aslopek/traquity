@@ -36,7 +36,7 @@ class DividendAnnouncementConfigEntity {
   @Column(nullable = false)
   private long dataSourceId;
 
-  @Column(nullable = false)
+  @Column
   private String externalSecurityId;
 
   @Column(nullable = false)
