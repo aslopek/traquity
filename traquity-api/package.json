@@ -27,6 +27,6 @@
     "url": "https://github.com/aslopek/traquity"
   },
   "devDependencies": {
-    "@openapitools/openapi-generator-cli": "^2.41.0"
+    "@openapitools/openapi-generator-cli": "^2.42.0"
   }
 }
