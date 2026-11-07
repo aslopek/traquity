@@ -17,8 +17,18 @@
 
         <mat-form-field>
             <mat-label>External Security ID</mat-label>
-            <input [formField]="form.externalSecurityId"
-                   matInput>
+            @if (isinKeyed()) {
+                <input [value]="isin() ?? ''"
+                       class="tq-numeric"
+                       disabled
+                       matInput>
+            } @else {
+                <input [formField]="form.externalSecurityId"
+                       matInput>
+            }
+            @if (isinKeyed()) {
+                <mat-hint>Taken from the security's ISIN</mat-hint>
+            }
         </mat-form-field>
     </form>
 } @else {

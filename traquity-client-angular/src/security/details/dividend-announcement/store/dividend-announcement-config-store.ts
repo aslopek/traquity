@@ -7,8 +7,10 @@ import {Store} from '@ngrx/store';
 import {AppState} from '../../../../store/app.state';
 import {setNewConfigValues} from './methods/set-new-config-values';
 import {newConfigValuesValid} from './computed/new-config-values-valid';
+import {isinKeyed} from './computed/isin-keyed';
 
 export type DividendAnnouncementConfigComputed = {
+  isinKeyed: () => boolean
   newConfigValuesValid: () => boolean
 };
 
@@ -45,6 +47,7 @@ export const readableDividendAnnouncementConfigStore = signalStore(
   withComputed((signalStore: ReadableSignalStore<DividendAnnouncementConfigState>,
                 globalStore: Store<AppState> = inject(Store)): DividendAnnouncementConfigComputed => {
     return {
+      isinKeyed: () => isinKeyed(signalStore, globalStore),
       newConfigValuesValid: () => newConfigValuesValid(signalStore, globalStore)
     };
   }),

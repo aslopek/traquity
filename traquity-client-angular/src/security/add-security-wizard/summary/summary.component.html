@@ -83,7 +83,7 @@
 
                 <div class="summary__item">
                     <dt class="tq-section-label">External Security ID</dt>
-                    <dd class="tq-numeric">{{ priceConfig.externalSecurityId }}</dd>
+                    <dd class="tq-numeric">{{ priceConfig.externalSecurityId ?? masterData()?.isin }}</dd>
                 </div>
             }
         </dl>
@@ -123,7 +123,7 @@
 
                 <div class="summary__item">
                     <dt class="tq-section-label">External Security ID</dt>
-                    <dd class="tq-numeric">{{ dividendConfig.externalSecurityId }}</dd>
+                    <dd class="tq-numeric">{{ dividendConfig.externalSecurityId ?? masterData()?.isin }}</dd>
                 </div>
             }
         </dl>

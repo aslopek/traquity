@@ -12,6 +12,7 @@ import {SecurityActions} from '../../../store/security/security.actions';
 import {HistoricalSecurityPriceConfigs} from '../../../store/security/security.state';
 import {getHistoricalSecurityPriceConfigs, getHistoricalSecurityPriceDataSources} from '../../../store/security/security.selector';
 import {DataSourceWithId} from '../../../settings/data-source/data-source.type';
+import {isIsinKeyed} from '../../../settings/data-source/is-isin-keyed';
 
 type FormModel = {
   isActive: boolean
@@ -41,6 +42,7 @@ export class HistoricalPriceConfigComponent {
   readonly securityId: InputSignal<number | undefined> = input<
     number | undefined
   >();
+  readonly isin: InputSignal<string | undefined> = input<string>();
   readonly configChanged: OutputEmitterRef<Output | null> =
     output<Output | null>();
 
@@ -49,6 +51,7 @@ export class HistoricalPriceConfigComponent {
   private readonly allConfigs: Signal<HistoricalSecurityPriceConfigs>;
   private readonly selectedConfig: Signal<HistoricalSecurityPriceConfigRead | null>;
   protected readonly dataSources: Signal<DataSourceWithId[]>;
+  protected readonly isinKeyed: Signal<boolean>;
 
   constructor(store: Store<AppState>) {
     this.allConfigs = store.selectSignal(getHistoricalSecurityPriceConfigs);
@@ -65,6 +68,8 @@ export class HistoricalPriceConfigComponent {
     this.dataSources = store.selectSignal(getHistoricalSecurityPriceDataSources);
     const availableDataSources: DataSourceWithId[] = this.dataSources();
     const dataSourceId: number = availableDataSources.length > 0 ? availableDataSources[0].id : 0;
+    this.isinKeyed = computed((): boolean =>
+      isIsinKeyed(this.dataSources().find((source: DataSourceWithId): boolean => source.id === this.formModel().dataSourceId)));
     this.formModel = signal<FormModel>({
       isActive: false,
       externalSecurityId: '',
@@ -74,7 +79,7 @@ export class HistoricalPriceConfigComponent {
     this.form = form(this.formModel, (schemaPath: SchemaPathTree<FormModel>): void => {
       required(schemaPath.externalSecurityId);
       minLength(schemaPath.externalSecurityId, 1);
-      disabled(schemaPath.externalSecurityId, {when: (): boolean => !this.formModel().isActive});
+      disabled(schemaPath.externalSecurityId, {when: (): boolean => !this.formModel().isActive || this.isinKeyed()});
       disabled(schemaPath.dataSourceId, {when: (): boolean => !this.formModel().isActive});
       required(schemaPath.dataSourceId);
       min(schemaPath.dataSourceId, 1);
@@ -104,11 +109,17 @@ export class HistoricalPriceConfigComponent {
       });
     });
 
+    effect((): void => {
+      if (this.isinKeyed() && this.formModel().externalSecurityId !== '') {
+        this.formModel.update((model: FormModel): FormModel => ({...model, externalSecurityId: ''}));
+      }
+    });
+
     // effect for emitting changes
     effect((): void => {
-      const formData: FormModel = {
+      const formData: Output = {
         isActive: this.form.isActive().value(),
-        externalSecurityId: this.form.externalSecurityId().value(),
+        externalSecurityId: this.isinKeyed() ? undefined : this.form.externalSecurityId().value(),
         dataSourceId: this.form.dataSourceId().value()
       };
 

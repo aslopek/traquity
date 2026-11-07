@@ -38,6 +38,7 @@
         </ng-template>
 
         <app-historical-price-config [securityId]="securityId"
+                                     [isin]="updateSecurityStore.masterData()?.isin"
                                      (configChanged)="updateSecurityStore.setHistoricalSecurityPriceConfig($event)">
         </app-historical-price-config>
     </mat-tab>
@@ -57,6 +58,7 @@
         </ng-template>
 
         <app-dividend-announcement-config [securityId]="securityId"
+                                          [isin]="updateSecurityStore.masterData()?.isin"
                                           (configChanged)="updateSecurityStore.setDividendAnnouncementConfig($event)">
         </app-dividend-announcement-config>
     </mat-tab>
