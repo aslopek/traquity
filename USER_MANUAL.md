@@ -616,6 +616,7 @@ On the **Securities** page, press **Add**. The wizard has four steps, and each s
 - **Data Source** — one of the sources under **Settings → Historical Security Prices**.
 - **External Security ID** — the identifier the data source expects, e.g. `MSFT` for Twelve Data or `MSFT.US` for EODHD. This is what the
   `#id()` template function in the source's URL is replaced with.
+  For a source whose URL uses `#id(isin)`, the field shows the security's ISIN and is locked.
 
 The step is skippable: a security without a price configuration simply has no price chart and no current value.
 

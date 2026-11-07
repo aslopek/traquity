@@ -9,6 +9,7 @@ import {catchError, of, take} from 'rxjs';
 import {patchState} from '@ngrx/signals';
 import {Store} from '@ngrx/store';
 import {AppState} from '../../../../../store/app.state';
+import {isIsinKeyed} from '../../../../../settings/data-source/is-isin-keyed';
 import {getAllDataSources} from '../../../../../store/dividend-announcement/dividend-announcement.selector';
 
 export function loadDividendAnnouncementConfig(signalStore: WritableSignalStore<DividendAnnouncementConfigState>,
@@ -41,7 +42,9 @@ export function loadDividendAnnouncementConfig(signalStore: WritableSignalStore<
         securityId,
         isDirty: false,
         existingConfig: result,
-        newConfigValues: result
+        newConfigValues: isIsinKeyed(dataSources.find((ds: DividendAnnouncementDataSourceRead) => ds.id === result.dataSourceId))
+          ? {...result, externalSecurityId: ''}
+          : result
       })
     }
   });
