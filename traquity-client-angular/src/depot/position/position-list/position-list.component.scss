@@ -25,6 +25,7 @@ $group-gutter-width: 2.5rem;
   flex-shrink: 0;
   padding-bottom: var(--tq-space-3);
   background-color: var(--tq-surface-canvas);
+  box-shadow: 2rem 0 0 0 var(--tq-surface-canvas);
   border-bottom: 0.0625rem solid var(--tq-border);
 
   &--grouped {
