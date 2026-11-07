@@ -1,31 +1,34 @@
 package de.as.traquity.security;
 
-import java.math.BigDecimal;
+import static integration.Accuracy.ACCURACY_ONE_THOUSANDTH;
+import static integration.SecurityIds.GOOGL;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.context.jdbc.SqlMergeMode.MergeMode.MERGE;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.as.traquity.security.api.model.PriceMetaInfoDto;
 import de.as.traquity.security.api.model.SecurityLinksDto;
 import de.as.traquity.security.api.model.SecurityReadDto;
 import de.as.traquity.security.api.model.SecurityTypeDto;
 import integration.IntegrationTest;
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.ZoneId;
-import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlMergeMode;
-import static org.springframework.test.context.jdbc.SqlMergeMode.MergeMode.MERGE;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @IntegrationTest
 class GetSecurityTest {
@@ -138,6 +141,25 @@ class GetSecurityTest {
     assertThat(priceMetaInfo.getLatestPrice()).isEqualByComparingTo(BigDecimal.valueOf(37.04));
     assertThat(priceMetaInfo.getCurrency()).isEqualTo("USD");
     assertThat(priceMetaInfo.getLatestPriceDate()).isEqualTo(LocalDate.of(2023, Month.DECEMBER, 29));
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      INSERT INTO HISTORICAL_SECURITY_PRICE(SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
+      VALUES (9, NULL, 108.68, 'USD', '2023-12-04', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      """)
+  void getSecurity_withPriceMetaInfo_mixedCurrencies_convertsOlderPricesToCurrencyOfNewestPrice() throws Exception {
+    MvcResult mvcResult = getSecurity(GOOGL).andExpect(status().isOk()).andReturn();
+    SecurityReadDto responseBody =
+        objectMapper.readValue(mvcResult.getResponse().getContentAsString(), SecurityReadDto.class);
+    PriceMetaInfoDto priceMetaInfo = responseBody.getPriceMetaInfo();
+    // derived from the buy on 2023-09-14 (transaction 203)
+    assertThat(priceMetaInfo.getHighTrailingTwelveMonths()).isCloseTo(new BigDecimal("130.04957"), ACCURACY_ONE_THOUSANDTH);
+    // 108.68 USD at the EUR/USD rate of 1.0868 on 2023-12-04
+    assertThat(priceMetaInfo.getLowTrailingTwelveMonths()).isCloseTo(new BigDecimal("100"), ACCURACY_ONE_THOUSANDTH);
+    assertThat(priceMetaInfo.getLatestPrice()).isEqualByComparingTo("126.76");
+    assertThat(priceMetaInfo.getCurrency()).isEqualTo("EUR");
   }
 
   @Test

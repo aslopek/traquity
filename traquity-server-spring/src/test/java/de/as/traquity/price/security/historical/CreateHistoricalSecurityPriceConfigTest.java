@@ -3,7 +3,10 @@ package de.as.traquity.price.security.historical;
 
 import static integration.MockServerUtils.respondWithFixture;
 import static integration.SecurityIds.QCOM;
+import static java.time.LocalDate.EPOCH;
 import static java.time.Month.DECEMBER;
+import static java.time.Month.JANUARY;
+import static java.time.Month.JUNE;
 import static java.time.Month.OCTOBER;
 import static java.time.temporal.ChronoUnit.MILLIS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -112,14 +115,22 @@ class CreateHistoricalSecurityPriceConfigTest {
 
     // verify database: prices (first, last and date sanity check)
     List<HistoricalSecurityPriceEntity> prices =
-        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(QCOM, LocalDate.EPOCH);
-    assertThat(prices).hasSize(52);
-    assertThat(prices.getFirst().getPrice()).isEqualTo(new BigDecimal("104.62"));
-    assertThat(prices.getFirst().getDate()).isEqualTo(LocalDate.of(2023, OCTOBER, 17));
-    assertThat(prices.getFirst().getCurrency()).isEqualTo("USD");
-    assertThat(prices.getLast().getPrice()).isEqualTo(new BigDecimal("131.96"));
-    assertThat(prices.getLast().getDate()).isEqualTo(LocalDate.of(2023, DECEMBER, 29));
-    assertThat(prices.getLast().getCurrency()).isEqualTo("USD");
+        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(QCOM, EPOCH);
+    // 52 fetched, one of them replacing the price derived from transaction 409 on 2023-10-23
+    // + 2 derived from transactions 410 and 411 before the fetched range
+    assertThat(prices).hasSize(54);
+    assertThat(prices.subList(0, 2)).extracting(HistoricalSecurityPriceEntity::getDate)
+        .containsExactly(LocalDate.of(2023, JANUARY, 10), LocalDate.of(2023, JUNE, 15));
+    assertThat(prices.subList(0, 2)).extracting(HistoricalSecurityPriceEntity::getDataSourceId).containsOnlyNulls();
+
+    List<HistoricalSecurityPriceEntity> fetched = prices.subList(2, prices.size());
+    assertThat(fetched).extracting(HistoricalSecurityPriceEntity::getDataSourceId).containsOnly(102L);
+    assertThat(fetched.getFirst().getPrice()).isEqualTo(new BigDecimal("104.62"));
+    assertThat(fetched.getFirst().getDate()).isEqualTo(LocalDate.of(2023, OCTOBER, 17));
+    assertThat(fetched.getFirst().getCurrency()).isEqualTo("USD");
+    assertThat(fetched.getLast().getPrice()).isEqualTo(new BigDecimal("131.96"));
+    assertThat(fetched.getLast().getDate()).isEqualTo(LocalDate.of(2023, DECEMBER, 29));
+    assertThat(fetched.getLast().getCurrency()).isEqualTo("USD");
     dateSanityCheck(prices);
   }
 
@@ -140,10 +151,7 @@ class CreateHistoricalSecurityPriceConfigTest {
     assertThat(configEntity.getExternalSecurityId()).isEqualTo("QCOM.XNAS");
     assertThat(configEntity.isActive()).isFalse();
 
-    // verify database: prices
-    List<HistoricalSecurityPriceEntity> prices =
-        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(QCOM, LocalDate.EPOCH);
-    assertThat(prices).isEmpty();
+    assertOnlyQcomPricesDerivedFromTrades();
   }
 
   @Test
@@ -171,18 +179,20 @@ class CreateHistoricalSecurityPriceConfigTest {
     assertThat(configEntity.getExternalSecurityId()).isEqualTo("VNGGF");
     assertThat(configEntity.isActive()).isTrue();
 
-    // verify database: prices - the two null entries of the fixture are skipped
+    // verify database: prices - 3 derived from transactions 27, 28 and 29 + 2 fetched, the two null entries of the fixture are skipped
     List<HistoricalSecurityPriceEntity> prices =
-        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(SecurityIds.VNGGF, LocalDate.EPOCH);
-    assertThat(prices).hasSize(2);
+        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(SecurityIds.VNGGF, EPOCH);
+    assertThat(prices).hasSize(5);
+    List<HistoricalSecurityPriceEntity> fetched = prices.stream().filter(entity -> entity.getDataSourceId() != null).toList();
+    assertThat(fetched).hasSize(2);
 
-    HistoricalSecurityPriceEntity price = prices.getFirst();
+    HistoricalSecurityPriceEntity price = fetched.getFirst();
     assertThat(price.getSecurityId()).isEqualTo(SecurityIds.VNGGF);
     assertThat(price.getPrice()).isEqualByComparingTo(new BigDecimal("56.469"));
     assertThat(price.getCurrency()).isEqualTo("EUR");
     assertThat(price.getDate()).isEqualTo(LocalDate.of(2024, Month.JANUARY, 19));
 
-    price = prices.get(1);
+    price = fetched.get(1);
     assertThat(price.getSecurityId()).isEqualTo(SecurityIds.VNGGF);
     assertThat(price.getPrice()).isEqualByComparingTo(new BigDecimal("57.441"));
     assertThat(price.getCurrency()).isEqualTo("EUR");
@@ -296,7 +306,18 @@ class CreateHistoricalSecurityPriceConfigTest {
     assertThat(configEntity.getUpdatedAt().toInstant()).isBetween(before, after);
 
     assertThat(priceRepository.count()).isEqualTo(priceCount);
-    assertThat(priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(QCOM, LocalDate.EPOCH)).isEmpty();
+    assertOnlyQcomPricesDerivedFromTrades();
+  }
+
+  private void assertOnlyQcomPricesDerivedFromTrades() {
+    List<HistoricalSecurityPriceEntity> prices =
+        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(QCOM, EPOCH);
+    // derived from transactions 410, 411 and 409
+    assertThat(prices).extracting(HistoricalSecurityPriceEntity::getDate).containsExactly(
+        LocalDate.of(2023, JANUARY, 10),
+        LocalDate.of(2023, JUNE, 15),
+        LocalDate.of(2023, OCTOBER, 23));
+    assertThat(prices).extracting(HistoricalSecurityPriceEntity::getDataSourceId).containsOnlyNulls();
   }
 
   private void assertRejectedWithBadRequest(HistoricalSecurityPriceConfigCreateDto config) throws Exception {

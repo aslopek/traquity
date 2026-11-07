@@ -1,9 +1,9 @@
 package de.as.traquity.price.security.historical;
 
 import static integration.SecurityIds.AMZN;
+import static integration.SecurityIds.CRM;
 import static integration.SecurityIds.GOOGL;
 import static integration.SecurityIds.PINS;
-import static integration.SecurityIds.QCOM;
 import static java.time.Month.DECEMBER;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -40,14 +40,14 @@ class HistoricalSecurityPriceRepositoryTest {
 
   @Test
   void findLatestBySecurityIdIn_securityWithNoRows_omittedFromResult() {
-    List<HistoricalSecurityPriceEntity> result = historicalSecurityPriceRepository.findLatestBySecurityIdIn(Set.of(QCOM));
+    List<HistoricalSecurityPriceEntity> result = historicalSecurityPriceRepository.findLatestBySecurityIdIn(Set.of(CRM));
 
     assertThat(result).isEmpty();
   }
 
   @Test
   void findLatestBySecurityIdIn_mixOfSecuritiesWithAndWithoutRows_onlyThoseWithRowsReturned() {
-    List<HistoricalSecurityPriceEntity> result = historicalSecurityPriceRepository.findLatestBySecurityIdIn(Set.of(GOOGL, QCOM));
+    List<HistoricalSecurityPriceEntity> result = historicalSecurityPriceRepository.findLatestBySecurityIdIn(Set.of(GOOGL, CRM));
 
     assertThat(result).hasSize(1);
     assertThat(result.getFirst().getSecurityId()).isEqualTo(GOOGL);

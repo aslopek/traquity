@@ -5,7 +5,10 @@ import static integration.MockServerUtils.respondWithFixture;
 import static integration.SecurityIds.AMZN;
 import static integration.SecurityIds.CRM;
 import static integration.SecurityIds.EQIX;
+import static java.time.Month.APRIL;
 import static java.time.Month.DECEMBER;
+import static java.time.Month.JULY;
+import static java.time.Month.NOVEMBER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -116,8 +119,9 @@ class UpdateHistoricalSecurityPriceConfigTest {
     // verify database: prices (first, last and date sanity check)
     List<HistoricalSecurityPriceEntity> prices =
         priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(AMZN, LocalDate.EPOCH);
-    assertThat(prices.getFirst().getPrice()).isEqualTo(new BigDecimal("134.74"));
-    assertThat(prices.getFirst().getDate()).isEqualTo(LocalDate.of(2023, DECEMBER, 1));
+    // derived from transaction 1
+    assertThat(prices.getFirst().getPrice()).isEqualByComparingTo("140.35");
+    assertThat(prices.getFirst().getDate()).isEqualTo(LocalDate.of(2020, JULY, 13));
     assertThat(prices.getFirst().getCurrency()).isEqualTo("EUR");
     assertThat(prices.getLast().getPrice()).isEqualTo(new BigDecimal("138.58"));
     assertThat(prices.getLast().getDate()).isEqualTo(LocalDate.of(2023, DECEMBER, 29));
@@ -147,13 +151,36 @@ class UpdateHistoricalSecurityPriceConfigTest {
     // verify database: prices (first, last and date sanity check)
     List<HistoricalSecurityPriceEntity> prices =
         priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(AMZN, LocalDate.EPOCH);
-    assertThat(prices.getFirst().getPrice()).isEqualTo(new BigDecimal("78.6"));
-    assertThat(prices.getFirst().getDate()).isEqualTo(LocalDate.of(2022, DECEMBER, 29));
-    assertThat(prices.getFirst().getCurrency()).isEqualTo("EUR");
+    HistoricalSecurityPriceEntity firstFetched = prices.get(4); // after the 4 prices derived from transactions 1, 4, 5 and 12
+    assertThat(firstFetched.getPrice()).isEqualTo(new BigDecimal("78.6"));
+    assertThat(firstFetched.getDate()).isEqualTo(LocalDate.of(2022, DECEMBER, 29));
+    assertThat(firstFetched.getCurrency()).isEqualTo("EUR");
     assertThat(prices.getLast().getPrice()).isEqualTo(new BigDecimal("138.58"));
     assertThat(prices.getLast().getDate()).isEqualTo(LocalDate.of(2023, DECEMBER, 29));
     assertThat(prices.getLast().getCurrency()).isEqualTo("EUR");
     dateSanityCheck(prices);
+  }
+
+  @Test
+  void changeDatasource_removeExistingPrices_keepsPricesFromTrades() throws Exception {
+    respondWithFixture(mockServer, "https://stock-price.api/v1/AMZ.DE?range=30d",
+        "fixtures/historical-security-prices/data-source-101/amzn-30-days.json");
+    respondWithFixture(mockServer, "https://stock-price.api/v1/AMZ.DE?range=1y",
+        "fixtures/historical-security-prices/data-source-101/amzn-365-days.json");
+
+    putConfig(AMZN, amznDataSource101, true).andExpect(status().isOk());
+
+    List<HistoricalSecurityPriceEntity> prices =
+        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(AMZN, LocalDate.EPOCH);
+    assertThat(prices).hasSize(256); // 4 derived from transactions 1, 4, 5 and 12 + 252 fetched
+    List<HistoricalSecurityPriceEntity> tradePrices = prices.subList(0, 4);
+    assertThat(tradePrices).extracting(HistoricalSecurityPriceEntity::getDate).containsExactly(
+        LocalDate.of(2020, JULY, 13),
+        LocalDate.of(2020, NOVEMBER, 9),
+        LocalDate.of(2020, NOVEMBER, 10),
+        LocalDate.of(2021, APRIL, 26));
+    assertThat(tradePrices).extracting(HistoricalSecurityPriceEntity::getDataSourceId).containsOnlyNulls();
+    assertThat(prices.stream().skip(4).map(HistoricalSecurityPriceEntity::getDataSourceId)).containsOnly(101L);
   }
 
   @Test
@@ -254,7 +281,7 @@ class UpdateHistoricalSecurityPriceConfigTest {
   private void assertIsinKeyedUpdateOk(HistoricalSecurityPriceConfigUpdateDto requestBody) throws Exception {
     long configCount = configRepository.count();
     long priceCount = priceRepository.count();
-    HistoricalSecurityPriceConfigEntity before = configRepository.findBySecurityId(EQIX).orElseThrow();
+    HistoricalSecurityPriceConfigEntity configBefore = configRepository.findBySecurityId(EQIX).orElseThrow();
     List<HistoricalSecurityPriceConfigEntity> othersBefore = otherConfigs(EQIX);
 
     MvcResult mvcResult = putConfig(EQIX, requestBody, null).andExpect(status().isOk()).andReturn();
@@ -271,15 +298,14 @@ class UpdateHistoricalSecurityPriceConfigTest {
     assertThat(responseBody).isEqualTo(expected);
 
     // verify database: config, every property
-    HistoricalSecurityPriceConfigEntity after = configRepository.findBySecurityId(EQIX).orElseThrow();
-    assertThat(after.getId()).isEqualTo(before.getId());
-    assertThat(after.getSecurityId()).isEqualTo(EQIX);
-    assertThat(after.getDataSourceId()).isEqualTo(105L);
-    assertThat(after.getExternalSecurityId()).isNull();
-    assertThat(after.isActive()).isFalse();
-    assertThat(after.getVersion()).isOne();
-    assertThat(after.getCreatedAt().toInstant()).isEqualTo(before.getCreatedAt().toInstant());
-    assertThat(after.getUpdatedAt().toInstant()).isAfterOrEqualTo(before.getUpdatedAt().toInstant());
+    HistoricalSecurityPriceConfigEntity configAfter = configRepository.findBySecurityId(EQIX).orElseThrow();
+    assertThat(configAfter.getId()).isEqualTo(configBefore.getId());
+    assertThat(configAfter.getSecurityId()).isEqualTo(EQIX);
+    assertThat(configAfter.getDataSourceId()).isEqualTo(105L);
+    assertThat(configAfter.getExternalSecurityId()).isNull();
+    assertThat(configAfter.isActive()).isFalse();
+    assertThat(configAfter.getVersion()).isOne();
+    assertThat(configAfter.getCreatedAt().toInstant()).isEqualTo(configBefore.getCreatedAt().toInstant());
 
     // verify database: no rows added or removed, other configs untouched, no prices loaded
     assertThat(configRepository.count()).isEqualTo(configCount);

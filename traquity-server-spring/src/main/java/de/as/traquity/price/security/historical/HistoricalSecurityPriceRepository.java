@@ -15,6 +15,14 @@ interface HistoricalSecurityPriceRepository extends JpaRepository<HistoricalSecu
 
   Optional<HistoricalSecurityPriceEntity> findFirstBySecurityIdOrderByDateDesc(Long securityId);
 
+  Optional<HistoricalSecurityPriceEntity> findFirstBySecurityIdAndDataSourceIdOrderByDateDesc(Long securityId, Long dataSourceId);
+
+  Optional<HistoricalSecurityPriceEntity> findFirstBySecurityIdAndDataSourceIdIsNotNullOrderByDateDesc(Long securityId);
+
+  Optional<HistoricalSecurityPriceEntity> findBySecurityIdAndDate(Long securityId, LocalDate date);
+
+  List<HistoricalSecurityPriceEntity> findAllBySecurityIdAndDateIn(Long securityId, Collection<LocalDate> dates);
+
   @Query("""
       SELECT p FROM HistoricalSecurityPriceEntity p
       WHERE p.securityId IN :securityIds
@@ -32,5 +40,8 @@ interface HistoricalSecurityPriceRepository extends JpaRepository<HistoricalSecu
   List<HistoricalSecurityPriceEntity> findAllBySecurityIdAndDateLessThanOrderByDateDesc(Long security, LocalDate date);
 
   @Transactional
-  void deleteAllBySecurityId(Long securityId);
+  void deleteBySecurityIdAndDateAndDataSourceIdIsNull(Long securityId, LocalDate date);
+
+  @Transactional
+  void deleteAllBySecurityIdAndDataSourceIdIsNotNull(Long securityId);
 }

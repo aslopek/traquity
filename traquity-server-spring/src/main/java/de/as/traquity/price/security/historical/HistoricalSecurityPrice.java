@@ -11,4 +11,5 @@ public class HistoricalSecurityPrice {
   private BigDecimal price;
   private String currency;
   private LocalDate date;
+  private Long dataSourceId;
 }

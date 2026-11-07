@@ -1,5 +1,7 @@
 package de.as.traquity.price.security.historical.datasource;
 
+import static integration.SecurityIds.PINS;
+import static java.time.Month.DECEMBER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.context.jdbc.SqlMergeMode.MergeMode.MERGE;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -7,6 +9,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import integration.IntegrationTest;
 import jakarta.persistence.EntityManager;
+import de.as.traquity.price.security.historical.HistoricalSecurityPrice;
+import integration.sql.TestDataQuery;
+import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.jdbc.Sql;
@@ -88,6 +93,24 @@ class DeleteHistoricalSecurityPriceDataSourceTest {
     // Verify cascaded deletion of currency mappings
     assertThat(countCurrencyMappingsByDataSourceId(id)).isZero();
     assertThat(countUrlsByDataSourceId(id)).isZero();
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      DELETE FROM HISTORICAL_SECURITY_PRICE_CONFIG;
+      """)
+  void deleteDataSource_withPrices_keepsAllPricesAndUnlinksItsOwn() throws Exception {
+    long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
+    long pinterestPriceCount = TestDataQuery.getHistoricalSecurityPriceCountBySecurityId(PINS);
+
+    deleteDataSource(102).andExpect(status().isNoContent());
+
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount);
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCountBySecurityId(PINS)).isEqualTo(pinterestPriceCount);
+    HistoricalSecurityPrice price = TestDataQuery.getHistoricalSecurityPrice(PINS, LocalDate.of(2023, DECEMBER, 29));
+    assertThat(price.getPrice()).isEqualByComparingTo("37.04");
+    assertThat(price.getDataSourceId()).isNull();
   }
 
   @Test

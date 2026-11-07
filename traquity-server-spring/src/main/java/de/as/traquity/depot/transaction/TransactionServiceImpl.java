@@ -18,6 +18,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,8 +37,10 @@ class TransactionServiceImpl implements TransactionService {
   private final DepotService depotService;
   private final MathContext mathContext;
   private final EntityManager entityManager;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Override
+  @Transactional
   public Transaction createTransaction(Long depotId, Transaction transaction)
       throws BadRequestException, NotFoundException {
     // the foreign key violation would surface as a 400 and could not be told apart from an unknown securityId
@@ -48,7 +51,9 @@ class TransactionServiceImpl implements TransactionService {
     TransactionEntity entity = transactionMapper.toEntity(transaction);
     entity.setDepotId(depotId);
     entity = persist(entity);
-    return transactionMapper.fromEntity(entity);
+    Transaction created = transactionMapper.fromEntity(entity);
+    eventPublisher.publishEvent(new TransactionChangedEvent(null, created));
+    return created;
   }
 
   @Override
@@ -146,9 +151,20 @@ class TransactionServiceImpl implements TransactionService {
     if (!existing.getVersion().equals(transaction.getVersion())) {
       throw new ConflictException();
     }
+    Transaction previous = transactionMapper.fromEntity(existing);
     TransactionEntity entity = transactionMapper.toEntity(transaction);
     entity = persist(entity);
-    return transactionMapper.fromEntity(entity);
+    Transaction updated = transactionMapper.fromEntity(entity);
+    eventPublisher.publishEvent(new TransactionChangedEvent(previous, updated));
+    return updated;
+  }
+
+  @Override
+  public List<Transaction> getTransactions(long securityId, LocalDate date, Set<TransactionTypeDto> transactionTypes) {
+    return transactionRepository.findAllBySecurityIdAndDateAndTransactionTypeInOrderByTimeAscIdAsc(securityId, date, transactionTypes)
+        .stream()
+        .map(transactionMapper::fromEntity)
+        .toList();
   }
 
   @Override
@@ -176,6 +192,7 @@ class TransactionServiceImpl implements TransactionService {
     } catch (ObjectOptimisticLockingFailureException e) {
       throw new ConflictException();
     }
+    eventPublisher.publishEvent(new TransactionChangedEvent(transactionMapper.fromEntity(entity), null));
   }
 
   private TransactionEntity persist(TransactionEntity transaction)

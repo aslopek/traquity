@@ -4,7 +4,9 @@ import static de.as.traquity.common.util.SecurityIdKeying.ISIN;
 import static de.as.traquity.price.security.historical.api.model.DateFormatDto.TIMESTAMP_MILLISECONDS;
 import static de.as.traquity.price.security.historical.api.model.DateFormatDto.TIMESTAMP_SECONDS;
 import static java.lang.Double.parseDouble;
+import static java.time.LocalDate.EPOCH;
 import static java.time.temporal.ChronoUnit.DAYS;
+import static java.util.function.Function.identity;
 import static org.springframework.http.HttpMethod.GET;
 
 import com.jayway.jsonpath.DocumentContext;
@@ -19,7 +21,6 @@ import de.as.traquity.common.util.SecurityIdKeying;
 import de.as.traquity.common.util.ValueFormatService;
 import de.as.traquity.exchangerates.CurrencyConversionRequest;
 import de.as.traquity.exchangerates.ExchangeRateService;
-import de.as.traquity.exchangerates.OutdatedExchangeRateException;
 import de.as.traquity.price.security.historical.datasource.HistoricalSecurityPriceDataSource;
 import de.as.traquity.price.security.historical.datasource.HistoricalSecurityPriceDataSourceService;
 import de.as.traquity.price.security.historical.datasource.HistoricalSecurityPriceMarketCloseTime;
@@ -44,7 +45,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -74,20 +74,36 @@ class HistoricalSecurityPriceServiceImpl implements HistoricalSecurityPriceServi
   private final BigDecimalParser bigDecimalParser = new BigDecimalParser();
 
   @Override
-  public List<HistoricalSecurityPrice> getPrices(long securityId, LocalDate startDate)
-      throws BadRequestException, NotFoundException {
-    LocalDate date = startDate != null ? startDate : LocalDate.EPOCH;
+  public List<HistoricalSecurityPrice> getPrices(long securityId, LocalDate startDate) {
+    List<HistoricalSecurityPrice> prices = findPrices(securityId, startDate);
+    if (prices.isEmpty()) {
+      return prices;
+    }
+    String currency = priceRepository.findFirstBySecurityIdAndDataSourceIdIsNotNullOrderByDateDesc(securityId)
+        .map(HistoricalSecurityPriceEntity::getCurrency)
+        .orElse(prices.getLast().getCurrency());
+    return convert(prices, currency);
+  }
+
+  @Override
+  public List<HistoricalSecurityPrice> getPrices(long securityId, LocalDate startDate, String currency) {
+    return convert(findPrices(securityId, startDate), currency);
+  }
+
+  /** Returns the prices from {@code startDate} on as stored, ordered by date, each in its own currency. */
+  private List<HistoricalSecurityPrice> findPrices(long securityId, LocalDate startDate) {
+    LocalDate date = startDate != null ? startDate : EPOCH;
     List<HistoricalSecurityPriceEntity> prices =
         priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(securityId, date);
     return prices.stream().map(priceMapper::fromEntity).toList();
   }
 
-  @Override
-  public List<HistoricalSecurityPrice> getPrices(long securityId, LocalDate startDate, String currency)
-      throws BadRequestException, NotFoundException, OutdatedExchangeRateException {
-    List<HistoricalSecurityPrice> prices = getPrices(securityId, startDate);
-
-    // group by source currency and convert each group in one batch call, rather than once per price row
+  /**
+   * Converts every price not yet in {@code currency} in place, each at the exchange rate of its own date, and returns the prices now in
+   * {@code currency}. A price without an exchange rate for its date is left out.
+   */
+  private List<HistoricalSecurityPrice> convert(List<HistoricalSecurityPrice> prices, String currency) {
+    // group by source currency and convert each group in one batch call
     Map<String, List<HistoricalSecurityPrice>> pricesToConvertByCurrency = prices.stream()
         .filter(price -> !price.getCurrency().equals(currency))
         .collect(Collectors.groupingBy(HistoricalSecurityPrice::getCurrency));
@@ -96,15 +112,17 @@ class HistoricalSecurityPriceServiceImpl implements HistoricalSecurityPriceServi
       List<CurrencyConversionRequest> conversionRequests = pricesToConvert.stream()
           .map(price -> new CurrencyConversionRequest(price.getPrice(), price.getDate()))
           .toList();
-      List<BigDecimal> converted = exchangeRateService.convert(conversionRequests, sourceCurrency, currency);
-
-      IntStream.range(0, pricesToConvert.size()).forEach(i -> {
-        pricesToConvert.get(i).setPrice(converted.get(i));
-        pricesToConvert.get(i).setCurrency(currency);
-      });
+      List<BigDecimal> converted = exchangeRateService.convertBestEffort(conversionRequests, sourceCurrency, currency);
+      for (int i = 0; i < pricesToConvert.size(); i++) {
+        if (converted.get(i) != null) {
+          pricesToConvert.get(i).setPrice(converted.get(i));
+          pricesToConvert.get(i).setCurrency(currency);
+        }
+      }
     });
 
-    return prices;
+    // a price that could not be converted is still in its source currency
+    return prices.stream().filter(price -> price.getCurrency().equals(currency)).toList();
   }
 
   @Override
@@ -154,6 +172,21 @@ class HistoricalSecurityPriceServiceImpl implements HistoricalSecurityPriceServi
       priceRepository.save(price);
     });
     priceRepository.flush();
+  }
+
+  /** Stores a price without data source link, unless its date holds a price linked to a data source. */
+  void storeTradePrice(HistoricalSecurityPrice price) {
+    HistoricalSecurityPriceEntity entity = priceRepository.findBySecurityIdAndDate(price.getSecurityId(), price.getDate())
+        .orElseGet(HistoricalSecurityPriceEntity::new);
+    if (entity.getDataSourceId() == null) {
+      priceMapper.copyInto(price, entity);
+      priceRepository.saveAndFlush(entity);
+    }
+  }
+
+  /** Removes the price of a date, unless it is linked to a data source. */
+  void removeTradePrice(long securityId, LocalDate date) {
+    priceRepository.deleteBySecurityIdAndDateAndDataSourceIdIsNull(securityId, date);
   }
 
   @Override
@@ -215,14 +248,15 @@ class HistoricalSecurityPriceServiceImpl implements HistoricalSecurityPriceServi
   }
 
   void deletePrices(long securityId) {
-    priceRepository.deleteAllBySecurityId(securityId);
+    priceRepository.deleteAllBySecurityIdAndDataSourceIdIsNotNull(securityId);
   }
 
   void updatePrices(long securityId) throws InternalServerErrorException, NotFoundException {
     HistoricalSecurityPriceConfigEntity config = configRepository.findBySecurityId(securityId).orElseThrow(NotFoundException::new);
     HistoricalSecurityPriceDataSource dataSource = dataSourceService.getDataSource(config.getDataSourceId());
     String reportedIdentifier = reportedIdentifier(securityId, keyingOf(dataSource), config.getExternalSecurityId());
-    Optional<HistoricalSecurityPriceEntity> latestPrice = priceRepository.findFirstBySecurityIdOrderByDateDesc(securityId);
+    Optional<HistoricalSecurityPriceEntity> latestPrice =
+        priceRepository.findFirstBySecurityIdAndDataSourceIdOrderByDateDesc(securityId, config.getDataSourceId());
     LocalDate today = LocalDate.now(clock);
     Long missingDays = null;
     if (latestPrice.isPresent()) {
@@ -260,13 +294,25 @@ class HistoricalSecurityPriceServiceImpl implements HistoricalSecurityPriceServi
       }
     }
 
+    Map<LocalDate, HistoricalSecurityPriceEntity> stored = priceRepository.findAllBySecurityIdAndDateIn(securityId, newPrices.keySet())
+        .stream().collect(Collectors.toMap(HistoricalSecurityPriceEntity::getDate, identity()));
     List<HistoricalSecurityPriceEntity> entities = newPrices.values().stream()
         .filter(e -> acceptDate(e.getDate(), dataSource))
-        .filter(e -> latestPrice.isEmpty() || e.getDate().isAfter(latestPrice.get().getDate()))
-        .map(priceMapper::toEntity)
+        .filter(e -> latestPrice.isEmpty() || e.getDate().isAfter(latestPrice.get().getDate()) || isTradePrice(stored.get(e.getDate())))
+        .map(e -> mergeInto(stored.get(e.getDate()), e))
         .toList();
     priceRepository.saveAll(entities);
     priceRepository.flush();
+  }
+
+  private boolean isTradePrice(HistoricalSecurityPriceEntity stored) {
+    return stored != null && stored.getDataSourceId() == null;
+  }
+
+  private HistoricalSecurityPriceEntity mergeInto(HistoricalSecurityPriceEntity stored, HistoricalSecurityPrice price) {
+    HistoricalSecurityPriceEntity entity = stored == null ? new HistoricalSecurityPriceEntity() : stored;
+    priceMapper.copyInto(price, entity);
+    return entity;
   }
 
   private SecurityIdKeying classifyAndNormalize(HistoricalSecurityPriceConfig config) throws BadRequestException {
@@ -341,6 +387,7 @@ class HistoricalSecurityPriceServiceImpl implements HistoricalSecurityPriceServi
       historicalSecurityPrice.setDate(parseDate(rawDates.get(i).toString(), dataSource.getDateFormat()));
       historicalSecurityPrice.setPrice(bigDecimalParser.apply(rawPrices.get(i)));
       historicalSecurityPrice.setCurrency(currency.get(i));
+      historicalSecurityPrice.setDataSourceId(dataSource.getId());
 
       mappedCurrencyCode = dataSource.getMappedCurrencyCode(currency.get(i));
       currencyMultiplier = dataSource.getMultiplier(currency.get(i));
