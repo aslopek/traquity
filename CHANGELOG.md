@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The preconfigured **Divvy Diary** data sources in *Settings / Historical Security Prices* and *Settings / Dividend Announcements* now
+  use the ISIN to identify a security instead of relying on manually configuring the ISIN a second time. Manually configured data sources
+  also support this feature when replacing `#id()` with `#id(isin)` in their URL(s) and headers.
+
 ## [1.4.5] - 2026-11-07
 
 ### Changed
