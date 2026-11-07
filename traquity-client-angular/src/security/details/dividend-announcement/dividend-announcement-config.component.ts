@@ -2,7 +2,7 @@ import {Component, DestroyRef, effect, inject, input, InputSignal, output, Outpu
 import {Store} from '@ngrx/store';
 import {AppState} from '../../../store/app.state';
 import {getAllDataSources} from '../../../store/dividend-announcement/dividend-announcement.selector';
-import {DividendAnnouncementDataSourceRead} from '../../../gen/api/notification/dividend-announcement';
+import {DividendAnnouncementConfigCreate, DividendAnnouncementDataSourceRead} from '../../../gen/api/notification/dividend-announcement';
 import {
   DividendAnnouncementConfigParams,
   readableDividendAnnouncementConfigStore,
@@ -10,22 +10,20 @@ import {
 } from './store/dividend-announcement-config-store';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {disabled, FieldTree, form, FormField, SchemaPathTree,} from '@angular/forms/signals';
-import {MatFormField, MatInput, MatLabel} from '@angular/material/input';
+import {MatFormField, MatHint, MatInput, MatLabel} from '@angular/material/input';
 import {MatOption, MatSelect} from '@angular/material/select';
 import {MatSlideToggle} from '@angular/material/slide-toggle';
 import {MatIcon} from '@angular/material/icon';
 import {skip, tap} from 'rxjs';
 
-export type DividendAnnouncementConfigChangedEvent =
-  DividendAnnouncementConfigParams & {
-  version: number | null;
-};
+export type DividendAnnouncementConfigChangedEvent = DividendAnnouncementConfigCreate & { version: number | null };
 
 @Component({
   selector: 'app-dividend-announcement-config',
   imports: [
     MatFormField,
     MatLabel,
+    MatHint,
     MatSelect,
     FormField,
     MatOption,
@@ -39,6 +37,7 @@ export type DividendAnnouncementConfigChangedEvent =
 })
 export class DividendAnnouncementConfigComponent {
   readonly securityId: InputSignal<number | undefined> = input<number>();
+  readonly isin: InputSignal<string | undefined> = input<string>();
   readonly configChanged: OutputEmitterRef<DividendAnnouncementConfigChangedEvent | null> =
     output<DividendAnnouncementConfigChangedEvent>();
   protected readonly dataSources: Signal<DividendAnnouncementDataSourceRead[]>;
@@ -71,11 +70,11 @@ export class DividendAnnouncementConfigComponent {
         ),
         skip(2),
         takeUntilDestroyed(destroyRef),
-      )
-      .subscribe((newConfigValues: DividendAnnouncementConfigParams): void => {
+      ).subscribe((newConfigValues: DividendAnnouncementConfigParams): void => {
         if (this.dividendAnnouncementConfigStore.newConfigValuesValid()) {
           this.configChanged.emit({
             ...newConfigValues,
+            externalSecurityId: this.dividendAnnouncementConfigStore.isinKeyed() ? undefined : newConfigValues.externalSecurityId,
             version:
               this.dividendAnnouncementConfigStore.existingConfig()?.version ??
               null,
@@ -88,11 +87,18 @@ export class DividendAnnouncementConfigComponent {
     this.dividendAnnouncementConfigForm = form(
       this.formModel,
       (path: SchemaPathTree<DividendAnnouncementConfigParams>) => {
-        disabled(path.dataSourceId, () => this.dataSources().length <= 1);
+        disabled(path.dataSourceId, {when: () => this.dataSources().length <= 1});
       },
     );
 
-    effect(() => {
+    effect((): void => {
+      if (this.dividendAnnouncementConfigStore.isinKeyed() && this.formModel().externalSecurityId !== '') {
+        this.formModel.update((model: DividendAnnouncementConfigParams): DividendAnnouncementConfigParams =>
+          ({...model, externalSecurityId: ''}));
+      }
+    });
+
+    effect((): void => {
       this.dividendAnnouncementConfigStore.setNewConfigValues(this.formModel());
     });
   }
