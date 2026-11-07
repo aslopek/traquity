@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `BUY` and `SELL` transactions now fill in historical security prices for the securities where no data source is configured or the data
+  source does not provide data for the given date. This enables complete passive tracking of depot value for regular investments such as
+  savings plans.
+
 ### Changed
 
 - The preconfigured **Divvy Diary** data sources in *Settings / Historical Security Prices* and *Settings / Dividend Announcements* now

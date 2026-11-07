@@ -143,6 +143,27 @@ class GetLotsTest {
 
   @SqlMergeMode(MERGE)
   @Sql(statements = """
+      UPDATE historical_security_price
+      SET currency = 'USD'
+      WHERE security_id = 13 AND date = '2023-12-29';
+      """)
+  @Test
+  void getLots_latestPriceOnlyConvertibleWithOutdatedExchangeRate_convertedWithIt() throws Exception {
+    MvcResult mvcResult = getLots(FIRST_DEPOT, AMZN).andExpect(status().isOk()).andReturn();
+    List<LotDto> lots = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {
+    });
+
+    assertThat(lots).hasSize(2);
+    LotDto lot = lots.getFirst();
+    assertThat(lot.getDate()).isEqualTo(LocalDate.of(2020, NOVEMBER, 10));
+    assertThat(lot.getCurrency()).isEqualTo("EUR");
+    // 27 * 138.58 USD / 1.0777 EUR/USD of 2023-12-08, the latest rate and older than 7 days
+    assertThat(lot.getCurrentSizeAbsolute()).isCloseTo(new BigDecimal("3471.89385"), ACCURACY_ONE_THOUSANDTH);
+    assertThat(lot.getPerformanceAbsolute()).isCloseTo(new BigDecimal("-11.78615"), ACCURACY_ONE_THOUSANDTH);
+  }
+
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
       UPDATE transaction
       SET tax = '50'
       WHERE id = 5;

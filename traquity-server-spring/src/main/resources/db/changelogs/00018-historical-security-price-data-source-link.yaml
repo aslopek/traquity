@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: 18
+      author: Armin Slopek
+      description: Link each historical price to the data source it came from
+      changes:
+        - addColumn:
+            tableName: HISTORICAL_SECURITY_PRICE
+            columns:
+              - column:
+                  name: DATA_SOURCE_ID
+                  type: BIGINT
+
+        - addForeignKeyConstraint:
+            constraintName: FK_HISTORICAL_SECURITY_PRICE__HSP_DATA_SOURCE
+            baseTableName: HISTORICAL_SECURITY_PRICE
+            baseColumnNames: DATA_SOURCE_ID
+            referencedTableName: HISTORICAL_SECURITY_PRICE_DATA_SOURCE
+            referencedColumnNames: ID
+            onDelete: SET NULL
+
+        - update:
+            tableName: HISTORICAL_SECURITY_PRICE
+            columns:
+              - column:
+                  name: DATA_SOURCE_ID
+                  valueComputed: >-
+                    (SELECT c.DATA_SOURCE_ID FROM HISTORICAL_SECURITY_PRICE_CONFIG c
+                    WHERE c.SECURITY_ID = HISTORICAL_SECURITY_PRICE.SECURITY_ID)

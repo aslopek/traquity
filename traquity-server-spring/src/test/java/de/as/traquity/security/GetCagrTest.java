@@ -2,13 +2,15 @@ package de.as.traquity.security;
 
 import static integration.Accuracy.ACCURACY_ONE_THOUSANDTH;
 import static integration.SecurityIds.AMZN;
+import static integration.SecurityIds.GOOGL;
+import static java.math.BigDecimal.ZERO;
 import static java.time.Month.DECEMBER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.context.jdbc.SqlMergeMode.MergeMode.MERGE;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import integration.IntegrationTest;
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -19,6 +21,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.SqlMergeMode;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
@@ -27,8 +31,6 @@ import org.springframework.test.web.servlet.ResultActions;
 class GetCagrTest {
 
   private static final String ENDPOINT = "/securities/%d/cagr";
-
-  private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
   @MockitoBean
   private Clock clock;
@@ -61,6 +63,19 @@ class GetCagrTest {
     MvcResult mvcResult = getCagr(AMZN, firstAmznPrice).andExpect(status().isOk()).andReturn();
     BigDecimal cagr = new BigDecimal(mvcResult.getResponse().getContentAsString());
     assertThat(cagr).isCloseTo(new BigDecimal("0.44277"), ACCURACY_ONE_THOUSANDTH);
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      UPDATE HISTORICAL_SECURITY_PRICE SET PRICE = 100 WHERE SECURITY_ID = 9 AND DATE = '2023-12-29';
+      INSERT INTO HISTORICAL_SECURITY_PRICE(SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
+      VALUES (9, NULL, 108.68, 'USD', '2023-12-04', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      """)
+  void getCagr_mixedCurrencies_comparesPricesInCurrencyOfNewestPrice() throws Exception {
+    MvcResult mvcResult = getCagr(GOOGL, LocalDate.of(2023, DECEMBER, 4)).andExpect(status().isOk()).andReturn();
+    BigDecimal cagr = new BigDecimal(mvcResult.getResponse().getContentAsString());
+    assertThat(cagr).isCloseTo(ZERO, ACCURACY_ONE_THOUSANDTH);
   }
 
   @Test

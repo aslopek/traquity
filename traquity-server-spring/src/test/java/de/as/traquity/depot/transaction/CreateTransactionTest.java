@@ -1,6 +1,20 @@
 package de.as.traquity.depot.transaction;
 
+import static de.as.traquity.depot.transaction.api.model.TransactionTypeDto.DIVIDEND;
+import static de.as.traquity.depot.transaction.api.model.TransactionTypeDto.SELL;
+import static de.as.traquity.depot.transaction.api.model.TransactionTypeDto.SPECIAL_DIVIDEND;
+import static de.as.traquity.depot.transaction.api.model.TransactionTypeDto.TAX;
+import static integration.SecurityIds.AAPL;
+import static integration.SecurityIds.AMZN;
+import static integration.SecurityIds.HAG;
+import static integration.SecurityIds.NVDA;
+import static java.math.BigDecimal.ZERO;
+import static java.time.Month.DECEMBER;
+import static java.time.Month.JANUARY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.test.context.jdbc.SqlMergeMode.MergeMode.MERGE;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -8,17 +22,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.as.traquity.depot.transaction.api.model.TransactionCreateDto;
 import de.as.traquity.depot.transaction.api.model.TransactionReadDto;
 import de.as.traquity.depot.transaction.api.model.TransactionTypeDto;
+import de.as.traquity.price.security.historical.HistoricalSecurityPrice;
+import integration.DepotIds;
 import integration.IntegrationTest;
-import integration.SecurityIds;
 import integration.sql.TestDataQuery;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.Month;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.SqlMergeMode;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
@@ -41,9 +57,9 @@ class CreateTransactionTest {
   @BeforeEach
   void beforeEach() {
     requestBody = new TransactionCreateDto();
-    requestBody.setDate(LocalDate.of(2024, Month.JANUARY, 17));
+    requestBody.setDate(LocalDate.of(2024, JANUARY, 17));
     requestBody.setTime("16:10:38");
-    requestBody.setSecurityId(SecurityIds.AAPL);
+    requestBody.setSecurityId(AAPL);
     requestBody.setTransactionType(TransactionTypeDto.BUY);
     requestBody.setSecurityCountOriginal(BigDecimal.valueOf(20.0));
     requestBody.setSecurityCountSplitAdjusted(null);
@@ -65,10 +81,10 @@ class CreateTransactionTest {
 
   @Test
   void addTransaction_sell_ok() throws Exception {
-    requestBody.setDate(LocalDate.of(2024, Month.JANUARY, 17));
+    requestBody.setDate(LocalDate.of(2024, JANUARY, 17));
     requestBody.setTime(null);
-    requestBody.setSecurityId(SecurityIds.HAG);
-    requestBody.setTransactionType(TransactionTypeDto.SELL);
+    requestBody.setSecurityId(HAG);
+    requestBody.setTransactionType(SELL);
     requestBody.setSecurityCountOriginal(BigDecimal.valueOf(150.0));
     requestBody.setSecurityCountSplitAdjusted(null);
     requestBody.setGrossValue(BigDecimal.valueOf(4264.5));
@@ -79,10 +95,10 @@ class CreateTransactionTest {
 
   @Test
   void addTransaction_dividend_ok() throws Exception {
-    requestBody.setDate(LocalDate.of(2024, Month.JANUARY, 17));
+    requestBody.setDate(LocalDate.of(2024, JANUARY, 17));
     requestBody.setTime(null);
-    requestBody.setSecurityId(SecurityIds.NVDA);
-    requestBody.setTransactionType(TransactionTypeDto.DIVIDEND);
+    requestBody.setSecurityId(NVDA);
+    requestBody.setTransactionType(DIVIDEND);
     requestBody.setSecurityCountOriginal(BigDecimal.valueOf(30.0));
     requestBody.setSecurityCountSplitAdjusted(null);
     requestBody.setGrossValue(BigDecimal.valueOf(1.2));
@@ -93,10 +109,10 @@ class CreateTransactionTest {
 
   @Test
   void addTransaction_specialDividend_ok() throws Exception {
-    requestBody.setDate(LocalDate.of(2024, Month.JANUARY, 17));
+    requestBody.setDate(LocalDate.of(2024, JANUARY, 17));
     requestBody.setTime(null);
-    requestBody.setSecurityId(SecurityIds.NVDA);
-    requestBody.setTransactionType(TransactionTypeDto.SPECIAL_DIVIDEND);
+    requestBody.setSecurityId(NVDA);
+    requestBody.setTransactionType(SPECIAL_DIVIDEND);
     requestBody.setSecurityCountOriginal(BigDecimal.valueOf(30.0));
     requestBody.setSecurityCountSplitAdjusted(null);
     requestBody.setGrossValue(BigDecimal.valueOf(1.2));
@@ -107,10 +123,10 @@ class CreateTransactionTest {
 
   @Test
   void addTransaction_tax_ok() throws Exception {
-    requestBody.setDate(LocalDate.of(2024, Month.JANUARY, 17));
+    requestBody.setDate(LocalDate.of(2024, JANUARY, 17));
     requestBody.setTime(null);
-    requestBody.setSecurityId(SecurityIds.AMZN);
-    requestBody.setTransactionType(TransactionTypeDto.TAX);
+    requestBody.setSecurityId(AMZN);
+    requestBody.setTransactionType(TAX);
     requestBody.setSecurityCountOriginal(BigDecimal.valueOf(40.0));
     requestBody.setSecurityCountSplitAdjusted(null);
     requestBody.setGrossValue(BigDecimal.valueOf(82.19));
@@ -121,43 +137,226 @@ class CreateTransactionTest {
 
   @Test
   void addTransaction_depotDoesNotExist_notFound() throws Exception {
-    runNegativeTestCase(999, HttpStatus.NOT_FOUND);
+    runNegativeTestCase(999, NOT_FOUND);
   }
 
   @Test
   void addTransaction_dateIsNull_badRequest() throws Exception {
     requestBody.setDate(null);
-    runNegativeTestCase(1, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(1, BAD_REQUEST);
   }
 
   @Test
   void addTransaction_securityIdIsNull_badRequest() throws Exception {
     requestBody.setSecurityId(null);
-    runNegativeTestCase(1, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(1, BAD_REQUEST);
   }
 
   @Test
   void addTransaction_securityIdDoesNotExist_badRequest() throws Exception {
     requestBody.setSecurityId(999L);
-    runNegativeTestCase(1, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(1, BAD_REQUEST);
   }
 
   @Test
   void addTransaction_typeIsNull_badRequest() throws Exception {
     requestBody.setTransactionType(null);
-    runNegativeTestCase(1, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(1, BAD_REQUEST);
   }
 
   @Test
   void addTransaction_securityCountOriginalIsNull() throws Exception {
     requestBody.setSecurityCountOriginal(null);
-    runNegativeTestCase(1, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(1, BAD_REQUEST);
   }
 
   @Test
   void addTransaction_grossValueIsNull_badRequest() throws Exception {
     requestBody.setGrossValue(null);
-    runNegativeTestCase(1, HttpStatus.BAD_REQUEST);
+    runNegativeTestCase(1, BAD_REQUEST);
+  }
+
+  @Test
+  void addTransaction_buy_storesPriceFromTrade() throws Exception {
+    long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
+    postTransaction(1).andExpect(status().isCreated());
+    assertPrice(AAPL, "167.58", "EUR");
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount + 1);
+  }
+
+  @Test
+  void addTransaction_sell_storesPriceFromTrade() throws Exception {
+    requestBody.setSecurityId(HAG);
+    requestBody.setTransactionType(SELL);
+    requestBody.setSecurityCountOriginal(BigDecimal.valueOf(150.0));
+    requestBody.setGrossValue(BigDecimal.valueOf(4264.5));
+    postTransaction(1).andExpect(status().isCreated());
+    assertPrice(HAG, "28.43", "EUR");
+  }
+
+  @Test
+  void addTransaction_depotInOtherCurrency_storesPriceInDepotCurrency() throws Exception {
+    postTransaction(DepotIds.USD_DEPOT_1).andExpect(status().isCreated());
+    assertPrice(AAPL, "167.58", "USD");
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      INSERT INTO TRANSACTION(ID, DATE, TIME, DEPOT_ID, SECURITY_ID, TRANSACTION_TYPE, SECURITY_COUNT_ORIGINAL, GROSS_VALUE,
+                              CREATED_AT, UPDATED_AT, VERSION)
+      VALUES (9001, '2024-01-17', '10:00:00', 1, 3, 'BUY', 10, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+      INSERT INTO HISTORICAL_SECURITY_PRICE(SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
+      VALUES (3, NULL, 10, 'EUR', '2024-01-17', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      """)
+  void addTransaction_laterTimeThanExistingTrade_replacesPrice() throws Exception {
+    useHag();
+    long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
+    postTransaction(1).andExpect(status().isCreated());
+    assertPrice(HAG, "22.5", "EUR");
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount);
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      INSERT INTO TRANSACTION(ID, DATE, TIME, DEPOT_ID, SECURITY_ID, TRANSACTION_TYPE, SECURITY_COUNT_ORIGINAL, GROSS_VALUE,
+                              CREATED_AT, UPDATED_AT, VERSION)
+      VALUES (9001, '2024-01-17', '18:00:00', 1, 3, 'BUY', 10, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+      INSERT INTO HISTORICAL_SECURITY_PRICE(SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
+      VALUES (3, NULL, 10, 'EUR', '2024-01-17', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      """)
+  void addTransaction_earlierTimeThanExistingTrade_keepsPrice() throws Exception {
+    useHag();
+    postTransaction(1).andExpect(status().isCreated());
+    assertPrice(HAG, "10", "EUR");
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      INSERT INTO TRANSACTION(ID, DATE, TIME, DEPOT_ID, SECURITY_ID, TRANSACTION_TYPE, SECURITY_COUNT_ORIGINAL, GROSS_VALUE,
+                              CREATED_AT, UPDATED_AT, VERSION)
+      VALUES (0, '2024-01-17', '16:10:38', 1, 3, 'BUY', 10, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+      INSERT INTO HISTORICAL_SECURITY_PRICE(SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
+      VALUES (3, NULL, 10, 'EUR', '2024-01-17', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      """)
+  void addTransaction_sameTimeAsExistingTrade_enteredLastWins() throws Exception {
+    useHag();
+    postTransaction(1).andExpect(status().isCreated());
+    assertPrice(HAG, "22.5", "EUR");
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      INSERT INTO TRANSACTION(ID, DATE, TIME, DEPOT_ID, SECURITY_ID, TRANSACTION_TYPE, SECURITY_COUNT_ORIGINAL, GROSS_VALUE,
+                              CREATED_AT, UPDATED_AT, VERSION)
+      VALUES (9001, '2024-01-17', '10:00:00', 1, 3, 'BUY', 10, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+      INSERT INTO HISTORICAL_SECURITY_PRICE(SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
+      VALUES (3, NULL, 10, 'EUR', '2024-01-17', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      """)
+  void addTransaction_noTimeAndExistingTradeHasTime_keepsPrice() throws Exception {
+    useHag();
+    requestBody.setTime(null);
+    postTransaction(1).andExpect(status().isCreated());
+    assertPrice(HAG, "10", "EUR");
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      INSERT INTO TRANSACTION(ID, DATE, TIME, DEPOT_ID, SECURITY_ID, TRANSACTION_TYPE, SECURITY_COUNT_ORIGINAL, GROSS_VALUE,
+                              CREATED_AT, UPDATED_AT, VERSION)
+      VALUES (9001, '2024-01-17', NULL, 1, 3, 'BUY', 10, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+      INSERT INTO HISTORICAL_SECURITY_PRICE(SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
+      VALUES (3, NULL, 10, 'EUR', '2024-01-17', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      """)
+  void addTransaction_existingTradeHasNoTime_replacesPrice() throws Exception {
+    useHag();
+    postTransaction(1).andExpect(status().isCreated());
+    assertPrice(HAG, "22.5", "EUR");
+  }
+
+  @Test
+  void addTransaction_priceLinkedToDataSource_keepsPrice() throws Exception {
+    requestBody.setSecurityId(AMZN);
+    requestBody.setDate(LocalDate.of(2023, DECEMBER, 29));
+    long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
+    postTransaction(1).andExpect(status().isCreated());
+    assertPrice(AMZN, LocalDate.of(2023, DECEMBER, 29), "138.58", "EUR", 101L);
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount);
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      INSERT INTO STOCK_SPLIT(SECURITY_ID, EX_DATE, QUANTITY_OLD, QUANTITY_NEW, CREATED_AT, UPDATED_AT)
+      VALUES (2, '2024-02-10', 1, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+             (2, '2024-03-10', 2, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      """)
+  void addTransaction_stockSplitsAfterDate_storesSplitAdjustedPrice() throws Exception {
+    postTransaction(1).andExpect(status().isCreated());
+    assertPrice(AAPL, "55.86", "EUR"); // 3351.6 / (20 * (2/1) * (3/2)) = 3351.6 / 60
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      INSERT INTO STOCK_SPLIT(SECURITY_ID, EX_DATE, QUANTITY_OLD, QUANTITY_NEW, CREATED_AT, UPDATED_AT)
+      VALUES (2, '2024-01-17', 1, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      """)
+  void addTransaction_stockSplitOnDate_ignoresSplit() throws Exception {
+    postTransaction(1).andExpect(status().isCreated());
+    assertPrice(AAPL, "167.58", "EUR");
+  }
+
+  @Test
+  void addTransaction_shareCountZero_storesNoPrice() throws Exception {
+    requestBody.setSecurityCountOriginal(ZERO);
+    long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
+    postTransaction(1).andExpect(status().isCreated());
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount);
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      INSERT INTO HISTORICAL_SECURITY_PRICE(SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
+      VALUES (3, NULL, 10, 'EUR', '2024-01-17', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      """)
+  void addTransaction_dividend_leavesPriceUnchanged() throws Exception {
+    useHag();
+    requestBody.setTransactionType(DIVIDEND);
+    long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
+    postTransaction(1).andExpect(status().isCreated());
+    assertPrice(HAG, "10", "EUR");
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount);
+  }
+
+  @Test
+  void addTransaction_securityIdDoesNotExist_storesNoPrice() throws Exception {
+    requestBody.setSecurityId(999L);
+    long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
+    postTransaction(1).andExpect(status().isBadRequest());
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount);
+  }
+
+  private void useHag() {
+    requestBody.setSecurityId(HAG);
+    requestBody.setSecurityCountOriginal(BigDecimal.valueOf(20.0));
+    requestBody.setGrossValue(BigDecimal.valueOf(450.0));
+  }
+
+  private void assertPrice(long securityId, String price, String currency) {
+    assertPrice(securityId, requestBody.getDate(), price, currency, null);
+  }
+
+  private void assertPrice(long securityId, LocalDate date, String price, String currency, Long dataSourceId) {
+    HistoricalSecurityPrice stored = TestDataQuery.getHistoricalSecurityPrice(securityId, date);
+    assertThat(stored.getPrice()).isEqualByComparingTo(price);
+    assertThat(stored.getCurrency()).isEqualTo(currency);
+    assertThat(stored.getDataSourceId()).isEqualTo(dataSourceId);
   }
 
   private void runPositiveTestCase(long depotId) throws Exception {

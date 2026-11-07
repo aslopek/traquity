@@ -65,9 +65,10 @@ class DepotPositionTest {
         DepotCompositionDto.class);
     assertThat(responseBody.getCurrency()).isEqualTo("EUR");
     assertThat(responseBody.getBuyInAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(13633.71));
-    assertThat(responseBody.getCurrentSizeAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(13895.87));
-    assertThat(responseBody.getPerformanceAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(262.16));
-    assertThat(responseBody.getPerformanceRelative().doubleValue()).isCloseTo(0.0192, PERCENTAGE_ACCURACY_ONE_HUNDREDTH);
+    // 7483.32 (Amazon) + 3865.536 (Nvidia) + 2985.63333 (LVMH)
+    assertThat(responseBody.getCurrentSizeAbsolute().doubleValue()).isCloseTo(14334.48933, ACCURACY_ONE_THOUSANDTH);
+    assertThat(responseBody.getPerformanceAbsolute().doubleValue()).isCloseTo(700.77933, ACCURACY_ONE_THOUSANDTH);
+    assertThat(responseBody.getPerformanceRelative().doubleValue()).isCloseTo(0.0514, PERCENTAGE_ACCURACY_ONE_HUNDREDTH);
 
     List<DepotPositionDto> positions = responseBody.getPositions();
     assertThat(positions).isNotNull();
@@ -81,7 +82,7 @@ class DepotPositionTest {
     assertThat(position.getBuyInAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(7221.16));
     assertThat(position.getBuyInRelative().doubleValue()).isCloseTo(0.5296548, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
     assertThat(position.getCurrentSizeAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(7483.32));
-    assertThat(position.getCurrentSizeRelative().doubleValue()).isCloseTo(0.5385284, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
+    assertThat(position.getCurrentSizeRelative().doubleValue()).isCloseTo(0.52205, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
     assertThat(position.getPerformanceAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(262.16));
     assertThat(position.getPerformanceRelative().doubleValue()).isCloseTo(0.0363044, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
 
@@ -92,10 +93,11 @@ class DepotPositionTest {
     assertThat(position.getCount()).isEqualByComparingTo(BigDecimal.valueOf(21.6));
     assertThat(position.getBuyInAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(3317.44));
     assertThat(position.getBuyInRelative().doubleValue()).isCloseTo(0.2433263, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
-    assertThat(position.getCurrentSizeAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(3317.44));
-    assertThat(position.getCurrentSizeRelative().doubleValue()).isCloseTo(0.2387357, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
-    assertThat(position.getPerformanceAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(0));
-    assertThat(position.getPerformanceRelative()).isEqualByComparingTo(BigDecimal.valueOf(0));
+    // 21.6 * 178.96, the price derived from the depot 2 buy on 2021-09-28 (transaction 17)
+    assertThat(position.getCurrentSizeAbsolute()).isEqualByComparingTo("3865.536");
+    assertThat(position.getCurrentSizeRelative().doubleValue()).isCloseTo(0.2696668, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
+    assertThat(position.getPerformanceAbsolute()).isEqualByComparingTo("548.096");
+    assertThat(position.getPerformanceRelative().doubleValue()).isCloseTo(0.1652166, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
 
     position = positions.get(2);
     assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(SecurityIds.LVMH);
@@ -104,10 +106,11 @@ class DepotPositionTest {
     assertThat(position.getCount()).isEqualByComparingTo(BigDecimal.valueOf(4.25));
     assertThat(position.getBuyInAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(3095.11));
     assertThat(position.getBuyInRelative().doubleValue()).isCloseTo(0.2270189, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
-    assertThat(position.getCurrentSizeAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(3095.11));
-    assertThat(position.getCurrentSizeRelative().doubleValue()).isCloseTo(0.222736, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
-    assertThat(position.getPerformanceAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(0));
-    assertThat(position.getPerformanceRelative()).isEqualByComparingTo(BigDecimal.valueOf(0));
+    // 4.25 * 702.50196, the price derived from the sell on 2023-11-27 (transaction 25)
+    assertThat(position.getCurrentSizeAbsolute().doubleValue()).isCloseTo(2985.63333, ACCURACY_ONE_THOUSANDTH);
+    assertThat(position.getCurrentSizeRelative().doubleValue()).isCloseTo(0.2082832, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
+    assertThat(position.getPerformanceAbsolute().doubleValue()).isCloseTo(-109.47667, ACCURACY_ONE_THOUSANDTH);
+    assertThat(position.getPerformanceRelative().doubleValue()).isCloseTo(-0.0353708, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
   }
 
   @Test
@@ -117,9 +120,9 @@ class DepotPositionTest {
         DepotCompositionDto.class);
     assertThat(responseBody.getCurrency()).isEqualTo("EUR");
     assertThat(responseBody.getBuyInAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(4143.28));
-    assertThat(responseBody.getCurrentSizeAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(4143.28));
-    assertThat(responseBody.getPerformanceAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(0.0));
-    assertThat(responseBody.getPerformanceRelative()).isEqualByComparingTo(BigDecimal.valueOf(0.0));
+    assertThat(responseBody.getCurrentSizeAbsolute()).isEqualByComparingTo("4134.28"); // 3150 (Hensoldt) + 984.28 (Nvidia)
+    assertThat(responseBody.getPerformanceAbsolute()).isEqualByComparingTo("-9");
+    assertThat(responseBody.getPerformanceRelative().doubleValue()).isCloseTo(-0.0021722, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
 
     List<DepotPositionDto> positions = responseBody.getPositions();
     assertThat(positions).isNotNull();
@@ -132,10 +135,11 @@ class DepotPositionTest {
     assertThat(position.getCount()).isEqualByComparingTo(BigDecimal.valueOf(250.0));
     assertThat(position.getBuyInAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(3159.0));
     assertThat(position.getBuyInRelative().doubleValue()).isCloseTo(0.7624394, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
-    assertThat(position.getCurrentSizeAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(3159.0));
-    assertThat(position.getCurrentSizeRelative().doubleValue()).isCloseTo(0.7624394, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
-    assertThat(position.getPerformanceAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(0.0));
-    assertThat(position.getPerformanceRelative()).isEqualByComparingTo(BigDecimal.valueOf(0.0));
+    // 250 * 12.6, the price derived from the buy on 2022-01-19 (transaction 20)
+    assertThat(position.getCurrentSizeAbsolute()).isEqualByComparingTo("3150");
+    assertThat(position.getCurrentSizeRelative().doubleValue()).isCloseTo(0.7619223, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
+    assertThat(position.getPerformanceAbsolute()).isEqualByComparingTo("-9");
+    assertThat(position.getPerformanceRelative().doubleValue()).isCloseTo(-0.002849, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
 
     position = positions.get(1);
     assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(SecurityIds.NVDA);
@@ -144,8 +148,9 @@ class DepotPositionTest {
     assertThat(position.getCount()).isEqualByComparingTo(BigDecimal.valueOf(5.5));
     assertThat(position.getBuyInAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(984.28));
     assertThat(position.getBuyInRelative().doubleValue()).isCloseTo(0.2375606, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
+    // 5.5 * 178.96, the price derived from this position's only buy (transaction 17)
     assertThat(position.getCurrentSizeAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(984.28));
-    assertThat(position.getCurrentSizeRelative().doubleValue()).isCloseTo(0.2375606, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
+    assertThat(position.getCurrentSizeRelative().doubleValue()).isCloseTo(0.2380777, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
     assertThat(position.getPerformanceAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(0.0));
     assertThat(position.getPerformanceRelative()).isEqualByComparingTo(BigDecimal.valueOf(0.0));
   }
@@ -157,9 +162,10 @@ class DepotPositionTest {
         DepotCompositionDto.class);
     assertThat(responseBody.getCurrency()).isEqualTo("EUR");
     assertThat(responseBody.getBuyInAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(2849.82));
-    assertThat(responseBody.getCurrentSizeAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(2849.82));
-    assertThat(responseBody.getPerformanceAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(0.0));
-    assertThat(responseBody.getPerformanceRelative()).isEqualByComparingTo(BigDecimal.valueOf(0.0));
+    // 51.063 * 56.72858, the price derived from the buy on 2024-12-22 (transaction 29)
+    assertThat(responseBody.getCurrentSizeAbsolute().doubleValue()).isCloseTo(2896.73126, ACCURACY_ONE_THOUSANDTH);
+    assertThat(responseBody.getPerformanceAbsolute().doubleValue()).isCloseTo(46.91126, ACCURACY_ONE_THOUSANDTH);
+    assertThat(responseBody.getPerformanceRelative().doubleValue()).isCloseTo(0.0164611, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
 
     List<DepotPositionDto> positions = responseBody.getPositions();
     assertThat(positions).isNotNull();
@@ -172,10 +178,10 @@ class DepotPositionTest {
     assertThat(position.getCount()).isEqualByComparingTo(BigDecimal.valueOf(51.063));
     assertThat(position.getBuyInAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(2849.82));
     assertThat(position.getBuyInRelative()).isEqualByComparingTo(BigDecimal.valueOf(1.0));
-    assertThat(position.getCurrentSizeAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(2849.82));
+    assertThat(position.getCurrentSizeAbsolute().doubleValue()).isCloseTo(2896.73126, ACCURACY_ONE_THOUSANDTH);
     assertThat(position.getCurrentSizeRelative()).isEqualByComparingTo(BigDecimal.valueOf(1.0));
-    assertThat(position.getPerformanceAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(0.0));
-    assertThat(position.getPerformanceRelative()).isEqualByComparingTo(BigDecimal.valueOf(0.0));
+    assertThat(position.getPerformanceAbsolute().doubleValue()).isCloseTo(46.91126, ACCURACY_ONE_THOUSANDTH);
+    assertThat(position.getPerformanceRelative().doubleValue()).isCloseTo(0.0164611, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
   }
 
   @Test

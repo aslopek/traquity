@@ -12,6 +12,7 @@ import jakarta.persistence.EntityManager;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 class TransactionServiceTest {
@@ -23,7 +24,7 @@ class TransactionServiceTest {
   void beforeEach() {
     transactionRepository = mock(TransactionRepository.class);
     subject = new TransactionServiceImpl(mock(TransactionMapper.class), transactionRepository, mock(DepotService.class),
-        MATH_CONTEXT, mock(EntityManager.class));
+        MATH_CONTEXT, mock(EntityManager.class), mock(ApplicationEventPublisher.class));
   }
 
   @Test
