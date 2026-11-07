@@ -22,9 +22,19 @@
 
         <mat-form-field>
             <mat-label>External Security ID</mat-label>
-            <input [formField]="dividendAnnouncementConfigForm.externalSecurityId"
-                   matInput
-                   type="text">
+            @if (dividendAnnouncementConfigStore.isinKeyed()) {
+                <input [value]="isin() ?? ''"
+                       class="tq-numeric"
+                       disabled
+                       matInput>
+            } @else {
+                <input [formField]="dividendAnnouncementConfigForm.externalSecurityId"
+                       matInput
+                       type="text">
+            }
+            @if (dividendAnnouncementConfigStore.isinKeyed()) {
+                <mat-hint>Taken from the security's ISIN</mat-hint>
+            }
         </mat-form-field>
     </form>
 }

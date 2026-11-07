@@ -461,11 +461,15 @@ components:
           $ref: '#/components/schemas/Name'
         urlPattern:
           description: >
-            The string must contain at least one '#id()' part, into which the security's property will be inserted
+            Must contain at least one '#id()', or at least one '#id(isin)'. Every URL assigned to a data source must have the same
+            placeholder for external security IDs. A mixture is not allowed. The placeholders will be replaced for contacting the data
+            source as follows:
+            - #id(): the configured external security ID
+            - #id(isin): the security's ISIN
           type: string
           nullable: false
           minLength: 1
-          example: https://dividend.api/#id()/dividends
+          example: https://dividend.api/#id(isin)/dividends
         requestHeaders:
           type: array
           nullable: false
@@ -530,23 +534,24 @@ components:
             id:
               $ref: '#/components/schemas/Id'
 
+    ExternalSecurityId:
+      type: string
+      nullable: false
+      minLength: 1
+      maxLength: 255
+      example: US5949181045
+
     DividendAnnouncementConfigCreate:
       type: object
       nullable: false
       required:
         - dataSourceId
-        - externalSecurityId
         - isActive
       properties:
         dataSourceId:
           $ref: '#/components/schemas/Id'
         externalSecurityId:
-          description: identifies the security at the external data provider identified by dataSourceId
-          type: string
-          nullable: false
-          minLength: 1
-          maxLength: 255
-          example: US5949181045
+          $ref: '#/components/schemas/ExternalSecurityId'
         isActive:
           type: boolean
           nullable: false
@@ -570,6 +575,9 @@ components:
           nullable: false
           required:
             - securityId
+            - externalSecurityId
           properties:
             securityId:
               $ref: '#/components/schemas/Id'
+            externalSecurityId:
+              $ref: '#/components/schemas/ExternalSecurityId'

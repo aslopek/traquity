@@ -2,8 +2,10 @@ package de.as.traquity.price.security.historical;
 
 
 import static integration.MockServerUtils.respondWithFixture;
+import static integration.SecurityIds.AMZN;
+import static integration.SecurityIds.CRM;
+import static integration.SecurityIds.EQIX;
 import static java.time.Month.DECEMBER;
-import static java.time.Month.OCTOBER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -17,13 +19,12 @@ import de.as.traquity.exchangerates.ExchangeRateService;
 import de.as.traquity.price.security.historical.api.model.HistoricalSecurityPriceConfigReadDto;
 import de.as.traquity.price.security.historical.api.model.HistoricalSecurityPriceConfigUpdateDto;
 import integration.IntegrationTest;
-import integration.SecurityIds;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.Month;
 import java.time.ZoneId;
+import java.util.Comparator;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -100,21 +101,21 @@ class UpdateHistoricalSecurityPriceConfigTest {
 
   @Test
   void changeDatasource_keepExistingPrices_ok() throws Exception {
-    MvcResult mvcResult = putConfig(SecurityIds.AMZN, amznDataSource101, null).andExpect(status().isOk()).andReturn();
+    MvcResult mvcResult = putConfig(AMZN, amznDataSource101, null).andExpect(status().isOk()).andReturn();
     HistoricalSecurityPriceConfigReadDto responseBody = objectMapper.readValue(
         mvcResult.getResponse().getContentAsString(), HistoricalSecurityPriceConfigReadDto.class);
-    assertThat(responseBody).isEqualTo(expectedRead(amznDataSource101, SecurityIds.AMZN, 1L));
+    assertThat(responseBody).isEqualTo(expectedRead(amznDataSource101, AMZN, 1L));
 
     // verify database: config
     HistoricalSecurityPriceConfigEntity configEntity =
-        configRepository.findBySecurityId(SecurityIds.AMZN).orElseThrow();
+        configRepository.findBySecurityId(AMZN).orElseThrow();
     assertThat(configEntity.getVersion()).isOne();
     assertThat(configEntity.getExternalSecurityId()).isEqualTo("AMZ.DE");
     assertThat(configEntity.isActive()).isTrue();
 
     // verify database: prices (first, last and date sanity check)
     List<HistoricalSecurityPriceEntity> prices =
-        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(SecurityIds.AMZN, LocalDate.EPOCH);
+        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(AMZN, LocalDate.EPOCH);
     assertThat(prices.getFirst().getPrice()).isEqualTo(new BigDecimal("134.74"));
     assertThat(prices.getFirst().getDate()).isEqualTo(LocalDate.of(2023, DECEMBER, 1));
     assertThat(prices.getFirst().getCurrency()).isEqualTo("EUR");
@@ -131,21 +132,21 @@ class UpdateHistoricalSecurityPriceConfigTest {
     respondWithFixture(mockServer, "https://stock-price.api/v1/AMZ.DE?range=1y",
         "fixtures/historical-security-prices/data-source-101/amzn-365-days.json");
 
-    MvcResult mvcResult = putConfig(SecurityIds.AMZN, amznDataSource101, true).andExpect(status().isOk()).andReturn();
+    MvcResult mvcResult = putConfig(AMZN, amznDataSource101, true).andExpect(status().isOk()).andReturn();
     HistoricalSecurityPriceConfigReadDto responseBody = objectMapper.readValue(
         mvcResult.getResponse().getContentAsString(), HistoricalSecurityPriceConfigReadDto.class);
-    assertThat(responseBody).isEqualTo(expectedRead(amznDataSource101, SecurityIds.AMZN, 1L));
+    assertThat(responseBody).isEqualTo(expectedRead(amznDataSource101, AMZN, 1L));
 
     // verify database: config
     HistoricalSecurityPriceConfigEntity configEntity =
-        configRepository.findBySecurityId(SecurityIds.AMZN).orElseThrow();
+        configRepository.findBySecurityId(AMZN).orElseThrow();
     assertThat(configEntity.getVersion()).isOne();
     assertThat(configEntity.getExternalSecurityId()).isEqualTo("AMZ.DE");
     assertThat(configEntity.isActive()).isTrue();
 
     // verify database: prices (first, last and date sanity check)
     List<HistoricalSecurityPriceEntity> prices =
-        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(SecurityIds.AMZN, LocalDate.EPOCH);
+        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(AMZN, LocalDate.EPOCH);
     assertThat(prices.getFirst().getPrice()).isEqualTo(new BigDecimal("78.6"));
     assertThat(prices.getFirst().getDate()).isEqualTo(LocalDate.of(2022, DECEMBER, 29));
     assertThat(prices.getFirst().getCurrency()).isEqualTo("EUR");
@@ -163,13 +164,83 @@ class UpdateHistoricalSecurityPriceConfigTest {
     requestBody.setIsActive(true);
     requestBody.setVersion(0L);
 
-    MvcResult mvcResult = putConfig(SecurityIds.CRM, requestBody, null).andExpect(status().isConflict()).andReturn();
+    MvcResult mvcResult = putConfig(CRM, requestBody, null).andExpect(status().isConflict()).andReturn();
     assertThat(mvcResult.getResponse().getContentLength()).isZero();
 
     // verify database: config (no changes)
-    HistoricalSecurityPriceConfigEntity configEntity = configRepository.findBySecurityId(SecurityIds.CRM).orElseThrow();
+    HistoricalSecurityPriceConfigEntity configEntity = configRepository.findBySecurityId(CRM).orElseThrow();
     assertThat(configEntity.getVersion()).isOne();
     assertThat(configEntity.isActive()).isFalse();
+  }
+
+  @Test
+  void updateDatasource_isinKeyedSource_withExternalSecurityId_ok() throws Exception {
+    HistoricalSecurityPriceConfigUpdateDto requestBody = new HistoricalSecurityPriceConfigUpdateDto();
+    requestBody.setDataSourceId(105L);
+    requestBody.setExternalSecurityId("ignored-value");
+    requestBody.setIsActive(false);
+    requestBody.setVersion(0L);
+
+    assertIsinKeyedUpdateOk(requestBody);
+  }
+
+  @Test
+  void updateDatasource_isinKeyedSource_withoutExternalSecurityId_ok() throws Exception {
+    HistoricalSecurityPriceConfigUpdateDto requestBody = new HistoricalSecurityPriceConfigUpdateDto();
+    requestBody.setDataSourceId(105L);
+    requestBody.setExternalSecurityId(null);
+    requestBody.setIsActive(false);
+    requestBody.setVersion(0L);
+
+    assertIsinKeyedUpdateOk(requestBody);
+  }
+
+  @Test
+  void updateDatasource_idKeyedSource_missingExternalSecurityId_badRequest() throws Exception {
+    HistoricalSecurityPriceConfigUpdateDto requestBody = new HistoricalSecurityPriceConfigUpdateDto();
+    requestBody.setDataSourceId(103L);
+    requestBody.setExternalSecurityId(null);
+    requestBody.setIsActive(false);
+    requestBody.setVersion(1L);
+
+    MvcResult mvcResult = putConfig(CRM, requestBody, null).andExpect(status().isBadRequest()).andReturn();
+    assertThat(mvcResult.getResponse().getContentLength()).isZero();
+
+    HistoricalSecurityPriceConfigEntity configEntity = configRepository.findBySecurityId(CRM).orElseThrow();
+    assertThat(configEntity.getExternalSecurityId()).isEqualTo("CRM");
+    assertThat(configEntity.getVersion()).isOne();
+  }
+
+  @Test
+  void updateDatasource_idKeyedSource_blankExternalSecurityId_badRequest() throws Exception {
+    HistoricalSecurityPriceConfigUpdateDto requestBody = new HistoricalSecurityPriceConfigUpdateDto();
+    requestBody.setDataSourceId(103L);
+    requestBody.setExternalSecurityId(" ");
+    requestBody.setIsActive(false);
+    requestBody.setVersion(1L);
+
+    MvcResult mvcResult = putConfig(CRM, requestBody, null).andExpect(status().isBadRequest()).andReturn();
+    assertThat(mvcResult.getResponse().getContentLength()).isZero();
+
+    HistoricalSecurityPriceConfigEntity configEntity = configRepository.findBySecurityId(CRM).orElseThrow();
+    assertThat(configEntity.getExternalSecurityId()).isEqualTo("CRM");
+    assertThat(configEntity.getVersion()).isOne();
+  }
+
+  @Test
+  void updateDatasource_unknownDataSourceId_badRequest() throws Exception {
+    HistoricalSecurityPriceConfigUpdateDto requestBody = new HistoricalSecurityPriceConfigUpdateDto();
+    requestBody.setDataSourceId(999L);
+    requestBody.setExternalSecurityId("CRM");
+    requestBody.setIsActive(false);
+    requestBody.setVersion(1L);
+
+    MvcResult mvcResult = putConfig(CRM, requestBody, null).andExpect(status().isBadRequest()).andReturn();
+    assertThat(mvcResult.getResponse().getContentLength()).isZero();
+
+    HistoricalSecurityPriceConfigEntity configEntity = configRepository.findBySecurityId(CRM).orElseThrow();
+    assertThat(configEntity.getDataSourceId()).isEqualTo(103L);
+    assertThat(configEntity.getVersion()).isOne();
   }
 
   @Test
@@ -178,6 +249,49 @@ class UpdateHistoricalSecurityPriceConfigTest {
     MvcResult mvcResult = putConfig(999, amznDataSource101, null).andExpect(status().isNotFound()).andReturn();
     assertThat(mvcResult.getResponse().getContentLength()).isZero();
     assertThat(configRepository.count()).isEqualTo(configCount);
+  }
+
+  private void assertIsinKeyedUpdateOk(HistoricalSecurityPriceConfigUpdateDto requestBody) throws Exception {
+    long configCount = configRepository.count();
+    long priceCount = priceRepository.count();
+    HistoricalSecurityPriceConfigEntity before = configRepository.findBySecurityId(EQIX).orElseThrow();
+    List<HistoricalSecurityPriceConfigEntity> othersBefore = otherConfigs(EQIX);
+
+    MvcResult mvcResult = putConfig(EQIX, requestBody, null).andExpect(status().isOk()).andReturn();
+
+    // verify response: every property; the ISIN is reported, not the submitted identifier
+    HistoricalSecurityPriceConfigReadDto responseBody = objectMapper.readValue(
+        mvcResult.getResponse().getContentAsString(), HistoricalSecurityPriceConfigReadDto.class);
+    HistoricalSecurityPriceConfigReadDto expected = new HistoricalSecurityPriceConfigReadDto();
+    expected.setSecurityId(EQIX);
+    expected.setDataSourceId(105L);
+    expected.setExternalSecurityId("US29444U7000");
+    expected.setIsActive(false);
+    expected.setVersion(1L);
+    assertThat(responseBody).isEqualTo(expected);
+
+    // verify database: config, every property
+    HistoricalSecurityPriceConfigEntity after = configRepository.findBySecurityId(EQIX).orElseThrow();
+    assertThat(after.getId()).isEqualTo(before.getId());
+    assertThat(after.getSecurityId()).isEqualTo(EQIX);
+    assertThat(after.getDataSourceId()).isEqualTo(105L);
+    assertThat(after.getExternalSecurityId()).isNull();
+    assertThat(after.isActive()).isFalse();
+    assertThat(after.getVersion()).isOne();
+    assertThat(after.getCreatedAt().toInstant()).isEqualTo(before.getCreatedAt().toInstant());
+    assertThat(after.getUpdatedAt().toInstant()).isAfterOrEqualTo(before.getUpdatedAt().toInstant());
+
+    // verify database: no rows added or removed, other configs untouched, no prices loaded
+    assertThat(configRepository.count()).isEqualTo(configCount);
+    assertThat(otherConfigs(EQIX)).usingRecursiveComparison().isEqualTo(othersBefore);
+    assertThat(priceRepository.count()).isEqualTo(priceCount);
+  }
+
+  private List<HistoricalSecurityPriceConfigEntity> otherConfigs(long securityId) {
+    return configRepository.findAll().stream()
+        .filter(config -> config.getSecurityId() != securityId)
+        .sorted(Comparator.comparing(HistoricalSecurityPriceConfigEntity::getId))
+        .toList();
   }
 
   private ResultActions putConfig(long securityId, HistoricalSecurityPriceConfigUpdateDto config,

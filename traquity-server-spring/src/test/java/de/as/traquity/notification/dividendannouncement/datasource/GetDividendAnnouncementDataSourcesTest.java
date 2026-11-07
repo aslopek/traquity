@@ -41,7 +41,7 @@ class GetDividendAnnouncementDataSourcesTest {
 
     dataSources = dataSources.stream().filter(ds -> ds.getId() >= 101).toList();
 
-    assertThat(dataSources).hasSize(3);
+    assertThat(dataSources).hasSize(4);
 
     // Data Source 101
     DividendAnnouncementDataSourceReadDto config = dataSources.getFirst();
@@ -130,6 +130,30 @@ class GetDividendAnnouncementDataSourcesTest {
         .filter(m -> m.getCurrencyKey().equals("CA-$")).findFirst().orElseThrow();
     assertThat(currencyMapping.getMappedCurrencyCode()).isEqualTo("CAD");
     assertThat(currencyMapping.getMultiplier()).isNull();
+
+    // Data Source 104
+    config = dataSources.get(3);
+    assertThat(config.getId()).isEqualTo(104);
+    assertThat(config.getVersion()).isEqualTo(0);
+    assertThat(config.getName()).isEqualTo("Dividend API v4 (ISIN)");
+    assertThat(config.getUrlPattern()).isEqualTo("https://dividend.api/v4/#id(isin)/dividends");
+    assertThat(config.getJsonPathDate()).isEqualTo("$.payments[*].date");
+    assertThat(config.getJsonPathValue()).isEqualTo("$.payments[*].dividendPayment");
+    assertThat(config.getJsonPathCurrency()).isEqualTo("$.currency");
+    assertThat(config.getRegexCurrency()).isNull();
+    assertThat(config.getRegexCurrencyGroup()).isNull();
+    assertThat(config.getCurrencyMappings()).isEmpty();
+
+    // Date Format
+    assertThat(config.getDateFormat()).isNotNull();
+    assertThat(config.getDateFormat().getFormat()).isEqualTo(CUSTOM_STRING);
+    assertThat(config.getDateFormat().getCustomPattern()).isEqualTo("yyyy-MM-dd");
+
+    // Headers
+    headers = config.getRequestHeaders();
+    assertThat(headers).hasSize(1);
+    assertThat(headers.getFirst().getHeaderName()).isEqualTo("x-isin");
+    assertThat(headers.getFirst().getHeaderValue()).isEqualTo("#id(isin)");
   }
 
   @Test

@@ -2,8 +2,10 @@ package de.as.traquity.price.security.historical;
 
 
 import static integration.MockServerUtils.respondWithFixture;
+import static integration.SecurityIds.QCOM;
 import static java.time.Month.DECEMBER;
 import static java.time.Month.OCTOBER;
+import static java.time.temporal.ChronoUnit.MILLIS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -92,17 +94,17 @@ class CreateHistoricalSecurityPriceConfigTest {
         "fixtures/historical-security-prices/data-source-102/qcom-73-days.json");
 
     MvcResult mvcResult =
-        postConfig(SecurityIds.QCOM, qcomDataSource102).andExpect(status().isCreated()).andReturn();
+        postConfig(QCOM, qcomDataSource102).andExpect(status().isCreated()).andReturn();
 
     HistoricalSecurityPriceConfigReadDto responseBody = objectMapper.readValue(
         mvcResult.getResponse().getContentAsString(), HistoricalSecurityPriceConfigReadDto.class);
-    assertThat(responseBody).isEqualTo(expectedRead(qcomDataSource102, SecurityIds.QCOM, 0L));
+    assertThat(responseBody).isEqualTo(expectedRead(qcomDataSource102, QCOM, 0L));
     assertThat(mvcResult.getResponse().getHeader("location"))
-        .isEqualTo(String.format(ENDPOINT, SecurityIds.QCOM));
+        .isEqualTo(String.format(ENDPOINT, QCOM));
 
     // verify database: config
     HistoricalSecurityPriceConfigEntity configEntity =
-        configRepository.findBySecurityId(SecurityIds.QCOM).orElseThrow();
+        configRepository.findBySecurityId(QCOM).orElseThrow();
     assertThat(configEntity.getDataSourceId()).isEqualTo(102L);
     assertThat(configEntity.getExternalSecurityId()).isEqualTo("QCOM.XNAS");
     assertThat(configEntity.isActive()).isTrue();
@@ -110,7 +112,7 @@ class CreateHistoricalSecurityPriceConfigTest {
 
     // verify database: prices (first, last and date sanity check)
     List<HistoricalSecurityPriceEntity> prices =
-        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(SecurityIds.QCOM, LocalDate.EPOCH);
+        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(QCOM, LocalDate.EPOCH);
     assertThat(prices).hasSize(52);
     assertThat(prices.getFirst().getPrice()).isEqualTo(new BigDecimal("104.62"));
     assertThat(prices.getFirst().getDate()).isEqualTo(LocalDate.of(2023, OCTOBER, 17));
@@ -126,21 +128,21 @@ class CreateHistoricalSecurityPriceConfigTest {
     qcomDataSource102.setIsActive(false);
 
     MvcResult mvcResult =
-        postConfig(SecurityIds.QCOM, qcomDataSource102).andExpect(status().isCreated()).andReturn();
+        postConfig(QCOM, qcomDataSource102).andExpect(status().isCreated()).andReturn();
 
     HistoricalSecurityPriceConfigReadDto responseBody = objectMapper.readValue(
         mvcResult.getResponse().getContentAsString(), HistoricalSecurityPriceConfigReadDto.class);
-    assertThat(responseBody).isEqualTo(expectedRead(qcomDataSource102, SecurityIds.QCOM, 0L));
+    assertThat(responseBody).isEqualTo(expectedRead(qcomDataSource102, QCOM, 0L));
 
     // verify database: config
     HistoricalSecurityPriceConfigEntity configEntity =
-        configRepository.findBySecurityId(SecurityIds.QCOM).orElseThrow();
+        configRepository.findBySecurityId(QCOM).orElseThrow();
     assertThat(configEntity.getExternalSecurityId()).isEqualTo("QCOM.XNAS");
     assertThat(configEntity.isActive()).isFalse();
 
     // verify database: prices
     List<HistoricalSecurityPriceEntity> prices =
-        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(SecurityIds.QCOM, LocalDate.EPOCH);
+        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(QCOM, LocalDate.EPOCH);
     assertThat(prices).isEmpty();
   }
 
@@ -188,6 +190,56 @@ class CreateHistoricalSecurityPriceConfigTest {
   }
 
   @Test
+  void createConfig_isinKeyedSource_withExternalSecurityId_ok() throws Exception {
+    HistoricalSecurityPriceConfigCreateDto config = new HistoricalSecurityPriceConfigCreateDto();
+    config.setDataSourceId(105L);
+    config.setExternalSecurityId("ignored-value");
+    config.setIsActive(false);
+
+    assertIsinKeyedConfigCreated(config);
+  }
+
+  @Test
+  void createConfig_isinKeyedSource_withoutExternalSecurityId_ok() throws Exception {
+    HistoricalSecurityPriceConfigCreateDto config = new HistoricalSecurityPriceConfigCreateDto();
+    config.setDataSourceId(105L);
+    config.setExternalSecurityId(null);
+    config.setIsActive(false);
+
+    assertIsinKeyedConfigCreated(config);
+  }
+
+  @Test
+  void createConfig_idKeyedSource_missingExternalSecurityId_badRequest() throws Exception {
+    HistoricalSecurityPriceConfigCreateDto config = new HistoricalSecurityPriceConfigCreateDto();
+    config.setDataSourceId(102L);
+    config.setExternalSecurityId(null);
+    config.setIsActive(false);
+
+    assertRejectedWithBadRequest(config);
+  }
+
+  @Test
+  void createConfig_idKeyedSource_blankExternalSecurityId_badRequest() throws Exception {
+    HistoricalSecurityPriceConfigCreateDto config = new HistoricalSecurityPriceConfigCreateDto();
+    config.setDataSourceId(102L);
+    config.setExternalSecurityId(" ");
+    config.setIsActive(false);
+
+    assertRejectedWithBadRequest(config);
+  }
+
+  @Test
+  void createConfig_unknownDataSourceId_badRequest() throws Exception {
+    HistoricalSecurityPriceConfigCreateDto config = new HistoricalSecurityPriceConfigCreateDto();
+    config.setDataSourceId(999L);
+    config.setExternalSecurityId("QCOM");
+    config.setIsActive(false);
+
+    assertRejectedWithBadRequest(config);
+  }
+
+  @Test
   void createConfig_configExistsAlready_conflict() throws Exception {
     long configCount = configRepository.count();
     HistoricalSecurityPriceConfigEntity before =
@@ -211,6 +263,54 @@ class CreateHistoricalSecurityPriceConfigTest {
     assertThat(mvcResult.getResponse().getContentLength()).isZero();
 
     assertThat(configRepository.count()).isEqualTo(configCount);
+  }
+
+  private void assertIsinKeyedConfigCreated(HistoricalSecurityPriceConfigCreateDto config) throws Exception {
+    long configCount = configRepository.count();
+    long priceCount = priceRepository.count();
+    Instant before = Instant.now().truncatedTo(MILLIS);
+
+    MvcResult mvcResult = postConfig(QCOM, config).andExpect(status().isCreated()).andReturn();
+    Instant after = Instant.now();
+
+    HistoricalSecurityPriceConfigReadDto responseBody = objectMapper.readValue(
+        mvcResult.getResponse().getContentAsString(), HistoricalSecurityPriceConfigReadDto.class);
+    HistoricalSecurityPriceConfigReadDto expectedBody = new HistoricalSecurityPriceConfigReadDto();
+    expectedBody.setSecurityId(QCOM);
+    expectedBody.setDataSourceId(105L);
+    expectedBody.setExternalSecurityId("US7475251036");
+    expectedBody.setIsActive(false);
+    expectedBody.setVersion(0L);
+    assertThat(responseBody).isEqualTo(expectedBody);
+    assertThat(mvcResult.getResponse().getHeader("location")).isEqualTo(String.format(ENDPOINT, QCOM));
+
+    assertThat(configRepository.count()).isEqualTo(configCount + 1);
+    HistoricalSecurityPriceConfigEntity configEntity = configRepository.findBySecurityId(QCOM).orElseThrow();
+    assertThat(configEntity.getId()).isNotNull();
+    assertThat(configEntity.getSecurityId()).isEqualTo(QCOM);
+    assertThat(configEntity.getDataSourceId()).isEqualTo(105L);
+    assertThat(configEntity.getExternalSecurityId()).isNull();
+    assertThat(configEntity.isActive()).isFalse();
+    assertThat(configEntity.getVersion()).isZero();
+    assertThat(configEntity.getCreatedAt().toInstant()).isBetween(before, after);
+    assertThat(configEntity.getUpdatedAt().toInstant()).isBetween(before, after);
+
+    assertThat(priceRepository.count()).isEqualTo(priceCount);
+    assertThat(priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(QCOM, LocalDate.EPOCH)).isEmpty();
+  }
+
+  private void assertRejectedWithBadRequest(HistoricalSecurityPriceConfigCreateDto config) throws Exception {
+    long configCount = configRepository.count();
+    long priceCount = priceRepository.count();
+
+    MvcResult mvcResult = postConfig(QCOM, config).andExpect(status().isBadRequest()).andReturn();
+
+    assertThat(mvcResult.getResponse().getContentLength()).isZero();
+    assertThat(mvcResult.getResponse().getContentAsString()).isEmpty();
+    assertThat(mvcResult.getResponse().getHeader("location")).isNull();
+    assertThat(configRepository.count()).isEqualTo(configCount);
+    assertThat(configRepository.findBySecurityId(QCOM)).isEmpty();
+    assertThat(priceRepository.count()).isEqualTo(priceCount);
   }
 
   private ResultActions postConfig(long securityId, HistoricalSecurityPriceConfigCreateDto config) throws Exception {

@@ -21,7 +21,8 @@
 
     <mat-step label="Historical Prices"
               [completed]="addSecurityWizardStore.historicalSecurityPriceConfigStepOk()">
-        <app-historical-price-config (configChanged)="addSecurityWizardStore.setHistoricalSecurityPriceConfig($event)">
+        <app-historical-price-config [isin]="addSecurityWizardStore.masterData()?.isin"
+                                     (configChanged)="addSecurityWizardStore.setHistoricalSecurityPriceConfig($event)">
         </app-historical-price-config>
 
         <div class="wizard__actions">
@@ -35,7 +36,8 @@
 
     <mat-step label="Dividend Announcements"
               [completed]="addSecurityWizardStore.dividendAnnouncementConfigStepOk()">
-        <app-dividend-announcement-config (configChanged)="addSecurityWizardStore.setDividendAnnouncementConfig($event)">
+        <app-dividend-announcement-config [isin]="addSecurityWizardStore.masterData()?.isin"
+                                          (configChanged)="addSecurityWizardStore.setDividendAnnouncementConfig($event)">
         </app-dividend-announcement-config>
 
         <div class="wizard__actions">

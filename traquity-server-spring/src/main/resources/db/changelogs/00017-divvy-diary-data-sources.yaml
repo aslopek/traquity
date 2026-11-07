@@ -1,0 +1,37 @@
+databaseChangeLog:
+  - changeSet:
+      id: 17
+      author: Armin Slopek
+      description: Key the preconfigured Divvy Diary data sources by ISIN
+      changes:
+        - update:
+            tableName: HISTORICAL_SECURITY_PRICE_DATA_SOURCE_URL
+            columns:
+              - column:
+                  name: URL_PATTERN
+                  valueComputed: "REPLACE(URL_PATTERN, '#id()', '#id(isin)')"
+            where: "DATA_SOURCE_ID = 3"
+
+        - update:
+            tableName: HISTORICAL_SECURITY_PRICE_CONFIG
+            columns:
+              - column:
+                  name: EXTERNAL_SECURITY_ID
+                  valueComputed: "NULL"
+            where: "DATA_SOURCE_ID = 3"
+
+        - update:
+            tableName: DIVIDEND_ANNOUNCEMENT_DATA_SOURCE
+            columns:
+              - column:
+                  name: URL_PATTERN
+                  valueComputed: "REPLACE(URL_PATTERN, '#id()', '#id(isin)')"
+            where: "ID = 1"
+
+        - update:
+            tableName: DIVIDEND_ANNOUNCEMENT_CONFIG
+            columns:
+              - column:
+                  name: EXTERNAL_SECURITY_ID
+                  valueComputed: "NULL"
+            where: "DATA_SOURCE_ID = 1"

@@ -1,11 +1,20 @@
 package de.as.traquity.notification.dividendannouncement.config;
 
+import static de.as.traquity.common.util.SecurityIdKeying.ISIN;
+import static java.util.function.Function.identity;
+
 import de.as.traquity.common.error.BadRequestException;
 import de.as.traquity.common.error.ConflictException;
 import de.as.traquity.common.error.NotFoundException;
+import de.as.traquity.common.util.SecurityIdKeying;
+import de.as.traquity.common.util.ValueFormatService;
+import de.as.traquity.notification.dividendannouncement.datasource.DividendAnnouncementDataSource;
 import de.as.traquity.notification.dividendannouncement.datasource.DividendAnnouncementDataSourceService;
+import de.as.traquity.security.SecurityIsinService;
 import de.as.traquity.security.SecurityService;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -19,29 +28,38 @@ class DividendAnnouncementConfigServiceImpl implements DividendAnnouncementConfi
   private final DividendAnnouncementConfigRepository dividendAnnouncementConfigRepository;
   private final DividendAnnouncementConfigMapper dividendAnnouncementConfigMapper;
   private final SecurityService securityService;
+  private final SecurityIsinService securityIsinService;
   private final DividendAnnouncementDataSourceService dividendAnnouncementDataSourceService;
+  private final ValueFormatService valueFormatService;
 
   @Override
   public List<DividendAnnouncementConfig> getDividendAnnouncementConfigs() {
+    Map<Long, DividendAnnouncementDataSource> dataSourcesById = dividendAnnouncementDataSourceService.getDataSources()
+        .stream().collect(Collectors.toMap(DividendAnnouncementDataSource::getId, identity()));
+
     return dividendAnnouncementConfigRepository.findAllByOrderBySecurityIdAsc().stream()
-        .map(dividendAnnouncementConfigMapper::fromEntity).toList();
+        .map(dividendAnnouncementConfigMapper::fromEntity)
+        .map(config -> withReportedIdentifier(config, keyingOf(dataSourcesById.get(config.getDataSourceId()))))
+        .toList();
   }
 
   @Override
   public DividendAnnouncementConfig getDividendAnnouncementConfig(long securityId) throws NotFoundException {
     DividendAnnouncementConfigEntity entity =
         dividendAnnouncementConfigRepository.findBySecurityId(securityId).orElseThrow(NotFoundException::new);
-    return dividendAnnouncementConfigMapper.fromEntity(entity);
+    DividendAnnouncementConfig config = dividendAnnouncementConfigMapper.fromEntity(entity);
+    DividendAnnouncementDataSource dataSource = dividendAnnouncementDataSourceService.getDataSource(config.getDataSourceId());
+    return withReportedIdentifier(config, keyingOf(dataSource));
   }
 
   @Override
   public DividendAnnouncementConfig createDividendAnnouncementConfig(
       DividendAnnouncementConfig dividendAnnouncementConfig)
       throws BadRequestException, ConflictException, NotFoundException {
-    validate(dividendAnnouncementConfig);
+    SecurityIdKeying keying = validateAndNormalize(dividendAnnouncementConfig);
     DividendAnnouncementConfigEntity entity = dividendAnnouncementConfigMapper.toEntity(dividendAnnouncementConfig);
     entity = persist(entity);
-    return dividendAnnouncementConfigMapper.fromEntity(entity);
+    return withReportedIdentifier(dividendAnnouncementConfigMapper.fromEntity(entity), keying);
   }
 
   @Override
@@ -49,7 +67,7 @@ class DividendAnnouncementConfigServiceImpl implements DividendAnnouncementConfi
   public DividendAnnouncementConfig updateDividendAnnouncementConfig(
       DividendAnnouncementConfig dividendAnnouncementConfig)
       throws BadRequestException, ConflictException, NotFoundException {
-    validate(dividendAnnouncementConfig);
+    SecurityIdKeying keying = validateAndNormalize(dividendAnnouncementConfig);
     DividendAnnouncementConfigEntity existing = dividendAnnouncementConfigRepository
         .findBySecurityId(dividendAnnouncementConfig.getSecurityId()).orElseThrow(NotFoundException::new);
     if (!existing.getVersion().equals(dividendAnnouncementConfig.getVersion())) {
@@ -57,7 +75,7 @@ class DividendAnnouncementConfigServiceImpl implements DividendAnnouncementConfi
     }
     DividendAnnouncementConfigEntity entity = dividendAnnouncementConfigMapper.toEntity(dividendAnnouncementConfig);
     entity = persist(entity);
-    return dividendAnnouncementConfigMapper.fromEntity(entity);
+    return withReportedIdentifier(dividendAnnouncementConfigMapper.fromEntity(entity), keying);
   }
 
   @Override
@@ -83,20 +101,35 @@ class DividendAnnouncementConfigServiceImpl implements DividendAnnouncementConfi
     return saved;
   }
 
-  private void validate(DividendAnnouncementConfig dividendAnnouncementConfig)
+  private SecurityIdKeying validateAndNormalize(DividendAnnouncementConfig dividendAnnouncementConfig)
       throws BadRequestException, NotFoundException {
-    if (dividendAnnouncementConfig.getExternalSecurityId() == null) {
+    DividendAnnouncementDataSource dataSource;
+    try {
+      dataSource = dividendAnnouncementDataSourceService.getDataSource(dividendAnnouncementConfig.getDataSourceId());
+    } catch (NotFoundException e) {
       throw new BadRequestException();
     }
 
-    if (dividendAnnouncementConfig.getExternalSecurityId().trim().isBlank()) {
+    SecurityIdKeying keying = keyingOf(dataSource);
+    if (keying == ISIN) {
+      dividendAnnouncementConfig.setExternalSecurityId(null);
+    } else if (dividendAnnouncementConfig.getExternalSecurityId() == null
+        || dividendAnnouncementConfig.getExternalSecurityId().trim().isBlank()) {
       throw new BadRequestException();
     }
 
-    if (!dividendAnnouncementDataSourceService.dataSourceExists(dividendAnnouncementConfig.getDataSourceId())) {
-      throw new BadRequestException();
-    }
+    securityService.getSecurity(dividendAnnouncementConfig.getSecurityId()); // throws not found exception if securityId is unknown
+    return keying;
+  }
 
-    securityService.getSecurity(dividendAnnouncementConfig.getSecurityId());
+  private SecurityIdKeying keyingOf(DividendAnnouncementDataSource dataSource) {
+    return valueFormatService.keyingOf(List.of(dataSource.getUrlPattern()), dataSource.getRequestHeaders().values());
+  }
+
+  private DividendAnnouncementConfig withReportedIdentifier(DividendAnnouncementConfig config, SecurityIdKeying keying) {
+    if (keying == ISIN) {
+      config.setExternalSecurityId(securityIsinService.getIsin(config.getSecurityId()));
+    }
+    return config;
   }
 }
