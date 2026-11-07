@@ -136,8 +136,7 @@ class HistoricalSecurityPriceUpdaterTest {
 
     // verify AMZN prices
     List<HistoricalSecurityPriceEntity> allPricesAmzn =
-        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(AMZN,
-            LocalDate.of(1970, JANUARY, 1));
+        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(AMZN, EPOCH);
     assertThat(allPricesAmzn).hasSize(252);
 
     HistoricalSecurityPriceEntity price = allPricesAmzn.getFirst();
@@ -152,7 +151,7 @@ class HistoricalSecurityPriceUpdaterTest {
 
     // verify PINS prices
     List<HistoricalSecurityPriceEntity> allPricesPins =
-        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(PINS, LocalDate.of(1970, JANUARY, 1));
+        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(PINS, EPOCH);
     assertThat(allPricesPins).hasSize(21);
 
     for (HistoricalSecurityPriceEntity entity : allPricesPins) {
@@ -251,6 +250,142 @@ class HistoricalSecurityPriceUpdaterTest {
     assertThat(prices.getLast().getDate()).isEqualTo(LocalDate.of(2023, DECEMBER, 15));
     assertThat(prices.getLast().getPrice()).isEqualByComparingTo(new BigDecimal("85.21"));
     assertThat(prices.getLast().getCurrency()).isEqualTo("EUR");
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      DELETE FROM HISTORICAL_SECURITY_PRICE
+      WHERE SECURITY_ID = (SELECT ID FROM SECURITY WHERE NAME = 'Amazon') AND DATE > '2023-12-01';
+      INSERT INTO HISTORICAL_SECURITY_PRICE(SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
+      VALUES ((SELECT ID FROM SECURITY WHERE NAME = 'Amazon'), NULL, 1, 'EUR', '2023-12-27', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+             ((SELECT ID FROM SECURITY WHERE NAME = 'Amazon'), 102, 2, 'EUR', '2023-12-28', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      """)
+  void updateHistoricalPrices_newerPricesFromTradesAndOtherSource_areOverwrittenAndLinked() {
+    // AMZN is configured for data source 101, so only its prices count when finding the newest stored price;
+    // the arranged prices on Dec 27 (trade, no data source) and Dec 28 (data source 102) are not considered therefore
+    respondWithAmznAndPinsFixtures(true);
+    long priceCountBefore = priceRepository.count();
+
+    subject.updateHistoricalPrices();
+
+    // the 1y URL is only requested when the date range is measured from the newest price of this data source (Dec 1)
+    mockServer.verify();
+    verifyAmznPricesDecember2023();
+    List<HistoricalSecurityPriceEntity> deliveredPrices =
+        priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(AMZN, LocalDate.of(2023, DECEMBER, 2));
+    // trading days Dec 4 to Dec 29 in the fixture
+    assertThat(deliveredPrices).hasSize(18);
+    assertThat(deliveredPrices).extracting(HistoricalSecurityPriceEntity::getDataSourceId).containsOnly(101L);
+    // 18 delivered prices, 2 of them replace the arranged ones on Dec 27 and Dec 28
+    assertThat(priceRepository.count()).isEqualTo(priceCountBefore + 16);
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      DELETE FROM HISTORICAL_SECURITY_PRICE
+      WHERE SECURITY_ID = (SELECT ID FROM SECURITY WHERE NAME = 'Amazon') AND DATE > '2023-12-13';
+      INSERT INTO HISTORICAL_SECURITY_PRICE(SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
+      VALUES ((SELECT ID FROM SECURITY WHERE NAME = 'Amazon'), NULL, 1, 'EUR', '2023-12-23', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      """)
+  void updateHistoricalPrices_tradePriceOnUndeliveredDate_staysUnchanged() {
+    respondWithAmznAndPinsFixtures(false);
+    long priceCountBefore = priceRepository.count();
+
+    subject.updateHistoricalPrices();
+
+    // Dec 23: fixture delivers no price for it
+    HistoricalSecurityPriceEntity price = findAmznPrice(LocalDate.of(2023, DECEMBER, 23));
+    // as arranged
+    assertThat(price.getPrice()).isEqualByComparingTo("1");
+    assertThat(price.getCurrency()).isEqualTo("EUR");
+    assertThat(price.getDataSourceId()).isNull();
+    // trading days Dec 14 to Dec 29 in the fixture
+    assertThat(priceRepository.count()).isEqualTo(priceCountBefore + 10);
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      DELETE FROM HISTORICAL_SECURITY_PRICE
+      WHERE SECURITY_ID = (SELECT ID FROM SECURITY WHERE NAME = 'Amazon') AND DATE > '2023-12-13';
+      INSERT INTO HISTORICAL_SECURITY_PRICE(SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
+      VALUES ((SELECT ID FROM SECURITY WHERE NAME = 'Amazon'), 102, 2, 'EUR', '2023-12-24', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      """)
+  void updateHistoricalPrices_otherSourcePriceOnUndeliveredDate_staysUnchanged() {
+    respondWithAmznAndPinsFixtures(false);
+    long priceCountBefore = priceRepository.count();
+
+    subject.updateHistoricalPrices();
+
+    // Dec 24 is a Sunday, the fixture delivers no price for it
+    HistoricalSecurityPriceEntity price = findAmznPrice(LocalDate.of(2023, DECEMBER, 24));
+    // as arranged
+    assertThat(price.getPrice()).isEqualByComparingTo("2");
+    assertThat(price.getCurrency()).isEqualTo("EUR");
+    assertThat(price.getDataSourceId()).isEqualTo(102L);
+    // trading days Dec 14 to Dec 29 in the fixture
+    assertThat(priceRepository.count()).isEqualTo(priceCountBefore + 10);
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      UPDATE HISTORICAL_SECURITY_PRICE
+      SET DATA_SOURCE_ID = NULL, PRICE = 1
+      WHERE SECURITY_ID = (SELECT ID FROM SECURITY WHERE NAME = 'Amazon') AND DATE = '2023-12-20';
+      """)
+  void updateHistoricalPrices_tradePriceBeforeNewestSourcePrice_isOverwrittenAndLinked() {
+    respondWithAmznAndPinsFixtures(false);
+    long priceCount = priceRepository.count();
+
+    subject.updateHistoricalPrices();
+
+    HistoricalSecurityPriceEntity price = findAmznPrice(LocalDate.of(2023, DECEMBER, 20));
+    // delivered for Dec 20 by the fixture
+    assertThat(price.getPrice()).isEqualByComparingTo("140.94");
+    assertThat(price.getDataSourceId()).isEqualTo(101L);
+    // the fixture delivers no date after this data source's newest price on Dec 29
+    assertThat(priceRepository.count()).isEqualTo(priceCount);
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      UPDATE HISTORICAL_SECURITY_PRICE
+      SET DATA_SOURCE_ID = 102, PRICE = 2
+      WHERE SECURITY_ID = (SELECT ID FROM SECURITY WHERE NAME = 'Amazon') AND DATE = '2023-12-20';
+      """)
+  void updateHistoricalPrices_otherSourcePriceBeforeNewestSourcePrice_staysUnchanged() {
+    respondWithAmznAndPinsFixtures(false);
+    long priceCount = priceRepository.count();
+
+    subject.updateHistoricalPrices();
+
+    HistoricalSecurityPriceEntity price = findAmznPrice(LocalDate.of(2023, DECEMBER, 20));
+    // as arranged
+    assertThat(price.getPrice()).isEqualByComparingTo("2");
+    assertThat(price.getDataSourceId()).isEqualTo(102L);
+    // the fixture delivers no date after this data source's newest price on Dec 29
+    assertThat(priceRepository.count()).isEqualTo(priceCount);
+  }
+
+  private void respondWithAmznAndPinsFixtures(boolean includeYearRange) {
+    respondWithFixture(mockServer,
+        "https://stock-price.api/v1/AMZN?range=30d",
+        "fixtures/historical-security-prices/data-source-101/amzn-30-days.json");
+    if (includeYearRange) {
+      respondWithFixture(mockServer,
+          "https://stock-price.api/v1/AMZN?range=1y",
+          "fixtures/historical-security-prices/data-source-101/amzn-365-days.json");
+    }
+    respondWithFixture(mockServer, "https://stock-price.api/v2?isin=US72352L1061.XETR",
+        "fixtures/historical-security-prices/data-source-102/pins-30-days.json");
+  }
+
+  private HistoricalSecurityPriceEntity findAmznPrice(LocalDate date) {
+    return priceRepository.findBySecurityIdAndDate(AMZN, date).orElseThrow();
   }
 
   private void verifyAmznPricesDecember2023() {

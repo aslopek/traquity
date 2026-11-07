@@ -1,5 +1,7 @@
 package de.as.traquity.security.stocksplit;
 
+import static java.math.BigDecimal.ONE;
+
 import de.as.traquity.common.error.BadRequestException;
 import de.as.traquity.common.error.ConflictException;
 import de.as.traquity.common.error.NotFoundException;
@@ -31,6 +33,14 @@ class StockSplitServiceImpl implements StockSplitService {
     securityService.getSecurity(securityId);
     List<StockSplitEntity> splits = stockSplitRepository.findAllBySecurityIdOrderByExDateAsc(securityId);
     return splits.stream().map(stockSplitMapper::fromEntity).toList();
+  }
+
+  @Override
+  public BigDecimal getSplitMultiplierAfter(long securityId, LocalDate date) {
+    return stockSplitRepository.findAllBySecurityIdOrderByExDateAsc(securityId).stream()
+        .filter(split -> split.getExDate().isAfter(date))
+        .map(split -> BigDecimal.valueOf(split.getQuantityNew()).divide(BigDecimal.valueOf(split.getQuantityOld()), mathContext))
+        .reduce(ONE, (product, multiplier) -> product.multiply(multiplier, mathContext));
   }
 
   @Override

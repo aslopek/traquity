@@ -20,4 +20,5 @@
     <include file="/db/changelogs/00015-add-divvy-diary-data-sources.yaml"/>
     <include file="/db/changelogs/00016-optional-external-security-id.yaml"/>
     <include file="/db/changelogs/00017-divvy-diary-data-sources.yaml"/>
+    <include file="/db/changelogs/00018-historical-security-price-data-source-link.yaml"/>
 </databaseChangeLog>

@@ -11,6 +11,7 @@ import static integration.SecurityIds.QCOM;
 import static integration.SecurityIds.TMO;
 import static java.math.BigDecimal.ZERO;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.context.jdbc.SqlMergeMode.MergeMode.MERGE;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -21,6 +22,8 @@ import integration.IntegrationTest;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.SqlMergeMode;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -84,7 +87,7 @@ class GetPositionPerformanceTest {
     assertThat(body.getFees()).isEqualByComparingTo(BigDecimal.valueOf(-150.0)); // -(20 + 10 + 10 + 25 + 25 + 10 + 30 + 20)
     assertThat(body.getNetCashFlow()).isEqualByComparingTo(BigDecimal.valueOf(-3160.0)); // sum of lines above
     assertThat(body.getCurrentSizeAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(4934.32)); // 20 x 126.76 (GOOGL) + 9 x 127.68 (GOOG) + 10 x
-    // 125.0 (QCOM, derived from latest buy transaction); TMO fully sold
+    // 125.0 (QCOM, derived from transaction 409); TMO fully sold
     assertThat(body.getCostBasis()).isEqualByComparingTo(BigDecimal.valueOf(12500.0)); // -(buys - taxes - fees)
     assertThat(body.getPerformanceAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(1774.32)); // net cash flow + current size absolute
     assertThat(body.getPerformanceRelative()).isEqualByComparingTo(BigDecimal.valueOf(0.1419456)); // performance absolute / cost basis
@@ -108,6 +111,11 @@ class GetPositionPerformanceTest {
   }
 
   @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      DELETE FROM HISTORICAL_SECURITY_PRICE
+      WHERE SECURITY_ID = (SELECT ID FROM SECURITY WHERE NAME = 'Qualcomm');
+      """)
   void getPositionPerformance_qualcomm_noKnownPrice_valuedAtLatestTransactionPrice() throws Exception {
     PositionPerformanceDto body = getPositionPerformance(POSITION_PERFORMANCE_DEPOT, QCOM);
 
@@ -125,6 +133,11 @@ class GetPositionPerformanceTest {
   }
 
   @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      DELETE FROM HISTORICAL_SECURITY_PRICE
+      WHERE SECURITY_ID = (SELECT ID FROM SECURITY WHERE NAME = 'Qualcomm');
+      """)
   void getPositionPerformance_qualcomm_noKnownPrice_multipleLots_valuedAtLatestLotPriceNotAverageCost() throws Exception {
     PositionPerformanceDto body = getPositionPerformance(POSITION_PERFORMANCE_LATEST_PRICE_FALLBACK_DEPOT, QCOM);
 

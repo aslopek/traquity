@@ -118,7 +118,9 @@ class DividendAnnouncementConfigServiceImpl implements DividendAnnouncementConfi
       throw new BadRequestException();
     }
 
-    securityService.getSecurity(dividendAnnouncementConfig.getSecurityId()); // throws not found exception if securityId is unknown
+    if (!securityService.securityExists(dividendAnnouncementConfig.getSecurityId())) {
+      throw new NotFoundException();
+    }
     return keying;
   }
 

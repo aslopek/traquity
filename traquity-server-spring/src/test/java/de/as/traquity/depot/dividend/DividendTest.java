@@ -415,9 +415,10 @@ class DividendTest {
     assertThat(dividendYield.getRegularDividendPaymentsPerYear()).isEqualTo(1);
     assertThat(dividendYield.getEstimatedPaymentGross().doubleValue()).isCloseTo(75, ACCURACY_ONE_THOUSANDTH);
     assertThat(dividendYield.getEstimatedPaymentNet().doubleValue()).isCloseTo(75, ACCURACY_ONE_THOUSANDTH);
-    assertThat(dividendYield.getCurrentYieldGross().doubleValue()).isCloseTo(0.0237, PERCENTAGE_ACCURACY_ONE_HUNDREDTH);
-    assertThat(dividendYield.getCurrentYieldNet().doubleValue()).isCloseTo(0.0237, PERCENTAGE_ACCURACY_ONE_HUNDREDTH);
-    // yield on cost are similar, because no historical prices exist for HAG
+    // 75 / (250 * 12.6), valued at the price derived from the latest buy (transaction 20)
+    assertThat(dividendYield.getCurrentYieldGross().doubleValue()).isCloseTo(0.0238, PERCENTAGE_ACCURACY_ONE_HUNDREDTH);
+    assertThat(dividendYield.getCurrentYieldNet().doubleValue()).isCloseTo(0.0238, PERCENTAGE_ACCURACY_ONE_HUNDREDTH);
+    // 75 / 3159 buy-in
     assertThat(dividendYield.getYieldOnCostGross().doubleValue()).isCloseTo(0.0237, PERCENTAGE_ACCURACY_ONE_HUNDREDTH);
     assertThat(dividendYield.getYieldOnCostNet().doubleValue()).isCloseTo(0.0237, PERCENTAGE_ACCURACY_ONE_HUNDREDTH);
 

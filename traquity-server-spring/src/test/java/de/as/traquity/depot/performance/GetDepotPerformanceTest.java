@@ -110,11 +110,11 @@ class GetDepotPerformanceTest {
   @Test
   @SqlMergeMode(MERGE)
   @Sql(statements = """
-        INSERT INTO HISTORICAL_SECURITY_PRICE (SECURITY_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
-        VALUES ((SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), 33.8, 'EUR', '2023-12-31', current_timestamp, current_timestamp),
-               ((SELECT ID FROM SECURITY WHERE NAME = 'Amazon'), 151.94, 'USD', '2023-12-31', current_timestamp, current_timestamp),
-               ((SELECT ID FROM SECURITY WHERE NAME = 'LVMH'), 614.6, 'EUR', '2023-12-31', current_timestamp, current_timestamp),
-               ((SELECT ID FROM SECURITY WHERE NAME = 'Nvidia'), 495.22, 'USD', '2023-12-31', current_timestamp, current_timestamp);
+        INSERT INTO HISTORICAL_SECURITY_PRICE (SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
+        VALUES ((SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), 101, 33.8, 'EUR', '2023-12-31', current_timestamp, current_timestamp),
+               ((SELECT ID FROM SECURITY WHERE NAME = 'Amazon'), 101, 151.94, 'USD', '2023-12-31', current_timestamp, current_timestamp),
+               ((SELECT ID FROM SECURITY WHERE NAME = 'LVMH'), 101, 614.6, 'EUR', '2023-12-31', current_timestamp, current_timestamp),
+               ((SELECT ID FROM SECURITY WHERE NAME = 'Nvidia'), 101, 495.22, 'USD', '2023-12-31', current_timestamp, current_timestamp);
       
         INSERT INTO EXCHANGE_RATE (DATE, BASE_CURRENCY, TARGET_CURRENCY, EXCHANGE_RATE, CREATED_AT, UPDATED_AT, VERSION)
         VALUES ('2023-12-31', 'EUR', 'USD', '1.1056', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
@@ -152,8 +152,8 @@ class GetDepotPerformanceTest {
   @Test
   @SqlMergeMode(MERGE)
   @Sql(statements = """
-        INSERT INTO HISTORICAL_SECURITY_PRICE (SECURITY_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
-        VALUES ((SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), 33.8, 'EUR', '2024-01-01', current_timestamp, current_timestamp);
+        INSERT INTO HISTORICAL_SECURITY_PRICE (SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
+        VALUES ((SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), 101, 33.8, 'EUR', '2024-01-01', current_timestamp, current_timestamp);
       """)
   void getDepotPerformance_lastDayHasFreshPrice_notRemoved() throws Exception {
     // unlike getDepotPerformance_oneDepot_ok, "today" (2024-01-01) now has its own real closing price, so its value differs from the
@@ -169,19 +169,13 @@ class GetDepotPerformanceTest {
     assertThat(depotValueDto.getAbsoluteValue()).isCloseTo(new BigDecimal("9434.28"), ACCURACY_ONE_THOUSANDTH);
   }
 
-  /**
-   * "My other depot" (only Hensoldt/Nvidia, no historical prices in the base fixtures) buys Hensoldt on 2021-03-19 and again on
-   * 2022-01-19, and buys Nvidia on 2021-09-28. This adds one real Hensoldt quote in between the two buys, and one real Nvidia quote on
-   * the exact same day as the Nvidia buy, to verify: a real quote is used over a stale BUY-implied price when it's more recent (Hensoldt,
-   * 2021-07-01), a real quote wins a same-day tie against a BUY (Nvidia, 2021-09-28), and a later BUY's own implied price takes over again
-   * once it is more recent than the last real quote (Hensoldt, 2022-02-01).
-   */
   @Test
   @SqlMergeMode(MERGE)
   @Sql(statements = """
-        INSERT INTO HISTORICAL_SECURITY_PRICE (SECURITY_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
-        VALUES ((SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), 13.00, 'EUR', '2021-06-01', current_timestamp, current_timestamp),
-               ((SELECT ID FROM SECURITY WHERE NAME = 'Nvidia'), 200.00, 'EUR', '2021-09-28', current_timestamp, current_timestamp);
+        INSERT INTO HISTORICAL_SECURITY_PRICE (SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
+        VALUES ((SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), 101, 13.00, 'EUR', '2021-06-01', current_timestamp, current_timestamp);
+        UPDATE HISTORICAL_SECURITY_PRICE SET DATA_SOURCE_ID = 101, PRICE = '200.00'
+        WHERE SECURITY_ID = (SELECT ID FROM SECURITY WHERE NAME = 'Nvidia') AND DATE = '2021-09-28';
       """)
   void getDepotPerformance_transactionPricesFillGapsButNeverReplaceARealPrice_ok() throws Exception {
     MvcResult mvcResult = getDepotPerformance(Set.of(OTHER_DEPOT)).andExpect(status().isOk()).andReturn();
@@ -226,8 +220,9 @@ class GetDepotPerformanceTest {
 
     try (Connection connection = DriverManager.getConnection("jdbc:h2:mem:traquity", "test-user", "test-password")) {
       PreparedStatement priceStatement = connection.prepareStatement("""
-          INSERT INTO HISTORICAL_SECURITY_PRICE (SECURITY_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
-          VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+          MERGE INTO HISTORICAL_SECURITY_PRICE (SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
+          KEY (SECURITY_ID, DATE)
+          VALUES (?, 101, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
           """);
       PreparedStatement exchangeRateStatement = connection.prepareStatement("""
           INSERT INTO EXCHANGE_RATE (DATE, BASE_CURRENCY, TARGET_CURRENCY, EXCHANGE_RATE, CREATED_AT, UPDATED_AT, VERSION)

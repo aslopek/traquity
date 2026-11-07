@@ -233,6 +233,8 @@ class DepotPositionServiceImpl implements DepotPositionService {
       latestPrice = historicalSecurityPriceService.getLatestPrice(securityId, currency).getPrice();
     } catch (NotFoundException e) {
       latestPrice = null;
+    } catch (OutdatedExchangeRateException e) {
+      latestPrice = e.getConversionResult();
     }
 
     Lot.calculatePerformance(lots, latestPrice, mathContext, clock);

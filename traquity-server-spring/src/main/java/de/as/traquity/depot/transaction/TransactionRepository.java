@@ -38,4 +38,7 @@ interface TransactionRepository extends JpaRepository<TransactionEntity, Long> {
   Page<TransactionEntity> findAll(Specification<TransactionEntity> specification, Pageable pageRequest);
 
   List<TransactionEntity> findAllBySecurityIdAndDateLessThan(Long securityId, LocalDate date);
+
+  List<TransactionEntity> findAllBySecurityIdAndDateAndTransactionTypeInOrderByTimeAscIdAsc(Long securityId, LocalDate date,
+                                                                                            Set<TransactionTypeDto> types);
 }

@@ -31,6 +31,14 @@ public interface TransactionService {
 
   List<Transaction> getTransactions(Long depotId, TransactionTypeDto transactionType, LocalDate date);
 
+  /**
+   * @param securityId       filters transaction on this {@code securityId}
+   * @param date             filters transactions on this {@code date}
+   * @param transactionTypes filters transactions on the specified {@code transactionTypes}
+   * @return the matching transactions, oldest first: by time (no time first), then by id
+   */
+  List<Transaction> getTransactions(long securityId, LocalDate date, Set<TransactionTypeDto> transactionTypes);
+
   Transaction updateTransaction(Transaction transaction)
       throws BadRequestException, ConflictException, NotFoundException;
 

@@ -47,4 +47,7 @@ class HistoricalSecurityPriceEntity {
 
   @Column(nullable = false)
   private LocalDate date;
+
+  @Column
+  private Long dataSourceId;
 }

@@ -106,8 +106,9 @@ paths:
           description: Successfully deleted the historical security price data source
         '400':
           description: >
-            There are data (e.g. historical security prices) referencing this historical security price data source or
-            the data source may not be deleted for other reasons
+            There are data (e.g. historical security price configurations) referencing this historical security price data
+            source or the data source may not be deleted for other reasons. Historical security prices loaded from it stay,
+            unlinked from any data source.
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -137,7 +138,9 @@ paths:
         - in: query
           name: currency
           required: false
-          description: Currency in which the prices are requested
+          description: >
+            Currency in which the prices are requested; without it, all prices are in the currency of the latest price from a
+            data source, or of the latest price if none comes from a data source
           schema:
             $ref: '#/components/schemas/Currency'
       tags:
@@ -161,10 +164,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
         '404':
-          description: |
-            One of these errors may have occurred:
-            - the given security does not exist
-            - there is no foreign exchange rate available to convert the prices to the requested currency
+          description: The given security does not exist
 
   /securities/{securityId}/historical-prices/config:
     parameters:
@@ -230,8 +230,9 @@ paths:
           name: removeExistingPrices
           required: false
           description: >
-            If true, will remove the existing prices. In case the configuration is deactivated, no new prices will be
-            loaded. Otherwise, the existing prices will be replaced with whatever the new config yields.
+            If true, will remove the prices loaded from data sources. Prices derived from buy and sell transactions stay.
+            In case the configuration is deactivated, no new prices will be loaded. Otherwise, the removed prices will be
+            replaced with whatever the new config yields.
           schema:
             type: boolean
             nullable: false

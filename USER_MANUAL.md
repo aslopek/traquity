@@ -618,7 +618,7 @@ On the **Securities** page, press **Add**. The wizard has four steps, and each s
   `#id()` template function in the source's URL is replaced with.
   For a source whose URL uses `#id(isin)`, the field shows the security's ISIN and is locked.
 
-The step is skippable: a security without a price configuration simply has no price chart and no current value.
+The step is skippable: a security without a price configuration only has the prices of its buy and sell transactions.
 
 **Step 3 — Dividend Announcements.** The same three settings for upcoming dividend announcements: **Data Source**, **External Security ID**
 and an **Active** checkbox. Also optional.
@@ -790,10 +790,15 @@ you.
 
 TraQuity picks among them by how much history it is missing for that security:
 
-- **No prices stored yet:** every URL is called, from the shortest time span to the longest, and the results are merged. The longest one is
-  what backfills the history.
-- **Prices already stored:** the URLs are called in ascending order of `timespanInDays` until one covers the gap since the newest stored
-  price, then it stops. A daily start therefore only ever calls the smallest URL — which is what keeps a free plan's request budget intact.
+- **No prices stored from this data source yet:** every URL is called, from the shortest time span to the longest, and the results are
+  merged. The longest one is what backfills the history.
+- **Prices already stored from this data source:** the URLs are called in ascending order of `timespanInDays` until one covers the gap since
+  the newest price stored from this data source, then it stops. A daily start therefore only ever calls the smallest URL — which is what
+  keeps a free plan's request budget intact.
+
+A `BUY` or `SELL` prices its security on its date (gross value / split-adjusted share count, in the depot's currency). The last trade of
+the day decides. Changing or deleting trades updates the price; deleting a depot leaves it. A data source overwrites such prices, and a
+trade never changes a price from a data source.
 
 So provide several spans (a week, a month, a year, everything) when the API supports it, and a single large one otherwise. There is no
 special timespan for 'maximum' or 'everything', so rather pick a very high number for that. Take note, that you are not able to fetch market
