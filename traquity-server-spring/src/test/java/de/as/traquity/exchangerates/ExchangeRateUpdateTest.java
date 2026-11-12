@@ -1,13 +1,19 @@
 package de.as.traquity.exchangerates;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.fail;
+import static org.springframework.http.HttpMethod.GET;
+import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withException;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 
 import integration.IntegrationTest;
 import jakarta.transaction.Transactional;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -16,6 +22,8 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.util.Iterator;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,13 +31,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 import org.springframework.test.web.client.ExpectedCount;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
 @IntegrationTest
+@RecordApplicationEvents
 public class ExchangeRateUpdateTest {
 
   private static final String EXCHANGE_RATE_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.zip";
@@ -50,6 +59,9 @@ public class ExchangeRateUpdateTest {
 
   @Autowired
   private RestTemplate restTemplate;
+
+  @Autowired
+  private ApplicationEvents applicationEvents;
 
   private MockRestServiceServer mockServer;
 
@@ -78,8 +90,8 @@ public class ExchangeRateUpdateTest {
     mockServer.reset();
     HttpHeaders responseHeaders = new HttpHeaders();
     responseHeaders.add("Content-Type", "application/zip");
-    mockServer.expect(ExpectedCount.once(), requestTo(EXCHANGE_RATE_URL)).andExpect(method(HttpMethod.GET))
-        .andRespond(withStatus(HttpStatus.OK).body(responseBody).headers(responseHeaders));
+    mockServer.expect(ExpectedCount.once(), requestTo(EXCHANGE_RATE_URL)).andExpect(method(GET))
+        .andRespond(withStatus(OK).body(responseBody).headers(responseHeaders));
   }
 
   @AfterEach
@@ -110,6 +122,51 @@ public class ExchangeRateUpdateTest {
         exchangeRateRepository.findAllByBaseCurrencyAndTargetCurrencyOrderByDateDesc("EUR", "USD");
     assertThat(exchangeRates.count()).isEqualTo(6399);
     exchangeRates.close();
+  }
+
+  @Test
+  @Transactional
+  void updateExchangeRates_downloadFails() {
+    mockServer.reset();
+    mockServer.expect(ExpectedCount.once(), requestTo(EXCHANGE_RATE_URL)).andExpect(method(GET))
+        .andRespond(withException(new IOException("No connection")));
+    long count = exchangeRateRepository.count();
+
+    assertThatCode(subject::updateExchangeRates).doesNotThrowAnyException();
+
+    verifyUpdateSkipped(count);
+  }
+
+  @Test
+  @Transactional
+  void updateExchangeRates_unparsableDate() throws IOException {
+    mockServer.reset();
+    HttpHeaders responseHeaders = new HttpHeaders();
+    responseHeaders.add("Content-Type", "application/zip");
+    byte[] zip = zipCsv("Date,USD,GBP,\nnot-a-date,1.1,0.8,\n");
+    mockServer.expect(ExpectedCount.once(), requestTo(EXCHANGE_RATE_URL)).andExpect(method(GET))
+        .andRespond(withStatus(OK).body(zip).headers(responseHeaders));
+    long count = exchangeRateRepository.count();
+
+    assertThatCode(subject::updateExchangeRates).doesNotThrowAnyException();
+
+    verifyUpdateSkipped(count);
+  }
+
+  private void verifyUpdateSkipped(long expectedExchangeRateCount) {
+    assertThat(exchangeRateRepository.count()).isEqualTo(expectedExchangeRateCount);
+    assertThat(applicationEvents.stream(ExchangeRateReadyEvent.class)).hasSize(1);
+    mockServer.verify();
+  }
+
+  private static byte[] zipCsv(String csv) throws IOException {
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    try (ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
+      zipOutputStream.putNextEntry(new ZipEntry("eurofxref-hist.csv"));
+      zipOutputStream.write(csv.getBytes(UTF_8));
+      zipOutputStream.closeEntry();
+    }
+    return outputStream.toByteArray();
   }
 
   private void verifyNewExchangeRates() {
