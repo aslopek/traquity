@@ -38,8 +38,8 @@ class EcbExchangeRateFetcher {
     String exchangeRatesCsv;
     try {
       exchangeRatesCsv = downloadExchangeRates();
-    } catch (IOException e) {
-      log.warn(e.getMessage());
+    } catch (IOException | RuntimeException e) {
+      log.warn("Could not download exchange rates", e);
       return List.of();
     }
 
@@ -59,8 +59,8 @@ class EcbExchangeRateFetcher {
         exchangeRates = parseExchangeRates(line, indices);
         exchangeRateEntities.addAll(createEntities(date, exchangeRates));
       }
-    } catch (IOException | CsvValidationException e) {
-      log.warn(e.getMessage());
+    } catch (IOException | CsvValidationException | RuntimeException e) {
+      log.warn("Could not parse exchange rates", e);
       return List.of();
     }
 
