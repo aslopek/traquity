@@ -13,4 +13,12 @@
   &:focus {
     box-shadow: 0 0 0 0.0625rem var(--tq-border-accent);
   }
+
+  &--invalid {
+    border-color: var(--tq-negative);
+
+    &:focus {
+      box-shadow: 0 0 0 0.0625rem var(--tq-negative);
+    }
+  }
 }

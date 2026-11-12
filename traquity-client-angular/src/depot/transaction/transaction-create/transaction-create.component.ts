@@ -30,6 +30,7 @@ import {securitiesByIsin, securityIdsMatchingName} from '../../../store/security
 import {SecuritiesByIsin} from '../../../store/security/selectors/get-securities-by-isin.selector';
 import {ReadableTransactionImportStore, TransactionImportStore} from './store/transaction-import.store';
 import {TransactionPrefill} from './store/transaction-import.type';
+import {countPattern} from '../transaction-count';
 
 type TransactionFormModel = {
   transactionType: TransactionType | null;
@@ -51,7 +52,6 @@ type NetValueInput = {
   fee: string;
 };
 
-const countRegex: RegExp = /^\d+([.,]\d+)?$/;
 const monetaryRegex: RegExp = /^(0[.,]\d{0,2}|[1-9]\d*([.,]\d+)?)$/;
 const timeRegex: RegExp = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
 
@@ -130,9 +130,9 @@ export class TransactionCreateComponent {
       pattern(schemaPath.time, timeRegex);
 
       required(schemaPath.securityCountOriginal);
-      pattern(schemaPath.securityCountOriginal, countRegex);
+      pattern(schemaPath.securityCountOriginal, countPattern);
 
-      pattern(schemaPath.securityCountSplitAdjusted, countRegex);
+      pattern(schemaPath.securityCountSplitAdjusted, countPattern);
 
       required(schemaPath.grossValue);
       pattern(schemaPath.grossValue, monetaryRegex);

@@ -149,6 +149,7 @@
                     matTooltip="{{ !hideAbsoluteValues && row.securityCountSplitAdjusted ? 'Original Quantity: ' + row.securityCountOriginal : null }}">
                     @if (editTransaction !== null && editTransaction === row) {
                         <app-table-input-field [value]="getSecurityCount(row)"
+                                               [invalid]="!countValid"
                                                (updateValue)="setCount($event)">
                         </app-table-input-field>
                     } @else {
@@ -253,6 +254,7 @@
                         <button mat-icon-button
                                 aria-label="Save"
                                 matTooltip="Save"
+                                [disabled]="!countValid"
                                 (click)="updateTransaction()">
                             <mat-icon fontIcon="save"></mat-icon>
                         </button>

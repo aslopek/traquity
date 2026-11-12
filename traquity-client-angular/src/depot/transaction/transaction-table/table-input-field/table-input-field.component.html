@@ -1,4 +1,7 @@
 <input matInput
+       #field
        class="input"
-       [value]="value"
-       (keyup)="emit($event)">
+       [class.input--invalid]="invalid()"
+       [attr.aria-invalid]="invalid()"
+       [value]="value()"
+       (keyup)="emit(field.value)">

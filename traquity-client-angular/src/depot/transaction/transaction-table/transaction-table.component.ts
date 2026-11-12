@@ -31,6 +31,7 @@ import {TransactionDeleteComponent} from '../transaction-delete/transaction-dele
 import {TransactionImportComponent} from '../transaction-import/transaction-import.component';
 import {TransactionPdfImportComponent} from '../transaction-pdf-import/transaction-pdf-import.component';
 import {TableInputFieldComponent} from './table-input-field/table-input-field.component';
+import {isValidCount} from '../transaction-count';
 import {AppState} from '../../../store/app.state';
 import {ReadableTransactionPageStore, transactionPageStore} from '../transaction-store/transaction-page.store';
 
@@ -92,11 +93,13 @@ export class TransactionTableComponent {
   protected editTransaction: TransactionRead | null = null;
   protected updatedTransactionValues: null | {
     transactionType: TransactionType;
-    count: number;
+    count: number | undefined;
     grossValue: number;
     tax: number | undefined;
     fee: number | undefined;
   } = null;
+
+  protected countValid: boolean = true;
 
   private readonly store: Store<AppState> = inject(Store);
   private readonly viewContainerRef: ViewContainerRef = inject(ViewContainerRef);
@@ -224,6 +227,7 @@ export class TransactionTableComponent {
     if (transaction === undefined) {
       this.editTransaction = null;
       this.updatedTransactionValues = null;
+      this.countValid = true;
     } else {
       this.editTransaction = transaction;
       this.updatedTransactionValues = {
@@ -237,13 +241,10 @@ export class TransactionTableComponent {
   }
 
   protected setCount(count: number | undefined): void {
-    if (
-      this.updatedTransactionValues === null ||
-      count === undefined ||
-      count === 0
-    ) {
+    if (this.updatedTransactionValues === null) {
       return;
     }
+    this.countValid = isValidCount(count);
     this.updatedTransactionValues = {
       ...this.updatedTransactionValues,
       count,
@@ -291,6 +292,10 @@ export class TransactionTableComponent {
     ) {
       return;
     }
+    const count: number | undefined = this.updatedTransactionValues.count;
+    if (!isValidCount(count)) {
+      return;
+    }
     const update: TransactionUpdate = this.editTransaction;
 
     update.grossValue = this.updatedTransactionValues.grossValue;
@@ -307,11 +312,11 @@ export class TransactionTableComponent {
       const factor: number =
         this.editTransaction.securityCountOriginal /
         this.editTransaction.securityCountSplitAdjusted;
-      update.securityCountSplitAdjusted = this.updatedTransactionValues.count;
+      update.securityCountSplitAdjusted = count;
       update.securityCountOriginal =
-        factor * this.updatedTransactionValues.count;
+        factor * count;
     } else {
-      update.securityCountOriginal = this.updatedTransactionValues.count;
+      update.securityCountOriginal = count;
     }
 
     const transactionId: number = this.editTransaction.id;
