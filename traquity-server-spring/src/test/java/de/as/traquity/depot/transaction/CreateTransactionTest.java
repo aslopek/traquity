@@ -312,11 +312,27 @@ class CreateTransactionTest {
   }
 
   @Test
-  void addTransaction_shareCountZero_storesNoPrice() throws Exception {
+  void addTransaction_securityCountOriginalIsZero_badRequest() throws Exception {
     requestBody.setSecurityCountOriginal(ZERO);
-    long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
-    postTransaction(1).andExpect(status().isCreated());
-    assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount);
+    runInvalidCountTestCase();
+  }
+
+  @Test
+  void addTransaction_securityCountOriginalIsNegative_badRequest() throws Exception {
+    requestBody.setSecurityCountOriginal(BigDecimal.valueOf(-20.0));
+    runInvalidCountTestCase();
+  }
+
+  @Test
+  void addTransaction_securityCountSplitAdjustedIsZero_badRequest() throws Exception {
+    requestBody.setSecurityCountSplitAdjusted(ZERO);
+    runInvalidCountTestCase();
+  }
+
+  @Test
+  void addTransaction_securityCountSplitAdjustedIsNegative_badRequest() throws Exception {
+    requestBody.setSecurityCountSplitAdjusted(BigDecimal.valueOf(-40.0));
+    runInvalidCountTestCase();
   }
 
   @Test
@@ -382,6 +398,16 @@ class CreateTransactionTest {
     assertThat(mvcResult.getResponse().getHeader("Location")).isNull();
     assertThat(transactionRepository.count()).isEqualTo(numberOfTransactions);
     assertThat(TestDataQuery.getDepotCount()).isEqualTo(numberOfDepots);
+  }
+
+  private void runInvalidCountTestCase() throws Exception {
+    long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
+    long transactionCountOfDepot = TestDataQuery.getTransactionCountByDepotId(1);
+    runNegativeTestCase(1, BAD_REQUEST);
+    assertThat(TestDataQuery.getTransactionCountByDepotId(1)).isEqualTo(transactionCountOfDepot);
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCountBySecurityIdAndDate(requestBody.getSecurityId(), requestBody.getDate()))
+        .isZero();
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount);
   }
 
   private ResultActions postTransaction(long depotId) throws Exception {

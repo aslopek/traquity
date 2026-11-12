@@ -7,6 +7,7 @@ import static integration.SecurityIds.HAG;
 import static integration.SecurityIds.LVMH;
 import static integration.SecurityIds.VNGGF;
 import static java.math.BigDecimal.ONE;
+import static java.math.BigDecimal.ZERO;
 import static java.time.Month.DECEMBER;
 import static java.time.Month.JULY;
 import static java.time.Month.NOVEMBER;
@@ -169,6 +170,30 @@ class UpdateTransactionTest {
   void updateTransaction_removeSecurityCountOriginal_badRequest() throws Exception {
     requestBody.setSecurityCountOriginal(null);
     runNegativeTestCase(1, 1, BAD_REQUEST);
+  }
+
+  @Test
+  void updateTransaction_securityCountOriginalIsZero_badRequest() throws Exception {
+    requestBody.setSecurityCountOriginal(ZERO);
+    runInvalidCountTestCase();
+  }
+
+  @Test
+  void updateTransaction_securityCountOriginalIsNegative_badRequest() throws Exception {
+    requestBody.setSecurityCountOriginal(BigDecimal.valueOf(-2.0));
+    runInvalidCountTestCase();
+  }
+
+  @Test
+  void updateTransaction_securityCountSplitAdjustedIsZero_badRequest() throws Exception {
+    requestBody.setSecurityCountSplitAdjusted(ZERO);
+    runInvalidCountTestCase();
+  }
+
+  @Test
+  void updateTransaction_securityCountSplitAdjustedIsNegative_badRequest() throws Exception {
+    requestBody.setSecurityCountSplitAdjusted(BigDecimal.valueOf(-40.0));
+    runInvalidCountTestCase();
   }
 
   @Test
@@ -428,6 +453,20 @@ class UpdateTransactionTest {
     assertTransactionUnchanged(beforeUpdate, afterUpdate);
 
     assertThat(transactionRepository.count()).isEqualTo(transactionCount);
+  }
+
+  private void runInvalidCountTestCase() throws Exception {
+    LocalDate tradeDate = requestBody.getDate();
+    long securityId = requestBody.getSecurityId();
+    long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
+    long transactionCountOfDepot = TestDataQuery.getTransactionCountByDepotId(1);
+    HistoricalSecurityPrice priceBefore = TestDataQuery.getHistoricalSecurityPrice(securityId, tradeDate);
+
+    runNegativeTestCase(1, 1, BAD_REQUEST);
+
+    assertThat(TestDataQuery.getTransactionCountByDepotId(1)).isEqualTo(transactionCountOfDepot);
+    assertThat(TestDataQuery.getHistoricalSecurityPrice(securityId, tradeDate)).isEqualTo(priceBefore);
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount);
   }
 
   private void assertTransactionUnchanged(TransactionEntity before, TransactionEntity after) {
