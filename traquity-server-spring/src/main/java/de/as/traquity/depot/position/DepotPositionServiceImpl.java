@@ -1,5 +1,6 @@
 package de.as.traquity.depot.position;
 
+import static de.as.traquity.common.arithmetic.MathFunctions.shareOf;
 import static de.as.traquity.depot.transaction.api.model.TransactionTypeDto.BUY;
 import static de.as.traquity.depot.transaction.api.model.TransactionTypeDto.SELL;
 import static java.math.BigDecimal.ZERO;
@@ -75,8 +76,7 @@ class DepotPositionServiceImpl implements DepotPositionService {
               mathContext));
           existing.setPerformanceAbsolute(existing.getCurrentSizeAbsolute().subtract(existing.getBuyInAbsolute(),
               mathContext));
-          existing.setPerformanceRelative(existing.getPerformanceAbsolute().divide(existing.getBuyInAbsolute(),
-              mathContext));
+          setPerformanceRelative(existing);
         } else {
           positionsById.put(position.getPositionId(), position);
         }
@@ -92,8 +92,8 @@ class DepotPositionServiceImpl implements DepotPositionService {
       sumCurrentSize = sumCurrentSize.add(position.getCurrentSizeAbsolute(), mathContext);
     }
     for (DepotPosition position : consolidatedDepotPositions) {
-      position.setCurrentSizeRelative(position.getCurrentSizeAbsolute().divide(sumCurrentSize, mathContext));
-      position.setBuyInRelative(position.getBuyInAbsolute().divide(sumBuyInSize, mathContext));
+      position.setCurrentSizeRelative(shareOf(position.getCurrentSizeAbsolute(), sumCurrentSize, mathContext));
+      position.setBuyInRelative(shareOf(position.getBuyInAbsolute(), sumBuyInSize, mathContext));
     }
 
     if (consolidateSecurityGroups) {
@@ -181,17 +181,8 @@ class DepotPositionServiceImpl implements DepotPositionService {
     }
 
     for (DepotPosition position : depotPositions) {
-      try {
-        position.setCurrentSizeRelative(position.getCurrentSizeAbsolute().divide(sumCurrentSize, mathContext));
-      } catch (ArithmeticException e) {
-        position.setCurrentSizeRelative(ZERO);
-      }
-
-      try {
-        position.setBuyInRelative(position.getBuyInAbsolute().divide(sumBuyInSize, mathContext));
-      } catch (ArithmeticException e) {
-        position.setBuyInRelative(ZERO);
-      }
+      position.setCurrentSizeRelative(shareOf(position.getCurrentSizeAbsolute(), sumCurrentSize, mathContext));
+      position.setBuyInRelative(shareOf(position.getBuyInAbsolute(), sumBuyInSize, mathContext));
     }
 
     if (consolidateSecurityGroups) {
@@ -379,16 +370,15 @@ class DepotPositionServiceImpl implements DepotPositionService {
     }
     depotComposition.setPerformanceAbsolute(depotComposition.getCurrentSizeAbsolute().subtract(depotComposition.getBuyInAbsolute(),
         mathContext));
-    try {
+    if (depotComposition.getBuyInAbsolute().signum() == 0) {
+      depotComposition.setPerformanceRelative(null);
+    } else {
       depotComposition.setPerformanceRelative(depotComposition.getPerformanceAbsolute().divide(depotComposition.getBuyInAbsolute(),
           mathContext));
-    } catch (ArithmeticException e) {
-      depotComposition.setPerformanceRelative(null);
     }
     depotComposition.setPositions(positions);
     return depotComposition;
   }
-
   @AllArgsConstructor
   private static class ShareBatch {
 

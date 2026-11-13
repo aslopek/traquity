@@ -1,6 +1,18 @@
 package de.as.traquity.depot.position;
 
 import java.math.BigDecimal;
+
+import static integration.SecurityIds.AMZN;
+import static integration.SecurityIds.GOOG;
+import static integration.SecurityIds.GOOGL;
+import static integration.SecurityIds.HAG;
+import static integration.SecurityIds.LVMH;
+import static integration.SecurityIds.NVDA;
+import static integration.SecurityIds.O;
+import static integration.SecurityIds.PINS;
+import static integration.SecurityIds.VNGGF;
+import static integration.SecurityIds.VW_STAMM;
+import static integration.SecurityIds.VW_VZ;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -9,7 +21,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.as.traquity.depot.position.api.model.DepotCompositionDto;
 import de.as.traquity.depot.position.api.model.DepotPositionDto;
 import integration.IntegrationTest;
-import integration.SecurityIds;
 import java.util.List;
 import org.assertj.core.data.Offset;
 import org.junit.jupiter.api.Test;
@@ -75,7 +86,7 @@ class DepotPositionTest {
     assertThat(positions).hasSize(3);
 
     DepotPositionDto position = positions.getFirst();
-    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(SecurityIds.AMZN);
+    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(AMZN);
     assertThat(position.getDisplayName()).isEqualTo("Amazon");
     assertThat(position.getSecurityGroupId()).isNull();
     assertThat(position.getCount()).isEqualByComparingTo(BigDecimal.valueOf(54.0));
@@ -87,7 +98,7 @@ class DepotPositionTest {
     assertThat(position.getPerformanceRelative().doubleValue()).isCloseTo(0.0363044, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
 
     position = positions.get(1);
-    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(SecurityIds.NVDA);
+    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(NVDA);
     assertThat(position.getDisplayName()).isEqualTo("Nvidia");
     assertThat(position.getSecurityGroupId()).isNull();
     assertThat(position.getCount()).isEqualByComparingTo(BigDecimal.valueOf(21.6));
@@ -100,7 +111,7 @@ class DepotPositionTest {
     assertThat(position.getPerformanceRelative().doubleValue()).isCloseTo(0.1652166, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
 
     position = positions.get(2);
-    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(SecurityIds.LVMH);
+    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(LVMH);
     assertThat(position.getDisplayName()).isEqualTo("LVMH");
     assertThat(position.getSecurityGroupId()).isNull();
     assertThat(position.getCount()).isEqualByComparingTo(BigDecimal.valueOf(4.25));
@@ -129,7 +140,7 @@ class DepotPositionTest {
     assertThat(positions).hasSize(2);
 
     DepotPositionDto position = positions.getFirst();
-    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(SecurityIds.HAG);
+    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(HAG);
     assertThat(position.getDisplayName()).isEqualTo("Hensoldt");
     assertThat(position.getSecurityGroupId()).isNull();
     assertThat(position.getCount()).isEqualByComparingTo(BigDecimal.valueOf(250.0));
@@ -142,7 +153,7 @@ class DepotPositionTest {
     assertThat(position.getPerformanceRelative().doubleValue()).isCloseTo(-0.002849, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
 
     position = positions.get(1);
-    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(SecurityIds.NVDA);
+    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(NVDA);
     assertThat(position.getDisplayName()).isEqualTo("Nvidia");
     assertThat(position.getSecurityGroupId()).isNull();
     assertThat(position.getCount()).isEqualByComparingTo(BigDecimal.valueOf(5.5));
@@ -172,7 +183,7 @@ class DepotPositionTest {
     assertThat(positions).hasSize(1);
 
     DepotPositionDto position = positions.getFirst();
-    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(SecurityIds.VNGGF);
+    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(VNGGF);
     assertThat(position.getDisplayName()).isEqualTo("Vanguard FTSE All-World High Dividend Yield UCITS DIST");
     assertThat(position.getSecurityGroupId()).isNull();
     assertThat(position.getCount()).isEqualByComparingTo(BigDecimal.valueOf(51.063));
@@ -200,7 +211,7 @@ class DepotPositionTest {
     assertThat(positions).hasSize(2);
 
     DepotPositionDto position = positions.getFirst();
-    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(SecurityIds.PINS);
+    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(PINS);
     assertThat(position.getDisplayName()).isEqualTo("Pinterest");
     assertThat(position.getSecurityGroupId()).isNull();
     assertThat(position.getCount()).isEqualByComparingTo(BigDecimal.valueOf(130.5));
@@ -212,7 +223,7 @@ class DepotPositionTest {
     assertThat(position.getPerformanceRelative().doubleValue()).isCloseTo(0.4531167, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
 
     position = positions.get(1);
-    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(SecurityIds.GOOGL);
+    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(GOOGL);
     assertThat(position.getDisplayName()).isEqualTo("Alphabet A");
     assertThat(position.getSecurityGroupId()).isEqualTo(2);
     assertThat(position.getCount()).isEqualByComparingTo(BigDecimal.valueOf(9.75));
@@ -240,7 +251,7 @@ class DepotPositionTest {
     assertThat(positions).hasSize(1);
 
     DepotPositionDto position = positions.getFirst();
-    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(SecurityIds.GOOGL);
+    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(GOOGL);
     assertThat(position.getDisplayName()).isEqualTo("Alphabet A");
     assertThat(position.getSecurityGroupId()).isEqualTo(2);
     assertThat(position.getCount()).isEqualByComparingTo(BigDecimal.valueOf(40.0));
@@ -268,7 +279,7 @@ class DepotPositionTest {
     assertThat(positions).hasSize(2);
 
     DepotPositionDto position = positions.getFirst();
-    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(SecurityIds.GOOGL, SecurityIds.GOOG);
+    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(GOOGL, GOOG);
     assertThat(position.getDisplayName()).isEqualTo("Alphabet");
     assertThat(position.getSecurityGroupId()).isEqualTo(2);
     assertThat(position.getCount()).isEqualByComparingTo(BigDecimal.valueOf(33.266));
@@ -280,7 +291,7 @@ class DepotPositionTest {
     assertThat(position.getPerformanceRelative().doubleValue()).isCloseTo(-0.0161792, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
 
     position = positions.get(1);
-    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(SecurityIds.VW_VZ, SecurityIds.VW_STAMM);
+    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(VW_VZ, VW_STAMM);
     assertThat(position.getDisplayName()).isEqualTo("Volkswagen");
     assertThat(position.getSecurityGroupId()).isEqualTo(1);
     assertThat(position.getCount()).isEqualByComparingTo(BigDecimal.valueOf(27.0));
@@ -308,7 +319,7 @@ class DepotPositionTest {
     assertThat(positions).hasSize(2);
 
     DepotPositionDto position = positions.getFirst();
-    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(SecurityIds.GOOGL);
+    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(GOOGL);
     assertThat(position.getDisplayName()).isEqualTo("Alphabet A");
     assertThat(position.getSecurityGroupId()).isEqualTo(2);
     assertThat(position.getCount()).isEqualByComparingTo(BigDecimal.valueOf(34.5));
@@ -320,7 +331,7 @@ class DepotPositionTest {
     assertThat(position.getPerformanceRelative().doubleValue()).isCloseTo(0.5056446, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
 
     position = positions.get(1);
-    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(SecurityIds.VW_VZ);
+    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(VW_VZ);
     assertThat(position.getDisplayName()).isEqualTo("Volkswagen VZ");
     assertThat(position.getSecurityGroupId()).isEqualTo(1);
     assertThat(position.getCount()).isEqualByComparingTo(BigDecimal.valueOf(9));
@@ -348,7 +359,7 @@ class DepotPositionTest {
     assertThat(positions).hasSize(2);
 
     DepotPositionDto position = positions.getFirst();
-    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(SecurityIds.GOOGL, SecurityIds.GOOG);
+    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(GOOGL, GOOG);
     assertThat(position.getDisplayName()).isEqualTo("Alphabet");
     assertThat(position.getSecurityGroupId()).isEqualTo(2);
     assertThat(position.getCount()).isEqualByComparingTo(BigDecimal.valueOf(67.766));
@@ -360,7 +371,7 @@ class DepotPositionTest {
     assertThat(position.getPerformanceRelative().doubleValue()).isCloseTo(0.1942627, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
 
     position = positions.get(1);
-    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(SecurityIds.VW_VZ, SecurityIds.VW_STAMM);
+    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(VW_VZ, VW_STAMM);
     assertThat(position.getDisplayName()).isEqualTo("Volkswagen");
     assertThat(position.getSecurityGroupId()).isEqualTo(1);
     assertThat(position.getCount()).isEqualByComparingTo(BigDecimal.valueOf(36));
@@ -370,6 +381,108 @@ class DepotPositionTest {
     assertThat(position.getCurrentSizeRelative().doubleValue()).isCloseTo(0.3214454, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
     assertThat(position.getPerformanceAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(233.485));
     assertThat(position.getPerformanceRelative().doubleValue()).isCloseTo(0.0607845, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
+  }
+
+  @Test
+  void getDepotPositions_sameSecurityBuyInZeroInSeveralDepots_ok() throws Exception {
+    MvcResult result = getDepotPositions("9,13").andExpect(status().isOk()).andReturn();
+    DepotCompositionDto responseBody = objectMapper.readValue(result.getResponse().getContentAsString(),
+        DepotCompositionDto.class);
+    assertThat(responseBody.getCurrency()).isEqualTo("EUR");
+    assertThat(responseBody.getBuyInAbsolute()).isEqualByComparingTo("100");
+    assertThat(responseBody.getCurrentSizeAbsolute()).isEqualByComparingTo("5308.96"); // 5197.16 (Alphabet A) + 111.8 (Volkswagen VZ)
+    assertThat(responseBody.getPerformanceAbsolute()).isEqualByComparingTo("5208.96");
+    assertThat(responseBody.getPerformanceRelative()).isEqualByComparingTo("52.0896");
+
+    List<DepotPositionDto> positions = responseBody.getPositions();
+    assertThat(positions).hasSize(2);
+
+    DepotPositionDto position = positions.getFirst();
+    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(GOOGL);
+    assertThat(position.getDisplayName()).isEqualTo("Alphabet A");
+    assertThat(position.getSecurityGroupId()).isEqualTo(2);
+    assertThat(position.getCount()).isEqualByComparingTo("41");
+    assertThat(position.getBuyInAbsolute()).isEqualByComparingTo("0");
+    assertThat(position.getBuyInRelative()).isEqualByComparingTo("0");
+    assertThat(position.getCurrentSizeAbsolute()).isEqualByComparingTo("5197.16"); // 41 * 126.76
+    assertThat(position.getCurrentSizeRelative().doubleValue()).isCloseTo(0.9789413, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
+    assertThat(position.getPerformanceAbsolute()).isEqualByComparingTo("5197.16");
+    assertThat(position.getPerformanceRelative()).isEqualByComparingTo("0");
+
+    position = positions.get(1);
+    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(VW_VZ);
+    assertThat(position.getDisplayName()).isEqualTo("Volkswagen VZ");
+    assertThat(position.getSecurityGroupId()).isEqualTo(1);
+    assertThat(position.getCount()).isEqualByComparingTo("1");
+    assertThat(position.getBuyInAbsolute()).isEqualByComparingTo("100");
+    assertThat(position.getBuyInRelative()).isEqualByComparingTo("1");
+    assertThat(position.getCurrentSizeAbsolute()).isEqualByComparingTo("111.8");
+    assertThat(position.getCurrentSizeRelative().doubleValue()).isCloseTo(0.0210587, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
+    assertThat(position.getPerformanceAbsolute()).isEqualByComparingTo("11.8");
+    assertThat(position.getPerformanceRelative()).isEqualByComparingTo("0.118");
+  }
+
+  @Test
+  void getDepotPositions_allBuyInsZeroInSeveralDepots_ok() throws Exception {
+    MvcResult result = getDepotPositions("3,9").andExpect(status().isOk()).andReturn();
+    DepotCompositionDto responseBody = objectMapper.readValue(result.getResponse().getContentAsString(),
+        DepotCompositionDto.class);
+    assertThat(responseBody.getCurrency()).isEqualTo("EUR");
+    assertThat(responseBody.getBuyInAbsolute()).isEqualByComparingTo("0");
+    assertThat(responseBody.getCurrentSizeAbsolute()).isEqualByComparingTo("5070.4"); // 40 * 126.76
+    assertThat(responseBody.getPerformanceAbsolute()).isEqualByComparingTo("5070.4");
+    assertThat(responseBody.getPerformanceRelative()).isNull();
+
+    List<DepotPositionDto> positions = responseBody.getPositions();
+    assertThat(positions).hasSize(1);
+
+    DepotPositionDto position = positions.getFirst();
+    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(GOOGL);
+    assertThat(position.getDisplayName()).isEqualTo("Alphabet A");
+    assertThat(position.getSecurityGroupId()).isEqualTo(2);
+    assertThat(position.getCount()).isEqualByComparingTo("40");
+    assertThat(position.getBuyInAbsolute()).isEqualByComparingTo("0");
+    assertThat(position.getBuyInRelative()).isEqualByComparingTo("0");
+    assertThat(position.getCurrentSizeAbsolute()).isEqualByComparingTo("5070.4");
+    assertThat(position.getCurrentSizeRelative()).isEqualByComparingTo("1");
+    assertThat(position.getPerformanceAbsolute()).isEqualByComparingTo("5070.4");
+    assertThat(position.getPerformanceRelative()).isEqualByComparingTo("0");
+  }
+
+  @Test
+  void getDepotPositions_valueZero_ok() throws Exception {
+    verifyValueZero(getDepotPositions("14"));
+  }
+
+  @Test
+  void getDepotPositions_valueZeroInSeveralDepots_ok() throws Exception {
+    verifyValueZero(getDepotPositions("3,14"));
+  }
+
+  private void verifyValueZero(ResultActions resultActions) throws Exception {
+    MvcResult result = resultActions.andExpect(status().isOk()).andReturn();
+    DepotCompositionDto responseBody = objectMapper.readValue(result.getResponse().getContentAsString(),
+        DepotCompositionDto.class);
+    assertThat(responseBody.getCurrency()).isEqualTo("EUR");
+    assertThat(responseBody.getBuyInAbsolute()).isEqualByComparingTo("0");
+    assertThat(responseBody.getCurrentSizeAbsolute()).isEqualByComparingTo("0");
+    assertThat(responseBody.getPerformanceAbsolute()).isEqualByComparingTo("0");
+    assertThat(responseBody.getPerformanceRelative()).isNull();
+
+    List<DepotPositionDto> positions = responseBody.getPositions();
+    assertThat(positions).hasSize(1);
+
+    DepotPositionDto position = positions.getFirst();
+    assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(O);
+    assertThat(position.getDisplayName()).isEqualTo("Realty Income");
+    assertThat(position.getSecurityGroupId()).isNull();
+    assertThat(position.getCount()).isEqualByComparingTo("1");
+    assertThat(position.getBuyInAbsolute()).isEqualByComparingTo("0");
+    assertThat(position.getBuyInRelative()).isEqualByComparingTo("0");
+    assertThat(position.getCurrentSizeAbsolute()).isEqualByComparingTo("0");
+    assertThat(position.getCurrentSizeRelative()).isEqualByComparingTo("0");
+    assertThat(position.getPerformanceAbsolute()).isEqualByComparingTo("0");
+    assertThat(position.getPerformanceRelative()).isEqualByComparingTo("0");
   }
 
   private ResultActions getDepotPositions(String depotIds) throws Exception {

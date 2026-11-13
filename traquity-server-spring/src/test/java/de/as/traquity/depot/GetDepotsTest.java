@@ -48,7 +48,7 @@ class GetDepotsTest {
         objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {
         });
 
-    assertThat(depots).hasSize(12);
+    assertThat(depots).hasSize(14);
     DepotReadDto depot = depots.getFirst();
     assertThat(depot.getId()).isEqualTo(1);
     assertThat(depot.getName()).isEqualTo("My first depot");
@@ -129,6 +129,20 @@ class GetDepotsTest {
     depot = depots.get(11);
     assertThat(depot.getId()).isEqualTo(12);
     assertThat(depot.getName()).isEqualTo("Position Performance - Latest Price Fallback");
+    assertThat(depot.getCurrency()).isEqualTo("EUR");
+    assertThat(depot.getVersion()).isEqualTo(0);
+    verifyLogoLink(depot, false);
+
+    depot = depots.get(12);
+    assertThat(depot.getId()).isEqualTo(13);
+    assertThat(depot.getName()).isEqualTo("Buy In Zero - Second Depot");
+    assertThat(depot.getCurrency()).isEqualTo("EUR");
+    assertThat(depot.getVersion()).isEqualTo(0);
+    verifyLogoLink(depot, false);
+
+    depot = depots.get(13);
+    assertThat(depot.getId()).isEqualTo(14);
+    assertThat(depot.getName()).isEqualTo("Value Zero");
     assertThat(depot.getCurrency()).isEqualTo("EUR");
     assertThat(depot.getVersion()).isEqualTo(0);
     verifyLogoLink(depot, false);
