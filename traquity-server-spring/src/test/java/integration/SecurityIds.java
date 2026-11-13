@@ -88,6 +88,11 @@ public class SecurityIds {
   public static final long PINS = 24;
 
   /**
+   * Realty Income
+   */
+  public static final long O = 36;
+
+  /**
    * Qualcomm
    */
   public static final long QCOM = 23;

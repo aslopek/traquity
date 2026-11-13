@@ -14,6 +14,16 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class MathFunctions {
 
+  /**
+   * Returns {@code numerator / denominator}, or zero if {@code denominator} is zero.
+   */
+  public static BigDecimal shareOf(BigDecimal numerator, BigDecimal denominator, MathContext mathContext) {
+    if (denominator.signum() == 0) {
+      return ZERO;
+    }
+    return numerator.divide(denominator, mathContext);
+  }
+
   public static BigDecimal pow(BigDecimal base, BigDecimal exponent, MathContext mathContext) throws ArithmeticException,
       IllegalArgumentException {
     if (base == null || exponent == null || mathContext == null) {
