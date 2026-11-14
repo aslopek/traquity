@@ -1,5 +1,8 @@
 import type {Config} from 'jest';
 
+// Specs run west of UTC
+process.env['TZ'] = 'America/New_York';
+
 const config: Config = {
   displayName: 'angular',
   preset: 'ts-jest',

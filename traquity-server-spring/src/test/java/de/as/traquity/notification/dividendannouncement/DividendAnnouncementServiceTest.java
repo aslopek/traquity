@@ -1,16 +1,25 @@
 package de.as.traquity.notification.dividendannouncement;
 
+import static integration.SecurityIds.AAPL;
+import static integration.SecurityIds.DEO;
+import static integration.SecurityIds.HAG;
+import static integration.SecurityIds.MSFT;
+import static integration.SecurityIds.PFE;
+import static integration.SecurityIds.VW_STAMM;
+import static integration.SecurityIds.VW_VZ;
 import static integration.api.MockRestRequestMatchers.withoutHeader;
 import static java.time.Month.APRIL;
 import static java.time.Month.AUGUST;
 import static java.time.Month.DECEMBER;
 import static java.time.Month.FEBRUARY;
+import static java.time.Month.JANUARY;
 import static java.time.Month.JUNE;
 import static java.time.Month.MARCH;
 import static java.time.Month.MAY;
 import static java.time.Month.OCTOBER;
 import static java.time.Month.SEPTEMBER;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpStatus.OK;
@@ -22,12 +31,13 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 
 import integration.IntegrationTest;
-import integration.SecurityIds;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -215,7 +225,7 @@ class DividendAnnouncementServiceTest {
     List<DividendAnnouncementEntity> all = dividendAnnouncementRepository.findAllByOrderByPayDateAsc();
 
     // MSFT
-    List<DividendAnnouncementEntity> msft = all.stream().filter(e -> e.getSecurityId() == SecurityIds.MSFT).toList();
+    List<DividendAnnouncementEntity> msft = all.stream().filter(e -> e.getSecurityId() == MSFT).toList();
     assertThat(msft).hasSize(6);
     verifyEntity(msft.getFirst(), 101, false, LocalDate.of(2023, SEPTEMBER, 14), "0.68", "USD");
     verifyEntity(msft.get(1), 101, false, LocalDate.of(2023, DECEMBER, 14), "0.75", "USD");
@@ -225,29 +235,29 @@ class DividendAnnouncementServiceTest {
     verifyEntity(msft.get(5), 101, true, LocalDate.of(2024, SEPTEMBER, 12), "0.75", "USD");
 
     // AAPL
-    List<DividendAnnouncementEntity> aapl = all.stream().filter(e -> e.getSecurityId() == SecurityIds.AAPL).toList();
+    List<DividendAnnouncementEntity> aapl = all.stream().filter(e -> e.getSecurityId() == AAPL).toList();
     assertThat(aapl).hasSize(3);
     verifyEntity(aapl.getFirst(), 101, true, LocalDate.of(2024, FEBRUARY, 15), "0.24", "USD");
     verifyEntity(aapl.get(1), 101, true, LocalDate.of(2024, MAY, 16), "0.25", "USD");
     verifyEntity(aapl.get(2), 101, true, LocalDate.of(2024, AUGUST, 15), "0.25", "USD");
 
     // HAG
-    List<DividendAnnouncementEntity> hag = all.stream().filter(e -> e.getSecurityId() == SecurityIds.HAG).toList();
+    List<DividendAnnouncementEntity> hag = all.stream().filter(e -> e.getSecurityId() == HAG).toList();
     assertThat(hag).hasSize(1);
     verifyEntity(hag.getFirst(), 102, false, LocalDate.of(2024, MAY, 22), "0.40", "EUR");
 
     // VOW3
-    List<DividendAnnouncementEntity> vow3 = all.stream().filter(e -> e.getSecurityId() == SecurityIds.VW_VZ).toList();
+    List<DividendAnnouncementEntity> vow3 = all.stream().filter(e -> e.getSecurityId() == VW_VZ).toList();
     assertThat(vow3).hasSize(1);
     verifyEntity(vow3.getFirst(), 102, true, LocalDate.of(2024, JUNE, 4), "9.06", "EUR");
 
     // VOW
-    List<DividendAnnouncementEntity> vow = all.stream().filter(e -> e.getSecurityId() == SecurityIds.VW_STAMM).toList();
+    List<DividendAnnouncementEntity> vow = all.stream().filter(e -> e.getSecurityId() == VW_STAMM).toList();
     assertThat(vow).hasSize(1);
     verifyEntity(vow.getFirst(), 102, true, LocalDate.of(2024, JUNE, 4), "9", "EUR");
 
     // DEO
-    List<DividendAnnouncementEntity> deo = all.stream().filter(e -> e.getSecurityId() == SecurityIds.DEO).toList();
+    List<DividendAnnouncementEntity> deo = all.stream().filter(e -> e.getSecurityId() == DEO).toList();
     assertThat(deo).hasSize(2);
     verifyEntity(deo.getFirst(), 103, true, LocalDate.of(2024, APRIL, 17), "0.3205", "GBP");
     verifyEntity(deo.get(1), 103, true, LocalDate.of(2024, OCTOBER, 17), "0.4907", "GBP");
@@ -280,9 +290,118 @@ class DividendAnnouncementServiceTest {
     subject.updateDividendAnnouncements();
 
     List<DividendAnnouncementEntity> pfe = dividendAnnouncementRepository.findAllByOrderByPayDateAsc().stream()
-        .filter(e -> e.getSecurityId() == SecurityIds.PFE).toList();
+        .filter(e -> e.getSecurityId() == PFE).toList();
     assertThat(pfe).hasSize(1);
     verifyEntity(pfe.getFirst(), 104, true, LocalDate.of(2024, SEPTEMBER, 12), "0.42", "USD");
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      UPDATE DIVIDEND_ANNOUNCEMENT_CONFIG
+      SET IS_ACTIVE = FALSE
+      WHERE SECURITY_ID != (SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt');
+      DELETE FROM DIVIDEND_ANNOUNCEMENT WHERE SECURITY_ID = (SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt');
+      """)
+  void updateDividendAnnouncements_timestampSecondsWestOfUtc_keepsReportedPayDate() {
+    // now: Mon Jan 1, 11:37 in New York
+    when(clock.getZone()).thenReturn(ZoneId.of("America/New_York"));
+    // dates are Mon Jan 8, Tue Jan 9 and Fri Jan 12, each at 00:00 UTC (19:00 on the day before in New York)
+    String responseHag = """
+        {
+          "dividends": {
+            "dates": [1704672000, 1704758400, 1705017600],
+            "amounts": ["EUR 0.4", "EUR 0.5", "EUR 0.6"]
+          }
+        }
+        """;
+    mockServer.expect(once(), requestTo("https://dividend.api/v2/DE000HAG0005/dividends")).andExpect(method(GET))
+        .andRespond(withStatus(OK).body(responseHag));
+    long announcementCountBefore = dividendAnnouncementRepository.count();
+
+    subject.updateDividendAnnouncements();
+
+    assertThat(storedAnnouncementsByPayDate(HAG)).containsExactly(
+        entry(LocalDate.of(2024, JANUARY, 8), "0.4"),
+        entry(LocalDate.of(2024, JANUARY, 9), "0.5"),
+        entry(LocalDate.of(2024, JANUARY, 12), "0.6"));
+    assertThat(dividendAnnouncementRepository.count()).isEqualTo(announcementCountBefore + 3);
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      UPDATE DIVIDEND_ANNOUNCEMENT_DATA_SOURCE SET DATE_FORMAT = 'TIMESTAMP_MILLISECONDS' WHERE ID = 102;
+      UPDATE DIVIDEND_ANNOUNCEMENT_CONFIG
+      SET IS_ACTIVE = FALSE
+      WHERE SECURITY_ID != (SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt');
+      DELETE FROM DIVIDEND_ANNOUNCEMENT WHERE SECURITY_ID = (SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt');
+      """)
+  void updateDividendAnnouncements_timestampMillisecondsWestOfUtc_keepsReportedPayDate() {
+    // now: Mon Jan 1, 11:37 in New York
+    when(clock.getZone()).thenReturn(ZoneId.of("America/New_York"));
+    // dates are Mon Jan 8, Tue Jan 9 and Fri Jan 12, each at 00:00 UTC (19:00 on the day before in New York)
+    String responseHag = """
+        {
+          "dividends": {
+            "dates": [1704672000000, 1704758400000, 1705017600000],
+            "amounts": ["EUR 0.4", "EUR 0.5", "EUR 0.6"]
+          }
+        }
+        """;
+    mockServer.expect(once(), requestTo("https://dividend.api/v2/DE000HAG0005/dividends")).andExpect(method(GET))
+        .andRespond(withStatus(OK).body(responseHag));
+    long announcementCountBefore = dividendAnnouncementRepository.count();
+
+    subject.updateDividendAnnouncements();
+
+    assertThat(storedAnnouncementsByPayDate(HAG)).containsExactly(
+        entry(LocalDate.of(2024, JANUARY, 8), "0.4"),
+        entry(LocalDate.of(2024, JANUARY, 9), "0.5"),
+        entry(LocalDate.of(2024, JANUARY, 12), "0.6"));
+    assertThat(dividendAnnouncementRepository.count()).isEqualTo(announcementCountBefore + 3);
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      UPDATE DIVIDEND_ANNOUNCEMENT_CONFIG
+      SET IS_ACTIVE = FALSE
+      WHERE SECURITY_ID != (SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt');
+      DELETE FROM DIVIDEND_ANNOUNCEMENT WHERE SECURITY_ID = (SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt');
+      """)
+  void updateDividendAnnouncements_todaysTimestampPayDateWestOfUtc_isStored() {
+    // now: Mon Jan 1, 11:37 in New York
+    when(clock.getZone()).thenReturn(ZoneId.of("America/New_York"));
+    // dates are today, Mon Jan 1, and Tue Jan 9, each at 00:00 UTC (19:00 on the day before in New York)
+    String responseHag = """
+        {
+          "dividends": {
+            "dates": [1704067200, 1704758400],
+            "amounts": ["EUR 0.4", "EUR 0.5"]
+          }
+        }
+        """;
+    mockServer.expect(once(), requestTo("https://dividend.api/v2/DE000HAG0005/dividends")).andExpect(method(GET))
+        .andRespond(withStatus(OK).body(responseHag));
+    long announcementCountBefore = dividendAnnouncementRepository.count();
+
+    subject.updateDividendAnnouncements();
+
+    // a pay date of today is not in the past yet
+    assertThat(storedAnnouncementsByPayDate(HAG)).containsExactly(
+        entry(LocalDate.of(2024, JANUARY, 1), "0.4"),
+        entry(LocalDate.of(2024, JANUARY, 9), "0.5"));
+    assertThat(dividendAnnouncementRepository.count()).isEqualTo(announcementCountBefore + 2);
+  }
+
+  /** Returns every stored announcement of the security as its plain amount per share, ordered by pay date. */
+  private Map<LocalDate, String> storedAnnouncementsByPayDate(long securityId) {
+    Map<LocalDate, String> result = new LinkedHashMap<>();
+    dividendAnnouncementRepository.findAllByOrderByPayDateAsc().stream()
+        .filter(entity -> entity.getSecurityId() == securityId)
+        .forEach(entity -> result.put(entity.getPayDate(), entity.getAmountPerShare().stripTrailingZeros().toPlainString()));
+    return result;
   }
 
   void verifyEntity(DividendAnnouncementEntity entity, long expectedDataSourceId, boolean expectedIsNew,
