@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-11-14
+
 ### Fixed
 
 - Failing exchange rate downloads (e.g. due to having no internet connection) no longer crashes the app.
