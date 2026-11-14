@@ -21,7 +21,7 @@ import {TqNetValuePipe} from '../../../common/pipe/tq-net-value.pipe';
 import {TqPercentPipe} from '../../../common/pipe/tq-percent.pipe';
 import {TransactionTypeDisplayIconPipe} from '../../../common/pipe/transaction-type-display-icon.pipe';
 import {TransactionTypeDisplayNamePipe} from '../../../common/pipe/transaction-type-display-name.pipe';
-import {TransactionApi, TransactionRead, TransactionType, TransactionUpdate,} from '../../../gen/api/depot-transaction';
+import {TransactionRead, TransactionType} from '../../../gen/api/depot-transaction';
 import {isAiActive} from '../../../store/ai/ai.selector';
 import {hideAbsoluteValues} from '../../../store/app-config/app-config.selector';
 import {DepotActions} from '../../../store/depot/depot.actions';
@@ -32,6 +32,7 @@ import {TransactionImportComponent} from '../transaction-import/transaction-impo
 import {TransactionPdfImportComponent} from '../transaction-pdf-import/transaction-pdf-import.component';
 import {TableInputFieldComponent} from './table-input-field/table-input-field.component';
 import {isValidCount} from '../transaction-count';
+import {toTransactionUpdate} from '../transaction-update';
 import {AppState} from '../../../store/app.state';
 import {ReadableTransactionPageStore, transactionPageStore} from '../transaction-store/transaction-page.store';
 
@@ -90,7 +91,6 @@ export class TransactionTableComponent {
 
   protected hoveredTransactionId: number | null = null;
 
-  protected editTransaction: TransactionRead | null = null;
   protected updatedTransactionValues: null | {
     transactionType: TransactionType;
     count: number | undefined;
@@ -110,7 +110,6 @@ export class TransactionTableComponent {
 
   constructor(
     private readonly dialog: MatDialog,
-    private readonly transactionApi: TransactionApi,
     destroyRef: DestroyRef,
   ) {
     this.hideAbsoluteValues$
@@ -225,11 +224,11 @@ export class TransactionTableComponent {
 
   protected setEditMode(transaction?: TransactionRead): void {
     if (transaction === undefined) {
-      this.editTransaction = null;
+      this.transactionPageStore.setEditedTransactionId(null);
       this.updatedTransactionValues = null;
       this.countValid = true;
     } else {
-      this.editTransaction = transaction;
+      this.transactionPageStore.setEditedTransactionId(transaction.id);
       this.updatedTransactionValues = {
         transactionType: transaction.transactionType,
         count: this.getSecurityCount(transaction),
@@ -285,53 +284,19 @@ export class TransactionTableComponent {
     };
   }
 
-  protected async updateTransaction(): Promise<void> {
-    if (
-      this.editTransaction === null ||
-      this.updatedTransactionValues === null
-    ) {
+  protected updateTransaction(transaction: TransactionRead): void {
+    if (this.updatedTransactionValues === null) {
       return;
     }
     const count: number | undefined = this.updatedTransactionValues.count;
     if (!isValidCount(count)) {
       return;
     }
-    const update: TransactionUpdate = this.editTransaction;
-
-    update.grossValue = this.updatedTransactionValues.grossValue;
-    update.tax = this.updatedTransactionValues.tax;
-    if (update.tax === 0) {
-      update.tax = undefined;
-    }
-    update.fee = this.updatedTransactionValues.fee;
-    if (update.fee === 0) {
-      update.fee = undefined;
-    }
-
-    if (this.editTransaction.securityCountSplitAdjusted != null) {
-      const factor: number =
-        this.editTransaction.securityCountOriginal /
-        this.editTransaction.securityCountSplitAdjusted;
-      update.securityCountSplitAdjusted = count;
-      update.securityCountOriginal =
-        factor * count;
-    } else {
-      update.securityCountOriginal = count;
-    }
-
-    const transactionId: number = this.editTransaction.id;
-    const updatedTransaction: TransactionRead = await firstValueFrom(
-      this.transactionApi.updateTransaction(
-        this.selectedDepotId(),
-        transactionId,
-        update,
-      ),
-    );
-
-    this.transactionPageStore.replaceTransaction(updatedTransaction);
-    this.store.dispatch(DepotActions.reloadDepots());
-
-    this.setEditMode(undefined);
+    this.transactionPageStore.updateTransaction({
+      depotId: this.selectedDepotId(),
+      transactionId: transaction.id,
+      update: toTransactionUpdate(transaction, {...this.updatedTransactionValues, count})
+    });
   }
 
   private selectedDepotId(): number {
