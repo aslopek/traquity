@@ -215,8 +215,8 @@ class DividendServiceImpl implements DividendService {
     List<DividendDto> dividendDtos = new ArrayList<>(consolidatedDividends.size());
 
     for (Dividend dividend : consolidatedDividends) {
-      dividend.setRelativeValueGross(dividend.getAbsoluteValueGross().divide(sums.getGrossSum(), mathContext));
-      dividend.setRelativeValueNet(dividend.getAbsoluteValueNet().divide(sums.getNetSum(), mathContext));
+      dividend.setRelativeValueGross(ratioOf(dividend.getAbsoluteValueGross(), sums.getGrossSum(), mathContext));
+      dividend.setRelativeValueNet(ratioOf(dividend.getAbsoluteValueNet(), sums.getNetSum(), mathContext));
       dividendDtos.add(dividendMapper.toDto(dividend));
     }
 
