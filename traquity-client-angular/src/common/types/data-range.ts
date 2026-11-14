@@ -4,7 +4,7 @@ export type DataRange = '1w' | '1m' | '3m' | '6m' | '1y' | '2y' | '3y' | '5y' | 
 
 export function fromDateRange(dataRange: DataRange): Date {
   if (dataRange === 'max') {
-    return new Date(0);
+    return new Date(1970, 0, 1);
   }
 
   const date: Date = new Date();
