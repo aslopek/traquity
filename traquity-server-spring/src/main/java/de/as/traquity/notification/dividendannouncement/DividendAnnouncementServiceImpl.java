@@ -3,6 +3,7 @@ package de.as.traquity.notification.dividendannouncement;
 import static de.as.traquity.notification.dividendannouncement.api.model.DateFormatDto.TIMESTAMP_MILLISECONDS;
 import static de.as.traquity.notification.dividendannouncement.api.model.DateFormatDto.TIMESTAMP_SECONDS;
 import static java.lang.Double.parseDouble;
+import static java.time.ZoneOffset.UTC;
 import static org.springframework.http.HttpMethod.GET;
 
 import com.jayway.jsonpath.DocumentContext;
@@ -202,10 +203,10 @@ class DividendAnnouncementServiceImpl implements DividendAnnouncementService {
   private LocalDate parseDate(String dateStr, String format) {
     if (TIMESTAMP_SECONDS.getValue().equals(format)) {
       long seconds = (long) parseDouble(dateStr);
-      return Instant.ofEpochSecond(seconds).atZone(clock.getZone()).toLocalDate();
+      return LocalDate.ofInstant(Instant.ofEpochSecond(seconds), UTC);
     } else if (TIMESTAMP_MILLISECONDS.getValue().equals(format)) {
       long milliseconds = (long) parseDouble(dateStr);
-      return Instant.ofEpochMilli(milliseconds).atZone(clock.getZone()).toLocalDate();
+      return LocalDate.ofInstant(Instant.ofEpochMilli(milliseconds), UTC);
     } else {
       DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
       return LocalDate.parse(dateStr, formatter);
