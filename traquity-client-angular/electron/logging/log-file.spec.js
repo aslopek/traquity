@@ -24,7 +24,7 @@ describe('createLogFile', () => {
     subjectUnderTest = createLogFile({
       fileSystem,
       logPath: LOG_PATH,
-      now: () => new Date(TIMESTAMP),
+      now: () => TIMESTAMP,
       logger: {error}
     });
   });
