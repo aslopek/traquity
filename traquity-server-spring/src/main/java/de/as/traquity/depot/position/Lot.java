@@ -1,6 +1,7 @@
 package de.as.traquity.depot.position;
 
 import static de.as.traquity.common.arithmetic.MathFunctions.cagr;
+import static de.as.traquity.common.arithmetic.MathFunctions.ratioOf;
 import static de.as.traquity.depot.transaction.api.model.TransactionTypeDto.BUY;
 import static de.as.traquity.depot.transaction.api.model.TransactionTypeDto.SELL;
 import static java.math.BigDecimal.ONE;
@@ -92,7 +93,6 @@ public class Lot implements Performance {
     BigDecimal buyInAbsolute;
     BigDecimal currentSizeAbsolute;
     BigDecimal performanceAbsolute;
-    BigDecimal performanceRelative;
 
     for (Lot lot : lots) {
       buyInAbsolute = lot.getBuyInAbsolute();
@@ -100,28 +100,30 @@ public class Lot implements Performance {
         lot.setCurrentSizeAbsolute(buyInAbsolute);
         lot.setPerformanceAbsolute(ZERO);
         lot.setPerformanceRelative(ZERO);
+        lot.setCagr(null);
         continue;
       }
 
       currentSizeAbsolute = lot.count.multiply(price, mathContext);
       performanceAbsolute = currentSizeAbsolute.subtract(buyInAbsolute, mathContext);
 
-      if (buyInAbsolute.compareTo(ZERO) == 0) {
-        performanceRelative = ZERO; // actually positive or negative infinity
-      } else {
-        performanceRelative = performanceAbsolute.divide(buyInAbsolute, mathContext);
-      }
-
       lot.currentSizeAbsolute = currentSizeAbsolute;
       lot.performanceAbsolute = performanceAbsolute;
-      lot.performanceRelative = performanceRelative;
+      lot.performanceRelative = ratioOf(performanceAbsolute, buyInAbsolute, mathContext);
       lot.cagr = calculateCagr(lot, mathContext, clock);
     }
   }
 
+  /**
+   * @return the lot's compound annual growth rate, or {@code null} if none can be computed (zero buy in, lot held for less than a day)
+   */
   private static BigDecimal calculateCagr(Lot lot, MathContext mathContext, Clock clock) {
+    LocalDate today = LocalDate.now(clock);
+    if (lot.buyInAbsolute.signum() == 0 || !lot.date.isBefore(today)) {
+      return null;
+    }
     BigDecimal growthFactor = ONE.add(lot.performanceRelative, mathContext);
-    return cagr(growthFactor, lot.date, LocalDate.now(clock), mathContext);
+    return cagr(growthFactor, lot.date, today, mathContext);
   }
 
   private long depotId;

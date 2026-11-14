@@ -58,13 +58,21 @@
 
         <div class="lot__row">
             <span class="lot__label">CAGR</span>
-            <span class="lot__value tq-numeric">{{ lot.cagr | tqPercent : '1.2-2' : true }}</span>
+            <span class="lot__value tq-numeric">
+                @if (lot.cagr != null) {
+                    {{ lot.cagr | tqPercent : '1.2-2' : true }}
+                } @else if (lot.buyInAbsolute === 0 && lot.currentSizeAbsolute > 0) {
+                    +&infin;
+                } @else {
+                    &ndash;
+                }
+            </span>
         </div>
 
         <div class="lot__row">
             <span class="lot__label">Performance</span>
             <app-performance-label [performanceAbsolute]="lot.performanceAbsolute"
-                                   [performanceRelative]="lot.performanceRelative"
+                                   [performanceRelative]="lot.performanceRelative ?? 'infinity'"
                                    [currency]="lot.currency">
             </app-performance-label>
         </div>

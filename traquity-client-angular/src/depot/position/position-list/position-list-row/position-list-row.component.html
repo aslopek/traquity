@@ -35,9 +35,9 @@
          [matTooltip]="pos.performanceAbsolute >= 0 ? 'Unrealized gains' : 'Unrealized losses'">
         @if (hideAbsoluteValues()) {
             <span class="tq-pill"
-                  [class.tq-pill--positive]="pos.performanceRelative >= 0"
-                  [class.tq-pill--negative]="pos.performanceRelative < 0">
-                @if (pos.buyInAbsolute === 0) {
+                  [class.tq-pill--positive]="pos.performanceAbsolute >= 0"
+                  [class.tq-pill--negative]="pos.performanceAbsolute < 0">
+                @if (pos.performanceRelative == null) {
                     +&infin;
                 } @else {
                     {{ pos.performanceRelative >= 0 ? '+' : '' }}{{ pos.performanceRelative | tqPercent }}
@@ -50,9 +50,9 @@
                 {{ pos.performanceAbsolute >= 0 ? '+' : '' }}{{ pos.performanceAbsolute | tqCurrency:depotCurrency() }}
             </span>
             <span class="position-row__sub-pill"
-                  [class.position-row__sub-pill--positive]="pos.performanceRelative >= 0"
-                  [class.position-row__sub-pill--negative]="pos.performanceRelative < 0">
-                @if (pos.buyInAbsolute === 0) {
+                  [class.position-row__sub-pill--positive]="pos.performanceAbsolute >= 0"
+                  [class.position-row__sub-pill--negative]="pos.performanceAbsolute < 0">
+                @if (pos.performanceRelative == null) {
                     +&infin;
                 } @else {
                     {{ pos.performanceRelative >= 0 ? '+' : '' }}{{ pos.performanceRelative | tqPercent }}

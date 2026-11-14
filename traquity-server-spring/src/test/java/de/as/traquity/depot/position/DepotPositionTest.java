@@ -52,7 +52,7 @@ class DepotPositionTest {
     assertThat(responseBody.getBuyInAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(0.0));
     assertThat(responseBody.getCurrentSizeAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(0.0));
     assertThat(responseBody.getPerformanceAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(0.0));
-    assertThat(responseBody.getPerformanceRelative()).isNull();
+    assertThat(responseBody.getPerformanceRelative()).isEqualByComparingTo("0");
     List<DepotPositionDto> positions = responseBody.getPositions();
     assertThat(positions).isEmpty();
   }
@@ -260,7 +260,7 @@ class DepotPositionTest {
     assertThat(position.getCurrentSizeAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(5070.4));
     assertThat(position.getCurrentSizeRelative()).isEqualByComparingTo(BigDecimal.valueOf(1.0));
     assertThat(position.getPerformanceAbsolute()).isEqualByComparingTo(BigDecimal.valueOf(5070.4));
-    assertThat(position.getPerformanceRelative()).isEqualByComparingTo(BigDecimal.valueOf(0.0));
+    assertThat(position.getPerformanceRelative()).isNull();
   }
 
   @Test
@@ -407,7 +407,7 @@ class DepotPositionTest {
     assertThat(position.getCurrentSizeAbsolute()).isEqualByComparingTo("5197.16"); // 41 * 126.76
     assertThat(position.getCurrentSizeRelative().doubleValue()).isCloseTo(0.9789413, PERCENTAGE_ACCURACY_ONE_THOUSANDTH);
     assertThat(position.getPerformanceAbsolute()).isEqualByComparingTo("5197.16");
-    assertThat(position.getPerformanceRelative()).isEqualByComparingTo("0");
+    assertThat(position.getPerformanceRelative()).isNull();
 
     position = positions.get(1);
     assertThat(position.getSecurityIds()).containsExactlyInAnyOrder(VW_VZ);
@@ -446,7 +446,7 @@ class DepotPositionTest {
     assertThat(position.getCurrentSizeAbsolute()).isEqualByComparingTo("5070.4");
     assertThat(position.getCurrentSizeRelative()).isEqualByComparingTo("1");
     assertThat(position.getPerformanceAbsolute()).isEqualByComparingTo("5070.4");
-    assertThat(position.getPerformanceRelative()).isEqualByComparingTo("0");
+    assertThat(position.getPerformanceRelative()).isNull();
   }
 
   @Test
@@ -467,7 +467,7 @@ class DepotPositionTest {
     assertThat(responseBody.getBuyInAbsolute()).isEqualByComparingTo("0");
     assertThat(responseBody.getCurrentSizeAbsolute()).isEqualByComparingTo("0");
     assertThat(responseBody.getPerformanceAbsolute()).isEqualByComparingTo("0");
-    assertThat(responseBody.getPerformanceRelative()).isNull();
+    assertThat(responseBody.getPerformanceRelative()).isEqualByComparingTo("0");
 
     List<DepotPositionDto> positions = responseBody.getPositions();
     assertThat(positions).hasSize(1);

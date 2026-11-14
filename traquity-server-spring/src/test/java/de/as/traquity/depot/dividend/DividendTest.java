@@ -357,7 +357,7 @@ class DividendTest {
   }
 
   @Test
-  void getDividends_positionBuyInAndValueZero_yieldsZero() throws Exception {
+  void getDividends_positionBuyInAndValueZero_yieldsInfinite() throws Exception {
     MvcResult mvcResult = getDividends("14", true).andExpect(status().isOk()).andReturn();
     DividendsDto dividends = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DividendsDto.class);
 
@@ -369,10 +369,10 @@ class DividendTest {
     assertThat(dividendYield.getRegularDividendPaymentsPerYear()).isEqualTo(12);
     assertThat(dividendYield.getEstimatedPaymentGross()).isEqualByComparingTo("12"); // 12 * 1
     assertThat(dividendYield.getEstimatedPaymentNet()).isEqualByComparingTo("9"); // 12 * (1 - 0.25)
-    assertThat(dividendYield.getCurrentYieldGross()).isEqualByComparingTo("0");
-    assertThat(dividendYield.getCurrentYieldNet()).isEqualByComparingTo("0");
-    assertThat(dividendYield.getYieldOnCostGross()).isEqualByComparingTo("0");
-    assertThat(dividendYield.getYieldOnCostNet()).isEqualByComparingTo("0");
+    assertThat(dividendYield.getCurrentYieldGross()).isNull();
+    assertThat(dividendYield.getCurrentYieldNet()).isNull();
+    assertThat(dividendYield.getYieldOnCostGross()).isNull();
+    assertThat(dividendYield.getYieldOnCostNet()).isNull();
   }
 
   private void getDividendsForDepot1_noSpecialDividend(MvcResult mvcResult) throws Exception {

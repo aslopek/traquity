@@ -253,7 +253,9 @@ components:
           type: number
           nullable: false
         performanceRelative:
-          description: performanceAbsolute / investedCapital, as a percentage (e.g. 0.1 meaning 10%)
+          description: >
+            performanceAbsolute / investedCapital as a percentage (e.g. 0.1 meaning 10%). 0 if both are 0. Absent if only investedCapital is
+            0, meaning infinite performance, or if investedCapital is negative, meaning no meaningful ratio exists.
           type: number
           nullable: false
 
@@ -304,7 +306,7 @@ components:
           type: number
           nullable: false
         costBasis:
-          description: all money put in - buys, taxes and fees - as a positive amount
+          description: all money put in (buys, taxes, fees) as a positive amount. Negative if tax refunds exceed the cost.
           type: number
           nullable: false
         performanceAbsolute:
@@ -312,7 +314,8 @@ components:
           type: number
           nullable: false
         performanceRelative:
-          description: |
-            performanceAbsolute / costBasis, as a ratio (e.g. 0.1 meaning 10%). Absent when costBasis is equal to or lower than zero.
+          description: >
+            performanceAbsolute / costBasis as a ratio (e.g. 0.1 meaning 10%). 0 if both are 0. Absent if only costBasis is 0, meaning
+            infinite performance, or if costBasis is negative, meaning no meaningful ratio exists.
           type: number
           nullable: false

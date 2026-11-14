@@ -1,5 +1,6 @@
 package de.as.traquity.depot.position;
 
+import static de.as.traquity.common.arithmetic.MathFunctions.ratioOf;
 import static de.as.traquity.common.arithmetic.MathFunctions.shareOf;
 import static de.as.traquity.depot.transaction.api.model.TransactionTypeDto.BUY;
 import static de.as.traquity.depot.transaction.api.model.TransactionTypeDto.SELL;
@@ -267,20 +268,8 @@ class DepotPositionServiceImpl implements DepotPositionService {
   }
 
   private void setPerformanceRelative(DepotPosition depotPosition) {
-    BigDecimal buyIn = depotPosition.getBuyInAbsolute();
-    BigDecimal absoluteSize = depotPosition.getCurrentSizeAbsolute();
-    BigDecimal performanceRelative = ZERO;
-    if (buyIn != null && ZERO.compareTo(buyIn) != 0) {
-      performanceRelative = absoluteSize.divide(buyIn, mathContext);
-      if (performanceRelative.compareTo(BigDecimal.ONE) >= 0) {
-        // positive performance
-        performanceRelative = performanceRelative.subtract(BigDecimal.ONE, mathContext);
-      } else {
-        // negative performance
-        performanceRelative = BigDecimal.ONE.subtract(performanceRelative, mathContext).negate();
-      }
-    }
-    depotPosition.setPerformanceRelative(performanceRelative);
+    depotPosition.setPerformanceRelative(ratioOf(depotPosition.getPerformanceAbsolute(), depotPosition.getBuyInAbsolute(),
+        mathContext));
   }
 
   private void setDisplayNames(List<DepotPosition> depotPositions) {
@@ -370,12 +359,8 @@ class DepotPositionServiceImpl implements DepotPositionService {
     }
     depotComposition.setPerformanceAbsolute(depotComposition.getCurrentSizeAbsolute().subtract(depotComposition.getBuyInAbsolute(),
         mathContext));
-    if (depotComposition.getBuyInAbsolute().signum() == 0) {
-      depotComposition.setPerformanceRelative(null);
-    } else {
-      depotComposition.setPerformanceRelative(depotComposition.getPerformanceAbsolute().divide(depotComposition.getBuyInAbsolute(),
-          mathContext));
-    }
+    depotComposition.setPerformanceRelative(ratioOf(depotComposition.getPerformanceAbsolute(), depotComposition.getBuyInAbsolute(),
+        mathContext));
     depotComposition.setPositions(positions);
     return depotComposition;
   }

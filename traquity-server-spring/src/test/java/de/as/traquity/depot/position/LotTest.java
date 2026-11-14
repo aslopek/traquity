@@ -10,10 +10,12 @@ import static java.math.BigDecimal.ONE;
 import static java.math.BigDecimal.ZERO;
 import static java.time.Month.APRIL;
 import static java.time.Month.DECEMBER;
+import static java.time.Month.JANUARY;
 import static java.time.Month.JUNE;
 import static java.time.Month.NOVEMBER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.data.Percentage.withPercentage;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -347,7 +349,88 @@ class LotTest {
   }
 
   @Test
-  void calculatePerformance_currentPriceIsNull_performanceIsZero() {
+  void calculatePerformance_buyInZero_performanceRelativeInfinite() {
+    lots = new LinkedList<>(List.of(freeLot()));
+    Lot.calculatePerformance(lots, new BigDecimal("12.5"), MATH_CONTEXT, clock);
+
+    Lot lot = lots.getFirst();
+    assertThat(lot.getCurrentSizeAbsolute()).isEqualByComparingTo("25");
+    assertThat(lot.getPerformanceAbsolute()).isEqualByComparingTo("25");
+    assertThat(lot.getPerformanceRelative()).isNull();
+    assertThat(lot.getCagr()).isNull();
+  }
+
+  @Test
+  void calculatePerformance_buyInAndPriceZero_performanceRelativeZeroCagrAbsent() {
+    lots = new LinkedList<>(List.of(freeLot()));
+    Lot.calculatePerformance(lots, ZERO, MATH_CONTEXT, clock);
+
+    Lot lot = lots.getFirst();
+    assertThat(lot.getCurrentSizeAbsolute()).isEqualByComparingTo("0");
+    assertThat(lot.getPerformanceAbsolute()).isEqualByComparingTo("0");
+    assertThat(lot.getPerformanceRelative()).isEqualByComparingTo("0");
+    assertThat(lot.getCagr()).isNull();
+  }
+
+  @Test
+  void calculatePerformance_lotDatedToday_cagrAbsent() {
+    lots = new LinkedList<>(List.of(lotDated(LocalDate.of(2024, JANUARY, 1))));
+    Lot.calculatePerformance(lots, new BigDecimal("12.5"), MATH_CONTEXT, clock);
+
+    Lot lot = lots.getFirst();
+    assertThat(lot.getPerformanceRelative()).isEqualByComparingTo("0.25");
+    assertThat(lot.getCagr()).isNull();
+  }
+
+  @Test
+  void calculatePerformance_lotDatedInTheFuture_cagrAbsent() {
+    lots = new LinkedList<>(List.of(lotDated(LocalDate.of(2024, JANUARY, 2))));
+    Lot.calculatePerformance(lots, new BigDecimal("12.5"), MATH_CONTEXT, clock);
+
+    Lot lot = lots.getFirst();
+    assertThat(lot.getPerformanceRelative()).isEqualByComparingTo("0.25");
+    assertThat(lot.getCagr()).isNull();
+  }
+
+  @Test
+  void calculatePerformance_lotHeldForAYear_cagrComputed() {
+    lots = new LinkedList<>(List.of(lotDated(LocalDate.of(2023, JANUARY, 1))));
+    Lot.calculatePerformance(lots, new BigDecimal("12.5"), MATH_CONTEXT, clock);
+
+    double expectedCagr = Math.pow(25.0 / 20.0, 365.25 / 365) - 1;
+    assertThat(lots.getFirst().getCagr().doubleValue()).isCloseTo(expectedCagr, withPercentage(0.0001));
+  }
+
+  private Lot lotDated(LocalDate date) {
+    return Lot.builder()
+        .depotId(1)
+        .securityId(2)
+        .date(date)
+        .time(LocalTime.of(9, 36, 10))
+        .holdingPeriodInDays(0)
+        .count(new BigDecimal("2"))
+        .buyInAbsolute(new BigDecimal("20"))
+        .fee(ZERO)
+        .tax(ZERO)
+        .build();
+  }
+
+  private Lot freeLot() {
+    return Lot.builder()
+        .depotId(1)
+        .securityId(2)
+        .date(LocalDate.of(2023, JUNE, 12))
+        .time(LocalTime.of(9, 36, 10))
+        .holdingPeriodInDays(0)
+        .count(new BigDecimal("2"))
+        .buyInAbsolute(ZERO)
+        .fee(ZERO)
+        .tax(ZERO)
+        .build();
+  }
+
+  @Test
+  void calculatePerformance_currentPriceIsNull_performanceIsZeroCagrAbsent() {
     Lot.calculatePerformance(lots, null, MATH_CONTEXT, clock);
 
     assertThat(lots).hasSize(3);
@@ -356,16 +439,19 @@ class LotTest {
     assertThat(lot.getCurrentSizeAbsolute()).isEqualByComparingTo("1500.28");
     assertThat(lot.getPerformanceAbsolute()).isZero();
     assertThat(lot.getPerformanceRelative()).isZero();
+    assertThat(lot.getCagr()).isNull();
 
     lot = lots.get(1);
     assertThat(lot.getCurrentSizeAbsolute()).isEqualByComparingTo("1348.03");
     assertThat(lot.getPerformanceAbsolute()).isZero();
     assertThat(lot.getPerformanceRelative()).isZero();
+    assertThat(lot.getCagr()).isNull();
 
     lot = lots.get(2);
     assertThat(lot.getCurrentSizeAbsolute()).isEqualByComparingTo("2100");
     assertThat(lot.getPerformanceAbsolute()).isZero();
     assertThat(lot.getPerformanceRelative()).isZero();
+    assertThat(lot.getCagr()).isNull();
   }
 
   @Test

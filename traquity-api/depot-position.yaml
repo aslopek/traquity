@@ -129,10 +129,11 @@ components:
           nullable: false
         performanceRelative:
           description: >
-            Percentage (e.g. 0.1 meaning 10%). Absent when buyInAbsolute is 0, because the ratio is undefined then - unlike
-            DepotPosition, which reports 0 in that case.
+            performanceAbsolute / buyInAbsolute as a percentage (e.g. 0.1 meaning 10%). 0 if both are 0. Absent if only buyInAbsolute is 0,
+            meaning infinite performance.
           type: number
           nullable: false
+          minimum: -1
         positions:
           type: array
           nullable: false
@@ -152,7 +153,6 @@ components:
         - currentSizeAbsolute
         - currentSizeRelative
         - performanceAbsolute
-        - performanceRelative
       properties:
         securityIds:
           description: '''Contains the security IDs associated to this position. If more than one ID is provided,
@@ -193,9 +193,12 @@ components:
           type: number
           nullable: false
         performanceRelative:
-          description: Percentage (e.g. 0.1 meaning 10%)
+          description: >
+            performanceAbsolute / buyInAbsolute as a percentage (e.g. 0.1 meaning 10%). 0 if both are 0. Absent if only buyInAbsolute is 0,
+            meaning infinite performance.
           type: number
           nullable: false
+          minimum: -1
 
     Time:
       description: Time including hours, minutes, seconds
@@ -220,8 +223,6 @@ components:
         - tax
         - currentSizeAbsolute
         - performanceAbsolute
-        - performanceRelative
-        - cagr
       properties:
         depotId:
           $ref: '#/components/schemas/Id'
@@ -259,10 +260,16 @@ components:
           type: number
           nullable: false
         performanceRelative:
-          description: Percentage (e.g. 0.1 meaning 10%)
+          description: >
+            performanceAbsolute / buyInAbsolute as a percentage (e.g. 0.1 meaning 10%). 0 if both are 0. Absent if only  buyInAbsolute is 0,
+            meaning infinite performance.
           type: number
           nullable: false
+          minimum: -1
         cagr:
-          description: Compound Annual Growth Rate, denoted as a percentage per year (e.g. 0.1 meaning 10% p.a.)
+          description: >
+            Compound Annual Growth Rate, denoted as a percentage per year (e.g. 0.1 meaning 10% p.a.). Absent if none can be computed: for a
+            buy-in of 0, for a lot dated today or later, or for a security without any price.
           type: number
           nullable: false
+          minimum: -1

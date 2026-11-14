@@ -3,6 +3,7 @@ import {signal, Signal, WritableSignal} from '@angular/core';
 import {PositionPerformance} from '../../../../gen/api/depot-performance';
 import {positionPerformanceFactory} from '../../../../testing/position-performance.factory';
 import {relativePerformance} from './relative-performance';
+import {RelativePerformance} from '../../../../common/types/relative-performance';
 
 describe('relativePerformance', (): void => {
   let performance: WritableSignal<PositionPerformance | null>;
@@ -11,7 +12,7 @@ describe('relativePerformance', (): void => {
     performance = signal<PositionPerformance | null>(positionPerformanceFactory());
   });
 
-  function result(): Signal<number | 'infinity' | null> {
+  function result(): Signal<RelativePerformance | null> {
     return relativePerformance({performance});
   }
 
@@ -19,13 +20,25 @@ describe('relativePerformance', (): void => {
     expect(result()()).toBe(0.2411);
   });
 
-  it('is \'infinity\' while the response carries no performanceRelative', (): void => {
-    performance.set(positionPerformanceFactory({performanceRelative: undefined}));
+  it('is \'infinity\' when the response has no performanceRelative and a zero costBasis', (): void => {
+    performance.set(positionPerformanceFactory({
+      performanceRelative: undefined,
+      costBasis: 0
+    }));
 
     expect(result()()).toBe('infinity');
   });
 
-  it('is null while no response is loaded', (): void => {
+  it('is \'none\' when the response has no performanceRelative and a negative costBasis', (): void => {
+    performance.set(positionPerformanceFactory({
+      performanceRelative: undefined,
+      costBasis: -10
+    }));
+
+    expect(result()()).toBe('none');
+  });
+
+  it('is null when no response is loaded', (): void => {
     performance.set(null);
 
     expect(result()()).toBeNull();

@@ -148,10 +148,6 @@ components:
           required:
             - estimatedPaymentGross
             - estimatedPaymentNet
-            - currentYieldGross
-            - currentYieldNet
-            - yieldOnCostGross
-            - yieldOnCostNet
             - regularDividendPaymentsPerYear
           properties:
             estimatedPaymentGross:
@@ -163,33 +159,33 @@ components:
               type: number
               nullable: false
             currentYieldGross:
-              description: '''
-                Dividend yield per year based on the latest regular payment (gross value) and current position size, as a
-                percentage (e.g. 0.1 meaning 10%).
-                '''
+              description: >
+                estimatedPaymentGross / current position size as a percentage (e.g. 0.1 meaning 10%). 0 if both are 0. Absent if only the
+                current position size is 0, meaning an infinite yield.
               type: number
               nullable: false
+              minimum: 0
             currentYieldNet:
-              description: '''
-                Dividend yield per year based on the latest regular payment (net value) and current position size, as a
-                percentage (e.g. 0.1 meaning 10%).
-                '''
+              description: >
+                estimatedPaymentNet / current position size as a percentage (e.g. 0.1 meaning 10%). 0 if both are 0. Absent if only the
+                current position size is 0, meaning an infinite yield.
               type: number
               nullable: false
+              minimum: 0
             yieldOnCostGross:
-              description: '''
-                Dividend yield per year based on the latest regular payment (gross value) and buy-in position size, as a
-                percentage (e.g. 0.1 meaning 10%).
-                '''
+              description: >
+                estimatedPaymentGross / buy-in position size as a percentage (e.g. 0.1 meaning 10%). 0 if both are 0. Absent if only the
+                buy-in position size is 0, meaning an infinite yield.
               type: number
               nullable: false
+              minimum: 0
             yieldOnCostNet:
-              description: '''
-                Dividend yield per year based on the latest regular payment (net value) and buy-in position size, as a
-                percentage (e.g. 0.1 meaning 10%).
-                '''
+              description: >
+                estimatedPaymentNet / buy-in position size as a percentage (e.g. 0.1 meaning 10%). 0 if both are 0. Absent if only the
+                buy-in position size is 0, meaning an infinite yield.
               type: number
               nullable: false
+              minimum: 0
             regularDividendPaymentsPerYear:
               description: '''
                 The number of regular dividend payments per year. Calculated by comparing the pay dates of the three most

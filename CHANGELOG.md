@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   free.
 - *Depot / Dividends* loads when a security paying regular dividends has a value of zero, e.g. shares received for free with no known
   price.
+- Relative performance and dividend yields show ∞ when only their basis is zero, e.g. the buy-in of shares received for free, and 0% when
+  both values are zero.
+- A purchase lot no longer shows a CAGR of -100% when bought today or later. Its CAGR shows +∞ when it grew out of a buy-in of zero, and `–`
+  where none can be computed: bought today or later, a buy-in of zero without value, or a security without any price.
+- Relative performance in *Depot / Performance* and in a position's performance breakdown shows when the invested capital or cost basis
+  is negative, e.g. after tax refunds exceeding the buys.
 
 ## [1.5.0] - 2026-11-08
 

@@ -1,15 +1,16 @@
 import {computed, Signal} from '@angular/core';
 import {RebasedDepotValue} from './rebased-depot-value.type';
 import {relativeTo} from './depot-values';
+import {RelativePerformance} from '../../../../common/types/relative-performance';
 
 export type DepotPerformanceKpis = {
   investedCapital: number
   cashPosition: number
-  cashPositionRelativeToAbsoluteValue: number | 'infinity'
+  cashPositionRelativeToAbsoluteValue: RelativePerformance
   absoluteValue: number
   dateRange: {
     growthAbsolute: number
-    growthRelative: number | 'infinity'
+    growthRelative: RelativePerformance
   }
 };
 
