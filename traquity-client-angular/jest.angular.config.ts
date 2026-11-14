@@ -1,5 +1,9 @@
 import type {Config} from 'jest';
 
+// Specs run west of UTC, where a `YYYY-MM-DD` date parsed as midnight UTC falls on the local day before. Set here, since jest's
+// workers inherit it, while a spec's own `process.env` is a copy the date functions never read.
+process.env['TZ'] = 'America/New_York';
+
 const config: Config = {
   displayName: 'angular',
   preset: 'ts-jest',

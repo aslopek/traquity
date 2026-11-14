@@ -10,6 +10,7 @@ import {DividendAnnouncementRead} from '../../gen/api/notification/dividend-anno
 import {getAllDividendAnnouncements} from '../../store/dividend-announcement/dividend-announcement.selector';
 import {DividendAnnouncementsWeekComponent} from './dividend-announcements-week/dividend-announcements-week.component';
 import {AppState} from '../../store/app.state';
+import {weekStartOf} from './pay-date-week';
 
 @Component({
   selector: 'app-dividend-announcements-view',
@@ -39,23 +40,12 @@ export class DividendAnnouncementsViewComponent {
     this.dividendAnnouncements$
       .pipe(takeUntilDestroyed(destroyRef))
       .subscribe((dividendAnnouncements) => {
-        dividendAnnouncements.sort(
-          (a, b) =>
-            new Date(a.payDate).getTime() - new Date(b.payDate).getTime(),
-        );
+        dividendAnnouncements.sort((a, b) => a.payDate.localeCompare(b.payDate));
         const grouped: { [s: string]: DividendAnnouncementRead[] } = {};
-        let date: Date;
-        let firstDayOfWeek: Date;
-        let timeZoneOffset: number;
         let key: string;
 
         for (const dividendAnnouncement of dividendAnnouncements) {
-          date = new Date(dividendAnnouncement.payDate);
-          firstDayOfWeek = this.getFirstDayOfWeek(date);
-          timeZoneOffset = firstDayOfWeek.getTimezoneOffset() * 60000;
-          firstDayOfWeek = new Date(firstDayOfWeek.getTime() - timeZoneOffset);
-
-          key = firstDayOfWeek.toISOString().split('T')[0];
+          key = weekStartOf(dividendAnnouncement.payDate);
           if (!grouped[key]) {
             grouped[key] = [];
           }
@@ -65,14 +55,5 @@ export class DividendAnnouncementsViewComponent {
         this.dividendAnnouncementsByWeek = grouped;
         this.weeks = Object.keys(grouped).sort();
       });
-  }
-
-  private getFirstDayOfWeek(date: Date): Date {
-    const firstDayOfWeek: Date = new Date(date.getTime());
-    firstDayOfWeek.setHours(0, 0, 0, 0);
-    const day: number = firstDayOfWeek.getDay();
-    const diff: number = (day <= 0 ? -6 : 1) - day;
-    firstDayOfWeek.setDate(firstDayOfWeek.getDate() + diff);
-    return firstDayOfWeek;
   }
 }

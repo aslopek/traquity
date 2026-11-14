@@ -1,6 +1,7 @@
 import {Component, input, InputSignal, OnChanges, SimpleChanges,} from '@angular/core';
 import {DividendAnnouncementRead} from '../../../gen/api/notification/dividend-announcement';
 import {DividendAnnouncementComponent} from '../dividend-announcement/dividend-announcement.component';
+import {workdayColumnOf} from '../pay-date-week';
 
 @Component({
   selector: 'app-dividend-announcements-week',
@@ -32,11 +33,8 @@ export class DividendAnnouncementsWeekComponent implements OnChanges {
       this.friday,
     ];
 
-    let day: number;
     for (const dividendAnnouncement of this.dividendAnnouncements()) {
-      day = (new Date(dividendAnnouncement.payDate).getDay() + 6) % 7;
-      day = Math.min(day, indexedDays.length - 1); // day must not be larger than the largest index
-      indexedDays[day].push(dividendAnnouncement);
+      indexedDays[workdayColumnOf(dividendAnnouncement.payDate)].push(dividendAnnouncement);
     }
   }
 }

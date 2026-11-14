@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   full.
 - Buys with a gross value of zero, e.g. shares received for free, no longer set the security's price to zero.
 - Historical prices from data sources reporting dates as timestamps keep their reported date in time zones west of UTC.
+- *Dividends* shows each upcoming dividend under the weekday and week of its pay date in time zones west of UTC. Announcements from data
+  sources reporting dates as timestamps keep their reported pay date there.
 - All lines in `traquity.log` show their time in the computer's local time zone. The desktop app's lines used to be in UTC.
 - A failed save of an edited transaction on *Depot / Transactions* shows an error and keeps the row in edit mode. *Cancel* brings back the
   saved values.
