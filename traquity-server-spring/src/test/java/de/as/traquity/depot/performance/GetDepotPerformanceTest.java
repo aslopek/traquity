@@ -1,6 +1,7 @@
 package de.as.traquity.depot.performance;
 
 import static integration.Accuracy.ACCURACY_ONE_THOUSANDTH;
+import static integration.DepotIds.BUY_IN_ZERO;
 import static integration.DepotIds.EMPTY_DEPOT;
 import static integration.DepotIds.FIRST_DEPOT;
 import static integration.DepotIds.OTHER_DEPOT;
@@ -195,6 +196,29 @@ class GetDepotPerformanceTest {
     // real quote, so it now values the whole Hensoldt position: 250 * 12.6 (Hensoldt) + 5.5 * 200.00 (Nvidia, unchanged) = 4250
     assertThat(findByDate(values, LocalDate.of(2022, FEBRUARY, 1)).getAbsoluteValue())
         .isCloseTo(new BigDecimal("4250"), ACCURACY_ONE_THOUSANDTH);
+  }
+
+  @Test
+  void getDepotPerformance_investedCapitalZero_ok() throws Exception {
+    MvcResult mvcResult = getDepotPerformance(Set.of(BUY_IN_ZERO)).andExpect(status().isOk()).andReturn();
+    DepotPerformanceDto responseBody = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DepotPerformanceDto.class);
+    List<DepotValueDto> values = responseBody.getValues();
+
+    // first entry - the free buy of 40 Alphabet A shares sets their price to 0, so value and invested capital are both 0
+    DepotValueDto depotValueDto = values.getFirst();
+    assertThat(depotValueDto.getDate()).isEqualTo(LocalDate.of(2020, MARCH, 13));
+    assertThat(depotValueDto.getInvestedCapital()).isEqualByComparingTo(ZERO);
+    assertThat(depotValueDto.getAbsoluteValue()).isEqualByComparingTo(ZERO);
+    assertThat(depotValueDto.getPerformanceAbsolute()).isEqualByComparingTo(ZERO);
+    assertThat(depotValueDto.getPerformanceRelative()).isEqualByComparingTo(ZERO);
+
+    // last entry - 40 * 126.76 against an invested capital of 0
+    depotValueDto = values.getLast();
+    assertThat(depotValueDto.getDate()).isEqualTo(LocalDate.of(2023, DECEMBER, 29));
+    assertThat(depotValueDto.getInvestedCapital()).isEqualByComparingTo(ZERO);
+    assertThat(depotValueDto.getAbsoluteValue()).isEqualByComparingTo("5070.4");
+    assertThat(depotValueDto.getPerformanceAbsolute()).isEqualByComparingTo("5070.4");
+    assertThat(depotValueDto.getPerformanceRelative()).isNull();
   }
 
   @Test

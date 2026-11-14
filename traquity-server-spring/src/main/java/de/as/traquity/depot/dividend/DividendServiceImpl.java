@@ -1,6 +1,6 @@
 package de.as.traquity.depot.dividend;
 
-import static de.as.traquity.common.arithmetic.MathFunctions.shareOf;
+import static de.as.traquity.common.arithmetic.MathFunctions.ratioOf;
 
 import de.as.traquity.common.error.BadRequestException;
 import de.as.traquity.common.error.NotFoundException;
@@ -339,9 +339,9 @@ class DividendServiceImpl implements DividendService {
             estimatedPaymentPerYear.add(dividendYield.getEstimatedPaymentGross(),
                 mathContext);
         dividendYield.setEstimatedPaymentGross(estimatedPaymentPerYear);
-        dividendYield.setCurrentYieldGross(shareOf(estimatedPaymentPerYear, depotPositions.get(securityId).getCurrentSizeAbsolute(),
+        dividendYield.setCurrentYieldGross(ratioOf(estimatedPaymentPerYear, depotPositions.get(securityId).getCurrentSizeAbsolute(),
             mathContext));
-        dividendYield.setYieldOnCostGross(shareOf(estimatedPaymentPerYear, depotPositions.get(securityId).getBuyInAbsolute(),
+        dividendYield.setYieldOnCostGross(ratioOf(estimatedPaymentPerYear, depotPositions.get(securityId).getBuyInAbsolute(),
             mathContext));
 
         estimatedPaymentPerYear = regularPaymentsPerYear.multiply(latestPayment.getNetValue(mathContext));
@@ -349,9 +349,9 @@ class DividendServiceImpl implements DividendService {
             estimatedPaymentPerYear.add(dividendYield.getEstimatedPaymentNet(),
                 mathContext);
         dividendYield.setEstimatedPaymentNet(estimatedPaymentPerYear);
-        dividendYield.setCurrentYieldNet(shareOf(estimatedPaymentPerYear, depotPositions.get(securityId).getCurrentSizeAbsolute(),
+        dividendYield.setCurrentYieldNet(ratioOf(estimatedPaymentPerYear, depotPositions.get(securityId).getCurrentSizeAbsolute(),
             mathContext));
-        dividendYield.setYieldOnCostNet(shareOf(estimatedPaymentPerYear, depotPositions.get(securityId).getBuyInAbsolute(),
+        dividendYield.setYieldOnCostNet(ratioOf(estimatedPaymentPerYear, depotPositions.get(securityId).getBuyInAbsolute(),
             mathContext));
       }
     }

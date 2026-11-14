@@ -40,15 +40,18 @@
             </span>
         </article>
 
+        @let growthRelative = data.dateRange.growthRelative;
         <article class="kpi"
-                 [class.kpi--positive]="data.dateRange.growthRelative === 'infinity' || data.dateRange.growthRelative >= 0"
-                 [class.kpi--negative]="data.dateRange.growthRelative !== 'infinity' && data.dateRange.growthRelative < 0">
+                 [class.kpi--positive]="growthRelative === 'infinity' || (growthRelative !== 'none' && growthRelative >= 0)"
+                 [class.kpi--negative]="growthRelative !== 'infinity' && growthRelative !== 'none' && growthRelative < 0">
             <span class="tq-section-label">Growth rel.</span>
             <span class="tq-value">
-                @if (data.dateRange.growthRelative === 'infinity') {
+                @if (growthRelative === 'infinity') {
                     ∞
+                } @else if (growthRelative === 'none') {
+                    &ndash;
                 } @else {
-                    {{ data.dateRange.growthRelative >= 0 ? '+' : '' }}{{ data.dateRange.growthRelative | tqPercent }}
+                    {{ growthRelative >= 0 ? '+' : '' }}{{ growthRelative | tqPercent }}
                 }
             </span>
             <span class="kpi__caption tq-numeric">
@@ -76,6 +79,8 @@
             <span class="kpi__caption tq-numeric">
                 @if (data.cashPositionRelativeToAbsoluteValue === 'infinity') {
                     ∞
+                } @else if (data.cashPositionRelativeToAbsoluteValue === 'none') {
+                    &ndash;
                 } @else {
                     {{ data.cashPositionRelativeToAbsoluteValue | tqPercent }} of depot value
                 }

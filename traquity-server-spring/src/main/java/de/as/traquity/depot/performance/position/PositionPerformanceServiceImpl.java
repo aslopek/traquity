@@ -1,5 +1,6 @@
 package de.as.traquity.depot.performance.position;
 
+import static de.as.traquity.common.arithmetic.MathFunctions.ratioOf;
 import static de.as.traquity.depot.transaction.api.model.TransactionTypeDto.BUY;
 import static de.as.traquity.depot.transaction.api.model.TransactionTypeDto.DIVIDEND;
 import static de.as.traquity.depot.transaction.api.model.TransactionTypeDto.SELL;
@@ -88,8 +89,9 @@ class PositionPerformanceServiceImpl implements PositionPerformanceService {
         .negate());
     performance.setPerformanceAbsolute(performance.getNetCashFlow()
         .add(performance.getCurrentSizeAbsolute(), mathContext));
-    if (performance.getCostBasis().compareTo(ZERO) > 0) {
-      performance.setPerformanceRelative(performance.getPerformanceAbsolute().divide(performance.getCostBasis(), mathContext));
+    // a ratio to a negative cost basis has no meaning
+    if (performance.getCostBasis().signum() >= 0) {
+      performance.setPerformanceRelative(ratioOf(performance.getPerformanceAbsolute(), performance.getCostBasis(), mathContext));
     }
 
     return performance;

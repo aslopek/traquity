@@ -1,11 +1,15 @@
 package de.as.traquity.depot.position;
 
 import static integration.Accuracy.ACCURACY_ONE_THOUSANDTH;
+import static integration.DepotIds.BUY_IN_ZERO;
 import static integration.DepotIds.FIRST_DEPOT;
 import static integration.SecurityIds.AMZN;
+import static integration.SecurityIds.GOOGL;
 import static integration.SecurityIds.MSFT;
 import static java.math.BigDecimal.ZERO;
 import static java.time.Month.APRIL;
+import static java.time.Month.JANUARY;
+import static java.time.Month.MARCH;
 import static java.time.Month.NOVEMBER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -96,12 +100,32 @@ class GetLotsTest {
     assertThat(lot.getCagr()).isCloseTo(new BigDecimal("0.00042"), ACCURACY_ONE_THOUSANDTH);
   }
 
+  @Test
+  void getLots_buyInZero_performanceRelativeAndCagrInfinite() throws Exception {
+    MvcResult mvcResult = getLots(BUY_IN_ZERO, GOOGL).andExpect(status().isOk()).andReturn();
+    List<LotDto> lots = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {
+    });
+
+    assertThat(lots).hasSize(1);
+    LotDto lot = lots.getFirst();
+    assertThat(lot.getDepotId()).isEqualTo(BUY_IN_ZERO);
+    assertThat(lot.getSecurityId()).isEqualTo(GOOGL);
+    assertThat(lot.getDate()).isEqualTo(LocalDate.of(2020, MARCH, 13));
+    assertThat(lot.getCount()).isEqualByComparingTo("40");
+    assertThat(lot.getBuyInAbsolute()).isEqualByComparingTo(ZERO);
+    // current price 126.76 EUR
+    assertThat(lot.getCurrentSizeAbsolute()).isEqualByComparingTo("5070.4");
+    assertThat(lot.getPerformanceAbsolute()).isEqualByComparingTo("5070.4");
+    assertThat(lot.getPerformanceRelative()).isNull();
+    assertThat(lot.getCagr()).isNull();
+  }
+
   @SqlMergeMode(MERGE)
   @Sql(statements = """
       DELETE FROM historical_security_price;
       """)
   @Test
-  void getLots_noPriceAvailable_ok() throws Exception {
+  void getLots_noPriceAvailable_cagrAbsent() throws Exception {
     MvcResult mvcResult = getLots(FIRST_DEPOT, AMZN).andExpect(status().isOk()).andReturn();
     List<LotDto> lots = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {
     });
@@ -122,7 +146,7 @@ class GetLotsTest {
     assertThat(lot.getCurrentSizeAbsolute()).isEqualByComparingTo("3483.68");
     assertThat(lot.getPerformanceAbsolute()).isZero();
     assertThat(lot.getPerformanceRelative()).isZero();
-    assertThat(lot.getCagr()).isZero();
+    assertThat(lot.getCagr()).isNull();
 
     lot = lots.get(1);
     assertThat(lot.getDepotId()).isEqualTo(FIRST_DEPOT);
@@ -138,7 +162,46 @@ class GetLotsTest {
     assertThat(lot.getCurrentSizeAbsolute()).isEqualByComparingTo("3737.48");
     assertThat(lot.getPerformanceAbsolute()).isZero();
     assertThat(lot.getPerformanceRelative()).isZero();
-    assertThat(lot.getCagr()).isZero();
+    assertThat(lot.getCagr()).isNull();
+  }
+
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      UPDATE transaction
+      SET date = '2024-01-01'
+      WHERE id = 12;
+      """)
+  @Test
+  void getLots_lotDatedToday_cagrAbsent() throws Exception {
+    verifyLatestLotWithoutCagr(LocalDate.of(2024, JANUARY, 1));
+  }
+
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      UPDATE transaction
+      SET date = '2024-01-02'
+      WHERE id = 12;
+      """)
+  @Test
+  void getLots_lotDatedInTheFuture_cagrAbsent() throws Exception {
+    verifyLatestLotWithoutCagr(LocalDate.of(2024, JANUARY, 2));
+  }
+
+  private void verifyLatestLotWithoutCagr(LocalDate date) throws Exception {
+    MvcResult mvcResult = getLots(FIRST_DEPOT, AMZN).andExpect(status().isOk()).andReturn();
+    List<LotDto> lots = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {
+    });
+
+    assertThat(lots).hasSize(2);
+    assertThat(lots.getFirst().getCagr()).isCloseTo(new BigDecimal("0.02301"), ACCURACY_ONE_THOUSANDTH);
+
+    LotDto lot = lots.get(1);
+    assertThat(lot.getDate()).isEqualTo(date);
+    // current price 138.58 EUR
+    assertThat(lot.getCurrentSizeAbsolute()).isEqualByComparingTo("3741.66");
+    assertThat(lot.getPerformanceAbsolute()).isEqualByComparingTo("4.18");
+    assertThat(lot.getPerformanceRelative()).isCloseTo(new BigDecimal("0.00112"), ACCURACY_ONE_THOUSANDTH);
+    assertThat(lot.getCagr()).isNull();
   }
 
   @SqlMergeMode(MERGE)
