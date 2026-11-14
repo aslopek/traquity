@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   where none can be computed: bought today or later, a buy-in of zero without value, or a security without any price.
 - Relative performance in *Depot / Performance* and in a position's performance breakdown shows when the invested capital or cost basis
   is negative, e.g. after tax refunds exceeding the buys.
+- *Depot / Performance* loads when all transactions of the selected depots are dated after today, e.g. a buy entered ahead of time.
 
 ## [1.5.0] - 2026-11-08
 

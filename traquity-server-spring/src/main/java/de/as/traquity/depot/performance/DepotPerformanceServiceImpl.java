@@ -74,6 +74,10 @@ public class DepotPerformanceServiceImpl implements DepotPerformanceService {
 
     final LocalDate firstDate = transactions.getFirst().getDate();
     final LocalDate lastDate = LocalDate.now(clock);
+    if (firstDate.isAfter(lastDate)) {
+      return List.of();
+    }
+
     List<DepotValue> result = new ArrayList<>((int) ChronoUnit.DAYS.between(firstDate, lastDate));
     initializeDepotValues(result, firstDate, lastDate);
     if (result.isEmpty()) {
