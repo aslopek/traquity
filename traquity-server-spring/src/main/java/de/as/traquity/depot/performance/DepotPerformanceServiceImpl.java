@@ -1,5 +1,6 @@
 package de.as.traquity.depot.performance;
 
+import static de.as.traquity.common.arithmetic.MathFunctions.ratioOf;
 import static de.as.traquity.depot.transaction.api.model.TransactionTypeDto.BUY;
 import static de.as.traquity.depot.transaction.api.model.TransactionTypeDto.DIVIDEND;
 import static de.as.traquity.depot.transaction.api.model.TransactionTypeDto.SELL;
@@ -275,8 +276,9 @@ public class DepotPerformanceServiceImpl implements DepotPerformanceService {
 
       // calculate absolute and relative performance
       current.setPerformanceAbsolute(current.getAbsoluteValue().subtract(current.getInvestedCapital(), mathContext));
-      if (current.getInvestedCapital().compareTo(ZERO) > 0) {
-        current.setPerformanceRelative(current.getPerformanceAbsolute().divide(current.getInvestedCapital(), mathContext));
+      // a ratio to a negative invested capital has no meaning
+      if (current.getInvestedCapital().signum() >= 0) {
+        current.setPerformanceRelative(ratioOf(current.getPerformanceAbsolute(), current.getInvestedCapital(), mathContext));
       }
     }
   }
