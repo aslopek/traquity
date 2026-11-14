@@ -44,6 +44,7 @@ class TradePriceDeriver {
   private void deriveTradePrice(long securityId, LocalDate date) {
     List<Transaction> trades = transactionService.getTransactions(securityId, date, TRADE_TYPES).stream()
         .filter(trade -> trade.getSecurityCountOriginal().signum() > 0)
+        .filter(trade -> trade.getTransactionType() != BUY || trade.getGrossValue().signum() != 0)
         .toList();
     if (trades.isEmpty()) {
       priceService.removeTradePrice(securityId, date);

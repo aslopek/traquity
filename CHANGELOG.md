@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - *Depot / Performance* loads when all transactions of the selected depots are dated after today, e.g. a buy entered ahead of time.
 - *Depot / Dividends* loads when taxes and fees take the whole gross value of a year, quarter or month, e.g. a single dividend taxed in
   full.
+- Buys with a gross value of zero, e.g. shares received for free, no longer set the security's price to zero.
 
 ## [1.5.0] - 2026-11-08
 

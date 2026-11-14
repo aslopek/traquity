@@ -205,9 +205,10 @@ class CreateTransactionTest {
   @Sql(statements = """
       INSERT INTO TRANSACTION(ID, DATE, TIME, DEPOT_ID, SECURITY_ID, TRANSACTION_TYPE, SECURITY_COUNT_ORIGINAL, GROSS_VALUE,
                               CREATED_AT, UPDATED_AT, VERSION)
-      VALUES (9001, '2024-01-17', '10:00:00', 1, 3, 'BUY', 10, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+      VALUES (9001, '2024-01-17', '10:00:00', 1, (SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), 'BUY', 10, 100,
+              CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
       INSERT INTO HISTORICAL_SECURITY_PRICE(SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
-      VALUES (3, NULL, 10, 'EUR', '2024-01-17', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      VALUES ((SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), NULL, 10, 'EUR', '2024-01-17', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
       """)
   void addTransaction_laterTimeThanExistingTrade_replacesPrice() throws Exception {
     useHag();
@@ -222,9 +223,10 @@ class CreateTransactionTest {
   @Sql(statements = """
       INSERT INTO TRANSACTION(ID, DATE, TIME, DEPOT_ID, SECURITY_ID, TRANSACTION_TYPE, SECURITY_COUNT_ORIGINAL, GROSS_VALUE,
                               CREATED_AT, UPDATED_AT, VERSION)
-      VALUES (9001, '2024-01-17', '18:00:00', 1, 3, 'BUY', 10, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+      VALUES (9001, '2024-01-17', '18:00:00', 1, (SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), 'BUY', 10, 100,
+              CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
       INSERT INTO HISTORICAL_SECURITY_PRICE(SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
-      VALUES (3, NULL, 10, 'EUR', '2024-01-17', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      VALUES ((SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), NULL, 10, 'EUR', '2024-01-17', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
       """)
   void addTransaction_earlierTimeThanExistingTrade_keepsPrice() throws Exception {
     useHag();
@@ -237,9 +239,10 @@ class CreateTransactionTest {
   @Sql(statements = """
       INSERT INTO TRANSACTION(ID, DATE, TIME, DEPOT_ID, SECURITY_ID, TRANSACTION_TYPE, SECURITY_COUNT_ORIGINAL, GROSS_VALUE,
                               CREATED_AT, UPDATED_AT, VERSION)
-      VALUES (0, '2024-01-17', '16:10:38', 1, 3, 'BUY', 10, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+      VALUES (0, '2024-01-17', '16:10:38', 1, (SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), 'BUY', 10, 100,
+              CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
       INSERT INTO HISTORICAL_SECURITY_PRICE(SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
-      VALUES (3, NULL, 10, 'EUR', '2024-01-17', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      VALUES ((SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), NULL, 10, 'EUR', '2024-01-17', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
       """)
   void addTransaction_sameTimeAsExistingTrade_enteredLastWins() throws Exception {
     useHag();
@@ -252,9 +255,10 @@ class CreateTransactionTest {
   @Sql(statements = """
       INSERT INTO TRANSACTION(ID, DATE, TIME, DEPOT_ID, SECURITY_ID, TRANSACTION_TYPE, SECURITY_COUNT_ORIGINAL, GROSS_VALUE,
                               CREATED_AT, UPDATED_AT, VERSION)
-      VALUES (9001, '2024-01-17', '10:00:00', 1, 3, 'BUY', 10, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+      VALUES (9001, '2024-01-17', '10:00:00', 1, (SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), 'BUY', 10, 100,
+              CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
       INSERT INTO HISTORICAL_SECURITY_PRICE(SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
-      VALUES (3, NULL, 10, 'EUR', '2024-01-17', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      VALUES ((SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), NULL, 10, 'EUR', '2024-01-17', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
       """)
   void addTransaction_noTimeAndExistingTradeHasTime_keepsPrice() throws Exception {
     useHag();
@@ -268,9 +272,10 @@ class CreateTransactionTest {
   @Sql(statements = """
       INSERT INTO TRANSACTION(ID, DATE, TIME, DEPOT_ID, SECURITY_ID, TRANSACTION_TYPE, SECURITY_COUNT_ORIGINAL, GROSS_VALUE,
                               CREATED_AT, UPDATED_AT, VERSION)
-      VALUES (9001, '2024-01-17', NULL, 1, 3, 'BUY', 10, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+      VALUES (9001, '2024-01-17', NULL, 1, (SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), 'BUY', 10, 100,
+              CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
       INSERT INTO HISTORICAL_SECURITY_PRICE(SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
-      VALUES (3, NULL, 10, 'EUR', '2024-01-17', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      VALUES ((SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), NULL, 10, 'EUR', '2024-01-17', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
       """)
   void addTransaction_existingTradeHasNoTime_replacesPrice() throws Exception {
     useHag();
@@ -292,8 +297,8 @@ class CreateTransactionTest {
   @SqlMergeMode(MERGE)
   @Sql(statements = """
       INSERT INTO STOCK_SPLIT(SECURITY_ID, EX_DATE, QUANTITY_OLD, QUANTITY_NEW, CREATED_AT, UPDATED_AT)
-      VALUES (2, '2024-02-10', 1, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-             (2, '2024-03-10', 2, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      VALUES ((SELECT ID FROM SECURITY WHERE NAME = 'Apple'), '2024-02-10', 1, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+             ((SELECT ID FROM SECURITY WHERE NAME = 'Apple'), '2024-03-10', 2, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
       """)
   void addTransaction_stockSplitsAfterDate_storesSplitAdjustedPrice() throws Exception {
     postTransaction(1).andExpect(status().isCreated());
@@ -304,7 +309,7 @@ class CreateTransactionTest {
   @SqlMergeMode(MERGE)
   @Sql(statements = """
       INSERT INTO STOCK_SPLIT(SECURITY_ID, EX_DATE, QUANTITY_OLD, QUANTITY_NEW, CREATED_AT, UPDATED_AT)
-      VALUES (2, '2024-01-17', 1, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      VALUES ((SELECT ID FROM SECURITY WHERE NAME = 'Apple'), '2024-01-17', 1, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
       """)
   void addTransaction_stockSplitOnDate_ignoresSplit() throws Exception {
     postTransaction(1).andExpect(status().isCreated());
@@ -339,7 +344,7 @@ class CreateTransactionTest {
   @SqlMergeMode(MERGE)
   @Sql(statements = """
       INSERT INTO HISTORICAL_SECURITY_PRICE(SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
-      VALUES (3, NULL, 10, 'EUR', '2024-01-17', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      VALUES ((SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), NULL, 10, 'EUR', '2024-01-17', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
       """)
   void addTransaction_dividend_leavesPriceUnchanged() throws Exception {
     useHag();
@@ -355,6 +360,80 @@ class CreateTransactionTest {
     requestBody.setSecurityId(999L);
     long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
     postTransaction(1).andExpect(status().isBadRequest());
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount);
+  }
+
+  @Test
+  void addTransaction_freeBuy_storesNoPrice() throws Exception {
+    requestBody.setGrossValue(ZERO);
+    long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
+    postTransaction(1).andExpect(status().isCreated());
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCountBySecurityIdAndDate(requestBody.getSecurityId(), requestBody.getDate())).isZero();
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount);
+  }
+
+  @Test
+  void addTransaction_sellWithGrossValueZero_storesPriceZero() throws Exception {
+    requestBody.setTransactionType(SELL);
+    requestBody.setGrossValue(ZERO);
+    long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
+    postTransaction(1).andExpect(status().isCreated());
+    assertPrice(requestBody.getSecurityId(), "0", "EUR");
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount + 1);
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      INSERT INTO TRANSACTION(ID, DATE, TIME, DEPOT_ID, SECURITY_ID, TRANSACTION_TYPE, SECURITY_COUNT_ORIGINAL, GROSS_VALUE,
+                              CREATED_AT, UPDATED_AT, VERSION)
+      VALUES (9001, '2024-01-17', '10:00:00', 1, (SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), 'BUY', 10, 0,
+              CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+      """)
+  void addTransaction_dateHasOnlyFreeBuy_storesPriceFromTrade() throws Exception {
+    useHag();
+    long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
+    postTransaction(1).andExpect(status().isCreated());
+    assertPrice(requestBody.getSecurityId(), "22.5", "EUR");
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount + 1);
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      INSERT INTO TRANSACTION(ID, DATE, TIME, DEPOT_ID, SECURITY_ID, TRANSACTION_TYPE, SECURITY_COUNT_ORIGINAL, GROSS_VALUE,
+                              CREATED_AT, UPDATED_AT, VERSION)
+      VALUES (9001, '2024-01-17', '10:00:00', 1, (SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), 'BUY', 10, 100,
+              CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+      INSERT INTO HISTORICAL_SECURITY_PRICE(SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
+      VALUES ((SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), NULL, 10, 'EUR', '2024-01-17', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      """)
+  void addTransaction_freeBuyLaterThanExistingTrade_keepsPrice() throws Exception {
+    useHag();
+    requestBody.setGrossValue(ZERO);
+    long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
+    postTransaction(1).andExpect(status().isCreated());
+    assertPrice(requestBody.getSecurityId(), "10", "EUR");
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount);
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      INSERT INTO TRANSACTION(ID, DATE, TIME, DEPOT_ID, SECURITY_ID, TRANSACTION_TYPE, SECURITY_COUNT_ORIGINAL, GROSS_VALUE,
+                              CREATED_AT, UPDATED_AT, VERSION)
+      VALUES (9001, '2024-01-17', '10:00:00', 1, (SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), 'BUY', 10, 100,
+              CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+             (9002, '2024-01-17', '18:00:00', 1, (SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), 'BUY', 10, 0,
+              CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+      INSERT INTO HISTORICAL_SECURITY_PRICE(SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
+      VALUES ((SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), NULL, 10, 'EUR', '2024-01-17', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      """)
+  void addTransaction_earlierTimeThanExistingFreeBuy_replacesPrice() throws Exception {
+    useHag();
+    long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
+    postTransaction(1).andExpect(status().isCreated());
+    assertPrice(HAG, "22.5", "EUR");
     assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount);
   }
 

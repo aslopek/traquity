@@ -1,8 +1,10 @@
 package de.as.traquity.depot.transaction;
 
 import static integration.SecurityIds.AMZN;
+import static integration.SecurityIds.GOOGL;
 import static java.time.Month.DECEMBER;
 import static java.time.Month.JULY;
+import static java.time.Month.MARCH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.context.jdbc.SqlMergeMode.MergeMode.MERGE;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -85,7 +87,8 @@ class DeleteTransactionTest {
   @Sql(statements = """
       INSERT INTO TRANSACTION(ID, DATE, TIME, DEPOT_ID, SECURITY_ID, TRANSACTION_TYPE, SECURITY_COUNT_ORIGINAL, GROSS_VALUE,
                               CREATED_AT, UPDATED_AT, VERSION)
-      VALUES (9001, '2020-07-13', '08:00:00', 5, 13, 'BUY', 2, 450, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+      VALUES (9001, '2020-07-13', '08:00:00', 5, (SELECT ID FROM SECURITY WHERE NAME = 'Amazon'), 'BUY', 2, 450,
+              CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
       """)
   void deleteTransaction_otherTradeOnDateRemains_pricesDateFromRemainingTrade() throws Exception {
     long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
@@ -103,7 +106,8 @@ class DeleteTransactionTest {
   @Sql(statements = """
       INSERT INTO TRANSACTION(ID, DATE, TIME, DEPOT_ID, SECURITY_ID, TRANSACTION_TYPE, SECURITY_COUNT_ORIGINAL, GROSS_VALUE,
                               CREATED_AT, UPDATED_AT, VERSION)
-      VALUES (9002, '2023-12-29', '10:00:00', 1, 13, 'BUY', 1, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+      VALUES (9002, '2023-12-29', '10:00:00', 1, (SELECT ID FROM SECURITY WHERE NAME = 'Amazon'), 'BUY', 1, 100,
+              CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
       """)
   void deleteTransaction_tradeOnLinkedDate_keepsLinkedPrice() throws Exception {
     long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
@@ -113,6 +117,14 @@ class DeleteTransactionTest {
     assertThat(stored.getCurrency()).isEqualTo("EUR");
     assertThat(stored.getDataSourceId()).isEqualTo(101L);
     assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount);
+  }
+
+  @Test
+  void deleteTransaction_onlyFreeBuyOnDateRemains_removesPrice() throws Exception {
+    long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
+    deleteTransaction(7, 101).andExpect(status().isNoContent());
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCountBySecurityIdAndDate(GOOGL, LocalDate.of(2020, MARCH, 13))).isZero();
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount - 1);
   }
 
   private ResultActions deleteTransaction(long depotId, long transactionId) throws Exception {

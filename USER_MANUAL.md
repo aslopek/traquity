@@ -796,9 +796,9 @@ TraQuity picks among them by how much history it is missing for that security:
   the newest price stored from this data source, then it stops. A daily start therefore only ever calls the smallest URL — which is what
   keeps a free plan's request budget intact.
 
-A `BUY` or `SELL` prices its security on its date (gross value / split-adjusted share count, in the depot's currency). The last trade of
-the day decides. Changing or deleting trades updates the price; deleting a depot leaves it. A data source overwrites such prices, and a
-trade never changes a price from a data source.
+A `BUY` or `SELL` prices its security on its date (gross value / split-adjusted share count, in the depot's currency). A buy with a gross
+value of zero does not count, a sell at zero does. The last trade of the day decides. Changing or deleting trades updates the price;
+deleting a depot leaves it. A data source overwrites such prices, and a trade never changes a price from a data source.
 
 So provide several spans (a week, a month, a year, everything) when the API supports it, and a single large one otherwise. There is no
 special timespan for 'maximum' or 'everything', so rather pick a very high number for that. Take note, that you are not able to fetch market
