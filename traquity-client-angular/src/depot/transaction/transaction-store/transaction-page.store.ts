@@ -15,6 +15,8 @@ import {setFilteredTransactionTypes} from './methods/set-filtered-transaction-ty
 import {setFilteredSecurityNames} from './methods/set-filtered-security-names';
 import {replaceTransaction} from './methods/replace-transaction';
 import {reloadOnDepotChange} from './effects/reload-on-depot-change';
+import {updateTransaction, UpdateTransactionArgs} from './effects/update-transaction';
+import {setEditedTransactionId} from './methods/set-edited-transaction-id';
 
 export type TransactionPageComputed = {
   allSecurityNames: Signal<string[]>
@@ -25,11 +27,14 @@ export type TransactionPageMethods = {
   loadPage: (page: number) => void
   reloadFirstPage: () => void
   replaceTransaction: (updated: TransactionRead) => void
+  setEditedTransactionId: (editedTransactionId: number | null) => void
   setFilteredSecurityNames: (names: string[]) => void
   setFilteredTransactionTypes: (types: TransactionType[]) => void
+  updateTransaction: (args: UpdateTransactionArgs) => void
 };
 
 export type TransactionPageState = {
+  editedTransactionId: number | null
   filteredSecurityIds: number[] | null
   filteredTransactionTypes: TransactionType[]
   pageSize: number
@@ -37,7 +42,8 @@ export type TransactionPageState = {
 };
 
 const pageSize: number = 10;
-const initialState: TransactionPageState = {
+export const initialState: TransactionPageState = {
+  editedTransactionId: null,
   filteredSecurityIds: null,
   filteredTransactionTypes: [
     TransactionType.BUY,
@@ -71,12 +77,17 @@ export const transactionPageStore = signalStore(
   withMethods((signalStore: WritableSignalStore<TransactionPageState, TransactionPageComputed>,
                globalStore: Store<AppState> = inject(Store),
                transactionApi: TransactionApi = inject(TransactionApi)): TransactionPageMethods => {
+    const updateTransactionMethod: RxMethod<UpdateTransactionArgs> = updateTransaction(signalStore, transactionApi, globalStore);
     return {
       loadPage: (page: number): void => loadPage(signalStore, globalStore, transactionApi, page),
       reloadFirstPage: (): void => reloadFirstPage(signalStore, globalStore, transactionApi),
       replaceTransaction: (updated: TransactionRead): void => replaceTransaction(signalStore, updated),
+      setEditedTransactionId: (editedTransactionId: number | null): void => setEditedTransactionId(signalStore, editedTransactionId),
       setFilteredSecurityNames: (names: string[]): void => setFilteredSecurityNames(signalStore, globalStore, transactionApi, names),
-      setFilteredTransactionTypes: (types: TransactionType[]): void => setFilteredTransactionTypes(signalStore, globalStore, transactionApi, types)
+      setFilteredTransactionTypes: (types: TransactionType[]): void => setFilteredTransactionTypes(signalStore, globalStore, transactionApi, types),
+      updateTransaction: (args: UpdateTransactionArgs): void => {
+        updateTransactionMethod(args);
+      }
     };
   }),
   withHooks({
