@@ -14,6 +14,27 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class MathFunctions {
 
+  /**
+   * @return {@code numerator / denominator}, or zero if {@code denominator} is zero.
+   */
+  public static BigDecimal shareOf(BigDecimal numerator, BigDecimal denominator, MathContext mathContext) {
+    if (denominator.signum() == 0) {
+      return ZERO;
+    }
+    return numerator.divide(denominator, mathContext);
+  }
+
+  /**
+   * @return the ratio {@code numerator / denominator}, zero if both are zero, or {@code null} if it is infinite, i.e. {@code denominator}
+   *     is zero and {@code numerator} is not
+   */
+  public static BigDecimal ratioOf(BigDecimal numerator, BigDecimal denominator, MathContext mathContext) {
+    if (denominator.signum() == 0) {
+      return numerator.signum() == 0 ? ZERO : null;
+    }
+    return numerator.divide(denominator, mathContext);
+  }
+
   public static BigDecimal pow(BigDecimal base, BigDecimal exponent, MathContext mathContext) throws ArithmeticException,
       IllegalArgumentException {
     if (base == null || exponent == null || mathContext == null) {

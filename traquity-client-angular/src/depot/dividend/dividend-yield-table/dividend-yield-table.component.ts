@@ -14,6 +14,7 @@ import {Dividends, DividendYield} from '../../../gen/api/depot-dividend';
 import {hideAbsoluteValues} from '../../../store/app-config/app-config.selector';
 import {AppState} from '../../../store/app.state';
 import {dividends, selectedDepotCurrency, useDividendGrossValues,} from '../../../store/depot/depot.selector';
+import {dividendYieldSortValue} from './dividend-yield-sort-value';
 
 @Component({
   selector: 'app-dividend-yield-table',
@@ -60,6 +61,7 @@ export class DividendYieldTableComponent implements AfterViewInit {
       data: DividendYield,
       filter: string,
     ): boolean => data.displayName.toLowerCase().includes(filter);
+    this.dataSource.sortingDataAccessor = dividendYieldSortValue;
 
     store
       .select(hideAbsoluteValues)

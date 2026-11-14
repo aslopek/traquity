@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Failing exchange rate downloads (e.g. due to having no internet connection) no longer crashes the app.
+- Transactions are guaranteed to have a minimum share count greater than zero at all times. This prevents unexpected behavior throughout the
+  app.
+- *Depot / Positions* loads with several depots selected when the buy-ins of their positions add up to zero, e.g. for shares received for
+  free.
+- *Depot / Dividends* loads when a security paying regular dividends has a value of zero, e.g. shares received for free with no known
+  price.
+- Relative performance and dividend yields show ∞ when only their basis is zero, e.g. the buy-in of shares received for free, and 0% when
+  both values are zero.
+- A purchase lot no longer shows a CAGR of -100% when bought today or later. Its CAGR shows +∞ when it grew out of a buy-in of zero, and `–`
+  where none can be computed: bought today or later, a buy-in of zero without value, or a security without any price.
+- Relative performance in *Depot / Performance* and in a position's performance breakdown shows when the invested capital or cost basis
+  is negative, e.g. after tax refunds exceeding the buys.
+- *Depot / Performance* loads when all transactions of the selected depots are dated after today, e.g. a buy entered ahead of time.
+- *Depot / Dividends* loads when taxes and fees take the whole gross value of a year, quarter or month, e.g. a single dividend taxed in
+  full.
+- Buys with a gross value of zero, e.g. shares received for free, no longer set the security's price to zero.
+- Historical prices from data sources reporting dates as timestamps keep their reported date in time zones west of UTC.
+- All lines in `traquity.log` show their time in the computer's local time zone. The desktop app's lines used to be in UTC.
+- A failed save of an edited transaction on *Depot / Transactions* shows an error and keeps the row in edit mode. *Cancel* brings back the
+  saved values.
+
 ## [1.5.0] - 2026-11-08
 
 ### Added

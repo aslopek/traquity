@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, Output,} from '@angular/core';
+import {Component, input, InputSignal, linkedSignal, output, OutputEmitterRef, WritableSignal} from '@angular/core';
 import {MatInputModule} from '@angular/material/input';
 
 @Component({
@@ -8,29 +8,25 @@ import {MatInputModule} from '@angular/material/input';
   styleUrl: './table-input-field.component.scss',
 })
 export class TableInputFieldComponent {
-  @Input()
-  value: number | undefined;
 
-  @Output()
-  updateValue: EventEmitter<number | undefined> = new EventEmitter<
-    number | undefined
-  >();
+  readonly value: InputSignal<number | undefined> = input<number | undefined>(undefined);
+  readonly invalid: InputSignal<boolean> = input<boolean>(false);
 
-  private previousValue: number | undefined;
+  /** Emits the typed number, or `undefined` when the field is empty or holds no number. */
+  readonly updateValue: OutputEmitterRef<number | undefined> = output<number | undefined>();
 
-  protected emit(event: Event): void {
-    const value: string = (event.target as HTMLInputElement).value.replace(
-      ',',
-      '.',
-    );
-    let parsedValue: number | undefined = Number(value);
+  private readonly previousValue: WritableSignal<number | undefined> = linkedSignal((): number | undefined => this.value());
 
-    if (isNaN(parsedValue)) {
+  protected emit(text: string): void {
+    const value: string = text.trim().replace(',', '.');
+    let parsedValue: number | undefined = value === '' ? undefined : Number(value);
+
+    if (parsedValue !== undefined && isNaN(parsedValue)) {
       parsedValue = undefined;
     }
 
-    if (parsedValue !== this.previousValue) {
-      this.previousValue = parsedValue;
+    if (parsedValue !== this.previousValue()) {
+      this.previousValue.set(parsedValue);
       this.updateValue.emit(parsedValue);
     }
   }

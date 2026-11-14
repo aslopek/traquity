@@ -7,6 +7,7 @@ import {TqCurrencyPipe} from '../../../common/pipe/tq-currency.pipe';
 import {TqDatePipe} from '../../../common/pipe/tq-date.pipe';
 import {TqPercentPipe} from '../../../common/pipe/tq-percent.pipe';
 import {BenchmarkResult} from '../store/benchmark/benchmark.type';
+import {RelativePerformance} from '../../../common/types/relative-performance';
 
 @Pipe({
   name: 'depotPerformanceChart',
@@ -47,7 +48,7 @@ export class DepotPerformanceChartPipe implements PipeTransform {
     const absoluteValues: number[] = [];
     const investedCapital: number[] = [];
     const performanceAbsolute: { [date: string]: number } = {};
-    const performanceRelative: { [date: string]: number | 'infinity' } = {};
+    const performanceRelative: { [date: string]: RelativePerformance } = {};
     let capitalInvested: boolean = false;
     let formattedDate: string;
 
@@ -180,7 +181,10 @@ export class DepotPerformanceChartPipe implements PipeTransform {
           const formattedPerformanceAbsolute: string = hideAbsoluteValues
             ? '••••••'
             : `${rawProfit >= 0 ? '+' : ''}${this.formatCurrency(rawProfit, currency)}`;
-          const formattedPerformanceRelative: string = `${rawProfit >= 0 ? '+' : ''}${this.formatPercent(performanceRelative[date])}`;
+          const relative: RelativePerformance = performanceRelative[date];
+          const formattedPerformanceRelative: string = relative === 'none'
+            ? '–'
+            : `${rawProfit >= 0 ? '+' : ''}${this.formatPercent(relative)}`;
           return `
             <div style="font-weight: 500; margin-bottom: 6px; font-size: 11px;
                         color: ${this.axisLabelColor};">${escapeHtml(date)}</div>

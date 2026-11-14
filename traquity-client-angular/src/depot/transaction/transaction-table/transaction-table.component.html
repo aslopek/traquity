@@ -147,8 +147,9 @@
                     class="transaction-table__numeric tq-numeric"
                     mat-cell
                     matTooltip="{{ !hideAbsoluteValues && row.securityCountSplitAdjusted ? 'Original Quantity: ' + row.securityCountOriginal : null }}">
-                    @if (editTransaction !== null && editTransaction === row) {
+                    @if (transactionPageStore.editedTransactionId() === row.id) {
                         <app-table-input-field [value]="getSecurityCount(row)"
+                                               [invalid]="!countValid"
                                                (updateValue)="setCount($event)">
                         </app-table-input-field>
                     } @else {
@@ -167,8 +168,8 @@
                     class="transaction-table__numeric tq-numeric"
                     mat-cell
                     matTooltip="{{getGrossValuePerShare(row) | tqCurrency:depotCurrency()}} per share">
-                    @if (!hideAbsoluteValues && editTransaction !== null && editTransaction === row) {
-                        <app-table-input-field [value]="editTransaction.grossValue"
+                    @if (!hideAbsoluteValues && transactionPageStore.editedTransactionId() === row.id) {
+                        <app-table-input-field [value]="row.grossValue"
                                                (updateValue)="setGrossValue($event)">
                         </app-table-input-field>
                     } @else {
@@ -187,7 +188,7 @@
                     class="transaction-table__numeric tq-numeric"
                     mat-cell
                     matTooltip="{{getNetValuePerShare(row) | tqCurrency:depotCurrency()}} per share">
-                    @if (!hideAbsoluteValues && editTransaction !== null && editTransaction === row) {
+                    @if (!hideAbsoluteValues && transactionPageStore.editedTransactionId() === row.id) {
                         {{ updatedTransactionValues | tqNetValue | tqCurrency:depotCurrency() }}
                     } @else {
                         {{ (hideAbsoluteValues ? getNetValuePerShare(row) : row | tqNetValue) | tqCurrency:depotCurrency() }}
@@ -205,8 +206,8 @@
                     class="transaction-table__numeric tq-numeric"
                     mat-cell
                     matTooltip="{{(row.tax == null || row.tax === 0) ? '': (row.tax / row.grossValue) | tqPercent}}">
-                    @if (editTransaction !== null && editTransaction === row) {
-                        <app-table-input-field [value]="editTransaction.tax"
+                    @if (transactionPageStore.editedTransactionId() === row.id) {
+                        <app-table-input-field [value]="row.tax"
                                                (updateValue)="setTax($event)">
                         </app-table-input-field>
                     } @else {
@@ -225,8 +226,8 @@
                     class="transaction-table__numeric tq-numeric"
                     mat-cell
                     matTooltip="{{(row.fee == null || row.fee === 0) ? '' : (row.fee / row.grossValue) | tqPercent}}">
-                    @if (editTransaction !== null && editTransaction === row) {
-                        <app-table-input-field [value]="editTransaction.fee"
+                    @if (transactionPageStore.editedTransactionId() === row.id) {
+                        <app-table-input-field [value]="row.fee"
                                                (updateValue)="setFee($event)">
                         </app-table-input-field>
                     } @else {
@@ -242,18 +243,19 @@
                 <td *matCellDef="let row"
                     class="transaction-table__button-column"
                     mat-cell>
-                    @if (hoveredTransactionId === row.id && editTransaction === null) {
+                    @if (hoveredTransactionId === row.id && transactionPageStore.editedTransactionId() === null) {
                         <button mat-icon-button
                                 aria-label="Edit"
                                 matTooltip="Edit"
                                 (click)="setEditMode(row)">
                             <mat-icon fontIcon="edit"></mat-icon>
                         </button>
-                    } @else if (editTransaction?.id === row.id) {
+                    } @else if (transactionPageStore.editedTransactionId() === row.id) {
                         <button mat-icon-button
                                 aria-label="Save"
                                 matTooltip="Save"
-                                (click)="updateTransaction()">
+                                [disabled]="!countValid"
+                                (click)="updateTransaction(row)">
                             <mat-icon fontIcon="save"></mat-icon>
                         </button>
                     }
@@ -267,14 +269,14 @@
                 <td *matCellDef="let row"
                     class="transaction-table__button-column"
                     mat-cell>
-                    @if (editTransaction !== null && editTransaction === row) {
+                    @if (transactionPageStore.editedTransactionId() === row.id) {
                         <button mat-icon-button
                                 aria-label="Cancel"
                                 matTooltip="Cancel"
                                 (click)="setEditMode(undefined)">
                             <mat-icon fontIcon="cancel"></mat-icon>
                         </button>
-                    } @else if (editTransaction === null && hoveredTransactionId === row.id) {
+                    } @else if (transactionPageStore.editedTransactionId() === null && hoveredTransactionId === row.id) {
                         <button mat-icon-button
                                 aria-label="Delete"
                                 matTooltip="Delete"

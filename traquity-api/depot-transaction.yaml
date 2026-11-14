@@ -295,10 +295,14 @@ components:
           description: The number of shares as recorded on the statement, before any stock split was applied
           type: number
           nullable: false
+          minimum: 0
+          exclusiveMinimum: true
         securityCountSplitAdjusted:
           description: The number of shares after applying every stock split that took effect since the transaction date
           type: number
           nullable: false
+          minimum: 0
+          exclusiveMinimum: true
         grossValue:
           type: number
           nullable: false

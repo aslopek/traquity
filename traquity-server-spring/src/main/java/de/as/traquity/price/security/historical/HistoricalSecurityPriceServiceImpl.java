@@ -5,6 +5,7 @@ import static de.as.traquity.price.security.historical.api.model.DateFormatDto.T
 import static de.as.traquity.price.security.historical.api.model.DateFormatDto.TIMESTAMP_SECONDS;
 import static java.lang.Double.parseDouble;
 import static java.time.LocalDate.EPOCH;
+import static java.time.ZoneOffset.UTC;
 import static java.time.temporal.ChronoUnit.DAYS;
 import static java.util.function.Function.identity;
 import static org.springframework.http.HttpMethod.GET;
@@ -406,10 +407,10 @@ class HistoricalSecurityPriceServiceImpl implements HistoricalSecurityPriceServi
   private LocalDate parseDate(String dateStr, String format) {
     if (TIMESTAMP_SECONDS.getValue().equals(format)) {
       long seconds = (long) parseDouble(dateStr);
-      return Instant.ofEpochSecond(seconds).atZone(clock.getZone()).toLocalDate();
+      return LocalDate.ofInstant(Instant.ofEpochSecond(seconds), UTC);
     } else if (TIMESTAMP_MILLISECONDS.getValue().equals(format)) {
       long milliseconds = (long) parseDouble(dateStr);
-      return Instant.ofEpochMilli(milliseconds).atZone(clock.getZone()).toLocalDate();
+      return LocalDate.ofInstant(Instant.ofEpochMilli(milliseconds), UTC);
     } else {
       DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
       return LocalDate.parse(dateStr, formatter);

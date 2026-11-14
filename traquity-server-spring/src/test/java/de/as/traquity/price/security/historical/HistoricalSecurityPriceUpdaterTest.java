@@ -12,6 +12,7 @@ import static java.time.Month.JANUARY;
 import static java.time.Month.JUNE;
 import static java.time.Month.NOVEMBER;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
@@ -26,7 +27,9 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -223,6 +226,95 @@ class HistoricalSecurityPriceUpdaterTest {
   @Sql(statements = """
       UPDATE HISTORICAL_SECURITY_PRICE_CONFIG
       SET IS_ACTIVE = TRUE
+      WHERE EXTERNAL_SECURITY_ID = 'MAIN';
+      UPDATE HISTORICAL_SECURITY_PRICE_CONFIG
+      SET IS_ACTIVE = FALSE
+      WHERE EXTERNAL_SECURITY_ID != 'MAIN';
+      DELETE FROM HISTORICAL_SECURITY_PRICE
+      WHERE SECURITY_ID = (SELECT ID FROM SECURITY WHERE NAME = 'Main Street Capital');
+      """)
+  void updateHistoricalPrices_timestampSecondsWestOfUtc_keepsReportedDate() {
+    // now: Fri Jan 26, 15:44 in New York
+    when(clock.instant()).thenReturn(Instant.parse("2024-01-26T20:44:38Z"));
+    when(clock.getZone()).thenReturn(ZoneId.of("America/New_York"));
+    // delivers Fri Jan 19 and Mon Jan 22 to Thu Jan 25, each at 00:00 UTC, which is 19:00 on the day before in New York
+    respondWithFixture(mockServer, "https://stock-price.api/v4/stocks/prices?id=MAIN&range=MAX",
+        "fixtures/historical-security-prices/data-source-104/main-5-days-midnight-utc.json");
+    long priceCountBefore = priceRepository.count();
+
+    subject.updateHistoricalPrices();
+
+    assertThat(storedPricesByDate(MAIN)).containsExactly(
+        entry(LocalDate.of(2024, JANUARY, 19), "43.1"),
+        entry(LocalDate.of(2024, JANUARY, 22), "43.2"),
+        entry(LocalDate.of(2024, JANUARY, 23), "43.17"),
+        entry(LocalDate.of(2024, JANUARY, 24), "43"),
+        entry(LocalDate.of(2024, JANUARY, 25), "43.23"));
+    assertThat(priceRepository.count()).isEqualTo(priceCountBefore + 5);
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      UPDATE HISTORICAL_SECURITY_PRICE_CONFIG
+      SET IS_ACTIVE = TRUE
+      WHERE SECURITY_ID = (SELECT ID FROM SECURITY WHERE NAME = 'Pinterest');
+      UPDATE HISTORICAL_SECURITY_PRICE_CONFIG
+      SET IS_ACTIVE = FALSE
+      WHERE SECURITY_ID != (SELECT ID FROM SECURITY WHERE NAME = 'Pinterest');
+      DELETE FROM HISTORICAL_SECURITY_PRICE WHERE SECURITY_ID = (SELECT ID FROM SECURITY WHERE NAME = 'Pinterest');
+      """)
+  void updateHistoricalPrices_timestampMillisecondsWestOfUtc_keepsReportedDate() {
+    // now: Mon Jan 1, 11:37 in New York
+    when(clock.getZone()).thenReturn(ZoneId.of("America/New_York"));
+    // delivers Wed Dec 27 to Fri Dec 29, each at 00:00 UTC, which is 19:00 on the day before in New York
+    respondWithFixture(mockServer, "https://stock-price.api/v2?isin=US72352L1061.XETR",
+        "fixtures/historical-security-prices/data-source-102/pins-3-days-midnight-utc.json");
+    long priceCountBefore = priceRepository.count();
+
+    subject.updateHistoricalPrices();
+
+    assertThat(storedPricesByDate(PINS)).containsExactly(
+        entry(LocalDate.of(2023, DECEMBER, 27), "37.16"),
+        entry(LocalDate.of(2023, DECEMBER, 28), "37.3"),
+        entry(LocalDate.of(2023, DECEMBER, 29), "37.27"));
+    assertThat(priceRepository.count()).isEqualTo(priceCountBefore + 3);
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      UPDATE HISTORICAL_SECURITY_PRICE_CONFIG
+      SET IS_ACTIVE = TRUE
+      WHERE EXTERNAL_SECURITY_ID = 'MAIN';
+      UPDATE HISTORICAL_SECURITY_PRICE_CONFIG
+      SET IS_ACTIVE = FALSE
+      WHERE EXTERNAL_SECURITY_ID != 'MAIN';
+      DELETE FROM HISTORICAL_SECURITY_PRICE WHERE SECURITY_ID = (SELECT ID FROM SECURITY WHERE NAME = 'Main Street Capital');
+      INSERT INTO HISTORICAL_SECURITY_PRICE_MARKET_CLOSE_TIME (DATA_SOURCE_ID, TIME_ZONE, TIME)
+      VALUES (104, 'America/New_York', '16:00:00');
+      """)
+  void updateHistoricalPrices_todaysTimestampPriceWestOfUtcBeforeMarketClose_isNotStored() {
+    // now: Fri Jan 26, 15:44 in New York, before the arranged market close at 16:00
+    when(clock.instant()).thenReturn(Instant.parse("2024-01-26T20:44:38Z"));
+    when(clock.getZone()).thenReturn(ZoneId.of("America/New_York"));
+    // delivers Thu Jan 25 and today, Fri Jan 26, each at 00:00 UTC, which is 19:00 on the day before in New York
+    respondWithFixture(mockServer, "https://stock-price.api/v4/stocks/prices?id=MAIN&range=MAX",
+        "fixtures/historical-security-prices/data-source-104/main-2-days-midnight-utc.json");
+    long priceCountBefore = priceRepository.count();
+
+    subject.updateHistoricalPrices();
+
+    // today's price (43.5) is not final before the market close
+    assertThat(storedPricesByDate(MAIN)).containsExactly(entry(LocalDate.of(2024, JANUARY, 25), "43.23"));
+    assertThat(priceRepository.count()).isEqualTo(priceCountBefore + 1);
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      UPDATE HISTORICAL_SECURITY_PRICE_CONFIG
+      SET IS_ACTIVE = TRUE
       WHERE SECURITY_ID = (SELECT ID FROM SECURITY WHERE NAME = 'Equinix');
       UPDATE HISTORICAL_SECURITY_PRICE_CONFIG
       SET IS_ACTIVE = FALSE
@@ -382,6 +474,14 @@ class HistoricalSecurityPriceUpdaterTest {
     }
     respondWithFixture(mockServer, "https://stock-price.api/v2?isin=US72352L1061.XETR",
         "fixtures/historical-security-prices/data-source-102/pins-30-days.json");
+  }
+
+  /** Returns every stored price of the security as its plain value, ordered by date. */
+  private Map<LocalDate, String> storedPricesByDate(long securityId) {
+    Map<LocalDate, String> result = new LinkedHashMap<>();
+    priceRepository.findAllBySecurityIdAndDateGreaterThanEqualOrderByDateAsc(securityId, EPOCH)
+        .forEach(price -> result.put(price.getDate(), price.getPrice().stripTrailingZeros().toPlainString()));
+    return result;
   }
 
   private HistoricalSecurityPriceEntity findAmznPrice(LocalDate date) {

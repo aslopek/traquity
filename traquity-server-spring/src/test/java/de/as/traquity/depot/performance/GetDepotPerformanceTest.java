@@ -1,6 +1,7 @@
 package de.as.traquity.depot.performance;
 
 import static integration.Accuracy.ACCURACY_ONE_THOUSANDTH;
+import static integration.DepotIds.BUY_IN_ZERO;
 import static integration.DepotIds.EMPTY_DEPOT;
 import static integration.DepotIds.FIRST_DEPOT;
 import static integration.DepotIds.OTHER_DEPOT;
@@ -35,6 +36,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.as.traquity.depot.performance.api.model.DepotPerformanceDto;
 import de.as.traquity.depot.performance.api.model.DepotValueDto;
 import integration.IntegrationTest;
+import integration.sql.TestDataQuery;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
@@ -198,12 +200,48 @@ class GetDepotPerformanceTest {
   }
 
   @Test
+  void getDepotPerformance_investedCapitalZero_ok() throws Exception {
+    MvcResult mvcResult = getDepotPerformance(Set.of(BUY_IN_ZERO)).andExpect(status().isOk()).andReturn();
+    DepotPerformanceDto responseBody = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DepotPerformanceDto.class);
+    List<DepotValueDto> values = responseBody.getValues();
+
+    // first entry - the free buy of 40 Alphabet A shares sets their price to 0, so value and invested capital are both 0
+    DepotValueDto depotValueDto = values.getFirst();
+    assertThat(depotValueDto.getDate()).isEqualTo(LocalDate.of(2020, MARCH, 13));
+    assertThat(depotValueDto.getInvestedCapital()).isEqualByComparingTo(ZERO);
+    assertThat(depotValueDto.getAbsoluteValue()).isEqualByComparingTo(ZERO);
+    assertThat(depotValueDto.getPerformanceAbsolute()).isEqualByComparingTo(ZERO);
+    assertThat(depotValueDto.getPerformanceRelative()).isEqualByComparingTo(ZERO);
+
+    // last entry - 40 * 126.76 against an invested capital of 0
+    depotValueDto = values.getLast();
+    assertThat(depotValueDto.getDate()).isEqualTo(LocalDate.of(2023, DECEMBER, 29));
+    assertThat(depotValueDto.getInvestedCapital()).isEqualByComparingTo(ZERO);
+    assertThat(depotValueDto.getAbsoluteValue()).isEqualByComparingTo("5070.4");
+    assertThat(depotValueDto.getPerformanceAbsolute()).isEqualByComparingTo("5070.4");
+    assertThat(depotValueDto.getPerformanceRelative()).isNull();
+  }
+
+  @Test
   void getDepotPerformance_noTransactions_ok() throws Exception {
     MvcResult mvcResult = getDepotPerformance(Set.of(EMPTY_DEPOT)).andExpect(status().isOk()).andReturn();
     DepotPerformanceDto responseBody = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DepotPerformanceDto.class);
     List<DepotValueDto> values = responseBody.getValues();
     assertThat(responseBody.getExtendedInternalRateOfReturn()).isZero();
     assertThat(values).isEmpty();
+  }
+
+  @Test
+  void getDepotPerformance_allTransactionsInTheFuture_ok() throws Exception {
+    // precondition: the depot has at least one transactions AND all transactions are in the future
+    assertThat(TestDataQuery.getTransactionCountByDepotId(WEEKEND_FIRST_TRANSACTION_DEPOT)).isPositive();
+    assertThat(TestDataQuery.getTransactionCountByDepotIdOnOrBefore(WEEKEND_FIRST_TRANSACTION_DEPOT, LocalDate.of(2024, JANUARY, 1)))
+        .isZero();
+
+    MvcResult mvcResult = getDepotPerformance(Set.of(WEEKEND_FIRST_TRANSACTION_DEPOT)).andExpect(status().isOk()).andReturn();
+    DepotPerformanceDto responseBody = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DepotPerformanceDto.class);
+    assertThat(responseBody.getExtendedInternalRateOfReturn()).isZero();
+    assertThat(responseBody.getValues()).isEmpty();
   }
 
   @Test

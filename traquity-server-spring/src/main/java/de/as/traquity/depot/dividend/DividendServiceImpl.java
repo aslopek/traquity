@@ -1,5 +1,7 @@
 package de.as.traquity.depot.dividend;
 
+import static de.as.traquity.common.arithmetic.MathFunctions.ratioOf;
+
 import de.as.traquity.common.error.BadRequestException;
 import de.as.traquity.common.error.NotFoundException;
 import de.as.traquity.configuration.securitygroup.SecurityGroup;
@@ -213,8 +215,8 @@ class DividendServiceImpl implements DividendService {
     List<DividendDto> dividendDtos = new ArrayList<>(consolidatedDividends.size());
 
     for (Dividend dividend : consolidatedDividends) {
-      dividend.setRelativeValueGross(dividend.getAbsoluteValueGross().divide(sums.getGrossSum(), mathContext));
-      dividend.setRelativeValueNet(dividend.getAbsoluteValueNet().divide(sums.getNetSum(), mathContext));
+      dividend.setRelativeValueGross(ratioOf(dividend.getAbsoluteValueGross(), sums.getGrossSum(), mathContext));
+      dividend.setRelativeValueNet(ratioOf(dividend.getAbsoluteValueNet(), sums.getNetSum(), mathContext));
       dividendDtos.add(dividendMapper.toDto(dividend));
     }
 
@@ -262,7 +264,6 @@ class DividendServiceImpl implements DividendService {
     long intervalSecondToThird;
     BigDecimal regularPaymentsPerYear;
     BigDecimal estimatedPaymentPerYear;
-    BigDecimal estimatedYield;
 
     for (DepotPosition depotPosition : depotPositionService.getDepotPositions(depotIds, true).getPositions()) {
       depotPositions.put(depotPosition.getPositionId(), depotPosition);
@@ -338,34 +339,20 @@ class DividendServiceImpl implements DividendService {
             estimatedPaymentPerYear.add(dividendYield.getEstimatedPaymentGross(),
                 mathContext);
         dividendYield.setEstimatedPaymentGross(estimatedPaymentPerYear);
-        estimatedYield = estimatedPaymentPerYear.divide(depotPositions.get(securityId).getCurrentSizeAbsolute(),
-            mathContext);
-        dividendYield.setCurrentYieldGross(estimatedYield);
-
-        try {
-          estimatedYield = estimatedPaymentPerYear.divide(depotPositions.get(securityId).getBuyInAbsolute(),
-              mathContext);
-        } catch (ArithmeticException e) {
-          estimatedYield = BigDecimal.ZERO;
-        }
-        dividendYield.setYieldOnCostGross(estimatedYield);
+        dividendYield.setCurrentYieldGross(ratioOf(estimatedPaymentPerYear, depotPositions.get(securityId).getCurrentSizeAbsolute(),
+            mathContext));
+        dividendYield.setYieldOnCostGross(ratioOf(estimatedPaymentPerYear, depotPositions.get(securityId).getBuyInAbsolute(),
+            mathContext));
 
         estimatedPaymentPerYear = regularPaymentsPerYear.multiply(latestPayment.getNetValue(mathContext));
         estimatedPaymentPerYear =
             estimatedPaymentPerYear.add(dividendYield.getEstimatedPaymentNet(),
                 mathContext);
         dividendYield.setEstimatedPaymentNet(estimatedPaymentPerYear);
-        estimatedYield = estimatedPaymentPerYear.divide(depotPositions.get(securityId).getCurrentSizeAbsolute(),
-            mathContext);
-        dividendYield.setCurrentYieldNet(estimatedYield);
-
-        try {
-          estimatedYield = estimatedPaymentPerYear.divide(depotPositions.get(securityId).getBuyInAbsolute(),
-              mathContext);
-        } catch (ArithmeticException e) {
-          estimatedYield = BigDecimal.ZERO;
-        }
-        dividendYield.setYieldOnCostNet(estimatedYield);
+        dividendYield.setCurrentYieldNet(ratioOf(estimatedPaymentPerYear, depotPositions.get(securityId).getCurrentSizeAbsolute(),
+            mathContext));
+        dividendYield.setYieldOnCostNet(ratioOf(estimatedPaymentPerYear, depotPositions.get(securityId).getBuyInAbsolute(),
+            mathContext));
       }
     }
 

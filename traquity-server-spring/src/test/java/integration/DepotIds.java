@@ -15,4 +15,6 @@ public class DepotIds {
   public static final long WEEKEND_FIRST_TRANSACTION_DEPOT = 10;
   public static final long POSITION_PERFORMANCE_DEPOT = 11;
   public static final long POSITION_PERFORMANCE_LATEST_PRICE_FALLBACK_DEPOT = 12;
+  public static final long BUY_IN_ZERO_SECOND_DEPOT = 13;
+  public static final long VALUE_ZERO_DEPOT = 14;
 }

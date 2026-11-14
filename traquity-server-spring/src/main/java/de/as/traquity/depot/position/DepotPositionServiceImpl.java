@@ -1,5 +1,7 @@
 package de.as.traquity.depot.position;
 
+import static de.as.traquity.common.arithmetic.MathFunctions.ratioOf;
+import static de.as.traquity.common.arithmetic.MathFunctions.shareOf;
 import static de.as.traquity.depot.transaction.api.model.TransactionTypeDto.BUY;
 import static de.as.traquity.depot.transaction.api.model.TransactionTypeDto.SELL;
 import static java.math.BigDecimal.ZERO;
@@ -75,8 +77,7 @@ class DepotPositionServiceImpl implements DepotPositionService {
               mathContext));
           existing.setPerformanceAbsolute(existing.getCurrentSizeAbsolute().subtract(existing.getBuyInAbsolute(),
               mathContext));
-          existing.setPerformanceRelative(existing.getPerformanceAbsolute().divide(existing.getBuyInAbsolute(),
-              mathContext));
+          setPerformanceRelative(existing);
         } else {
           positionsById.put(position.getPositionId(), position);
         }
@@ -92,8 +93,8 @@ class DepotPositionServiceImpl implements DepotPositionService {
       sumCurrentSize = sumCurrentSize.add(position.getCurrentSizeAbsolute(), mathContext);
     }
     for (DepotPosition position : consolidatedDepotPositions) {
-      position.setCurrentSizeRelative(position.getCurrentSizeAbsolute().divide(sumCurrentSize, mathContext));
-      position.setBuyInRelative(position.getBuyInAbsolute().divide(sumBuyInSize, mathContext));
+      position.setCurrentSizeRelative(shareOf(position.getCurrentSizeAbsolute(), sumCurrentSize, mathContext));
+      position.setBuyInRelative(shareOf(position.getBuyInAbsolute(), sumBuyInSize, mathContext));
     }
 
     if (consolidateSecurityGroups) {
@@ -181,17 +182,8 @@ class DepotPositionServiceImpl implements DepotPositionService {
     }
 
     for (DepotPosition position : depotPositions) {
-      try {
-        position.setCurrentSizeRelative(position.getCurrentSizeAbsolute().divide(sumCurrentSize, mathContext));
-      } catch (ArithmeticException e) {
-        position.setCurrentSizeRelative(ZERO);
-      }
-
-      try {
-        position.setBuyInRelative(position.getBuyInAbsolute().divide(sumBuyInSize, mathContext));
-      } catch (ArithmeticException e) {
-        position.setBuyInRelative(ZERO);
-      }
+      position.setCurrentSizeRelative(shareOf(position.getCurrentSizeAbsolute(), sumCurrentSize, mathContext));
+      position.setBuyInRelative(shareOf(position.getBuyInAbsolute(), sumBuyInSize, mathContext));
     }
 
     if (consolidateSecurityGroups) {
@@ -276,20 +268,8 @@ class DepotPositionServiceImpl implements DepotPositionService {
   }
 
   private void setPerformanceRelative(DepotPosition depotPosition) {
-    BigDecimal buyIn = depotPosition.getBuyInAbsolute();
-    BigDecimal absoluteSize = depotPosition.getCurrentSizeAbsolute();
-    BigDecimal performanceRelative = ZERO;
-    if (buyIn != null && ZERO.compareTo(buyIn) != 0) {
-      performanceRelative = absoluteSize.divide(buyIn, mathContext);
-      if (performanceRelative.compareTo(BigDecimal.ONE) >= 0) {
-        // positive performance
-        performanceRelative = performanceRelative.subtract(BigDecimal.ONE, mathContext);
-      } else {
-        // negative performance
-        performanceRelative = BigDecimal.ONE.subtract(performanceRelative, mathContext).negate();
-      }
-    }
-    depotPosition.setPerformanceRelative(performanceRelative);
+    depotPosition.setPerformanceRelative(ratioOf(depotPosition.getPerformanceAbsolute(), depotPosition.getBuyInAbsolute(),
+        mathContext));
   }
 
   private void setDisplayNames(List<DepotPosition> depotPositions) {
@@ -379,16 +359,11 @@ class DepotPositionServiceImpl implements DepotPositionService {
     }
     depotComposition.setPerformanceAbsolute(depotComposition.getCurrentSizeAbsolute().subtract(depotComposition.getBuyInAbsolute(),
         mathContext));
-    try {
-      depotComposition.setPerformanceRelative(depotComposition.getPerformanceAbsolute().divide(depotComposition.getBuyInAbsolute(),
-          mathContext));
-    } catch (ArithmeticException e) {
-      depotComposition.setPerformanceRelative(null);
-    }
+    depotComposition.setPerformanceRelative(ratioOf(depotComposition.getPerformanceAbsolute(), depotComposition.getBuyInAbsolute(),
+        mathContext));
     depotComposition.setPositions(positions);
     return depotComposition;
   }
-
   @AllArgsConstructor
   private static class ShareBatch {
 

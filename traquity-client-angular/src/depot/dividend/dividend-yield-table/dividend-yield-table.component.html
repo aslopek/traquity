@@ -85,7 +85,12 @@
                 <td *matCellDef="let row"
                     mat-cell
                     class="yield-table__numeric tq-numeric">
-                    {{ (useGrossValues() ? row.currentYieldGross : row.currentYieldNet) | tqPercent }}
+                    @let currentYield = useGrossValues() ? row.currentYieldGross : row.currentYieldNet;
+                    @if (currentYield == null) {
+                        &infin;
+                    } @else {
+                        {{ currentYield | tqPercent }}
+                    }
                 </td>
             </ng-container>
 
@@ -99,10 +104,11 @@
                 <td *matCellDef="let row"
                     mat-cell
                     class="yield-table__numeric tq-numeric">
-                    @if (row.yieldOnCostNet === 0.0 && row.estimatedPaymentNet > 0) {
+                    @let yieldOnCost = useGrossValues() ? row.yieldOnCostGross : row.yieldOnCostNet;
+                    @if (yieldOnCost == null) {
                         &infin;
                     } @else {
-                        {{ (useGrossValues() ? row.yieldOnCostGross : row.yieldOnCostNet) | tqPercent }}
+                        {{ yieldOnCost | tqPercent }}
                     }
                 </td>
             </ng-container>

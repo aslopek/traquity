@@ -56,7 +56,7 @@ class GetPositionPerformanceTest {
   }
 
   @Test
-  void getPositionPerformance_buyInZero_googl_noPerformanceRelative() throws Exception {
+  void getPositionPerformance_buyInZero_googl_performanceRelativeInfinite() throws Exception {
     PositionPerformanceDto body = getPositionPerformance(BUY_IN_ZERO, GOOGL);
 
     assertThat(body.getCurrency()).isEqualTo("EUR");
@@ -107,7 +107,7 @@ class GetPositionPerformanceTest {
     assertThat(body.getCurrentSizeAbsolute()).isEqualByComparingTo(ZERO);
     assertThat(body.getCostBasis()).isEqualByComparingTo(ZERO);
     assertThat(body.getPerformanceAbsolute()).isEqualByComparingTo(ZERO);
-    assertThat(body.getPerformanceRelative()).isNull();
+    assertThat(body.getPerformanceRelative()).isEqualByComparingTo(ZERO);
   }
 
   @Test

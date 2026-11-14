@@ -3,12 +3,17 @@ package de.as.traquity.depot.transaction;
 import static de.as.traquity.depot.transaction.api.model.TransactionTypeDto.BUY;
 import static de.as.traquity.depot.transaction.api.model.TransactionTypeDto.DIVIDEND;
 import static integration.SecurityIds.AMZN;
+import static integration.SecurityIds.GOOGL;
 import static integration.SecurityIds.HAG;
 import static integration.SecurityIds.LVMH;
+import static integration.SecurityIds.O;
 import static integration.SecurityIds.VNGGF;
 import static java.math.BigDecimal.ONE;
+import static java.math.BigDecimal.ZERO;
 import static java.time.Month.DECEMBER;
+import static java.time.Month.JANUARY;
 import static java.time.Month.JULY;
+import static java.time.Month.MARCH;
 import static java.time.Month.NOVEMBER;
 import static java.time.Month.SEPTEMBER;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -172,6 +177,30 @@ class UpdateTransactionTest {
   }
 
   @Test
+  void updateTransaction_securityCountOriginalIsZero_badRequest() throws Exception {
+    requestBody.setSecurityCountOriginal(ZERO);
+    runInvalidCountTestCase();
+  }
+
+  @Test
+  void updateTransaction_securityCountOriginalIsNegative_badRequest() throws Exception {
+    requestBody.setSecurityCountOriginal(BigDecimal.valueOf(-2.0));
+    runInvalidCountTestCase();
+  }
+
+  @Test
+  void updateTransaction_securityCountSplitAdjustedIsZero_badRequest() throws Exception {
+    requestBody.setSecurityCountSplitAdjusted(ZERO);
+    runInvalidCountTestCase();
+  }
+
+  @Test
+  void updateTransaction_securityCountSplitAdjustedIsNegative_badRequest() throws Exception {
+    requestBody.setSecurityCountSplitAdjusted(BigDecimal.valueOf(-40.0));
+    runInvalidCountTestCase();
+  }
+
+  @Test
   void updateTransaction_updateSecurityCountSplitAdjusted_ok() throws Exception {
     requestBody.setSecurityCountSplitAdjusted(BigDecimal.valueOf(40.0));
     runPositiveTestCase(1, 1);
@@ -293,7 +322,8 @@ class UpdateTransactionTest {
   @Sql(statements = """
       INSERT INTO TRANSACTION(ID, DATE, TIME, DEPOT_ID, SECURITY_ID, TRANSACTION_TYPE, SECURITY_COUNT_ORIGINAL, GROSS_VALUE,
                               CREATED_AT, UPDATED_AT, VERSION)
-      VALUES (9001, '2020-07-13', '08:00:00', 5, 13, 'BUY', 2, 400, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+      VALUES (9001, '2020-07-13', '08:00:00', 5, (SELECT ID FROM SECURITY WHERE NAME = 'Amazon'), 'BUY', 2, 400,
+              CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
       """)
   void updateTransaction_tradeMovedOffDateWithRemainingTrade_pricesOldDateFromRemainingTrade() throws Exception {
     requestBody.setDate(LocalDate.of(2021, SEPTEMBER, 7));
@@ -309,7 +339,8 @@ class UpdateTransactionTest {
   @Sql(statements = """
       INSERT INTO TRANSACTION(ID, DATE, TIME, DEPOT_ID, SECURITY_ID, TRANSACTION_TYPE, SECURITY_COUNT_ORIGINAL, GROSS_VALUE,
                               CREATED_AT, UPDATED_AT, VERSION)
-      VALUES (9002, '2023-12-29', '10:00:00', 1, 13, 'BUY', 1, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+      VALUES (9002, '2023-12-29', '10:00:00', 1, (SELECT ID FROM SECURITY WHERE NAME = 'Amazon'), 'BUY', 1, 100,
+              CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
       """)
   void updateTransaction_figuresChangedOnDateWithPriceFromDataSource_keepsPrice() throws Exception {
     requestBody.setDate(LocalDate.of(2023, DECEMBER, 29));
@@ -326,7 +357,8 @@ class UpdateTransactionTest {
   @Sql(statements = """
       INSERT INTO TRANSACTION(ID, DATE, TIME, DEPOT_ID, SECURITY_ID, TRANSACTION_TYPE, SECURITY_COUNT_ORIGINAL, GROSS_VALUE,
                               CREATED_AT, UPDATED_AT, VERSION)
-      VALUES (9002, '2023-12-29', '10:00:00', 1, 13, 'BUY', 1, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+      VALUES (9002, '2023-12-29', '10:00:00', 1, (SELECT ID FROM SECURITY WHERE NAME = 'Amazon'), 'BUY', 1, 100,
+              CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
       """)
   void updateTransaction_movedOffDateWithPriceFromDataSource_keepsPrice() throws Exception {
     requestBody.setDate(LocalDate.of(2021, SEPTEMBER, 7));
@@ -386,6 +418,108 @@ class UpdateTransactionTest {
     assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount + 1);
   }
 
+  @Test
+  void updateTransaction_freeBuyChanged_storesNoPrice() throws Exception {
+    useFreeBuy();
+    requestBody.setSecurityCountOriginal(BigDecimal.valueOf(2.0));
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCountBySecurityId(O)).isZero();
+    runPositiveTestCase(14, 304);
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCountBySecurityId(O)).isZero();
+  }
+
+  @Test
+  void updateTransaction_freeBuyMovedOntoDateWithoutPrice_storesNoPrice() throws Exception {
+    useFreeBuy();
+    requestBody.setDate(LocalDate.of(2024, JANUARY, 3));
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCountBySecurityId(O)).isZero();
+    runPositiveTestCase(14, 304);
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCountBySecurityId(O)).isZero();
+  }
+
+  @Test
+  void updateTransaction_freeBuyGetsGrossValue_storesPriceFromTrade() throws Exception {
+    useFreeBuy();
+    requestBody.setGrossValue(BigDecimal.valueOf(50.0));
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCountBySecurityId(O)).isZero();
+    long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
+    runPositiveTestCase(14, 304);
+    assertPrice(O, "50", "EUR"); // one share
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCountBySecurityId(O)).isOne();
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount + 1);
+  }
+
+  @Test
+  void updateTransaction_tradeMovedOffDateWithRemainingFreeBuy_removesPriceOnOldDate() throws Exception {
+    useTradeNextToFreeBuy();
+    requestBody.setDate(LocalDate.of(2021, SEPTEMBER, 7));
+    long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
+    runPositiveTestCase(7, 101);
+    assertNoPrice(GOOGL, LocalDate.of(2020, MARCH, 13));
+    assertPrice(GOOGL, "1029.4", "EUR"); // 926.46 / 0.9
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount); // one removed, one added
+  }
+
+  @Test
+  void updateTransaction_tradeMovedToOtherSecurityWithRemainingFreeBuy_removesPriceOfOldSecurity() throws Exception {
+    useTradeNextToFreeBuy();
+    requestBody.setSecurityId(HAG);
+    long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
+    runPositiveTestCase(7, 101);
+    assertNoPrice(GOOGL, requestBody.getDate());
+    assertPrice(HAG, "1029.4", "EUR"); // 926.46 / 0.9
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount); // one removed, one added
+  }
+
+  @Test
+  void updateTransaction_tradeTurnedIntoFreeBuy_removesPrice() throws Exception {
+    useTradeNextToFreeBuy();
+    requestBody.setGrossValue(ZERO);
+    long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
+    runPositiveTestCase(7, 101);
+    assertNoPrice(GOOGL, requestBody.getDate());
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount - 1);
+  }
+
+  @Test
+  void updateTransaction_typeChangedToDividendWithRemainingFreeBuy_removesPrice() throws Exception {
+    useTradeNextToFreeBuy();
+    requestBody.setTransactionType(DIVIDEND);
+    long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
+    runPositiveTestCase(7, 101);
+    assertNoPrice(GOOGL, requestBody.getDate());
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount - 1);
+  }
+
+  /** Matches the free buy 304, the only trade of its security on its date. */
+  private void useFreeBuy() {
+    requestBody = new TransactionUpdateDto();
+    requestBody.setDate(LocalDate.of(2024, JANUARY, 2));
+    requestBody.setTime("10:00:00");
+    requestBody.setSecurityId(O);
+    requestBody.setTransactionType(BUY);
+    requestBody.setSecurityCountOriginal(ONE);
+    requestBody.setSecurityCountSplitAdjusted(null);
+    requestBody.setGrossValue(ZERO);
+    requestBody.setTax(null);
+    requestBody.setFee(null);
+    requestBody.setVersion(0L);
+  }
+
+  /** Matches the buy 101, which shares its security and date with the free buy 301 only. */
+  private void useTradeNextToFreeBuy() {
+    requestBody = new TransactionUpdateDto();
+    requestBody.setDate(LocalDate.of(2020, MARCH, 13));
+    requestBody.setTime("09:01:57");
+    requestBody.setSecurityId(GOOGL);
+    requestBody.setTransactionType(BUY);
+    requestBody.setSecurityCountOriginal(BigDecimal.valueOf(0.9));
+    requestBody.setSecurityCountSplitAdjusted(BigDecimal.valueOf(18.0));
+    requestBody.setGrossValue(BigDecimal.valueOf(926.46));
+    requestBody.setTax(null);
+    requestBody.setFee(BigDecimal.valueOf(0.99));
+    requestBody.setVersion(0L);
+  }
+
   private void assertNoPrice(long securityId, LocalDate date) {
     assertThat(TestDataQuery.getHistoricalSecurityPriceCountBySecurityIdAndDate(securityId, date)).isZero();
   }
@@ -428,6 +562,20 @@ class UpdateTransactionTest {
     assertTransactionUnchanged(beforeUpdate, afterUpdate);
 
     assertThat(transactionRepository.count()).isEqualTo(transactionCount);
+  }
+
+  private void runInvalidCountTestCase() throws Exception {
+    LocalDate tradeDate = requestBody.getDate();
+    long securityId = requestBody.getSecurityId();
+    long priceCount = TestDataQuery.getHistoricalSecurityPriceCount();
+    long transactionCountOfDepot = TestDataQuery.getTransactionCountByDepotId(1);
+    HistoricalSecurityPrice priceBefore = TestDataQuery.getHistoricalSecurityPrice(securityId, tradeDate);
+
+    runNegativeTestCase(1, 1, BAD_REQUEST);
+
+    assertThat(TestDataQuery.getTransactionCountByDepotId(1)).isEqualTo(transactionCountOfDepot);
+    assertThat(TestDataQuery.getHistoricalSecurityPrice(securityId, tradeDate)).isEqualTo(priceBefore);
+    assertThat(TestDataQuery.getHistoricalSecurityPriceCount()).isEqualTo(priceCount);
   }
 
   private void assertTransactionUnchanged(TransactionEntity before, TransactionEntity after) {
