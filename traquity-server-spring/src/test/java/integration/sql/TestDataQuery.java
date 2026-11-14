@@ -38,6 +38,10 @@ public class TestDataQuery {
     return getCount("SELECT COUNT(*) FROM TRANSACTION WHERE DEPOT_ID = ?", depotId);
   }
 
+  public static long getTransactionCountByDepotIdOnOrBefore(long depotId, LocalDate date) {
+    return getCount("SELECT COUNT(*) FROM TRANSACTION WHERE DEPOT_ID = ? AND DATE <= ?", depotId, date);
+  }
+
   public static long getDividendAnnouncementCountBySecurityId(long securityId) {
     return getCount("SELECT COUNT(*) FROM DIVIDEND_ANNOUNCEMENT WHERE SECURITY_ID = ?", securityId);
   }

@@ -36,6 +36,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.as.traquity.depot.performance.api.model.DepotPerformanceDto;
 import de.as.traquity.depot.performance.api.model.DepotValueDto;
 import integration.IntegrationTest;
+import integration.sql.TestDataQuery;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
@@ -228,6 +229,19 @@ class GetDepotPerformanceTest {
     List<DepotValueDto> values = responseBody.getValues();
     assertThat(responseBody.getExtendedInternalRateOfReturn()).isZero();
     assertThat(values).isEmpty();
+  }
+
+  @Test
+  void getDepotPerformance_allTransactionsInTheFuture_ok() throws Exception {
+    // precondition: the depot has at least one transactions AND all transactions are in the future
+    assertThat(TestDataQuery.getTransactionCountByDepotId(WEEKEND_FIRST_TRANSACTION_DEPOT)).isPositive();
+    assertThat(TestDataQuery.getTransactionCountByDepotIdOnOrBefore(WEEKEND_FIRST_TRANSACTION_DEPOT, LocalDate.of(2024, JANUARY, 1)))
+        .isZero();
+
+    MvcResult mvcResult = getDepotPerformance(Set.of(WEEKEND_FIRST_TRANSACTION_DEPOT)).andExpect(status().isOk()).andReturn();
+    DepotPerformanceDto responseBody = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DepotPerformanceDto.class);
+    assertThat(responseBody.getExtendedInternalRateOfReturn()).isZero();
+    assertThat(responseBody.getValues()).isEmpty();
   }
 
   @Test
