@@ -38,6 +38,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +47,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -54,6 +56,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 @Slf4j
@@ -141,6 +144,46 @@ class HistoricalSecurityPriceServiceImpl implements HistoricalSecurityPriceServi
       price.setCurrency(currency);
     }
     return price;
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public HistoricalSecurityPrice getOldestPrice(long securityId, String currency) throws NotFoundException {
+    HistoricalSecurityPrice oldest = priceRepository.findFirstBySecurityIdOrderByDateAsc(securityId)
+        .map(priceMapper::fromEntity)
+        .orElseThrow(NotFoundException::new);
+    if (oldest.getCurrency().equals(currency)) {
+      return oldest;
+    }
+
+    Map<String, LocalDate> earliestConversionDates = new HashMap<>();
+    try (Stream<HistoricalSecurityPriceEntity> prices = priceRepository.findAllBySecurityIdOrderByDateAsc(securityId)) {
+      for (Iterator<HistoricalSecurityPriceEntity> it = prices.iterator(); it.hasNext(); ) {
+        HistoricalSecurityPrice price = priceMapper.fromEntity(it.next());
+        if (price.getCurrency().equals(currency)) {
+          return price;
+        }
+        LocalDate earliest = earliestConversionDates.computeIfAbsent(price.getCurrency(), c -> earliestConversionDate(c, currency));
+        if (price.getDate().isBefore(earliest)) {
+          continue;
+        }
+        BigDecimal converted = exchangeRateService
+            .convertBestEffort(List.of(new CurrencyConversionRequest(price.getPrice(), price.getDate())), price.getCurrency(), currency)
+            .getFirst();
+        price.setPrice(converted);
+        price.setCurrency(currency);
+        return price;
+      }
+    }
+    throw new NotFoundException();
+  }
+
+  private LocalDate earliestConversionDate(String sourceCurrency, String currency) {
+    try {
+      return exchangeRateService.getEarliestConversionDate(sourceCurrency, currency);
+    } catch (NotFoundException e) {
+      return LocalDate.MAX;
+    }
   }
 
   @Override

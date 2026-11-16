@@ -2,6 +2,7 @@ package de.as.traquity.exchangerates;
 
 import de.as.traquity.common.error.NotFoundException;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 public interface ExchangeRateService {
@@ -25,4 +26,10 @@ public interface ExchangeRateService {
    * item whose only available rate is outdated still gets converted with it.
    */
   List<BigDecimal> convertBestEffort(List<CurrencyConversionRequest> items, String baseCurrency, String targetCurrency);
+
+  /**
+   * @return the first date {@link #convert} and {@link #convertBestEffort} can convert between the two currencies, in either direction
+   * @throws NotFoundException when no exchange rate between the two currencies is stored
+   */
+  LocalDate getEarliestConversionDate(String baseCurrency, String targetCurrency) throws NotFoundException;
 }
