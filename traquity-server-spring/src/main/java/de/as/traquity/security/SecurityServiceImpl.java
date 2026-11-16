@@ -275,8 +275,10 @@ class SecurityServiceImpl implements SecurityService {
   private PriceMetaInfoDto getPriceMetaInfo(Long securityId) {
     LocalDate oneYearAgo = LocalDate.now(clock).minusYears(1);
     List<HistoricalSecurityPrice> prices;
+    HistoricalSecurityPrice oldestPrice;
     try {
       prices = historicalSecurityPriceService.getPrices(securityId, oneYearAgo);
+      oldestPrice = prices.isEmpty() ? null : historicalSecurityPriceService.getOldestPrice(securityId, prices.getLast().getCurrency());
     } catch (RuntimeException e) {
       return null;
     }
@@ -289,6 +291,8 @@ class SecurityServiceImpl implements SecurityService {
     priceMetaInfo.setCurrency(latestPrice.getCurrency());
     priceMetaInfo.setLatestPrice(latestPrice.getPrice());
     priceMetaInfo.setLatestPriceDate(latestPrice.getDate());
+    priceMetaInfo.setOldestPrice(oldestPrice.getPrice());
+    priceMetaInfo.setOldestPriceDate(oldestPrice.getDate());
 
     List<BigDecimal> priceValues = new ArrayList<>(prices.stream().map(HistoricalSecurityPrice::getPrice).toList());
     priceValues.sort(BigDecimal::compareTo);

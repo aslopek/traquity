@@ -1,6 +1,13 @@
 package de.as.traquity.security;
 
 import java.math.BigDecimal;
+
+import static de.as.traquity.security.api.model.SecurityTypeDto.STOCK;
+import static integration.SecurityIds.ASML;
+import static integration.SecurityIds.MSFT;
+import static java.time.Month.DECEMBER;
+import static java.time.Month.JULY;
+import static java.time.Month.MARCH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.context.jdbc.SqlMergeMode.MergeMode.MERGE;
@@ -14,14 +21,11 @@ import de.as.traquity.security.api.model.PriceMetaInfoDto;
 import de.as.traquity.security.api.model.SecurityLinksDto;
 import de.as.traquity.security.api.model.SecurityOrderPropertyDto;
 import de.as.traquity.security.api.model.SecurityReadDto;
-import de.as.traquity.security.api.model.SecurityTypeDto;
 import de.as.traquity.security.api.model.SortOrderDto;
 import integration.IntegrationTest;
-import integration.SecurityIds;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.Month;
 import java.time.ZoneId;
 import java.util.Collection;
 import java.util.List;
@@ -85,7 +89,7 @@ class GetSecuritiesTest {
       "DELETE FROM HISTORICAL_SECURITY_PRICE_CONFIG"})
   void getSecurities_someContent() throws Exception {
     Collection<Long> ids = securityRepository.findAll().stream().map(SecurityEntity::getId)
-        .filter(e -> e != SecurityIds.MSFT && e != SecurityIds.ASML).toList();
+        .filter(e -> e != MSFT && e != ASML).toList();
     securityRepository.deleteAllById(ids);
 
     MvcResult result = getSecurities(null, null).andExpect(status().isOk()).andReturn();
@@ -99,7 +103,7 @@ class GetSecuritiesTest {
     microsoft.setWkn("870747");
     microsoft.setSymbols(List.of("MSFT", "MSF.DE"));
     microsoft.setSector("Technology");
-    microsoft.setSecurityType(SecurityTypeDto.STOCK);
+    microsoft.setSecurityType(STOCK);
     microsoft.setVersion(1L);
     microsoft.setLinks(new SecurityLinksDto());
     microsoft.getLinks().setLogo("/securities/1/logo");
@@ -109,7 +113,7 @@ class GetSecuritiesTest {
     asml.setName("ASML");
     asml.setIsin("NL0010273215");
     asml.setSymbols(List.of());
-    asml.setSecurityType(SecurityTypeDto.STOCK);
+    asml.setSecurityType(STOCK);
     asml.setVersion(0L);
     asml.setLinks(new SecurityLinksDto());
     asml.getLinks().setLogo("/securities/5/logo");
@@ -177,7 +181,9 @@ class GetSecuritiesTest {
     assertThat(priceMetaInfo.getLowTrailingTwelveMonths()).isEqualByComparingTo(BigDecimal.valueOf(133.32));
     assertThat(priceMetaInfo.getLatestPrice()).isEqualByComparingTo(BigDecimal.valueOf(138.58));
     assertThat(priceMetaInfo.getCurrency()).isEqualTo("EUR");
-    assertThat(priceMetaInfo.getLatestPriceDate()).isEqualTo(LocalDate.of(2023, Month.DECEMBER, 29));
+    assertThat(priceMetaInfo.getLatestPriceDate()).isEqualTo(LocalDate.of(2023, DECEMBER, 29));
+    assertThat(priceMetaInfo.getOldestPrice()).isEqualByComparingTo("140.35");
+    assertThat(priceMetaInfo.getOldestPriceDate()).isEqualTo(LocalDate.of(2020, JULY, 13));
 
     security = responseBody.getItems().get(23);
     assertThat(security.getId()).isEqualTo(24);
@@ -188,7 +194,9 @@ class GetSecuritiesTest {
     assertThat(priceMetaInfo.getLowTrailingTwelveMonths()).isEqualByComparingTo(BigDecimal.valueOf(33.52));
     assertThat(priceMetaInfo.getLatestPrice()).isEqualByComparingTo(BigDecimal.valueOf(37.04));
     assertThat(priceMetaInfo.getCurrency()).isEqualTo("USD");
-    assertThat(priceMetaInfo.getLatestPriceDate()).isEqualTo(LocalDate.of(2023, Month.DECEMBER, 29));
+    assertThat(priceMetaInfo.getLatestPriceDate()).isEqualTo(LocalDate.of(2023, DECEMBER, 29));
+    assertThat(priceMetaInfo.getOldestPrice()).isEqualByComparingTo("25.49003831417624521072796934865900");
+    assertThat(priceMetaInfo.getOldestPriceDate()).isEqualTo(LocalDate.of(2022, MARCH, 25));
   }
 
   @Test
