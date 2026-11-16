@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -328,6 +329,56 @@ class ExchangeRateServiceImplTest {
         assertThat(results.get(i)).isEqualByComparingTo(TEN_VALUES.get(i).multiply(new BigDecimal("2")));
       }
     }
+  }
+
+  @Test
+  void getEarliestConversionDate_onlyForwardRates_returnsDateOfEarliestForwardRate() {
+    LocalDate earliest = LocalDate.of(2024, JANUARY, 5);
+    mockEarliestRates(mockRate("EUR", "USD", earliest, "1.1"), null);
+
+    assertThat(subject.getEarliestConversionDate("EUR", "USD")).isEqualTo(earliest);
+  }
+
+  @Test
+  void getEarliestConversionDate_onlyReverseRates_returnsDateOfEarliestReverseRate() {
+    LocalDate earliest = LocalDate.of(2024, JANUARY, 7);
+    mockEarliestRates(null, mockRate("USD", "EUR", earliest, "0.9"));
+
+    assertThat(subject.getEarliestConversionDate("EUR", "USD")).isEqualTo(earliest);
+  }
+
+  @Test
+  void getEarliestConversionDate_forwardRatesStartEarlier_returnsForwardDate() {
+    LocalDate forwardDate = LocalDate.of(2024, JANUARY, 5);
+    mockEarliestRates(
+        mockRate("EUR", "USD", forwardDate, "1.1"),
+        mockRate("USD", "EUR", forwardDate.plusDays(3), "0.9"));
+
+    assertThat(subject.getEarliestConversionDate("EUR", "USD")).isEqualTo(forwardDate);
+  }
+
+  @Test
+  void getEarliestConversionDate_reverseRatesStartEarlier_returnsReverseDate() {
+    LocalDate reverseDate = LocalDate.of(2024, JANUARY, 5);
+    mockEarliestRates(
+        mockRate("EUR", "USD", reverseDate.plusDays(3), "1.1"),
+        mockRate("USD", "EUR", reverseDate, "0.9"));
+
+    assertThat(subject.getEarliestConversionDate("EUR", "USD")).isEqualTo(reverseDate);
+  }
+
+  @Test
+  void getEarliestConversionDate_noRatesInEitherDirection_throwsNotFoundException() {
+    mockEarliestRates(null, null);
+
+    assertThatExceptionOfType(NotFoundException.class).isThrownBy(() -> subject.getEarliestConversionDate("EUR", "USD"));
+  }
+
+  private void mockEarliestRates(ExchangeRateEntity forward, ExchangeRateEntity reverse) {
+    when(exchangeRateRepositoryMock.findFirstByBaseCurrencyAndTargetCurrencyOrderByDateAsc("EUR", "USD"))
+        .thenReturn(Optional.ofNullable(forward));
+    when(exchangeRateRepositoryMock.findFirstByBaseCurrencyAndTargetCurrencyOrderByDateAsc("USD", "EUR"))
+        .thenReturn(Optional.ofNullable(reverse));
   }
 
   private List<CurrencyConversionRequest> tenRequests() {

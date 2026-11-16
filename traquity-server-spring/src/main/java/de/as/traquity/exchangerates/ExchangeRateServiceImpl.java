@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -91,6 +92,17 @@ class ExchangeRateServiceImpl implements ExchangeRateService {
           return rate == null ? null : item.getValue().multiply(rate.multiplier(), mathContext);
         })
         .toList();
+  }
+
+  @Override
+  public LocalDate getEarliestConversionDate(String baseCurrency, String targetCurrency) throws NotFoundException {
+    return Stream.of(
+            exchangeRateRepository.findFirstByBaseCurrencyAndTargetCurrencyOrderByDateAsc(baseCurrency, targetCurrency),
+            exchangeRateRepository.findFirstByBaseCurrencyAndTargetCurrencyOrderByDateAsc(targetCurrency, baseCurrency))
+        .flatMap(Optional::stream)
+        .map(ExchangeRateEntity::getDate)
+        .min(LocalDate::compareTo)
+        .orElseThrow(NotFoundException::new);
   }
 
   private BigDecimal convertUsingCachedRates(CurrencyConversionRequest item, List<ExchangeRateEntity> forwardRates,
