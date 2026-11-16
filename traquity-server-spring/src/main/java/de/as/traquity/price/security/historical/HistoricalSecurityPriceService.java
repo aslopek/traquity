@@ -28,6 +28,13 @@ public interface HistoricalSecurityPriceService {
 
   HistoricalSecurityPrice getLatestPrice(long securityId, String currency) throws NotFoundException;
 
+  /**
+   * @return the oldest price stored in {@code currency} or convertible to it at the exchange rate of its own date, given in
+   *     {@code currency}
+   * @throws NotFoundException when no stored price qualifies
+   */
+  HistoricalSecurityPrice getOldestPrice(long securityId, String currency) throws NotFoundException;
+
   Map<Long, HistoricalSecurityPrice> getLatestPrices(Set<Long> securityIds, String currency);
 
   void splitAdjustment(Long securityId, BigDecimal multiplier, LocalDate exDate);

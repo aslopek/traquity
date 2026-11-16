@@ -566,6 +566,8 @@ components:
         - latestPrice
         - currency
         - latestPriceDate
+        - oldestPrice
+        - oldestPriceDate
       properties:
         highTrailingTwelveMonths:
           type: number
@@ -586,6 +588,15 @@ components:
           format: date
           nullable: false
           example: 2023-12-22
+        oldestPrice:
+          type: number
+          nullable: false
+          minimum: 0
+        oldestPriceDate:
+          type: string
+          format: date
+          nullable: false
+          example: 2023-12-01
 
     SecurityLinks:
       type: object
