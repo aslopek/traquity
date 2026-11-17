@@ -111,8 +111,6 @@ Angular + NgRx frontend, packaged as the Electron desktop app. Root `LLM.md` cov
 - `type` over `interface`. `interface` if and only if a class `implements` it.
 - **Barrel files are forbidden.** Never add an `index.ts` re-export. Generated code is exempt.
 - Doc comments obey dependency inversion (root `LLM.md`) — document the unit's own contract, never its callers.
-- JSDoc, if present, states every parameter via `@param` and the return via `@returns` — never folded into prose. Not every
-  function needs JSDoc.
 - **Input from outside the program is defined exactly once, as a zod schema, with its static type inferred from that schema** —
   the renderer's half of the boundary rule `electron/LLM.md` states in full. Applies to anything the user hands the app to
   parse (e.g. imported config files). Not to API responses — a generated client already types those. Everything the app

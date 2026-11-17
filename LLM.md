@@ -69,6 +69,9 @@ Documentation (JavaDoc, JSDoc etc.) describes a class, method, function, interfa
 Public methods and functions are to be documented. Others receive documentation if and only if the purpose of the unit is not
 self-explanatory.
 
+Documentation of a method or function states every parameter via `@param` and the return value via `@return` (JavaDoc) or
+`@returns` (JSDoc). Never fold them into the description.
+
 Comments must be used sparsely and only for non-obvious code or when reasoning why any of the given rules are broken.
 
 Avoid mentioning stories and acceptance criteria in docs or comments.
