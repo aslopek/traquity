@@ -154,6 +154,9 @@ context.
 - A tag is "too long" when it has more than one attribute, or one attribute plus a child, or more than one child. A tag that
   isn't too long stays on one line; otherwise: first attribute on the opening-tag line, every further attribute and every child
   on its own line, closing tag on its own line.
+- Event handlers take only the values they need, never a DOM or framework event. Read an input's text through a template reference
+  variable (`#field` and `(keyup)="emit(field.value)"`), a picked autocomplete option as `$event.option.value`. The handler stays
+  unaware of the element that triggered it, and its spec calls it with plain values.
 
 ## Styling (SCSS units)
 
