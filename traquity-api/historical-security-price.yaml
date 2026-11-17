@@ -148,7 +148,9 @@ paths:
       operationId: getHistoricalSecurityPrices
       responses:
         '200':
-          description: Successfully returned the security's historical prices, or an empty array if the security has none
+          description: >
+            Successfully returned the security's historical prices ordered by date, oldest first, or an empty array if the security
+            has none
           content:
             application/json:
               schema:
