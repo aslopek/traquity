@@ -1,0 +1,26 @@
+<mat-form-field>
+    <mat-label>Security</mat-label>
+    <input #securityInput
+           (input)="filterSecurities(securityInput.value)"
+           [disabled]="!hasSecurities()"
+           [matAutocomplete]="autocompleteSecurity"
+           [value]="securityText()"
+           matInput
+           type="text">
+    <mat-autocomplete #autocompleteSecurity="matAutocomplete"
+                      (optionSelected)="selectSecurity($event.option.value)">
+        @for (securityId of securityOptions(); track securityId) {
+        <mat-option [value]="securityId">
+            <span class="benchmark-security-select__option">
+                <security-logo [securityId]="securityId"
+                               size="small">
+                </security-logo>
+                {{ securityId | securityName }}
+            </span>
+        </mat-option>
+        }
+        @if (securityOptions().length === 0) {
+        <mat-option disabled>No matching security</mat-option>
+        }
+    </mat-autocomplete>
+</mat-form-field>
