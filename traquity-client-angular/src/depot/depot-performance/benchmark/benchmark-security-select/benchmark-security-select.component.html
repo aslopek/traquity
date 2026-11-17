@@ -8,19 +8,30 @@
            matInput
            type="text">
     <mat-autocomplete #autocompleteSecurity="matAutocomplete"
+                      [displayWith]="securityNameOf"
                       (optionSelected)="selectSecurity($event.option.value)">
-        @for (securityId of securityOptions(); track securityId) {
-        <mat-option [value]="securityId">
-            <span class="benchmark-security-select__option">
-                <security-logo [securityId]="securityId"
-                               size="small">
-                </security-logo>
-                {{ securityId | securityName }}
-            </span>
-        </mat-option>
+        @for (option of securityOptions(); track option.securityId) {
+            <mat-option [value]="option.securityId"
+                        [disabled]="!option.selectable">
+                <span class="benchmark-security-select__option">
+                    <security-logo [securityId]="option.securityId"
+                                   size="small">
+                    </security-logo>
+                    {{ option.securityId | securityName }}
+                    @if (!option.selectable) {
+                        <span class="benchmark-security-select__reason">
+                            @if (option.oldestPriceDate) {
+                                Prices start {{ option.oldestPriceDate | tqDate }}
+                            } @else {
+                                No prices
+                            }
+                        </span>
+                    }
+                </span>
+            </mat-option>
         }
         @if (securityOptions().length === 0) {
-        <mat-option disabled>No matching security</mat-option>
+            <mat-option disabled>No matching security</mat-option>
         }
     </mat-autocomplete>
 </mat-form-field>

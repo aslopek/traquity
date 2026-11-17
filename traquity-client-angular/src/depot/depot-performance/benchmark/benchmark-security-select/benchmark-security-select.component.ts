@@ -5,7 +5,10 @@ import {Store} from '@ngrx/store';
 import {SecurityLogoComponent} from '../../../../common/components/security-logo/security-logo.component';
 import {SecurityNamePipe} from '../../../../common/pipe/security-name.pipe';
 import {AppState} from '../../../../store/app.state';
-import {securityIdsMatchingName} from '../../../../store/security/security.selector';
+import {securitiesById, securityIdsMatchingName} from '../../../../store/security/security.selector';
+import {TqDatePipe} from '../../../../common/pipe/tq-date.pipe';
+import {DepotPerformanceStore, ReadableDepotPerformanceStore} from '../../store/depot-performance.store';
+import {BenchmarkSecurityOption, benchmarkSecurityOptions} from './benchmark-security-option';
 
 @Component({
   selector: 'app-benchmark-security-select',
@@ -14,6 +17,7 @@ import {securityIdsMatchingName} from '../../../../store/security/security.selec
     MatInputModule,
     SecurityLogoComponent,
     SecurityNamePipe,
+    TqDatePipe,
   ],
   providers: [SecurityNamePipe],
   templateUrl: './benchmark-security-select.component.html',
@@ -26,16 +30,24 @@ export class BenchmarkSecuritySelectComponent {
 
   private readonly store: Store<AppState> = inject(Store);
   private readonly securityNamePipe: SecurityNamePipe = inject(SecurityNamePipe);
+  private readonly depotPerformanceStore: ReadableDepotPerformanceStore = inject(DepotPerformanceStore);
 
   private securityPicked: boolean = false;
 
   protected readonly securityText: WritableSignal<string> = signal<string>('');
 
-  protected readonly securityOptions: Signal<number[]> = computed((): number[] =>
-    this.store.selectSignal(securityIdsMatchingName(this.securityText()))());
+  protected readonly securityOptions: Signal<BenchmarkSecurityOption[]> = computed((): BenchmarkSecurityOption[] =>
+    benchmarkSecurityOptions(
+      this.store.selectSignal(securityIdsMatchingName(this.securityText()))(),
+      this.store.selectSignal(securitiesById)(),
+      this.depotPerformanceStore.depotValues()[0]?.date ?? null
+    ));
 
   protected readonly hasSecurities: Signal<boolean> = computed((): boolean =>
     this.store.selectSignal(securityIdsMatchingName(''))().length > 0);
+
+  protected readonly securityNameOf: (securityId: number | null) => string = (securityId: number | null): string =>
+    securityId === null ? '' : this.securityNamePipe.transform(securityId);
 
   protected filterSecurities(text: string): void {
     this.securityText.set(text);

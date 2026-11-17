@@ -12,7 +12,9 @@ import {DepotPerformanceKpis, depotPerformanceKpis} from './computed/depot-perfo
 import {DataRanges, dataRanges} from './computed/data-ranges';
 import {setShowInvestedCapital} from './methods/set-show-invested-capital';
 import {setAddCashToAbsoluteValue} from './methods/set-add-cash-to-absolute-value';
-import {selectedDepotIds} from '../../../store/depot/depot.selector';
+import {selectedDepotCurrency, selectedDepotIds} from '../../../store/depot/depot.selector';
+import {HistoricalSecurityPrice, HistoricalSecurityPriceApi} from '../../../gen/api/historical-security-price';
+import {loadBenchmarkPrices, LoadBenchmarkPricesArgs} from './effects/load-benchmark-prices';
 import {loadTransactions, LoadTransactionsArgs} from './effects/load-transactions';
 import {TransactionApi, TransactionRead} from '../../../gen/api/depot-transaction';
 import {RxMethod} from '@ngrx/signals/rxjs-interop';
@@ -20,6 +22,7 @@ import {groupedTransaction, TransactionGroup} from './computed/grouped-transacti
 import {Benchmark, BenchmarkResult} from './benchmark/benchmark.type';
 import {setBenchmark} from './methods/set-benchmark';
 import {benchmarkResult} from './computed/benchmark-result';
+import {benchmarkPricesArgs} from './computed/benchmark-prices-args';
 
 export type DepotPerformanceComputed = {
   benchmarkResult: Signal<BenchmarkResult | [BenchmarkResult, BenchmarkResult] | null>
@@ -41,6 +44,7 @@ export type DepotPerformanceMethods = {
 export type DepotPerformanceState = {
   addCashToAbsoluteValue: boolean
   benchmark: Benchmark | null
+  benchmarkPrices: HistoricalSecurityPrice[]
   dataRange: DataRange
   showInvestedCapital: boolean
   transactions: TransactionRead[]
@@ -49,6 +53,7 @@ export type DepotPerformanceState = {
 const initialState: DepotPerformanceState = {
   addCashToAbsoluteValue: true,
   benchmark: null,
+  benchmarkPrices: [],
   dataRange: 'max',
   showInvestedCapital: true,
   transactions: []
@@ -64,7 +69,7 @@ export const DepotPerformanceStore = signalStore(
     const depotValuesSignal: Signal<RebasedDepotValue[]> = computed((): RebasedDepotValue[] => depotValuesResult().values);
     const isRebasedSignal: Signal<boolean> = computed((): boolean => depotValuesResult().isRebased);
     return {
-      benchmarkResult: benchmarkResult(signalStore, depotValuesSignal),
+      benchmarkResult: benchmarkResult(signalStore, depotValuesSignal, globalStore),
       dataRanges: dataRanges(globalStore, depotValuesSignal),
       depotValues: depotValuesSignal,
       extendedInternalRateOfReturn: extendedInternalRateOfReturn(globalStore),
@@ -92,6 +97,12 @@ export const DepotPerformanceStore = signalStore(
         depotIds: depotIds(),
         depotValues: depotValues()
       })));
+
+      const historicalSecurityPriceApi: HistoricalSecurityPriceApi = inject(HistoricalSecurityPriceApi);
+      const depotCurrency: Signal<string> = globalStore.selectSignal(selectedDepotCurrency);
+      const loadBenchmarkPricesFunction: RxMethod<LoadBenchmarkPricesArgs> =
+        loadBenchmarkPrices(signalStore, globalStore, historicalSecurityPriceApi);
+      loadBenchmarkPricesFunction(benchmarkPricesArgs(signalStore, depotCurrency));
     }
   })
 );
