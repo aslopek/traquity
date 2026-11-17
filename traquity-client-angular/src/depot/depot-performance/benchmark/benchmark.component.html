@@ -19,15 +19,8 @@
 
     <mat-button-toggle-group class="benchmark__modes"
                              [value]="mode()"
-                             (change)="mode.set($event.value)">
-        <mat-button-toggle value="fixedInterest.cashFlowBased">
-            Fixed Interest (Cashflow based)
-        </mat-button-toggle>
-        <mat-button-toggle value="fixedInterest.intervalBased">
-            Fixed Interest (Regular Investments)
-        </mat-button-toggle>
-        <mat-button-toggle value="security.cashflowBased"
-                           [disabled]="true">
+                             (change)="selectMode($event.value)">
+        <mat-button-toggle value="security.cashFlowBased">
             Security (Cashflow based)
         </mat-button-toggle>
         <mat-button-toggle value="security.intervalBased"
@@ -38,9 +31,20 @@
                            [disabled]="true">
             Security (Lucky Investor)
         </mat-button-toggle>
+        <mat-button-toggle value="fixedInterest.cashFlowBased">
+            Fixed Interest (Cashflow based)
+        </mat-button-toggle>
+        <mat-button-toggle value="fixedInterest.intervalBased">
+            Fixed Interest (Regular Investments)
+        </mat-button-toggle>
     </mat-button-toggle-group>
 
-    <app-fixed-interest-benchmark [mode]="mode()"
-                                  (benchmark)="onBenchmarkUpdate($event)">
-    </app-fixed-interest-benchmark>
+    @let fixedInterest = fixedInterestMode();
+    @if (fixedInterest) {
+        <app-fixed-interest-benchmark [mode]="fixedInterest"
+                                      (benchmark)="onBenchmarkUpdate($event)">
+        </app-fixed-interest-benchmark>
+    } @else {
+        <app-security-cashflow-benchmark (benchmark)="onBenchmarkUpdate($event)"></app-security-cashflow-benchmark>
+    }
 </section>

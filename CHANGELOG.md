@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Security (Cashflow based)** benchmark on the *Depot / Performance* tab. It draws what the depot's own money would be worth if it had
+  been invested solely into a chosen security: the **Initial Investment** buys shares on the oldest shown day, and every increase of the
+  invested capital buys more shares on the day it happens, at that day's price in the currency of the selected depots. Only securities whose
+  prices reach back to the oldest shown day can be picked.
+
 ## [1.5.2] - 2026-11-18
 
 ### Fixed

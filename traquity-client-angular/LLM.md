@@ -220,5 +220,6 @@ Further conventions:
   type is used by more than one spec.
 - Prefer the tightest true invariant over a type-only check. Write a custom asymmetric matcher when no built-in expresses it; it
   needs its own file and spec once shared across specs — it's logic, not a fixture.
-- Write expected values as expressions over the arranged fixtures, not recomputed literals — so the test still passes for the
-  right reason when a fixture's value changes, and a reader can verify the assertion from the arrange step alone.
+- Write expected values as literals in the assertion, so a reader can verify the claim without tracing it back through the
+  arrange step or a helper. Derive an expected value by mapping if it supports understanding and validating the test case.
+- Do not pick fields out of the result; assert the whole result.
