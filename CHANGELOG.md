@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed a bug that prevented the dividend view from loading when having dividends without yield on cost. This can happen for a position
   consisting entirely of free shares.
+- *Depot / Performance* no longer counts a buy as freshly invested capital when a sell, dividend or tax refund on the same day provides the
+  cash for it. This affects the invested capital, the cash position and the XIRR.
 
 ## [1.5.1] - 2026-11-14
 

@@ -5,9 +5,11 @@ import static integration.DepotIds.BUY_IN_ZERO;
 import static integration.DepotIds.FIRST_DEPOT;
 import static integration.SecurityIds.AMZN;
 import static integration.SecurityIds.GOOGL;
+import static integration.SecurityIds.HAG;
 import static integration.SecurityIds.MSFT;
 import static java.math.BigDecimal.ZERO;
 import static java.time.Month.APRIL;
+import static java.time.Month.DECEMBER;
 import static java.time.Month.JANUARY;
 import static java.time.Month.MARCH;
 import static java.time.Month.NOVEMBER;
@@ -29,6 +31,8 @@ import java.time.ZoneId;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
@@ -277,6 +281,31 @@ class GetLotsTest {
     assertThat(lot.getPerformanceAbsolute()).isEqualByComparingTo("4.18");
     assertThat(lot.getPerformanceRelative()).isCloseTo(new BigDecimal("0.00112"), ACCURACY_ONE_THOUSANDTH);
     assertThat(lot.getCagr()).isCloseTo(new BigDecimal("0.00042"), ACCURACY_ONE_THOUSANDTH);
+  }
+
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      INSERT INTO DEPOT(ID, NAME, CURRENCY, CREATED_AT, UPDATED_AT, VERSION)
+      VALUES (100, 'D1', 'EUR', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+             (101, 'D2', 'EUR', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+      INSERT INTO TRANSACTION(ID, DATE, TIME, DEPOT_ID, SECURITY_ID, TRANSACTION_TYPE, SECURITY_COUNT_ORIGINAL, SECURITY_COUNT_SPLIT_ADJUSTED, GROSS_VALUE, TAX, FEE, CREATED_AT, UPDATED_AT, VERSION)
+      VALUES  (3001, '2023-12-01', null, 100, (SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), 'BUY', '10', null, '100', null, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+              (3002, '2023-12-01', null, 100, (SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), 'SELL', '4', null, '48', null, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+              --
+              (3003, '2023-12-01', null, 101, (SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), 'SELL', '4', null, '48', null, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+              (3004, '2023-12-01', null, 101, (SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), 'BUY', '10', null, '100', null, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+      """)
+  @ParameterizedTest
+  @ValueSource(longs = {100, 101})
+  void getLots_sameDayBuyAndSellWithoutTime_sellReducesLotRegardlessOfIds(long depotId) throws Exception {
+    MvcResult mvcResult = getLots(depotId, HAG).andExpect(status().isOk()).andReturn();
+    List<LotDto> lots = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {
+    });
+
+    assertThat(lots).hasSize(1);
+    assertThat(lots.getFirst().getDate()).isEqualTo(LocalDate.of(2023, DECEMBER, 1));
+    assertThat(lots.getFirst().getCount()).isEqualByComparingTo("6");
+    assertThat(lots.getFirst().getBuyInAbsolute()).isEqualByComparingTo("60");
   }
 
   @Test

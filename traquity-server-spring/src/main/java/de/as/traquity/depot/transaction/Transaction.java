@@ -12,11 +12,8 @@ import java.time.LocalTime;
 import java.util.Set;
 import lombok.Data;
 
-/**
- * Note: this class has a natural ordering that is inconsistent with equals.
- */
 @Data
-public class Transaction implements Comparable<Transaction> {
+public class Transaction {
 
   private Long id;
   private Long version;
@@ -56,21 +53,5 @@ public class Transaction implements Comparable<Transaction> {
 
   public int getQuarter() {
     return ((date.getMonthValue() - 1) / 3) + 1;
-  }
-
-  @Override
-  public int compareTo(Transaction other) {
-    if (other == null) {
-      throw new NullPointerException();
-    }
-
-    int compareResult = date.compareTo(other.date);
-    if (compareResult == 0 && time != null && other.time != null) {
-      compareResult = time.compareTo(other.time);
-    }
-    if (compareResult == 0) {
-      compareResult = id.compareTo(other.id);
-    }
-    return compareResult;
   }
 }
