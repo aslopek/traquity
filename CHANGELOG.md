@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed a bug that prevented the dividend view from loading when having dividends without yield on cost. This can happen for a position
+  consisting entirely of free shares.
+
 ## [1.5.1] - 2026-11-14
 
 ### Fixed
