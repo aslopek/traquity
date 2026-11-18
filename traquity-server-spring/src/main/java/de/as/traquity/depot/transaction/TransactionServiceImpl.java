@@ -69,8 +69,8 @@ class TransactionServiceImpl implements TransactionService {
     if (depotIds == null || depotIds.isEmpty() || transactionTypes == null || transactionTypes.isEmpty()) {
       throw new BadRequestException();
     }
-    List<TransactionEntity> entities =
-        transactionRepository.findAllByDepotIdInAndTransactionTypeInOrderByDateAscTimeAsc(depotIds, transactionTypes);
+    List<TransactionEntity> entities = transactionRepository
+        .findAllByDepotIdInAndTransactionTypeInOrderByDateAscTimeAscTransactionTypeAscIdAsc(depotIds, transactionTypes);
     return entities.stream().map(transactionMapper::fromEntity).toList();
   }
 
@@ -81,9 +81,9 @@ class TransactionServiceImpl implements TransactionService {
         || transactionTypes == null || transactionTypes.isEmpty()) {
       throw new BadRequestException();
     }
-    List<TransactionEntity> entities =
-        transactionRepository.findAllByDepotIdInAndSecurityIdInAndTransactionTypeInOrderByDateAscTimeAsc(depotIds,
-            securityIds, transactionTypes);
+    List<TransactionEntity> entities = transactionRepository
+        .findAllByDepotIdInAndSecurityIdInAndTransactionTypeInOrderByDateAscTimeAscTransactionTypeAscIdAsc(depotIds, securityIds,
+            transactionTypes);
     return entities.stream().map(transactionMapper::fromEntity).toList();
   }
 
@@ -96,9 +96,11 @@ class TransactionServiceImpl implements TransactionService {
       throw new BadRequestException();
     }
     try (Stream<TransactionEntity> entities = securityIds == null
-        ? transactionRepository.streamAllByDepotIdInAndTransactionTypeInOrderByDateAscTimeAscIdAsc(depotIds, transactionTypes)
-        : transactionRepository.streamAllByDepotIdInAndTransactionTypeInAndSecurityIdInOrderByDateAscTimeAscIdAsc(depotIds,
-        transactionTypes, securityIds)) {
+        ? transactionRepository
+        .streamAllByDepotIdInAndTransactionTypeInOrderByDateAscTimeAscTransactionTypeAscIdAsc(depotIds, transactionTypes)
+        : transactionRepository
+        .streamAllByDepotIdInAndTransactionTypeInAndSecurityIdInOrderByDateAscTimeAscTransactionTypeAscIdAsc(depotIds,
+            transactionTypes, securityIds)) {
       entities.forEach(entity -> {
         consumer.accept(transactionMapper.fromEntity(entity));
         entityManager.detach(entity);

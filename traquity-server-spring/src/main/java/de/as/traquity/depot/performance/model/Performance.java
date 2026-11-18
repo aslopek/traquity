@@ -1,9 +1,9 @@
 package de.as.traquity.depot.performance.model;
 
+import de.as.traquity.depot.transaction.ChronologicalTransactionComparator;
 import de.as.traquity.depot.transaction.Transaction;
 import java.math.BigDecimal;
 import java.math.MathContext;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import lombok.Getter;
@@ -33,7 +33,7 @@ public class Performance implements Comparable<Performance> {
 
   public void add(Performance other, MathContext mathContext) {
     transactions.addAll(other.transactions);
-    Collections.sort(transactions);
+    transactions.sort(new ChronologicalTransactionComparator());
     absoluteValueGross = absoluteValueGross.add(other.absoluteValueGross, mathContext);
     absoluteValueNet = absoluteValueNet.add(other.absoluteValueNet, mathContext);
   }

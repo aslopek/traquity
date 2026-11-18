@@ -223,6 +223,26 @@ class GetDepotPerformanceTest {
   }
 
   @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      INSERT INTO DEPOT(ID, NAME, CURRENCY, CREATED_AT, UPDATED_AT, VERSION)
+      VALUES (100, 'D1', 'EUR', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+      INSERT INTO TRANSACTION(ID, DATE, TIME, DEPOT_ID, SECURITY_ID, TRANSACTION_TYPE, SECURITY_COUNT_ORIGINAL, SECURITY_COUNT_SPLIT_ADJUSTED, GROSS_VALUE, TAX, FEE, CREATED_AT, UPDATED_AT, VERSION)
+      VALUES  (2001, '2023-12-18', '10:00:00', 100, (SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), 'BUY', '10', null, '100', null, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+              (2002, '2023-12-19', null, 100, (SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), 'SELL', '5', null, '50', null, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+              -- buy has deliberately a higher ID than sell: As both don't have a time, breaking the sorting by ID is a thing to get wrong easily during calculation
+              (2003, '2023-12-19', null, 100, (SELECT ID FROM SECURITY WHERE NAME = 'Hensoldt'), 'BUY', '5', null, '50', null, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+      """)
+  void getDepotPerformance_sameDayBuyAndSellWithoutTime_sellFundsBuy() throws Exception {
+    MvcResult mvcResult = getDepotPerformance(Set.of(100L)).andExpect(status().isOk()).andReturn();
+    DepotPerformanceDto responseBody = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DepotPerformanceDto.class);
+
+    DepotValueDto depotValueDto = findByDate(responseBody.getValues(), LocalDate.of(2023, DECEMBER, 19));
+    assertThat(depotValueDto.getInvestedCapital()).isEqualByComparingTo("100");
+    assertThat(depotValueDto.getCashPosition()).isEqualByComparingTo(ZERO);
+  }
+
+  @Test
   void getDepotPerformance_noTransactions_ok() throws Exception {
     MvcResult mvcResult = getDepotPerformance(Set.of(EMPTY_DEPOT)).andExpect(status().isOk()).andReturn();
     DepotPerformanceDto responseBody = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DepotPerformanceDto.class);

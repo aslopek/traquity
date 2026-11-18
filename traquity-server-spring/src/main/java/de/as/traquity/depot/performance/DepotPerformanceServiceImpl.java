@@ -14,6 +14,7 @@ import de.as.traquity.common.arithmetic.XirrFunction;
 import de.as.traquity.common.error.BadRequestException;
 import de.as.traquity.common.error.NotFoundException;
 import de.as.traquity.depot.DepotService;
+import de.as.traquity.depot.transaction.CashFlowTransactionComparator;
 import de.as.traquity.depot.transaction.Transaction;
 import de.as.traquity.depot.transaction.TransactionService;
 import de.as.traquity.depot.transaction.api.model.TransactionTypeDto;
@@ -165,6 +166,7 @@ public class DepotPerformanceServiceImpl implements DepotPerformanceService {
       relevantTransactions.add(transactions.get(index));
       index++;
     }
+    relevantTransactions.sort(new CashFlowTransactionComparator());
 
     BigDecimal investedCapital = previousDay.getInvestedCapital();
     BigDecimal cashPosition = previousDay.getCashPosition();

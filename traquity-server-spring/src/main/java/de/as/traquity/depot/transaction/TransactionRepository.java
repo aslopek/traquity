@@ -19,17 +19,16 @@ interface TransactionRepository extends JpaRepository<TransactionEntity, Long> {
 
   Optional<TransactionEntity> findByIdAndDepotId(Long id, Long depotId);
 
-  List<TransactionEntity> findAllByDepotIdInAndTransactionTypeInOrderByDateAscTimeAsc(Set<Long> depotIds,
-                                                                                      Set<TransactionTypeDto> types);
+  List<TransactionEntity> findAllByDepotIdInAndTransactionTypeInOrderByDateAscTimeAscTransactionTypeAscIdAsc(
+      Set<Long> depotIds, Set<TransactionTypeDto> types);
 
-  List<TransactionEntity> findAllByDepotIdInAndSecurityIdInAndTransactionTypeInOrderByDateAscTimeAsc(Set<Long> depotIds,
-                                                                                                     Set<Long> securityIds,
-                                                                                                     Set<TransactionTypeDto> types);
+  List<TransactionEntity> findAllByDepotIdInAndSecurityIdInAndTransactionTypeInOrderByDateAscTimeAscTransactionTypeAscIdAsc(
+      Set<Long> depotIds, Set<Long> securityIds, Set<TransactionTypeDto> types);
 
-  Stream<TransactionEntity> streamAllByDepotIdInAndTransactionTypeInOrderByDateAscTimeAscIdAsc(Set<Long> depotIds,
-                                                                                               Set<TransactionTypeDto> types);
+  Stream<TransactionEntity> streamAllByDepotIdInAndTransactionTypeInOrderByDateAscTimeAscTransactionTypeAscIdAsc(
+      Set<Long> depotIds, Set<TransactionTypeDto> types);
 
-  Stream<TransactionEntity> streamAllByDepotIdInAndTransactionTypeInAndSecurityIdInOrderByDateAscTimeAscIdAsc(
+  Stream<TransactionEntity> streamAllByDepotIdInAndTransactionTypeInAndSecurityIdInOrderByDateAscTimeAscTransactionTypeAscIdAsc(
       Set<Long> depotIds, Set<TransactionTypeDto> types, Set<Long> securityIds);
 
   List<TransactionEntity> findAllByDepotIdAndTransactionTypeAndDate(Long depotId, TransactionTypeDto type,

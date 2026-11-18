@@ -1016,6 +1016,18 @@ TraQuity does not model money leaving your depot. When you sell a position or re
 the depot**, available to fund your next buy, or sitting there earning nothing until you reinvest it. If a tax payment (for example a German
 "Vorabpauschale") exceeds the available cash, the shortfall is treated as freshly invested capital, exactly like a deposit.
 
+Money coming in is booked before money going out, but only within a single day. The day always comes first, so money from a later day
+never pays for something on an earlier day. On a single day, the cash from a dividend, a tax refund or a sale is available to fund the
+buys and tax payments of that day, no matter in which order you entered them. Within a day, the order is:
+
+1. Dividends.
+2. Taxes, the lowest amount first, so that refunds come before payments.
+3. Sells without a time.
+4. Buys without a time.
+5. Buys and sells with a time, from the earliest to the latest.
+
+Within each step, transactions that tie are booked in the order you entered them.
+
 One consequence is worth knowing: **"Invested Capital" only ever grows.** It represents everything you have ever put into the depot, in
 stock or in cash. It does not shrink when you sell something, because selling does not take money out of the depot.
 
