@@ -375,6 +375,43 @@ class DividendTest {
     assertThat(dividendYield.getYieldOnCostNet()).isNull();
   }
 
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      INSERT INTO DEPOT(ID, NAME, CURRENCY, CREATED_AT, UPDATED_AT, VERSION)
+      VALUES (100, 'D1', 'EUR', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+             (101, 'D2', 'EUR', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+      INSERT INTO TRANSACTION(ID, DATE, TIME, DEPOT_ID, SECURITY_ID, TRANSACTION_TYPE, SECURITY_COUNT_ORIGINAL, SECURITY_COUNT_SPLIT_ADJUSTED, GROSS_VALUE, TAX, FEE, CREATED_AT, UPDATED_AT, VERSION)
+      VALUES  (1001, '2024-01-02', null, 100, (SELECT ID FROM SECURITY WHERE NAME = 'Diageo'), 'BUY', '10', null, '100', null, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+              (1002, '2024-02-15', null, 100, (SELECT ID FROM SECURITY WHERE NAME = 'Diageo'), 'DIVIDEND', '10', null, '2', null, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+              (1003, '2024-03-15', null, 100, (SELECT ID FROM SECURITY WHERE NAME = 'Diageo'), 'DIVIDEND', '10', null, '2', null, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+              (1004, '2024-04-15', null, 100, (SELECT ID FROM SECURITY WHERE NAME = 'Diageo'), 'DIVIDEND', '10', null, '2', null, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+              --
+              (1005, '2024-01-02', null, 101, (SELECT ID FROM SECURITY WHERE NAME = 'Realty Income'), 'BUY', '1', null, '0', null, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+              (1006, '2024-02-15', null, 101, (SELECT ID FROM SECURITY WHERE NAME = 'Realty Income'), 'DIVIDEND', '1', null, '1', null, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+              (1007, '2024-03-15', null, 101, (SELECT ID FROM SECURITY WHERE NAME = 'Realty Income'), 'DIVIDEND', '1', null, '1', null, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+              (1008, '2024-04-15', null, 101, (SELECT ID FROM SECURITY WHERE NAME = 'Realty Income'), 'DIVIDEND', '1', null, '1', null, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
+      """)
+  void getDividends_positionBuyInZeroAndPositionBuyInPositive_bothYieldsReturned() throws Exception {
+    MvcResult mvcResult = getDividends("100,101", true).andExpect(status().isOk()).andReturn();
+    DividendsDto dividends = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DividendsDto.class);
+
+    assertThat(dividends.getDividendYield()).extracting(DividendYieldDto::getDisplayName)
+        .containsExactlyInAnyOrder("Diageo", "Realty Income");
+
+    DividendYieldDto positiveBuyIn = yieldOf(dividends, "Diageo");
+    assertThat(positiveBuyIn.getEstimatedPaymentGross()).isEqualByComparingTo("24"); // 12 * 2
+    assertThat(positiveBuyIn.getYieldOnCostGross()).isEqualByComparingTo("0.24"); // 24 / 100
+
+    DividendYieldDto zeroBuyIn = yieldOf(dividends, "Realty Income");
+    assertThat(zeroBuyIn.getEstimatedPaymentGross()).isEqualByComparingTo("12"); // 12 * 1
+    assertThat(zeroBuyIn.getYieldOnCostGross()).isNull();
+  }
+
+  private DividendYieldDto yieldOf(DividendsDto dividends, String displayName) {
+    return dividends.getDividendYield().stream().filter(e -> displayName.equals(e.getDisplayName())).findFirst().orElseThrow();
+  }
+
   private void getDividendsForDepot1_noSpecialDividend(MvcResult mvcResult) throws Exception {
     DividendsDto dividends = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DividendsDto.class);
     List<Integer> years = dividends.getByYear().stream().map(DividendsByYearDto::getYear).toList();

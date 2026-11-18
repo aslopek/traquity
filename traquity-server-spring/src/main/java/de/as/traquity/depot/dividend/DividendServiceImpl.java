@@ -24,6 +24,7 @@ import java.math.MathContext;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -357,7 +358,7 @@ class DividendServiceImpl implements DividendService {
     }
 
     List<DividendYieldDto> result = new ArrayList<>(dividendYields.values());
-    result.sort((a, b) -> b.getYieldOnCostGross().compareTo(a.getYieldOnCostGross()));
+    result.sort(Comparator.comparing(DividendYieldDto::getYieldOnCostGross, Comparator.nullsLast(Comparator.reverseOrder())));
     return result;
   }
 
