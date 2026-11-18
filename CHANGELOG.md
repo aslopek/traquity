@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   consisting entirely of free shares.
 - *Depot / Performance* no longer counts a buy as freshly invested capital when a sell, dividend or tax refund on the same day provides the
   cash for it. This affects the invested capital, the cash position and the XIRR.
+- *Depot / Positions*, a position's lots and its performance breakdown no longer show shares that were sold on the same day when the sell
+  was entered before the buy and both have no time.
+- Saving a stock split no longer leaves the split saved with only some of the transactions or historical prices adjusted when an error
+  occurs. Either everything is adjusted, or nothing is saved.
 
 ## [1.5.1] - 2026-11-14
 
