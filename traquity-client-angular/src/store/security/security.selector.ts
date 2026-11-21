@@ -13,11 +13,15 @@ import {getHistoricalSecurityPriceConfigsSelector} from './selectors/get-histori
 import {DataSourceWithId} from '../../settings/data-source/data-source.type';
 import {getHistoricalSecurityPriceDataSourcesSelector} from './selectors/get-historical-security-price-data-sources.selector';
 import {getHistoricalSecurityPriceDataSourceSelector} from './selectors/get-historical-security-price-data-source.selector';
+import {getRequestCurrencySelector} from './selectors/get-request-currency.selector';
 
 export const securityStore = 'security';
 
 const securitySelector: MemoizedSelector<AppState, SecurityState>
   = createFeatureSelector<SecurityState>(securityStore);
+
+export const requestCurrency: MemoizedSelector<AppState, string | null>
+  = createSelector(securitySelector, getRequestCurrencySelector);
 
 export const securitiesById: MemoizedSelector<AppState, SecuritiesById>
   = createSelector(securitySelector, getSecuritiesByIdSelector);

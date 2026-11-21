@@ -1,12 +1,14 @@
 import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 import {Router} from '@angular/router';
 import {signalState, SignalState} from '@ngrx/signals';
+import {Store} from '@ngrx/store';
 import {Observable} from 'rxjs';
 import {RunHelpers, TestScheduler} from 'rxjs/testing';
 import {HotObservable} from 'rxjs/internal/testing/HotObservable';
 import {WritableSignalStore} from '../../../../common/types/signal-store.type';
 import {StartupBridgeService} from '../../../../bridge/startup-bridge.service';
 import {BackendStartOutcome} from '../../../../bridge/startup-bridge.type';
+import {AppState} from '../../../../store/app.state';
 import {applyStartOutcome} from '../methods/apply-start-outcome';
 import {enterBooting} from '../methods/enter-booting';
 import {initialState, StartupComputed, StartupStoreState} from '../startup.store';
@@ -23,7 +25,8 @@ type StartBackend = (password: string) => Observable<BackendStartOutcome>;
 type EnterBooting = (signalStore: WritableSignalStore<StartupStoreState, StartupComputed>,
                      router: Pick<Router, 'navigate'>) => void;
 type ApplyStartOutcome = (signalStore: WritableSignalStore<StartupStoreState, StartupComputed>,
-                          router: Pick<Router, 'navigate'>, outcome: BackendStartOutcome) => void;
+                          router: Pick<Router, 'navigate'>, globalStore: Pick<Store<AppState>, 'dispatch'>,
+                          outcome: BackendStartOutcome) => void;
 
 describe('startBackendPipe', (): void => {
   let scheduler: TestScheduler;
@@ -31,6 +34,7 @@ describe('startBackendPipe', (): void => {
   let startBackendMock: jest.Mock<StartBackend>;
   let bridge: Pick<StartupBridgeService, 'startBackend'>;
   let router: Pick<Router, 'navigate'>;
+  let globalStore: Store<AppState>;
   let enterBootingMock: jest.Mock<EnterBooting>;
   let applyStartOutcomeMock: jest.Mock<ApplyStartOutcome>;
   let inputMarbles: string;
@@ -47,6 +51,9 @@ describe('startBackendPipe', (): void => {
     startBackendMock = jest.fn<StartBackend>();
     bridge = {startBackend: startBackendMock};
     router = {navigate: jest.fn<Router['navigate']>()};
+    globalStore = {
+      dispatch: jest.fn() as unknown as Store<AppState>['dispatch']
+    } as Store<AppState>;
 
     enterBootingMock = enterBooting as jest.Mock<EnterBooting>;
     enterBootingMock.mockReset();
@@ -71,7 +78,7 @@ describe('startBackendPipe', (): void => {
     scheduler.run(({cold, hot}: RunHelpers): void => {
       startBackendMock.mockReturnValue(cold(responseMarbles, responseValues));
       const source$: HotObservable<string> = hot<string>(inputMarbles, inputValues);
-      startBackendPipe(store, bridge, router)(source$).subscribe();
+      startBackendPipe(store, bridge, router, globalStore)(source$).subscribe();
     });
   }
 
@@ -88,7 +95,7 @@ describe('startBackendPipe', (): void => {
     run();
 
     expect(applyStartOutcomeMock).toHaveBeenCalledTimes(1);
-    expect(applyStartOutcomeMock).toHaveBeenCalledWith(store, router, {
+    expect(applyStartOutcomeMock).toHaveBeenCalledWith(store, router, globalStore, {
       reachable: true,
       startedFrom: 'scrypt'
     });
@@ -105,7 +112,7 @@ describe('startBackendPipe', (): void => {
     run();
 
     expect(applyStartOutcomeMock).toHaveBeenCalledTimes(1);
-    expect(applyStartOutcomeMock).toHaveBeenCalledWith(store, router, {
+    expect(applyStartOutcomeMock).toHaveBeenCalledWith(store, router, globalStore, {
       reachable: false,
       startedFrom: 'scrypt'
     });
@@ -143,7 +150,7 @@ describe('startBackendPipe', (): void => {
     expect(startBackendMock).toHaveBeenCalledTimes(1);
     expect(startBackendMock).toHaveBeenCalledWith(inputValues['a']);
     expect(applyStartOutcomeMock).toHaveBeenCalledTimes(1);
-    expect(applyStartOutcomeMock).toHaveBeenCalledWith(store, router, responseValues['v']);
+    expect(applyStartOutcomeMock).toHaveBeenCalledWith(store, router, globalStore, responseValues['v']);
   });
 
   it('starts again once the previous start has finished', (): void => {
@@ -156,8 +163,8 @@ describe('startBackendPipe', (): void => {
       [inputValues['b']]
     ]);
     expect(applyStartOutcomeMock.mock.calls).toEqual([
-      [store, router, responseValues['v']],
-      [store, router, responseValues['v']]
+      [store, router, globalStore, responseValues['v']],
+      [store, router, globalStore, responseValues['v']]
     ]);
   });
 });

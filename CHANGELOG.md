@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   invested capital buys more shares on the day it happens, at that day's price in the currency of the selected depots. Only securities whose
   prices reach back to the oldest shown day can be picked.
 
+### Changed
+
+- *Securities* shows prices in the currency of the selected depots, or in EUR while no depot is selected. *Price TTM* shows the outdated
+  marker when no price of the last 12 months exists.
+- A security's price chart starts in the currency of the selected depots and always shows a currency: *No Currency Selected* is no longer
+  offered.
+
 ## [1.5.2] - 2026-11-18
 
 ### Fixed

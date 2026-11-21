@@ -1,3 +1,8 @@
+:host {
+  display: flex;
+  flex-direction: column;
+}
+
 .benchmark-security-select__option {
   display: flex;
   align-items: center;
@@ -8,4 +13,5 @@
   margin-left: auto;
   color: var(--tq-text-muted);
   font-size: var(--tq-font-size-sm);
+  white-space: nowrap;
 }

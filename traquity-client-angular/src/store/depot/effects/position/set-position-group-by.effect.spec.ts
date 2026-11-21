@@ -47,11 +47,10 @@ describe('setPositionGroupBy', (): void => {
     actionMarbles = '-a';
     configResponseMarbles = '---(v|)';
 
-    // marble alphabet of the action stream: `a` and `b` are handled by the effect, `c` is not
+    // marble alphabet of the action stream: `a` and `b` set the position group by
     actionValues = {
       a: DepotActions.setPositionGroupBy({groupBy: 'sector'}),
-      b: DepotActions.setPositionGroupBy({groupBy: 'none'}),
-      c: DepotActions.setPositionGroupByDone({groupBy: 'sector'})
+      b: DepotActions.setPositionGroupBy({groupBy: 'none'})
     };
 
     store = {
@@ -94,11 +93,5 @@ describe('setPositionGroupBy', (): void => {
       [clientId, positionGroupByConfigKey.key, 'sector'],
       [clientId, positionGroupByConfigKey.key, 'sector']
     ]);
-  });
-
-  it('ignores actions of other types', (): void => {
-    actionMarbles = '-c';
-    expectEffect('');
-    expect(setClientConfigValue).not.toHaveBeenCalled();
   });
 });

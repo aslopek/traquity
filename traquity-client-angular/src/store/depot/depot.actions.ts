@@ -35,7 +35,7 @@ export type LoadDividendsPositionsSuccessActionArgs = {
   income?: Performance[] | null
 };
 
-export type SetDepotsSliceActionArgs = Omit<DepotState, 'selectedDepotCurrency'>;
+export type SetDepotsSliceActionArgs = Omit<DepotState, 'initialized' | 'selectedDepotCurrency'>;
 
 export type ToggleDepotSelectionActionArgs = {
   depotId: number
@@ -81,6 +81,10 @@ export type LoadPerformanceDoneActionArgs = {
   depotPerformance: DepotPerformance | null
 };
 
+export type SelectedDepotCurrencyChangedActionArgs = {
+  currency: string
+};
+
 export const DepotActions = createActionGroup({
   source: 'Depot',
   events: {
@@ -120,7 +124,9 @@ export const DepotActions = createActionGroup({
     // an explicit request to reload the depots and everything derived from them, after an operation that can have
     // changed them. Another global-store slice must never dispatch it, per dependency inversion principle: it
     // dispatches its own Done/Success action, which this slice reacts to in a `<verb>-<noun>-on.effect.ts`.
-    'Reload Depots': emptyProps()
+    'Reload Depots': emptyProps(),
+    // announces the currency of the selected depots once the depots are set, and again whenever it changes
+    'Selected Depot Currency Changed': props<SelectedDepotCurrencyChangedActionArgs>()
   }
 });
 
