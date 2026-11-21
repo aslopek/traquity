@@ -30,17 +30,20 @@ Angular + NgRx frontend, packaged as the Electron desktop app. Root `LLM.md` cov
   direct reach into another service's global. A new `contextBridge` global gets its own service and type file.
   - Every one of these services reaches its global through the shared `BRIDGE_HOST` injection token, which resolves
     `globalThis` and never `window` directly — that is what lets the node-environment jest suite inject a stub.
-- **Startup screens and the app shell**: `AppComponent` is a router outlet plus the trigger that starts the backend immediately
-  for a passwordless database. Shell chrome (header, side menu, splash, initial global-store loads) lives in `ShellComponent`,
-  behind `startupPhaseGuard`.
+- **Startup screens and the app shell**: `AppComponent` is a router outlet plus the trigger that starts the backend immediately for a
+  passwordless database, or waits for the separately started one in browser dev mode. Shell chrome (header, side menu, splash) lives in
+  `ShellComponent`, behind `startupPhaseGuard`.
+  - The shell shows header and pages only once the depot slice is initialized, so no page sends a request before the currency of the
+    selected depots is known. It never starts or orders loads.
   - Unlock, configure and an insecure-mode screen are sibling top-level routes with no chrome, shown instead of the shell while
     the startup mode calls for one.
   - The configure screen is a frame of independently titled sections (not a wizard) around a screen-scoped store. The frame owns
     the notices and the two finish buttons; a section contributes its own controls/validity/config slice. Adding a section means
     adding a component, a slice, and one term in the frame's aggregate validity — never touching the frame itself.
-  - A dedicated startup store (not a global-store slice) holds startup mode/phase/database info and drives the backend-start
-    call; an app initializer resolves it before the router's first navigation so routing can decide synchronously. In browser
-    dev mode (no bridge), none of this activates — the shell is admitted immediately.
+  - A dedicated startup store (not a global-store slice) holds startup mode/phase/database info, drives the backend-start call and
+    dispatches `AppActions.initialize` once the backend is reachable; an app initializer resolves it before the router's first navigation so
+    routing can decide synchronously. In browser dev mode (no bridge), the shell is admitted immediately and the startup store probes the
+    separately started backend until it answers.
   - The Settings page carries a bridge-gated relaunch action, shown only while the bridge is available.
 - **Two kinds of state, kept strictly separate**:
   - Global NgRx store (`src/store/`): only genuinely shared data (loaded entities, cross-screen config). Never screen-local
@@ -93,6 +96,13 @@ Angular + NgRx frontend, packaged as the Electron desktop app. Root `LLM.md` cov
   selector may freely compose another slice's public selectors (a pure, memoized read creates none of the ordering coupling the
   write-side rule prevents) — but only along the direction the domain data already points, and the composing selector lives in
   the slice doing the reaching, so no pair of slices imports each other both ways.
+- **A slice whose requests need another slice's value keeps its own copy of it.** An effect of the requesting slice copies the value from
+  the owner's outcome action into the requesting slice's state, and its request effects read it from there, holding requests that arrive
+  before the first copy. The value never goes into the requesting slice's action payloads: every dispatcher would then have to read the
+  owning slice. `architecture/ui-state-management.md`, ADR-001, has the reasoning.
+- **Every slice loads its initial data in its own effect on `AppActions.initialize`.** A load that needs another slice's data waits for that
+  slice's outcome action in its own effect, holding what arrives before it — never dropping it, never relying on another slice to answer
+  first.
 
 ## Signal Stores (component/feature-local state)
 
@@ -195,6 +205,9 @@ timing and cancellation assertable (e.g. that a `switchMap` drops an in-flight r
 - Feed the effect a hot, non-completing action stream, so the expectation sees only the effect's own emissions.
 - Declare the input stream's marble alphabet once in `beforeEach`. Keep expected-value marbles inline at the call site, even
   when repetitive — a reader must never scroll up to learn what a test claims.
+- The helper running the effect also collects its emissions (one `tap` inside `expectObservable`) and returns them. Every test asserts
+  that array as a literal `toEqual([...])`, `[]` for none, next to the marble: the marble proves timing, the array shows count and
+  content at a glance.
 - Space response marbles away from action marbles so no two events share a frame — same-frame ordering is a coin flip.
 - After writing a marble test, break its expectation once and confirm it fails for the right reason.
 

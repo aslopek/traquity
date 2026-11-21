@@ -1,6 +1,7 @@
 import {beforeEach, describe, expect, it} from '@jest/globals';
 import {setHistoricalSecurityPriceDataSource} from './add-historical-security-price-data-source.reducer';
 import {SecurityState} from '../security.state';
+import {initialState} from '../security.reducer';
 import {SetHistoricalSecurityPriceDataSourceDoneActionArgs} from '../security.actions';
 import {DataSourceWithId} from '../../../settings/data-source/data-source.type';
 import {HistoricalSecurityPriceDataSourceRead} from '../../../gen/api/historical-security-price';
@@ -23,8 +24,7 @@ describe('setHistoricalSecurityPriceDataSource', (): void => {
       name: 'New Source'
     });
     state = {
-      securities: {},
-      historicalSecurityPriceConfigs: {},
+      ...initialState,
       historicalSecurityPriceDataSources: [existingDataSource]
     };
     args = {

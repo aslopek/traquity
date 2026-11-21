@@ -1,6 +1,7 @@
 import {DepotState} from '../depot.state';
 import {DeleteDepotSuccessActionArgs} from '../depot.actions';
 import {DepotRead} from '../../../gen/api/depot';
+import {defaultCurrency} from '../default-currency';
 
 export function deleteDepotReducer(state: Readonly<DepotState>, actionArgs: DeleteDepotSuccessActionArgs): DepotState {
   const {depotId} = actionArgs;
@@ -16,6 +17,7 @@ export function deleteDepotReducer(state: Readonly<DepotState>, actionArgs: Dele
     return {
       ...state,
       depots: [],
+      selectedDepotCurrency: defaultCurrency,
       selectedDepotIds: []
     }
   }

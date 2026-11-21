@@ -5,8 +5,6 @@ import {AppState} from '../../store/app.state';
 import {Store} from '@ngrx/store';
 import {DestroyRef, inject} from '@angular/core';
 import {loadPage} from './methods/load-page';
-import {initialize} from './methods/initialize';
-import {search} from './methods/search';
 import {hoverSecurity} from './methods/hover-security';
 import {Actions, ofType} from '@ngrx/effects';
 import {SecurityActions} from '../../store/security/security.actions';
@@ -53,9 +51,12 @@ export const securityPageStore = signalStore(
                securityApi: SecurityApi = inject(SecurityApi)): Methods => {
     return {
       hoverSecurity: (securityId: number | null) => hoverSecurity(signalStore, securityId),
-      initialize: (): void => initialize(signalStore, globalStore, securityApi),
-      loadPage: (pageIndex: number) => loadPage(signalStore, globalStore, securityApi, pageIndex),
-      search: (searchString?: string) => search(signalStore, globalStore, securityApi, searchString)
+      initialize: (): void => {
+        hoverSecurity(signalStore, null);
+        loadPage(signalStore, globalStore, securityApi, 0, emptySearchParams);
+      },
+      loadPage: (pageIndex: number) => loadPage(signalStore, globalStore, securityApi, pageIndex, signalStore.searchParams()),
+      search: (searchString?: string) => loadPage(signalStore, globalStore, securityApi, 0, {search: searchString ?? null})
     };
   }), withHooks({
     onInit(signalStore: WritableSignalStore<SecurityPageState, Computed, Methods>): void {
@@ -66,7 +67,8 @@ export const securityPageStore = signalStore(
           SecurityActions.updateSecuritySuccess,
           SecurityActions.createSecuritySuccess,
           SecurityActions.updateSecurityLogoDone,
-          SecurityActions.updateHistoricalSecurityPriceConfigDone
+          SecurityActions.updateHistoricalSecurityPriceConfigDone,
+          SecurityActions.setRequestCurrency
         ),
         takeUntilDestroyed(destroyRef)
       ).subscribe((): void => {

@@ -19,6 +19,9 @@ export class CurrencySelectComponent implements OnInit {
 
   readonly currency: InputSignal<string | undefined> = input<string>();
 
+  /** Whether the selection offers a choice without a currency. */
+  readonly allowNone: InputSignal<boolean> = input<boolean>(true);
+
   @Output() onCurrencySelect: EventEmitter<string | undefined> =
     new EventEmitter<string | undefined>();
   protected currencies: string[] = [];

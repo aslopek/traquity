@@ -7,8 +7,10 @@ import {overwriteSecurities} from './reducers/overwrite-securities.reducer';
 import {overwriteHistoricalSecurityPriceDataSources} from './reducers/overwrite-historical-security-price-data-sources.reducer';
 import {setHistoricalSecurityPriceDataSource} from './reducers/add-historical-security-price-data-source.reducer';
 import {deleteHistoricalSecurityPriceDataSource} from './reducers/delete-historical-security-price-data-source.reducer';
+import {setRequestCurrency} from './reducers/set-request-currency.reducer';
 
-const initialState: SecurityState = {
+export const initialState: SecurityState = {
+  requestCurrency: null,
   securities: {},
   historicalSecurityPriceConfigs: {},
   historicalSecurityPriceDataSources: []
@@ -16,6 +18,8 @@ const initialState: SecurityState = {
 
 export const securityReducer = createReducer(
   initialState,
+
+  on(SecurityActions.setRequestCurrency, setRequestCurrency),
 
   on(SecurityActions.setSecurities, (state, actionArgs) => overwriteSecurities(state, actionArgs.securities)),
 
