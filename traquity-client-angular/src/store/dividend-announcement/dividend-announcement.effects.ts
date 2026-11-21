@@ -1,11 +1,7 @@
 import {inject, Injectable} from '@angular/core';
 import {Actions, createEffect, ofType} from '@ngrx/effects';
 import {catchError, concatMap, delay, EMPTY, map, of} from 'rxjs';
-import {
-  DividendAnnouncementApi,
-  DividendAnnouncementDataSourceApi,
-  DividendAnnouncementRead
-} from '../../gen/api/notification/dividend-announcement';
+import {DividendAnnouncementApi, DividendAnnouncementDataSourceApi} from '../../gen/api/notification/dividend-announcement';
 import {DividendAnnouncementActions} from './dividend-announcement.actions';
 import {Store} from '@ngrx/store';
 import {AppState} from '../app.state';
@@ -18,6 +14,7 @@ import {
   deleteDividendAnnouncementDataSource,
   DeleteDividendAnnouncementDataSourceEffectArgs
 } from './effects/delete-dividend-announcement-data-source.effect';
+import {loadDividendAnnouncements, LoadDividendAnnouncementsEffectArgs} from './effects/load-dividend-announcements.effect';
 
 /** Interval between two dividend announcement requests in milliseconds. */
 const dividendAnnouncementReloadInterval: number = 10000;
@@ -31,17 +28,10 @@ export class DividendAnnouncementEffects {
   private readonly dividendAnnouncementDataSourceApi: DividendAnnouncementDataSourceApi
     = inject(DividendAnnouncementDataSourceApi);
 
-  readonly loadDividendAnnouncements = createEffect(() =>
-    this.actions$.pipe(
-      ofType(DividendAnnouncementActions.loadDividendAnnouncements),
-      concatMap(() =>
-        this.dividendAnnouncementApi.getDividendAnnouncements().pipe(
-          map((dividendAnnouncements: DividendAnnouncementRead[]) =>
-            DividendAnnouncementActions.loadDividendAnnouncementsSuccess({dividendAnnouncements})),
-          catchError(() => of(DividendAnnouncementActions.loadDividendAnnouncementsError())))
-      )
-    )
-  );
+  readonly loadDividendAnnouncements = createEffect(() => loadDividendAnnouncements({
+    actions$: this.actions$,
+    api: this.dividendAnnouncementApi
+  } satisfies LoadDividendAnnouncementsEffectArgs));
 
   readonly reloadDividendAnnouncements = createEffect(() =>
     this.actions$.pipe(

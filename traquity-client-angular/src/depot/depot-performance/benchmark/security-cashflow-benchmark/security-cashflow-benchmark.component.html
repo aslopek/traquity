@@ -1,7 +1,5 @@
 <div class="benchmark-form">
     <div class="tq-form-grid">
-        <app-benchmark-security-select (securityId)="pickSecurity($event)"></app-benchmark-security-select>
-
         <mat-form-field>
             <mat-label>Initial Investment</mat-label>
             <input matInput
@@ -12,5 +10,7 @@
                 <mat-error>{{ error.message }}</mat-error>
             }
         </mat-form-field>
+
+        <app-benchmark-security-select (securityId)="pickSecurity($event)"></app-benchmark-security-select>
     </div>
 </div>

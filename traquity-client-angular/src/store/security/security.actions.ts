@@ -19,6 +19,10 @@ export type CreateSecurityActionArgs = {
   dividendAnnouncementConfig?: DividendAnnouncementConfigCreate
 };
 
+export type SetRequestCurrencyActionArgs = {
+  currency: string
+};
+
 export type LoadSecurityActionArgs = {
   securityId: number
 };
@@ -76,6 +80,8 @@ export type DeleteHistoricalSecurityPriceDataSourceDoneActionArgs = {
 export const SecurityActions = createActionGroup({
   source: 'Security',
   events: {
+    'Set Request Currency': props<SetRequestCurrencyActionArgs>(),
+
     'Set Securities': props<SetSecuritiesActionArgs>(),
 
     // paginates through all securities and dispatches 'Set Securities' for each page

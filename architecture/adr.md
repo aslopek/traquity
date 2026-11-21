@@ -15,3 +15,5 @@ Architectural principles, patterns and other coding rules can be found in any of
 [Licensing](licensing.md)
 
 [Security](security.md)
+
+[UI State Management](ui-state-management.md)

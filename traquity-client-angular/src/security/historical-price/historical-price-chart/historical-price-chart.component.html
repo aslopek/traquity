@@ -65,22 +65,26 @@
          class="price-chart__canvas"
          echarts>
     </div>
-
-    <div class="price-chart__options">
-        <app-currency-select (onCurrencySelect)="changeCurrency($event)"
-                             [currency]="selectedCurrency()">
-        </app-currency-select>
-
-        <mat-slide-toggle [checked]="percent()"
-                          (change)="usePercent($event.checked)">
-            Show as Percent Change
-        </mat-slide-toggle>
-    </div>
 } @else {
     <div class="tq-empty">
         <mat-icon class="tq-empty__icon"
                   fontIcon="show_chart"></mat-icon>
         <span class="tq-empty__title">No price data available</span>
-        <span class="tq-empty__hint">Configure a historical price data source for this security.</span>
+        <span class="tq-empty__hint">Configure a historical price data source for this security, or pick another currency.</span>
     </div>
 }
+
+<!-- shown in the empty state too: a currency the prices cannot be converted into leads there, so another one has to stay pickable -->
+<div class="price-chart__options">
+    <app-currency-select (onCurrencySelect)="changeCurrency($event)"
+                         [allowNone]="false"
+                         [currency]="selectedCurrency()">
+    </app-currency-select>
+
+    @if (dataAvailable()) {
+        <mat-slide-toggle [checked]="percent()"
+                          (change)="usePercent($event.checked)">
+            Show as Percent Change
+        </mat-slide-toggle>
+    }
+</div>

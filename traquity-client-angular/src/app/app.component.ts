@@ -15,6 +15,9 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     if (this.startupStore.mode() === 'boot') {
       this.startupStore.startBackend('');
+    } else if (this.startupStore.mode() == null) {
+      // without a bridge the backend is started outside the app and needs to start the polling itself
+      this.startupStore.waitForBackend();
     }
   }
 }

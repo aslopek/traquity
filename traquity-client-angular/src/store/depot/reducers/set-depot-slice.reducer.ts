@@ -1,6 +1,7 @@
 import {DepotState} from '../depot.state';
 import {SetDepotsSliceActionArgs} from '../depot.actions';
 import {DepotRead} from '../../../gen/api/depot';
+import {defaultCurrency} from '../default-currency';
 
 export function setDepotSliceReducer(state: Readonly<DepotState>, actionArgs: SetDepotsSliceActionArgs): DepotState {
   let {
@@ -26,7 +27,8 @@ export function setDepotSliceReducer(state: Readonly<DepotState>, actionArgs: Se
     selectedDepotIds = restrictToSingleCurrency(depots, selectedDepotIds);
     return {
       ...actionArgs,
-      selectedDepotCurrency: getSelectedDepotCurrency(depots, selectedDepotIds, state.selectedDepotCurrency),
+      initialized: true,
+      selectedDepotCurrency: getSelectedDepotCurrency(depots, selectedDepotIds),
       selectedDepotIds
     };
   }
@@ -34,20 +36,22 @@ export function setDepotSliceReducer(state: Readonly<DepotState>, actionArgs: Se
   if (depots.length === 0) {
     return {
       ...actionArgs,
-      selectedDepotCurrency: state.selectedDepotCurrency,
+      initialized: true,
+      selectedDepotCurrency: defaultCurrency,
       selectedDepotIds: []
     };
   }
 
   return {
     ...actionArgs,
+    initialized: true,
     selectedDepotCurrency: depots[0].currency,
     selectedDepotIds: [depots[0].id]
   };
 }
 
-function getSelectedDepotCurrency(depots: DepotRead[], selectedDepotIds: number[], fallback: string): string {
-  return depots.find(depot => selectedDepotIds.includes(depot.id))?.currency ?? fallback;
+function getSelectedDepotCurrency(depots: DepotRead[], selectedDepotIds: number[]): string {
+  return depots.find(depot => selectedDepotIds.includes(depot.id))?.currency ?? defaultCurrency;
 }
 
 function restrictToSingleCurrency(depots: DepotRead[], selectedDepotIds: number[]): number[] {

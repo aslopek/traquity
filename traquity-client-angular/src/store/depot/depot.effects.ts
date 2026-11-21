@@ -29,6 +29,7 @@ import {setPositionGroupBy, SetPositionGroupByEffectArgs} from './effects/positi
 import {DepotPerformanceApi, DepotPerformanceIncomeApi} from '../../gen/api/depot-performance';
 import {loadPerformance, LoadPerformanceEffectArgs} from './effects/performance/load-performance.effect';
 import {reloadDepotsOn, ReloadDepotsOnEffectArgs} from './effects/reload-depots-on.effect';
+import {trackSelectedDepotCurrency, TrackSelectedDepotCurrencyEffectArgs} from './effects/track-selected-depot-currency.effect';
 
 @Injectable()
 export class DepotEffects {
@@ -156,4 +157,9 @@ export class DepotEffects {
   readonly reloadDepotsOn = createEffect(() => reloadDepotsOn({
     actions$: this.actions$
   } satisfies ReloadDepotsOnEffectArgs));
+
+  readonly trackSelectedDepotCurrency = createEffect(() => trackSelectedDepotCurrency({
+    actions$: this.actions$,
+    store: this.store
+  } satisfies TrackSelectedDepotCurrencyEffectArgs));
 }

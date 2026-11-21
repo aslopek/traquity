@@ -2,10 +2,14 @@ import {inject} from '@angular/core';
 import {Router} from '@angular/router';
 import {signalStore, withComputed, withMethods, withState} from '@ngrx/signals';
 import {RxMethod} from '@ngrx/signals/rxjs-interop';
+import {Store} from '@ngrx/store';
 import {ReadableSignalStore, WritableSignalStore} from '../../../common/types/signal-store.type';
 import {StartupBridgeService} from '../../../bridge/startup-bridge.service';
 import {AuthState, StartupMode, StartupState} from '../../../bridge/startup-bridge.type';
+import {AdminApi} from '../../../gen/api/admin';
+import {AppState} from '../../../store/app.state';
 import {startBackend} from './effects/start-backend';
+import {waitForBackend} from './effects/wait-for-backend';
 import {enterConfigure} from './methods/enter-configure';
 import {enterUnlock} from './methods/enter-unlock';
 import {DatabaseSelection, selectDatabase} from './methods/select-database';
@@ -22,6 +26,7 @@ export type StartupMethods = {
   selectDatabase: (selection: DatabaseSelection) => void
   setStartupState: (state: StartupState) => void
   startBackend: (password: string) => void
+  waitForBackend: () => void
 };
 
 export type StartupStoreState = {
@@ -49,14 +54,20 @@ export const StartupStore = signalStore(
   withComputed((): StartupComputed => ({})),
   withMethods((signalStore: WritableSignalStore<StartupStoreState, StartupComputed>,
                bridge: StartupBridgeService = inject(StartupBridgeService),
-               router: Router = inject(Router)): StartupMethods => {
-    const startBackendMethod: RxMethod<string> = startBackend(signalStore, bridge, router);
+               router: Router = inject(Router),
+               globalStore: Store<AppState> = inject(Store),
+               adminApi: AdminApi = inject(AdminApi)): StartupMethods => {
+    const startBackendMethod: RxMethod<string> = startBackend(signalStore, bridge, router, globalStore);
+    const waitForBackendMethod: RxMethod<void> = waitForBackend(globalStore, adminApi);
     return {
       enterConfigure: (): void => enterConfigure(signalStore, router),
       enterUnlock: (): void => enterUnlock(signalStore, router),
       selectDatabase: (selection: DatabaseSelection): void => selectDatabase(signalStore, selection),
       setStartupState: (state: StartupState): void => setStartupState(signalStore, state),
-      startBackend: startBackendMethod
+      startBackend: startBackendMethod,
+      waitForBackend: (): void => {
+        waitForBackendMethod();
+      }
     };
   })
 );

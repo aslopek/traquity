@@ -74,7 +74,7 @@ The window opens immediately and then shows one of four screens. Which one it is
 | 7 | Anything else (a remembered password, or a database the app knows nothing about) | Unlock               |
 
 The backend is started only after that screen is done with — from the unlock screen, from the configuration screen, or immediately in
-case 6. While the backend boots, the splash screen is shown. Once the backend answers, the normal app appears.
+case 6. While the backend boots, the splash screen is shown. Once the backend answers and the depots are loaded, the normal app appears.
 
 The TLS warning screen (case 1) is a refusal, not a prompt. TraQuity downloads files over HTTPS and relies on certificate verification, so
 with verification disabled it starts nothing at all: no backend, no database access. Unset `NODE_TLS_REJECT_UNAUTHORIZED` or set it to `1`,
@@ -674,7 +674,13 @@ The list carries a search field and shows, per security, its logo, ISIN with cou
 The last known price is shown in a slider, where the left end represents the 52-week low and the right end the 52-week high. This helps you
 to quickly get an idea where the price is at, without having to open the chart.
 
-Clicking a row opens the security's detail view with the historical price chart.
+Prices are shown in the currency of the selected depots, or in EUR while no depot is selected. A price that cannot be converted into that
+currency is left out (see [Currency conversion](#currency-conversion)). An icon replaces the slider when the last known price is older than
+six days or no price of the last 52 weeks is left. Hovering it shows the date of the last known price. A security without any price shows
+no icon and no slider.
+
+Clicking a row opens the security's detail view with the historical price chart. The chart starts in the currency of the selected depots, or
+in EUR while no depot is selected. Pick another **Currency** below the chart to see the prices in it. The chart always shows a currency.
 
 ## Market data sources
 
@@ -1089,7 +1095,8 @@ price of its own is valued at the latest price before it.
 
 The line is shown in the currency of the selected depots, converted as [Currency conversion](#currency-conversion) describes. It follows
 the price only: dividends of the security are not part of it. Only a security whose prices reach back to the oldest shown day can be
-picked. Any other security is listed greyed out, with the day its prices start beside it, or **No prices** if it has none.
+picked. A price counts only where it can be converted into the currency of the selected depots. Any other security is listed greyed out,
+with the day its prices start beside it, or **No prices** if it has none.
 
 ### Position-level returns
 

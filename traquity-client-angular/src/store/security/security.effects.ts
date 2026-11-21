@@ -25,6 +25,8 @@ import {
   DeleteHistoricalSecurityPriceDataSourceEffectArgs
 } from './effects/delete-historical-security-price-data-source.effect';
 import {loadSecuritiesOn, LoadSecuritiesOnEffectArgs} from './effects/load-securities-on.effect';
+import {reloadSecuritiesOn, ReloadSecuritiesOnEffectArgs} from './effects/reload-securities-on.effect';
+import {setRequestCurrencyOn, SetRequestCurrencyOnEffectArgs} from './effects/set-request-currency-on.effect';
 
 @Injectable()
 export class SecurityEffects {
@@ -37,9 +39,14 @@ export class SecurityEffects {
   private readonly historicalSecurityPriceDataSourceApi: HistoricalSecurityPriceDataSourceApi = inject(HistoricalSecurityPriceDataSourceApi);
   private readonly dividendAnnouncementConfigApi: DividendAnnouncementConfigApi = inject(DividendAnnouncementConfigApi);
 
+  readonly setRequestCurrencyOn = createEffect(() => setRequestCurrencyOn({
+    actions$: this.actions$
+  } satisfies SetRequestCurrencyOnEffectArgs));
+
   readonly loadAllSecurities = createEffect(() => loadAllSecurities({
     actions$: this.actions$,
-    securityApi: this.securityApi
+    securityApi: this.securityApi,
+    store: this.store
   } satisfies LoadAllSecuritiesEffectArgs));
 
   readonly createSecurity = createEffect(() => createSecurity({
@@ -95,4 +102,9 @@ export class SecurityEffects {
   readonly loadSecuritiesOn = createEffect(() => loadSecuritiesOn({
     actions$: this.actions$
   } satisfies LoadSecuritiesOnEffectArgs));
+
+  readonly reloadSecuritiesOn = createEffect(() => reloadSecuritiesOn({
+    actions$: this.actions$,
+    store: this.store
+  } satisfies ReloadSecuritiesOnEffectArgs));
 }

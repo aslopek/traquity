@@ -16,6 +16,7 @@ import {DataRange, fromDateRange} from '../../../common/types/data-range';
 import {ConfigApi} from '../../../gen/api/configuration';
 import {HistoricalSecurityPrice, HistoricalSecurityPriceApi,} from '../../../gen/api/historical-security-price';
 import {AppState} from '../../../store/app.state';
+import {selectedDepotCurrency} from '../../../store/depot/depot.selector';
 import {NotificationActions} from '../../../store/notification/notification.actions';
 import {HistoricalPriceChartPipe} from './historical-price-chart.pipe';
 
@@ -45,7 +46,7 @@ export class HistoricalPriceChartComponent implements OnDestroy, OnInit {
   selectedSecurityId: number = 0;
 
   protected chartInstance: ECharts | null = null;
-  protected readonly selectedCurrency: WritableSignal<string | undefined> = signal(undefined);
+  protected readonly selectedCurrency: WritableSignal<string>;
   protected readonly isLoading: WritableSignal<boolean> = signal(false);
   protected readonly dataAvailable: WritableSignal<boolean> = signal(true);
   protected readonly dataRange: WritableSignal<DataRange> = signal('1y');
@@ -57,6 +58,7 @@ export class HistoricalPriceChartComponent implements OnDestroy, OnInit {
     private readonly configApi: ConfigApi,
     private readonly store: Store<AppState>
   ) {
+    this.selectedCurrency = signal(store.selectSignal(selectedDepotCurrency)());
   }
 
   @Input({
@@ -82,7 +84,7 @@ export class HistoricalPriceChartComponent implements OnDestroy, OnInit {
     this.chartInstance = e;
   }
 
-  async changeDataRange(newRange: DataRange): Promise<void> {
+  protected async changeDataRange(newRange: DataRange): Promise<void> {
     const previousRange: DataRange = this.dataRange();
     this.dataRange.set(newRange);
 
@@ -96,8 +98,16 @@ export class HistoricalPriceChartComponent implements OnDestroy, OnInit {
     this.percent.set(percent);
   }
 
-  async changeCurrency(currency: string | undefined): Promise<void> {
-    const previousCurrency: string | undefined = this.selectedCurrency();
+  /**
+   * @param currency the currency to show the prices in
+   * @returns resolves once the prices in that currency arrived or failed to load
+   */
+  protected async changeCurrency(currency: string | undefined): Promise<void> {
+    if (currency === undefined) {
+      return;
+    }
+
+    const previousCurrency: string = this.selectedCurrency();
     this.selectedCurrency.set(currency);
 
     // the chart keeps showing the previous currency's prices when the new one cannot be loaded, so the selection follows

@@ -13,6 +13,7 @@ export type IncomeByPosition = { [id: number]: Performance };
 
 export type DepotState = {
   depots: DepotRead[]
+  initialized: boolean
   selectedDepotCurrency: string
   selectedDepotIds: number[]
   selectedTabIndex: number

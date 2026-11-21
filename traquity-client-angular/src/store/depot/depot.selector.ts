@@ -6,6 +6,7 @@ import {multipleSelectionAllowed} from './selectors/multiple-selection-allowed.s
 import {getSelectedDepotTab} from './selectors/get-selected-depot-tab';
 import {DepotRead} from '../../gen/api/depot';
 import {getDepots} from './selectors/get-depots.selector';
+import {isInitialized} from './selectors/is-initialized.selector';
 import {DepotTab} from './depot-tabs';
 import {getSelectableDepotTabs, SelectableDepotTabs} from './selectors/get-selectable-depot-tabs.selector';
 import {getSelectedDepotCurrency} from './selectors/get-selected-depot-currency.selector';
@@ -37,6 +38,9 @@ export const isMultipleSelectionAllowed: MemoizedSelector<AppState, boolean>
 
 export const depots: MemoizedSelector<AppState, DepotRead[]>
   = createSelector(depotSelector, getDepots);
+
+export const isDepotSliceInitialized: MemoizedSelector<AppState, boolean>
+  = createSelector(depotSelector, isInitialized);
 
 export const depotsByCurrency: MemoizedSelector<AppState, DepotsByCurrency>
   = createSelector(depotSelector, getAllDepotsByCurrency);

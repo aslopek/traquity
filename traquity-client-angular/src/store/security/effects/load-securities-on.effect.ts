@@ -17,9 +17,12 @@ function toSecurityIds(items: (number | SecurityIdObject)[]): number[] {
 }
 
 /**
- * Listens for other domains' Done/Success actions that reference securities needing a (re)load, rather than having those domains
- * dispatch SecurityActions.loadSecurity themselves. To add a trigger, add a branch to the `merge(...)` below that maps the
- * new action to a `(number | SecurityIdObject)[]` - the id normalization and dispatching below is shared by all triggers.
+ * Loads the securities that other domains' Done/Success actions reference, each security of one action once. To add a trigger, add a
+ * branch to the `merge(...)` of triggers below that maps the new action to a `(number | SecurityIdObject)[]` - the id normalization and
+ * dispatching below is shared by all triggers.
+ *
+ * @param effectArgs the action stream
+ * @returns a `Load Security` action per referenced security
  */
 export function loadSecuritiesOn(effectArgs: LoadSecuritiesOnEffectArgs): Observable<Action> {
   const {actions$} = effectArgs;

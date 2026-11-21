@@ -26,10 +26,12 @@ import {setUsePositionBuyInValuesReducer} from './reducers/position/set-use-posi
 import {setSelectedPositionViewReducer} from './reducers/position/set-selected-position-view.reducer';
 import {setPerformanceReducer} from './reducers/performance/set-performance.reducer';
 import {setPositionGroupByReducer} from './reducers/position/set-position-group-by.reducer';
+import {defaultCurrency} from './default-currency';
 
 export const initialState: DepotState = {
   depots: [],
-  selectedDepotCurrency: 'EUR',
+  initialized: false,
+  selectedDepotCurrency: defaultCurrency,
   selectedDepotIds: selectedDepotIds.default,
   selectedTabIndex: selectedTabIndex.default,
   dividend: {
