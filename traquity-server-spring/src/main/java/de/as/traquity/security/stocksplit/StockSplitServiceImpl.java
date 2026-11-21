@@ -31,7 +31,9 @@ class StockSplitServiceImpl implements StockSplitService {
 
   @Override
   public List<StockSplit> getStockSplits(Long securityId) throws NotFoundException {
-    securityService.getSecurity(securityId);
+    if (!securityService.securityExists(securityId)) {
+      throw new NotFoundException();
+    }
     List<StockSplitEntity> splits = stockSplitRepository.findAllBySecurityIdOrderByExDateAsc(securityId);
     return splits.stream().map(stockSplitMapper::fromEntity).toList();
   }
@@ -58,7 +60,9 @@ class StockSplitServiceImpl implements StockSplitService {
     }
 
     long securityId = newStockSplit.getSecurityId();
-    securityService.getSecurity(securityId);
+    if (!securityService.securityExists(securityId)) {
+      throw new NotFoundException();
+    }
     List<StockSplitEntity> splits = stockSplitRepository.findAllBySecurityIdOrderByExDateAsc(securityId);
 
     LocalDate exDate = newStockSplit.getExDate();

@@ -126,21 +126,26 @@ class ExchangeRateServiceImpl implements ExchangeRateService {
   }
 
   /**
-   * The exchange rate entity applicable to {@code item}'s date - forward if available, otherwise reverse inverted
-   * via {@code mathContext} - or {@code null} if neither list has one on or before that date.
+   * Finds the exchange rate applicable to {@code item} by the rules in the section "Currency conversion" of {@code USER_MANUAL.md}. On a
+   * day with both, the forward rate is taken.
+   *
+   * @param item         the value to convert, with its date
+   * @param forwardRates the rates from the item's currency into the target currency, sorted ascending by date
+   * @param reverseRates the rates from the target currency into the item's currency, sorted ascending by date
+   * @param mathContext  the context to invert a reverse rate with
+   * @return the applicable rate, a reverse one inverted, or {@code null} if neither list has one on or before the item's date
    */
   private RateLookup findApplicableRate(CurrencyConversionRequest item, List<ExchangeRateEntity> forwardRates,
                                         List<ExchangeRateEntity> reverseRates, MathContext mathContext) {
-    ExchangeRateEntity entity = findRateOnOrBefore(forwardRates, item.getDate());
-    if (entity != null) {
-      return new RateLookup(entity, entity.getExchangeRate());
+    ExchangeRateEntity forward = findRateOnOrBefore(forwardRates, item.getDate());
+    ExchangeRateEntity reverse = findRateOnOrBefore(reverseRates, item.getDate());
+    if (forward != null && (reverse == null || !forward.getDate().isBefore(reverse.getDate()))) {
+      return new RateLookup(forward, forward.getExchangeRate());
     }
-
-    entity = findRateOnOrBefore(reverseRates, item.getDate());
-    if (entity == null) {
-      return null;
+    if (reverse != null) {
+      return new RateLookup(reverse, ONE.divide(reverse.getExchangeRate(), mathContext));
     }
-    return new RateLookup(entity, ONE.divide(entity.getExchangeRate(), mathContext));
+    return null;
   }
 
   private record RateLookup(ExchangeRateEntity entity, BigDecimal multiplier) {

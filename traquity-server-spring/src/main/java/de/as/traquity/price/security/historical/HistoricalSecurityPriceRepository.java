@@ -44,6 +44,8 @@ interface HistoricalSecurityPriceRepository extends JpaRepository<HistoricalSecu
 
   Stream<HistoricalSecurityPriceEntity> findAllBySecurityIdOrderByDateAsc(Long securityId);
 
+  Stream<HistoricalSecurityPriceEntity> findAllBySecurityIdOrderByDateDesc(Long securityId);
+
   @Transactional
   void deleteBySecurityIdAndDateAndDataSourceIdIsNull(Long securityId, LocalDate date);
 

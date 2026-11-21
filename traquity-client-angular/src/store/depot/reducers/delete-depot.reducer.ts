@@ -9,7 +9,7 @@ export function deleteDepotReducer(state: Readonly<DepotState>, actionArgs: Dele
   }
 
   const depots: DepotRead[] = state.depots.filter(depot => depot.id !== depotId);
-  const selectedDepotIds: number[] = state.selectedDepotIds.filter(depotId => depotId !== depotId);
+  const selectedDepotIds: number[] = state.selectedDepotIds.filter(id => id !== depotId);
 
   // deleted the last depot
   if (depots.length === 0) {
