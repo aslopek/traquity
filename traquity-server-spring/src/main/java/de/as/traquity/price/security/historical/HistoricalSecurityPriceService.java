@@ -29,8 +29,24 @@ public interface HistoricalSecurityPriceService {
   HistoricalSecurityPrice getLatestPrice(long securityId, String currency) throws NotFoundException;
 
   /**
-   * @return the oldest price stored in {@code currency} or convertible to it at the exchange rate of its own date, given in
-   *     {@code currency}
+   * @param securityId the security to look up
+   * @return the security's latest stored price, in the currency it is stored in
+   * @throws NotFoundException when the security has no stored price
+   */
+  HistoricalSecurityPrice getLatestPrice(long securityId) throws NotFoundException;
+
+  /**
+   * @param securityId the security to look up
+   * @param currency   the currency in which the price shall be returned
+   * @return the latest price stored in {@code currency} or convertible to it at the exchange rate of its own date or the closest earlier
+   *     date that has one, given in {@code currency}
+   * @throws NotFoundException when no stored price qualifies
+   */
+  HistoricalSecurityPrice getLatestConvertiblePrice(long securityId, String currency) throws NotFoundException;
+
+  /**
+   * @return the oldest price stored in {@code currency} or convertible to it at the exchange rate of its own date or the closest earlier
+   *     date that has one, given in {@code currency}
    * @throws NotFoundException when no stored price qualifies
    */
   HistoricalSecurityPrice getOldestPrice(long securityId, String currency) throws NotFoundException;

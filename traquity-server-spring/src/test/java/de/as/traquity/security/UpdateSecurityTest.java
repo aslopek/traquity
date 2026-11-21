@@ -1,19 +1,33 @@
 package de.as.traquity.security;
 
+import static integration.Accuracy.ACCURACY_ONE_THOUSANDTH;
+import static java.time.Month.DECEMBER;
+import static java.time.Month.NOVEMBER;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.context.jdbc.SqlMergeMode.MergeMode.MERGE;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.as.traquity.security.api.model.PriceMetaInfoDto;
 import de.as.traquity.security.api.model.SecurityReadDto;
 import de.as.traquity.security.api.model.SecurityTypeDto;
 import de.as.traquity.security.api.model.SecurityUpdateDto;
 import integration.IntegrationTest;
+import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.SqlMergeMode;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
@@ -22,12 +36,22 @@ import org.springframework.test.web.servlet.ResultActions;
 class UpdateSecurityTest {
 
   private static final String ENDPOINT = "/securities/%d";
+  private static final String MICROSOFT_PRICES = """
+      INSERT INTO HISTORICAL_SECURITY_PRICE(SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
+      VALUES ((SELECT ID FROM SECURITY WHERE NAME = 'Microsoft'), NULL, 100, 'EUR', '2023-11-30', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+             ((SELECT ID FROM SECURITY WHERE NAME = 'Microsoft'), NULL, 140, 'EUR', '2023-12-05', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+             ((SELECT ID FROM SECURITY WHERE NAME = 'Microsoft'), NULL, 90, 'EUR', '2023-12-07', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+             ((SELECT ID FROM SECURITY WHERE NAME = 'Microsoft'), NULL, 126.76, 'EUR', '2023-12-29', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      """;
 
   @Autowired
   private MockMvc mockMvc;
 
   @Autowired
   private SecurityRepository securityRepository;
+
+  @MockitoBean
+  private Clock clock;
 
   private ObjectMapper objectMapper;
 
@@ -37,6 +61,8 @@ class UpdateSecurityTest {
 
   @BeforeEach
   void setUp() {
+    when(clock.instant()).thenReturn(Instant.parse("2024-01-01T16:37:08Z"));
+    when(clock.getZone()).thenReturn(ZoneId.of("Europe/Berlin"));
     objectMapper = new ObjectMapper().findAndRegisterModules();
     securityCount = securityRepository.count();
     requestBody = new SecurityUpdateDto();
@@ -307,9 +333,99 @@ class UpdateSecurityTest {
     assertThat(securityRepository.count()).isEqualTo(securityCount);
   }
 
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = MICROSOFT_PRICES)
+  void update_withCurrency_priceMetaInfoInCurrency() throws Exception {
+    requestBody.setSector("Software");
+    MvcResult result = putSecurity(1, "USD").andExpect(status().isOk()).andReturn();
+
+    // verify response
+    SecurityReadDto responseBody =
+        objectMapper.readValue(result.getResponse().getContentAsString(), SecurityReadDto.class);
+    verifyResponseBody(responseBody);
+    PriceMetaInfoDto priceMetaInfo = responseBody.getPriceMetaInfo();
+    assertThat(priceMetaInfo.getCurrency()).isEqualTo("USD");
+    // 126.76 EUR at the EUR/USD rate of 1.0777 on 2023-12-08, the closest rate before 2023-12-29
+    assertThat(priceMetaInfo.getLatestPrice()).isCloseTo(new BigDecimal("136.609252"), ACCURACY_ONE_THOUSANDTH);
+    assertThat(priceMetaInfo.getLatestPriceDate()).isEqualTo(LocalDate.of(2023, DECEMBER, 29));
+    // 100 EUR at the EUR/USD rate of 1.0931 on 2023-11-30
+    assertThat(priceMetaInfo.getOldestPrice()).isCloseTo(new BigDecimal("109.31"), ACCURACY_ONE_THOUSANDTH);
+    assertThat(priceMetaInfo.getOldestPriceDate()).isEqualTo(LocalDate.of(2023, NOVEMBER, 30));
+    // 140 EUR at the EUR/USD rate of 1.0817 on 2023-12-05
+    assertThat(priceMetaInfo.getHighTrailingTwelveMonths()).isCloseTo(new BigDecimal("151.438"), ACCURACY_ONE_THOUSANDTH);
+    // 90 EUR at the EUR/USD rate of 1.0771 on 2023-12-07
+    assertThat(priceMetaInfo.getLowTrailingTwelveMonths()).isCloseTo(new BigDecimal("96.939"), ACCURACY_ONE_THOUSANDTH);
+
+    // verify database
+    assertThat(securityRepository.count()).isEqualTo(securityCount);
+    verifyDatabase(1);
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = MICROSOFT_PRICES)
+  void update_withoutCurrency_priceMetaInfoInCurrencyOfLatestPrice() throws Exception {
+    requestBody.setSector("Software");
+    MvcResult result = putSecurity(1).andExpect(status().isOk()).andReturn();
+
+    // verify response
+    SecurityReadDto responseBody =
+        objectMapper.readValue(result.getResponse().getContentAsString(), SecurityReadDto.class);
+    verifyResponseBody(responseBody);
+    PriceMetaInfoDto priceMetaInfo = responseBody.getPriceMetaInfo();
+    assertThat(priceMetaInfo.getCurrency()).isEqualTo("EUR");
+    assertThat(priceMetaInfo.getLatestPrice()).isEqualByComparingTo("126.76");
+    assertThat(priceMetaInfo.getLatestPriceDate()).isEqualTo(LocalDate.of(2023, DECEMBER, 29));
+    assertThat(priceMetaInfo.getOldestPrice()).isEqualByComparingTo("100");
+    assertThat(priceMetaInfo.getOldestPriceDate()).isEqualTo(LocalDate.of(2023, NOVEMBER, 30));
+    assertThat(priceMetaInfo.getHighTrailingTwelveMonths()).isEqualByComparingTo("140");
+    assertThat(priceMetaInfo.getLowTrailingTwelveMonths()).isEqualByComparingTo("90");
+
+    // verify database
+    assertThat(securityRepository.count()).isEqualTo(securityCount);
+    verifyDatabase(1);
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = MICROSOFT_PRICES)
+  void update_unsupportedCurrency_storedWithoutPriceMetaInfo() throws Exception {
+    requestBody.setSector("Software");
+    MvcResult result = putSecurity(1, "XYZ").andExpect(status().isOk()).andReturn();
+    verifyStoredWithoutPriceMetaInfo(result);
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = MICROSOFT_PRICES)
+  void update_currencyWithoutRates_storedWithoutPriceMetaInfo() throws Exception {
+    requestBody.setSector("Software");
+    // no rate into CHF is stored
+    MvcResult result = putSecurity(1, "CHF").andExpect(status().isOk()).andReturn();
+    verifyStoredWithoutPriceMetaInfo(result);
+  }
+
   private ResultActions putSecurity(long id) throws Exception {
     return mockMvc.perform(put(String.format(ENDPOINT, id)).contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(requestBody)));
+  }
+
+  private ResultActions putSecurity(long id, String currency) throws Exception {
+    return mockMvc.perform(put(String.format(ENDPOINT, id)).queryParam("currency", currency).contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(requestBody)));
+  }
+
+  private void verifyStoredWithoutPriceMetaInfo(MvcResult result) throws Exception {
+    // verify response
+    SecurityReadDto responseBody =
+        objectMapper.readValue(result.getResponse().getContentAsString(), SecurityReadDto.class);
+    verifyResponseBody(responseBody);
+    assertThat(responseBody.getPriceMetaInfo()).isNull();
+
+    // verify database
+    assertThat(securityRepository.count()).isEqualTo(securityCount);
+    verifyDatabase(1);
   }
 
   private void assertSecurityUnchanged(SecurityEntity before, SecurityEntity after) {

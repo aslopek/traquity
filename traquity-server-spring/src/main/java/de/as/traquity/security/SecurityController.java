@@ -51,9 +51,9 @@ class SecurityController implements SecurityApiDelegate {
 
   @Override
   public ResponseEntity<PaginatedSecurityReadDto> getSecurities(Integer page, Integer pageSize, SortOrderDto order,
-                                                                String search, SecurityOrderPropertyDto orderBy) {
+                                                                String search, SecurityOrderPropertyDto orderBy, String currency) {
     PageContainer<Security> securities =
-        securityService.getSecurities(getPageNumber(page), getPageSize(pageSize), search, orderBy, order);
+        securityService.getSecurities(getPageNumber(page), getPageSize(pageSize), search, orderBy, order, currency);
     PaginatedSecurityReadDto responseBody = securityMapper.toPageDto(securities);
     for (SecurityReadDto security : responseBody.getItems()) {
       if (securityService.hasLogo(security.getId())) {
@@ -64,8 +64,8 @@ class SecurityController implements SecurityApiDelegate {
   }
 
   @Override
-  public ResponseEntity<SecurityReadDto> getSecurity(Long id) {
-    Security security = securityService.getSecurity(id);
+  public ResponseEntity<SecurityReadDto> getSecurity(Long id, String currency) {
+    Security security = securityService.getSecurity(id, currency);
     SecurityReadDto responseBody = securityMapper.toDto(security);
     if (securityService.hasLogo(id)) {
       responseBody.getLinks().setLogo(String.format(SECURITY_LOGO_URI_PATTERN, id));
@@ -74,10 +74,12 @@ class SecurityController implements SecurityApiDelegate {
   }
 
   @Override
-  public ResponseEntity<SecurityReadDto> updateSecurity(Long id, SecurityUpdateDto securityUpdateDto) {
+  public ResponseEntity<SecurityReadDto> updateSecurity(Long id, SecurityUpdateDto securityUpdateDto, String currency) {
     Security security = securityMapper.fromUpdateDto(securityUpdateDto);
     security.setId(id);
     security = securityService.updateSecurity(security);
+    // looked up after the update's transaction: a failing price lookup inside it would roll back the stored change
+    security.setPriceMetaInfo(securityService.getPriceMetaInfo(id, currency));
     SecurityReadDto responseBody = securityMapper.toDto(security);
     return ResponseEntity.ok(responseBody);
   }

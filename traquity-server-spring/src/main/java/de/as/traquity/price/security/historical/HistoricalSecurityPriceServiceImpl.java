@@ -147,6 +147,21 @@ class HistoricalSecurityPriceServiceImpl implements HistoricalSecurityPriceServi
   }
 
   @Override
+  public HistoricalSecurityPrice getLatestPrice(long securityId) throws NotFoundException {
+    return priceRepository.findFirstBySecurityIdOrderByDateDesc(securityId)
+        .map(priceMapper::fromEntity)
+        .orElseThrow(NotFoundException::new);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public HistoricalSecurityPrice getLatestConvertiblePrice(long securityId, String currency) throws NotFoundException {
+    try (Stream<HistoricalSecurityPriceEntity> prices = priceRepository.findAllBySecurityIdOrderByDateDesc(securityId)) {
+      return findFirstConvertible(prices, currency);
+    }
+  }
+
+  @Override
   @Transactional(readOnly = true)
   public HistoricalSecurityPrice getOldestPrice(long securityId, String currency) throws NotFoundException {
     HistoricalSecurityPrice oldest = priceRepository.findFirstBySecurityIdOrderByDateAsc(securityId)
@@ -156,24 +171,38 @@ class HistoricalSecurityPriceServiceImpl implements HistoricalSecurityPriceServi
       return oldest;
     }
 
-    Map<String, LocalDate> earliestConversionDates = new HashMap<>();
     try (Stream<HistoricalSecurityPriceEntity> prices = priceRepository.findAllBySecurityIdOrderByDateAsc(securityId)) {
-      for (Iterator<HistoricalSecurityPriceEntity> it = prices.iterator(); it.hasNext(); ) {
-        HistoricalSecurityPrice price = priceMapper.fromEntity(it.next());
-        if (price.getCurrency().equals(currency)) {
-          return price;
-        }
-        LocalDate earliest = earliestConversionDates.computeIfAbsent(price.getCurrency(), c -> earliestConversionDate(c, currency));
-        if (price.getDate().isBefore(earliest)) {
-          continue;
-        }
-        BigDecimal converted = exchangeRateService
-            .convertBestEffort(List.of(new CurrencyConversionRequest(price.getPrice(), price.getDate())), price.getCurrency(), currency)
-            .getFirst();
-        price.setPrice(converted);
-        price.setCurrency(currency);
+      return findFirstConvertible(prices, currency);
+    }
+  }
+
+  /**
+   * Returns the first of {@code prices} stored in {@code currency} or convertible to it at the exchange rate of its own date or the
+   * closest earlier date that has one, given in {@code currency}.
+   *
+   * @param prices   the prices to search, in the order to search them
+   * @param currency the currency the price is given in
+   * @return the first qualifying price, given in {@code currency}
+   * @throws NotFoundException when no price qualifies
+   */
+  private HistoricalSecurityPrice findFirstConvertible(Stream<HistoricalSecurityPriceEntity> prices, String currency)
+      throws NotFoundException {
+    Map<String, LocalDate> earliestConversionDates = new HashMap<>();
+    for (Iterator<HistoricalSecurityPriceEntity> it = prices.iterator(); it.hasNext(); ) {
+      HistoricalSecurityPrice price = priceMapper.fromEntity(it.next());
+      if (price.getCurrency().equals(currency)) {
         return price;
       }
+      LocalDate earliest = earliestConversionDates.computeIfAbsent(price.getCurrency(), c -> earliestConversionDate(c, currency));
+      if (price.getDate().isBefore(earliest)) {
+        continue;
+      }
+      BigDecimal converted = exchangeRateService
+          .convertBestEffort(List.of(new CurrencyConversionRequest(price.getPrice(), price.getDate())), price.getCurrency(), currency)
+          .getFirst();
+      price.setPrice(converted);
+      price.setCurrency(currency);
+      return price;
     }
     throw new NotFoundException();
   }
