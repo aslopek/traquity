@@ -111,8 +111,6 @@ Angular + NgRx frontend, packaged as the Electron desktop app. Root `LLM.md` cov
 - `type` over `interface`. `interface` if and only if a class `implements` it.
 - **Barrel files are forbidden.** Never add an `index.ts` re-export. Generated code is exempt.
 - Doc comments obey dependency inversion (root `LLM.md`) — document the unit's own contract, never its callers.
-- JSDoc, if present, states every parameter via `@param` and the return via `@returns` — never folded into prose. Not every
-  function needs JSDoc.
 - **Input from outside the program is defined exactly once, as a zod schema, with its static type inferred from that schema** —
   the renderer's half of the boundary rule `electron/LLM.md` states in full. Applies to anything the user hands the app to
   parse (e.g. imported config files). Not to API responses — a generated client already types those. Everything the app
@@ -156,6 +154,9 @@ context.
 - A tag is "too long" when it has more than one attribute, or one attribute plus a child, or more than one child. A tag that
   isn't too long stays on one line; otherwise: first attribute on the opening-tag line, every further attribute and every child
   on its own line, closing tag on its own line.
+- Event handlers take only the values they need, never a DOM or framework event. Read an input's text through a template reference
+  variable (`#field` and `(keyup)="emit(field.value)"`), a picked autocomplete option as `$event.option.value`. The handler stays
+  unaware of the element that triggered it, and its spec calls it with plain values.
 
 ## Styling (SCSS units)
 
@@ -219,5 +220,6 @@ Further conventions:
   type is used by more than one spec.
 - Prefer the tightest true invariant over a type-only check. Write a custom asymmetric matcher when no built-in expresses it; it
   needs its own file and spec once shared across specs — it's logic, not a fixture.
-- Write expected values as expressions over the arranged fixtures, not recomputed literals — so the test still passes for the
-  right reason when a fixture's value changes, and a reader can verify the assertion from the arrange step alone.
+- Write expected values as literals in the assertion, so a reader can verify the claim without tracing it back through the
+  arrange step or a helper. Derive an expected value by mapping if it supports understanding and validating the test case.
+- Do not pick fields out of the result; assert the whole result.

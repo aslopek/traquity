@@ -1059,6 +1059,20 @@ conventions.
 
 ![A running Fixed Interest benchmark (orange) next to the depot value curve](./doc-assets/depot-performance-benchmark.png)
 
+### Security Benchmark (Cashflow based)
+
+This answers: "what would the money I put into the depot be worth if I had invested all of it into one security instead?" Pick the
+**Security** from the list, and press **Start benchmark**.
+
+The **Initial Investment** buys shares on the oldest shown day. It starts out as the depot value of that day and follows the data range
+you select. Leave it empty to start the line at `0`. Every later increase of the invested capital buys shares on the day it happens.
+Shares may be fractional, and no money waits as cash. The line shows what the shares are worth at each shown day's price. A day without a
+price of its own is valued at the latest price before it.
+
+The line is shown in the currency of the selected depots, converted at the exchange rates TraQuity knows. It follows the price only:
+dividends of the security are not part of it. Only a security whose prices reach back to the oldest shown day can be picked. Any other
+security is listed greyed out, with the day its prices start beside it, or **No prices** if it has none.
+
 ### Position-level returns
 
 The Positions view is the exception: the return shown per holding is deliberately **cash-exclusive**. It is the gain or loss on that

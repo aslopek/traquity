@@ -1,0 +1,11 @@
+.benchmark-security-select__option {
+  display: flex;
+  align-items: center;
+  gap: var(--tq-space-3);
+}
+
+.benchmark-security-select__reason {
+  margin-left: auto;
+  color: var(--tq-text-muted);
+  font-size: var(--tq-font-size-sm);
+}

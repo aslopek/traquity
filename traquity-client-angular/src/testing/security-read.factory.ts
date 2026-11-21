@@ -12,3 +12,18 @@ export function securityReadFactory(overrides?: Partial<SecurityRead>): Security
     ...overrides
   };
 }
+
+export function withOldestPriceDate(id: number, oldestPriceDate: string): SecurityRead {
+  return securityReadFactory({
+    id,
+    priceMetaInfo: {
+      highTrailingTwelveMonths: 2,
+      lowTrailingTwelveMonths: 1,
+      latestPrice: 1,
+      currency: 'EUR',
+      latestPriceDate: '2026-02-01',
+      oldestPrice: 1,
+      oldestPriceDate
+    }
+  });
+}

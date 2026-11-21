@@ -21,7 +21,23 @@ export type FixedInterestBenchmark = (CashFlowBasedBenchmark | IntervalBasedBenc
   yieldInterval: 'monthly' | 'quarterly' | 'annually'
 };
 
-export type Benchmark = FixedInterestBenchmark;
+export type SecurityCashFlowBasedBenchmark = CashFlowBasedBenchmark & {
+  type: 'security'
+  securityId: number
+};
+
+export type SecurityBenchmark = SecurityCashFlowBasedBenchmark;
+
+export type Benchmark = FixedInterestBenchmark | SecurityBenchmark;
+
+/** The `<type>.<mode>` name of each benchmark variant in `B`. */
+type ModeOf<B extends Benchmark> = B extends Benchmark ? `${B['type']}.${B['mode']}` : never;
+
+export type FixedInterestBenchmarkMode = ModeOf<FixedInterestBenchmark>;
+
+export type SecurityBenchmarkMode = ModeOf<SecurityBenchmark>;
+
+export type BenchmarkMode = FixedInterestBenchmarkMode | SecurityBenchmarkMode;
 
 export type BenchmarkResult = {
   name: string
