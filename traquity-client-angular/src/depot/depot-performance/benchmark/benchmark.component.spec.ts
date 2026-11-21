@@ -104,30 +104,35 @@ describe('BenchmarkComponent', (): void => {
   });
 
   describe('selectMode', (): void => {
-    it('keeps the running line when switching between fixed interest modes', (): void => {
-      component['selectMode']('fixedInterest.intervalBased');
-
-      expect(setBenchmark).not.toHaveBeenCalled();
-      expect(component['mode']()).toBe('fixedInterest.intervalBased');
-    });
-
-    it('removes the running line and the stale benchmark when switching to the security mode', (): void => {
-      component['benchmark'].set(fixedInterest);
-
-      component['selectMode']('security.cashFlowBased');
-
-      expect(setBenchmark.mock.calls).toEqual([[null]]);
-      expect(component['benchmark']()).toBeNull();
-      expect(component['mode']()).toBe('security.cashFlowBased');
-    });
-
     it('removes the running security line when switching to a fixed interest mode', (): void => {
-      component['mode'].set('security.cashFlowBased');
       storedBenchmark.set(security);
 
       component['selectMode']('fixedInterest.cashFlowBased');
 
       expect(setBenchmark.mock.calls).toEqual([[null]]);
+    });
+
+    describe('from a fixed interest mode', (): void => {
+      beforeEach((): void => {
+        component['mode'].set('fixedInterest.cashFlowBased');
+      });
+
+      it('keeps the running line when switching between fixed interest modes', (): void => {
+        component['selectMode']('fixedInterest.intervalBased');
+
+        expect(setBenchmark).not.toHaveBeenCalled();
+        expect(component['mode']()).toBe('fixedInterest.intervalBased');
+      });
+
+      it('removes the running line and the stale benchmark when switching to the security mode', (): void => {
+        component['benchmark'].set(fixedInterest);
+
+        component['selectMode']('security.cashFlowBased');
+
+        expect(setBenchmark.mock.calls).toEqual([[null]]);
+        expect(component['benchmark']()).toBeNull();
+        expect(component['mode']()).toBe('security.cashFlowBased');
+      });
     });
   });
 });

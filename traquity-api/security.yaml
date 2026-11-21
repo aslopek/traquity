@@ -64,6 +64,7 @@ paths:
           description: Which property should be used to order the search results
           schema:
             $ref: '#/components/schemas/SecurityOrderProperty'
+        - $ref: '#/components/parameters/PriceCurrency'
       tags:
         - Security
       operationId: getSecurities
@@ -75,7 +76,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedSecurityRead'
         '400':
-          description: Pagination parameters are invalid
+          description: Pagination parameters are invalid, or currency is not a supported currency
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -90,6 +91,8 @@ paths:
         schema:
           $ref: '#/components/schemas/Id'
     get:
+      parameters:
+        - $ref: '#/components/parameters/PriceCurrency'
       tags:
         - Security
       operationId: getSecurity
@@ -100,6 +103,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SecurityRead'
+        '400':
+          description: currency is not a supported currency
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -107,6 +112,8 @@ paths:
         '404':
           description: No security with the given ID exists
     put:
+      parameters:
+        - $ref: '#/components/parameters/PriceCurrency'
       tags:
         - Security
       operationId: updateSecurity
@@ -382,6 +389,15 @@ components:
       required: false
       schema:
         $ref: '#/components/schemas/SortOrder'
+    PriceCurrency:
+      name: currency
+      description: >
+        Currency the price meta information must be given in. Without it, the price information is given in the currency of the security's
+        latest stored price.
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/Currency'
 
   responses:
     Unauthorized:
@@ -561,8 +577,6 @@ components:
       type: object
       nullable: false
       required:
-        - highTrailingTwelveMonths
-        - lowTrailingTwelveMonths
         - latestPrice
         - currency
         - latestPriceDate
@@ -570,10 +584,12 @@ components:
         - oldestPriceDate
       properties:
         highTrailingTwelveMonths:
+          description: The highest price of the trailing twelve months. Absent where that period has no price.
           type: number
           nullable: false
           minimum: 0
         lowTrailingTwelveMonths:
+          description: The lowest price of the trailing twelve months. Absent where that period has no price.
           type: number
           nullable: false
           minimum: 0

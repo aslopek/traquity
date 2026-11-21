@@ -9,8 +9,10 @@ import de.as.traquity.common.error.NotFoundException;
 import de.as.traquity.common.error.UnprocessableEntityException;
 import de.as.traquity.common.image.ImageService;
 import de.as.traquity.common.pagination.PageContainer;
+import de.as.traquity.configuration.ServerConfigurationService;
 import de.as.traquity.price.security.historical.HistoricalSecurityPrice;
 import de.as.traquity.price.security.historical.HistoricalSecurityPriceService;
+import de.as.traquity.price.security.historical.HistoricalSecurityPriceSummary;
 import de.as.traquity.security.api.model.PriceMetaInfoDto;
 import de.as.traquity.security.api.model.SecurityOrderPropertyDto;
 import de.as.traquity.security.api.model.SortOrderDto;
@@ -49,6 +51,7 @@ class SecurityServiceImpl implements SecurityService {
   private final SecurityRepository securityRepository;
   private final SecurityLogoRepository securityLogoRepository;
   private final HistoricalSecurityPriceService historicalSecurityPriceService;
+  private final ServerConfigurationService serverConfigurationService;
   private final ImageService imageService;
   private final MathContext mathContext;
 
@@ -100,7 +103,8 @@ class SecurityServiceImpl implements SecurityService {
 
   @Override
   public PageContainer<Security> getSecurities(int page, int pageSize, String search, SecurityOrderPropertyDto orderBy,
-                                               SortOrderDto order) {
+                                               SortOrderDto order, String currency) throws BadRequestException {
+    requireSupportedOrAbsent(currency);
     final PageRequest pageRequest;
     if (orderBy != null) {
       Sort.Direction direction = SortOrderDto.DESC.equals(order) ? Sort.Direction.DESC : Sort.Direction.ASC;
@@ -125,7 +129,8 @@ class SecurityServiceImpl implements SecurityService {
     result.setLastPage(Math.max(0, securities.getTotalPages() - 1));
     result.setPageSize(pageSize);
     result.setItems(securities.stream().map(securityMapper::fromEntity).toList());
-    result.getItems().forEach(security -> security.setPriceMetaInfo(getPriceMetaInfo(security.getId())));
+    Map<Long, PriceMetaInfoDto> priceMetaInfos = computePriceMetaInfos(result.getItems().stream().map(Security::getId).toList(), currency);
+    result.getItems().forEach(security -> security.setPriceMetaInfo(priceMetaInfos.get(security.getId())));
     return result;
   }
 
@@ -140,11 +145,17 @@ class SecurityServiceImpl implements SecurityService {
   }
 
   @Override
-  public Security getSecurity(Long securityId) throws NotFoundException {
+  public Security getSecurity(Long securityId, String currency) throws BadRequestException, NotFoundException {
+    requireSupportedOrAbsent(currency);
     SecurityEntity fromDatabase = securityRepository.findById(securityId).orElseThrow(NotFoundException::new);
     Security security = securityMapper.fromEntity(fromDatabase);
-    security.setPriceMetaInfo(getPriceMetaInfo(securityId));
+    security.setPriceMetaInfo(computePriceMetaInfos(List.of(securityId), currency).get(securityId));
     return security;
+  }
+
+  @Override
+  public PriceMetaInfoDto getPriceMetaInfo(long securityId, String currency) {
+    return isSupportedOrAbsent(currency) ? computePriceMetaInfos(List.of(securityId), currency).get(securityId) : null;
   }
 
   @Override
@@ -272,32 +283,54 @@ class SecurityServiceImpl implements SecurityService {
     }
   }
 
-  private PriceMetaInfoDto getPriceMetaInfo(Long securityId) {
-    LocalDate oneYearAgo = LocalDate.now(clock).minusYears(1);
-    List<HistoricalSecurityPrice> prices;
-    HistoricalSecurityPrice oldestPrice;
-    try {
-      prices = historicalSecurityPriceService.getPrices(securityId, oneYearAgo);
-      oldestPrice = prices.isEmpty() ? null : historicalSecurityPriceService.getOldestPrice(securityId, prices.getLast().getCurrency());
-    } catch (RuntimeException e) {
-      return null;
+  private void requireSupportedOrAbsent(String currency) throws BadRequestException {
+    if (!isSupportedOrAbsent(currency)) {
+      throw new BadRequestException();
     }
-    if (prices.isEmpty()) {
-      return null;
+  }
+
+  private boolean isSupportedOrAbsent(String currency) {
+    return currency == null || serverConfigurationService.getSupportedCurrencies().contains(currency);
+  }
+
+  /**
+   * Computes the price meta information the way {@link SecurityService#getPriceMetaInfo} describes it, for a supported or absent
+   * {@code currency}.
+   *
+   * @param securityIds the securities to look up
+   * @param currency    the currency of the price meta information, {@code null} for the currency of each security's latest stored price
+   * @return the price meta information by security ID; a security where every price is left out has none
+   */
+  private Map<Long, PriceMetaInfoDto> computePriceMetaInfos(List<Long> securityIds, String currency) {
+    Map<Long, HistoricalSecurityPriceSummary> summaries;
+    try {
+      summaries = historicalSecurityPriceService.getPriceSummaries(securityIds, currency, LocalDate.now(clock).minusYears(1));
+    } catch (RuntimeException e) {
+      return Map.of();
     }
 
+    Map<Long, PriceMetaInfoDto> priceMetaInfos = new HashMap<>();
+    summaries.forEach((securityId, summary) -> priceMetaInfos.put(securityId, toPriceMetaInfo(summary)));
+    return priceMetaInfos;
+  }
+
+  private PriceMetaInfoDto toPriceMetaInfo(HistoricalSecurityPriceSummary summary) {
+    HistoricalSecurityPrice latestPrice = summary.getLatestPrice();
+    HistoricalSecurityPrice oldestPrice = summary.getOldestPrice();
     PriceMetaInfoDto priceMetaInfo = new PriceMetaInfoDto();
-    HistoricalSecurityPrice latestPrice = prices.getLast();
     priceMetaInfo.setCurrency(latestPrice.getCurrency());
     priceMetaInfo.setLatestPrice(latestPrice.getPrice());
     priceMetaInfo.setLatestPriceDate(latestPrice.getDate());
     priceMetaInfo.setOldestPrice(oldestPrice.getPrice());
     priceMetaInfo.setOldestPriceDate(oldestPrice.getDate());
 
-    List<BigDecimal> priceValues = new ArrayList<>(prices.stream().map(HistoricalSecurityPrice::getPrice).toList());
-    priceValues.sort(BigDecimal::compareTo);
-    priceMetaInfo.setLowTrailingTwelveMonths(priceValues.getFirst());
-    priceMetaInfo.setHighTrailingTwelveMonths(priceValues.getLast());
+    List<HistoricalSecurityPrice> trailingTwelveMonths = summary.getRecentPrices();
+    if (!trailingTwelveMonths.isEmpty()) {
+      List<BigDecimal> priceValues = new ArrayList<>(trailingTwelveMonths.stream().map(HistoricalSecurityPrice::getPrice).toList());
+      priceValues.sort(BigDecimal::compareTo);
+      priceMetaInfo.setLowTrailingTwelveMonths(priceValues.getFirst());
+      priceMetaInfo.setHighTrailingTwelveMonths(priceValues.getLast());
+    }
     return priceMetaInfo;
   }
 
