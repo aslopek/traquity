@@ -26,6 +26,7 @@ short sentences, names buttons and screens exactly as the app labels them, and a
 - [Market data sources](#market-data-sources)
 - [AI features](#ai-features)
 - [A tour of the screens](#a-tour-of-the-screens)
+- [Currency conversion](#currency-conversion)
 - [Understanding your depot performance numbers](#understanding-your-depot-performance-numbers)
 - [Dev mode and direct database access](#dev-mode-and-direct-database-access)
 - [Troubleshooting](#troubleshooting)
@@ -382,8 +383,8 @@ A depot is one portfolio: a name, a currency, an optional logo, and the transact
 3. Enter a name, pick the currency, and press **Create**.
 
 The currency is the depot's currency: every transaction amount is entered in it, and every figure the depot's tabs show is expressed in it.
-A security priced in another currency is converted with the ECB reference rate when its position value is computed, so a depot may hold
-securities from any market. To delete a depot, select it and press the bin button next to the dropdown.
+A security priced in another currency is converted when its position value is computed (see [Currency conversion](#currency-conversion)),
+so a depot may hold securities from any market. To delete a depot, select it and press the bin button next to the dropdown.
 
 ### Selecting one or several depots
 
@@ -1005,6 +1006,23 @@ its `About` tab and the [transparency note](#privacy-what-leaves-your-computer) 
 the database button. A running
 [AI model download](#ai-features) shows its progress here too.
 
+## Currency conversion
+
+TraQuity converts an amount from one currency into another with the ECB exchange rates it has stored. Converting from `A` into `B` can use
+either the exchange rate from `A` into `B` or the inverse exchange rate: the rate from `B` into `A`, inverted. Which day's rate applies
+depends on the amount.
+
+An amount that belongs to a day, e.g. a historical price:
+
+1. The exchange rate or inverse exchange rate of that day.
+2. If that day has neither, the exchange rate or inverse exchange rate of the latest earlier day that has one.
+3. If no earlier day has one, the amount cannot be converted.
+
+An amount that belongs to no day, or to a day in the future, e.g. a dividend announcement:
+
+1. The exchange rate or inverse exchange rate of the latest day that has one.
+2. If no day has one, the amount cannot be converted.
+
 ## Understanding your depot performance numbers
 
 TraQuity shows several numbers that all describe "performance" from different angles. This section explains what each one means, so the
@@ -1069,9 +1087,9 @@ you select. Leave it empty to start the line at `0`. Every later increase of the
 Shares may be fractional, and no money waits as cash. The line shows what the shares are worth at each shown day's price. A day without a
 price of its own is valued at the latest price before it.
 
-The line is shown in the currency of the selected depots, converted at the exchange rates TraQuity knows. It follows the price only:
-dividends of the security are not part of it. Only a security whose prices reach back to the oldest shown day can be picked. Any other
-security is listed greyed out, with the day its prices start beside it, or **No prices** if it has none.
+The line is shown in the currency of the selected depots, converted as [Currency conversion](#currency-conversion) describes. It follows
+the price only: dividends of the security are not part of it. Only a security whose prices reach back to the oldest shown day can be
+picked. Any other security is listed greyed out, with the day its prices start beside it, or **No prices** if it has none.
 
 ### Position-level returns
 

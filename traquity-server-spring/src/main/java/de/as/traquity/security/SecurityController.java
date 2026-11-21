@@ -6,6 +6,7 @@ import static de.as.traquity.common.pagination.PaginationUtils.getPageSize;
 import de.as.traquity.common.pagination.PageContainer;
 import de.as.traquity.security.api.controller.SecurityApiDelegate;
 import de.as.traquity.security.api.model.PaginatedSecurityReadDto;
+import de.as.traquity.security.api.model.PriceMetaInfoDto;
 import de.as.traquity.security.api.model.SecurityCreateDto;
 import de.as.traquity.security.api.model.SecurityOrderPropertyDto;
 import de.as.traquity.security.api.model.SecurityReadDto;
@@ -15,9 +16,11 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 class SecurityController implements SecurityApiDelegate {
@@ -51,9 +54,9 @@ class SecurityController implements SecurityApiDelegate {
 
   @Override
   public ResponseEntity<PaginatedSecurityReadDto> getSecurities(Integer page, Integer pageSize, SortOrderDto order,
-                                                                String search, SecurityOrderPropertyDto orderBy) {
+                                                                String search, SecurityOrderPropertyDto orderBy, String currency) {
     PageContainer<Security> securities =
-        securityService.getSecurities(getPageNumber(page), getPageSize(pageSize), search, orderBy, order);
+        securityService.getSecurities(getPageNumber(page), getPageSize(pageSize), search, orderBy, order, currency);
     PaginatedSecurityReadDto responseBody = securityMapper.toPageDto(securities);
     for (SecurityReadDto security : responseBody.getItems()) {
       if (securityService.hasLogo(security.getId())) {
@@ -64,8 +67,8 @@ class SecurityController implements SecurityApiDelegate {
   }
 
   @Override
-  public ResponseEntity<SecurityReadDto> getSecurity(Long id) {
-    Security security = securityService.getSecurity(id);
+  public ResponseEntity<SecurityReadDto> getSecurity(Long id, String currency) {
+    Security security = securityService.getSecurity(id, currency);
     SecurityReadDto responseBody = securityMapper.toDto(security);
     if (securityService.hasLogo(id)) {
       responseBody.getLinks().setLogo(String.format(SECURITY_LOGO_URI_PATTERN, id));
@@ -74,10 +77,18 @@ class SecurityController implements SecurityApiDelegate {
   }
 
   @Override
-  public ResponseEntity<SecurityReadDto> updateSecurity(Long id, SecurityUpdateDto securityUpdateDto) {
+  public ResponseEntity<SecurityReadDto> updateSecurity(Long id, SecurityUpdateDto securityUpdateDto, String currency) {
     Security security = securityMapper.fromUpdateDto(securityUpdateDto);
     security.setId(id);
     security = securityService.updateSecurity(security);
+
+    // looking up the price information must not hide an otherwise successful update behind a non-200 status code
+    try {
+      PriceMetaInfoDto info = securityService.getPriceMetaInfo(id, currency);
+      security.setPriceMetaInfo(info);
+    } catch (RuntimeException e) {
+      log.warn(e.getMessage(), e);
+    }
     SecurityReadDto responseBody = securityMapper.toDto(security);
     return ResponseEntity.ok(responseBody);
   }

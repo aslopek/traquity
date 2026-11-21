@@ -3,11 +3,16 @@ package de.as.traquity.security;
 import java.math.BigDecimal;
 
 import static de.as.traquity.security.api.model.SecurityTypeDto.STOCK;
+import static integration.Accuracy.ACCURACY_ONE_THOUSANDTH;
 import static integration.SecurityIds.ASML;
+import static integration.SecurityIds.GOOG;
+import static integration.SecurityIds.GOOGL;
 import static integration.SecurityIds.MSFT;
+import static java.time.Month.APRIL;
 import static java.time.Month.DECEMBER;
 import static java.time.Month.JULY;
 import static java.time.Month.MARCH;
+import static java.time.Month.NOVEMBER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.context.jdbc.SqlMergeMode.MergeMode.MERGE;
@@ -197,6 +202,113 @@ class GetSecuritiesTest {
     assertThat(priceMetaInfo.getLatestPriceDate()).isEqualTo(LocalDate.of(2023, DECEMBER, 29));
     assertThat(priceMetaInfo.getOldestPrice()).isEqualByComparingTo("25.49003831417624521072796934865900");
     assertThat(priceMetaInfo.getOldestPriceDate()).isEqualTo(LocalDate.of(2022, MARCH, 25));
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      DELETE FROM HISTORICAL_SECURITY_PRICE
+      WHERE SECURITY_ID = (SELECT ID FROM SECURITY WHERE NAME = 'Alphabet A')
+      AND DATE < '2023-11-29';
+      INSERT INTO HISTORICAL_SECURITY_PRICE(SECURITY_ID, DATA_SOURCE_ID, PRICE, CURRENCY, DATE, CREATED_AT, UPDATED_AT)
+      VALUES ((SELECT ID FROM SECURITY WHERE NAME = 'Alphabet A'), NULL, 100, 'EUR', '2023-11-30', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+             ((SELECT ID FROM SECURITY WHERE NAME = 'Alphabet A'), NULL, 140, 'EUR', '2023-12-05', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+             ((SELECT ID FROM SECURITY WHERE NAME = 'Alphabet A'), NULL, 90, 'EUR', '2023-12-07', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      """)
+  void getSecurities_withCurrency_everyPriceHasRate_everyPriceConverted() throws Exception {
+    PriceMetaInfoDto priceMetaInfo = getPriceMetaInfo(GOOGL, "USD");
+    assertThat(priceMetaInfo.getCurrency()).isEqualTo("USD");
+
+    // 126.76 EUR at the EUR/USD rate of 1.0777 on 2023-12-08, the closest rate before 2023-12-29
+    assertThat(priceMetaInfo.getLatestPrice()).isCloseTo(new BigDecimal("136.609252"), ACCURACY_ONE_THOUSANDTH);
+    assertThat(priceMetaInfo.getLatestPriceDate()).isEqualTo(LocalDate.of(2023, DECEMBER, 29));
+
+    // 100 EUR at the EUR/USD rate of 1.0931 on 2023-11-30
+    assertThat(priceMetaInfo.getOldestPrice()).isCloseTo(new BigDecimal("109.31"), ACCURACY_ONE_THOUSANDTH);
+    assertThat(priceMetaInfo.getOldestPriceDate()).isEqualTo(LocalDate.of(2023, NOVEMBER, 30));
+
+    // 140 EUR at the EUR/USD rate of 1.0817 on 2023-12-05
+    assertThat(priceMetaInfo.getHighTrailingTwelveMonths()).isCloseTo(new BigDecimal("151.438"), ACCURACY_ONE_THOUSANDTH);
+
+    // 90 EUR at the EUR/USD rate of 1.0771 on 2023-12-07
+    assertThat(priceMetaInfo.getLowTrailingTwelveMonths()).isCloseTo(new BigDecimal("96.939"), ACCURACY_ONE_THOUSANDTH);
+  }
+
+  @Test
+  void getSecurities_withCurrency_securitiesOfOnePage_eachFromItsOwnPrices() throws Exception {
+    PaginatedSecurityReadDto page = getFirstPage("USD");
+
+    PriceMetaInfoDto alphabetA = priceMetaInfoOf(page, GOOGL);
+    assertThat(alphabetA.getCurrency()).isEqualTo("USD");
+
+    // 126.76 EUR at the EUR/USD rate of 1.0777 on 2023-12-08, the closest rate before 2023-12-29
+    assertThat(alphabetA.getLatestPrice()).isCloseTo(new BigDecimal("136.609252"), ACCURACY_ONE_THOUSANDTH);
+    assertThat(alphabetA.getLatestPriceDate()).isEqualTo(LocalDate.of(2023, DECEMBER, 29));
+
+    // the older EUR prices predate every EUR/USD rate
+    assertThat(alphabetA.getOldestPrice()).isEqualByComparingTo("136.1302564102564102564102564102564");
+    assertThat(alphabetA.getOldestPriceDate()).isEqualTo(LocalDate.of(2022, MARCH, 18));
+
+    assertThat(alphabetA.getHighTrailingTwelveMonths()).isCloseTo(new BigDecimal("136.609252"), ACCURACY_ONE_THOUSANDTH);
+    assertThat(alphabetA.getLowTrailingTwelveMonths()).isCloseTo(new BigDecimal("136.609252"), ACCURACY_ONE_THOUSANDTH);
+
+    PriceMetaInfoDto alphabetC = priceMetaInfoOf(page, GOOG);
+    assertThat(alphabetC.getCurrency()).isEqualTo("USD");
+
+    // 127.68 EUR at the EUR/USD rate of 1.0777 on 2023-12-08, the closest rate before 2023-12-29
+    assertThat(alphabetC.getLatestPrice()).isCloseTo(new BigDecimal("137.600736"), ACCURACY_ONE_THOUSANDTH);
+    assertThat(alphabetC.getLatestPriceDate()).isEqualTo(LocalDate.of(2023, DECEMBER, 29));
+
+    assertThat(alphabetC.getOldestPrice()).isEqualByComparingTo("133.2898989898989898989898989898990");
+    assertThat(alphabetC.getOldestPriceDate()).isEqualTo(LocalDate.of(2022, APRIL, 8));
+
+    assertThat(alphabetC.getHighTrailingTwelveMonths()).isEqualByComparingTo("140.4202020202020202020202020202020");
+    assertThat(alphabetC.getLowTrailingTwelveMonths()).isEqualByComparingTo("94.35");
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      DELETE FROM EXCHANGE_RATE
+      WHERE BASE_CURRENCY = 'CHF'
+      OR TARGET_CURRENCY = 'CHF';
+      """)
+  void getSecurities_withCurrency_noPriceHasRate_priceMetaInfoAbsent() throws Exception {
+    assertThat(getPriceMetaInfo(GOOGL, "CHF")).isNull();
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      DELETE FROM HISTORICAL_SECURITY_PRICE
+      WHERE SECURITY_ID = (SELECT ID FROM SECURITY WHERE NAME = 'Alphabet A') AND DATE >= '2022-08-01';
+      """)
+  void getSecurities_withCurrency_noPriceInTrailingTwelveMonths_highAndLowAbsent() throws Exception {
+    PriceMetaInfoDto priceMetaInfo = getPriceMetaInfo(GOOGL, "EUR");
+    assertThat(priceMetaInfo).isNotNull();
+    assertThat(priceMetaInfo.getCurrency()).isEqualTo("EUR");
+
+    // the latest stored price, 136.13 USD of 2022-03-18, predates every EUR/USD rate
+    assertThat(priceMetaInfo.getLatestPrice()).isEqualByComparingTo("120");
+    assertThat(priceMetaInfo.getLatestPriceDate()).isEqualTo(LocalDate.of(2022, MARCH, 16));
+
+    assertThat(priceMetaInfo.getOldestPrice()).isEqualByComparingTo("1225.2");
+    assertThat(priceMetaInfo.getOldestPriceDate()).isEqualTo(LocalDate.of(2019, DECEMBER, 20));
+
+    assertThat(priceMetaInfo.getHighTrailingTwelveMonths()).isNull();
+    assertThat(priceMetaInfo.getLowTrailingTwelveMonths()).isNull();
+  }
+
+  @Test
+  void getSecurities_malformedCurrency_badRequest() throws Exception {
+    MvcResult result = getSecurities("eur").andExpect(status().isBadRequest()).andReturn();
+    assertThat(result.getResponse().getContentLength()).isZero();
+  }
+
+  @Test
+  void getSecurities_unsupportedCurrency_badRequest() throws Exception {
+    MvcResult result = getSecurities("XYZ").andExpect(status().isBadRequest()).andReturn();
+    assertThat(result.getResponse().getContentLength()).isZero();
   }
 
   @Test
@@ -445,6 +557,27 @@ class GetSecuritiesTest {
       requestBuilder = requestBuilder.queryParam("order", order.getValue());
     }
     return mockMvc.perform(requestBuilder);
+  }
+
+  private ResultActions getSecurities(String currency) throws Exception {
+    return mockMvc.perform(get(ENDPOINT).queryParam("currency", currency));
+  }
+
+  private PriceMetaInfoDto getPriceMetaInfo(long securityId, String currency) throws Exception {
+    return priceMetaInfoOf(getFirstPage(currency), securityId);
+  }
+
+  private PaginatedSecurityReadDto getFirstPage(String currency) throws Exception {
+    MvcResult mvcResult = getSecurities(currency).andExpect(status().isOk()).andReturn();
+    return objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {});
+  }
+
+  private PriceMetaInfoDto priceMetaInfoOf(PaginatedSecurityReadDto page, long securityId) {
+    return page.getItems().stream()
+        .filter(security -> security.getId() == securityId)
+        .findFirst()
+        .orElseThrow()
+        .getPriceMetaInfo();
   }
 
   private void verifySecurityIds(List<SecurityReadDto> securities, long minId, long maxId) {

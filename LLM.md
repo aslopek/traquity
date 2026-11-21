@@ -16,7 +16,12 @@ Read the part's own `LLM.md` before changing anything there: `traquity-api/LLM.m
 
 ## Code style
 
-Line length: 140 characters, project-wide and in all file types. Language specifics live in each part's own `LLM.md`.
+Line length: 140 characters, project-wide and in all file types. It is the target width, not just a cap:
+
+- Prose (Markdown, comments, docs) wraps only where the next word would cross 140 — never at 80 or any other narrower width.
+- Code breaks a statement, signature or argument list only when it doesn't fit in 140.
+
+Language specifics live in each part's own `LLM.md`.
 
 ## Testing: nothing under test witnesses itself
 
@@ -81,6 +86,12 @@ Avoid mentioning stories and acceptance criteria in docs or comments.
 - Every server contacted that this project does not run itself is listed in the About dialog's Transparency tab
   (`traquity-client-angular/src/app/privacy/privacy-notice/privacy-notice.component.html`): who, when, what.
 - Keep it in sync when changing how the app interacts with third parties.
+
+## Currency conversion
+
+- Every conversion of a monetary value follows the rules in `USER_MANUAL.md`, section "Currency conversion".
+- Never restate the rules in docs, comments, specs or other `LLM.md` files. A doc says a value is converted or cannot be converted; only
+  the unit implementing the rules points to the section.
 
 ## Dependency licensing
 

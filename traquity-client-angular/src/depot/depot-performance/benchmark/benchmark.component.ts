@@ -32,7 +32,7 @@ export class BenchmarkComponent {
     return this.depotPerformanceStore.benchmarkResult() !== null;
   });
 
-  protected readonly mode: WritableSignal<BenchmarkMode> = signal<BenchmarkMode>('fixedInterest.cashFlowBased');
+  protected readonly mode: WritableSignal<BenchmarkMode> = signal<BenchmarkMode>('security.cashFlowBased');
 
   protected readonly fixedInterestMode: Signal<FixedInterestBenchmarkMode | null> = computed<FixedInterestBenchmarkMode | null>(
     (): FixedInterestBenchmarkMode | null => {

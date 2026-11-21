@@ -103,8 +103,12 @@ class HistoricalSecurityPriceServiceImpl implements HistoricalSecurityPriceServi
   }
 
   /**
-   * Converts every price not yet in {@code currency} in place, each at the exchange rate of its own date, and returns the prices now in
-   * {@code currency}. A price without an exchange rate for its date is left out.
+   * Converts every price not yet in {@code currency} in place and returns the prices now in {@code currency}. A price that cannot be
+   * converted is left out.
+   *
+   * @param prices   the prices to convert, each in its own currency
+   * @param currency the currency to convert to
+   * @return the prices now in {@code currency}, in the order of {@code prices}
    */
   private List<HistoricalSecurityPrice> convert(List<HistoricalSecurityPrice> prices, String currency) {
     // group by source currency and convert each group in one batch call
@@ -148,32 +152,126 @@ class HistoricalSecurityPriceServiceImpl implements HistoricalSecurityPriceServi
 
   @Override
   @Transactional(readOnly = true)
-  public HistoricalSecurityPrice getOldestPrice(long securityId, String currency) throws NotFoundException {
-    HistoricalSecurityPrice oldest = priceRepository.findFirstBySecurityIdOrderByDateAsc(securityId)
-        .map(priceMapper::fromEntity)
-        .orElseThrow(NotFoundException::new);
-    if (oldest.getCurrency().equals(currency)) {
-      return oldest;
+  public Map<Long, HistoricalSecurityPriceSummary> getPriceSummaries(Collection<Long> securityIds, String currency,
+                                                                     LocalDate startDate) {
+    List<UnconvertedSummary> unconvertedSummaries = new ArrayList<>(securityIds.size());
+    Map<String, List<HistoricalSecurityPrice>> pricesBySummaryCurrency = new HashMap<>();
+
+    for (long securityId : securityIds) {
+      Optional<HistoricalSecurityPriceEntity> latestPrice = priceRepository.findFirstBySecurityIdOrderByDateDesc(securityId);
+      Optional<HistoricalSecurityPriceEntity> oldestPrice = priceRepository.findFirstBySecurityIdOrderByDateAsc(securityId);
+      if (latestPrice.isEmpty() || oldestPrice.isEmpty()) {
+        continue;
+      }
+
+      HistoricalSecurityPriceSummary summary = new HistoricalSecurityPriceSummary();
+      summary.setLatestPrice(priceMapper.fromEntity(latestPrice.get()));
+      summary.setOldestPrice(priceMapper.fromEntity(oldestPrice.get()));
+      summary.setRecentPrices(findPrices(securityId, startDate));
+
+      String summaryCurrency = currency == null ? summary.getLatestPrice().getCurrency() : currency;
+      List<HistoricalSecurityPrice> prices = pricesBySummaryCurrency.computeIfAbsent(summaryCurrency, c -> new ArrayList<>());
+      prices.add(summary.getLatestPrice());
+      prices.add(summary.getOldestPrice());
+      prices.addAll(summary.getRecentPrices());
+      unconvertedSummaries.add(new UnconvertedSummary(securityId, summaryCurrency, summary));
     }
 
-    Map<String, LocalDate> earliestConversionDates = new HashMap<>();
+    pricesBySummaryCurrency.forEach((summaryCurrency, prices) -> convert(prices, summaryCurrency));
+
+    Map<Long, HistoricalSecurityPriceSummary> summaries = new HashMap<>();
+    for (UnconvertedSummary unconverted : unconvertedSummaries) {
+      try {
+        summaries.put(unconverted.securityId(), completeConverted(unconverted));
+      } catch (NotFoundException e) {
+        // no price of this security is stored in or convertible to the summary's currency
+      }
+    }
+    return summaries;
+  }
+
+  /**
+   * Completes a summary after its prices went through the conversion to its currency: a latest or oldest price that did not convert is
+   * replaced by the latest or oldest price stored in or convertible to that currency, and the recent prices that did not convert are
+   * left out.
+   *
+   * @param unconverted the summary whose prices went through the conversion
+   * @return the completed summary
+   * @throws NotFoundException when no price of the security is stored in or convertible to the summary's currency
+   */
+  private HistoricalSecurityPriceSummary completeConverted(UnconvertedSummary unconverted) throws NotFoundException {
+    HistoricalSecurityPriceSummary summary = unconverted.summary();
+    String currency = unconverted.currency();
+    if (!summary.getLatestPrice().getCurrency().equals(currency)) {
+      summary.setLatestPrice(findLatestConvertiblePrice(unconverted.securityId(), currency));
+    }
+    if (!summary.getOldestPrice().getCurrency().equals(currency)) {
+      summary.setOldestPrice(findOldestConvertiblePrice(unconverted.securityId(), currency));
+    }
+    summary.setRecentPrices(summary.getRecentPrices().stream().filter(price -> price.getCurrency().equals(currency)).toList());
+    return summary;
+  }
+
+  /** A summary of the prices of a security as stored, to be converted to {@code currency}. */
+  private record UnconvertedSummary(long securityId, String currency, HistoricalSecurityPriceSummary summary) {
+  }
+
+  /**
+   * Finds the latest price of a security that is stored in {@code currency} or can be converted to it. Must run inside a transaction,
+   * since it streams the prices.
+   *
+   * @param securityId the security to look up
+   * @param currency   the currency in which the price shall be returned
+   * @return the latest qualifying price, denoted in {@code currency}
+   * @throws NotFoundException when no stored price qualifies
+   */
+  private HistoricalSecurityPrice findLatestConvertiblePrice(long securityId, String currency) throws NotFoundException {
+    try (Stream<HistoricalSecurityPriceEntity> prices = priceRepository.findAllBySecurityIdOrderByDateDesc(securityId)) {
+      return findFirstConvertible(prices, currency);
+    }
+  }
+
+  /**
+   * Finds the oldest price of a security that is stored in {@code currency} or can be converted to it. Must run inside a transaction,
+   * since it streams the prices.
+   *
+   * @param securityId the security to look up
+   * @param currency   the currency in which the price shall be returned
+   * @return the oldest qualifying price, denoted in {@code currency}
+   * @throws NotFoundException when no stored price qualifies
+   */
+  private HistoricalSecurityPrice findOldestConvertiblePrice(long securityId, String currency) throws NotFoundException {
     try (Stream<HistoricalSecurityPriceEntity> prices = priceRepository.findAllBySecurityIdOrderByDateAsc(securityId)) {
-      for (Iterator<HistoricalSecurityPriceEntity> it = prices.iterator(); it.hasNext(); ) {
-        HistoricalSecurityPrice price = priceMapper.fromEntity(it.next());
-        if (price.getCurrency().equals(currency)) {
-          return price;
-        }
-        LocalDate earliest = earliestConversionDates.computeIfAbsent(price.getCurrency(), c -> earliestConversionDate(c, currency));
-        if (price.getDate().isBefore(earliest)) {
-          continue;
-        }
-        BigDecimal converted = exchangeRateService
-            .convertBestEffort(List.of(new CurrencyConversionRequest(price.getPrice(), price.getDate())), price.getCurrency(), currency)
-            .getFirst();
-        price.setPrice(converted);
-        price.setCurrency(currency);
+      return findFirstConvertible(prices, currency);
+    }
+  }
+
+  /**
+   * Returns the first of {@code prices} that is stored in {@code currency} or can be converted to it, denoted in {@code currency}.
+   *
+   * @param prices   the prices to search, in the order to search them
+   * @param currency the currency the price is denoted in
+   * @return the first qualifying price, denoted in {@code currency}
+   * @throws NotFoundException when no price qualifies
+   */
+  private HistoricalSecurityPrice findFirstConvertible(Stream<HistoricalSecurityPriceEntity> prices, String currency)
+      throws NotFoundException {
+    Map<String, LocalDate> earliestConversionDates = new HashMap<>();
+    for (Iterator<HistoricalSecurityPriceEntity> it = prices.iterator(); it.hasNext(); ) {
+      HistoricalSecurityPrice price = priceMapper.fromEntity(it.next());
+      if (price.getCurrency().equals(currency)) {
         return price;
       }
+      LocalDate earliest = earliestConversionDates.computeIfAbsent(price.getCurrency(), c -> earliestConversionDate(c, currency));
+      if (price.getDate().isBefore(earliest)) {
+        continue;
+      }
+      BigDecimal converted = exchangeRateService
+          .convertBestEffort(List.of(new CurrencyConversionRequest(price.getPrice(), price.getDate())), price.getCurrency(), currency)
+          .getFirst();
+      price.setPrice(converted);
+      price.setCurrency(currency);
+      return price;
     }
     throw new NotFoundException();
   }
