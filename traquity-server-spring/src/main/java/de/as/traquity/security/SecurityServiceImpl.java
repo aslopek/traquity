@@ -9,6 +9,7 @@ import de.as.traquity.common.error.NotFoundException;
 import de.as.traquity.common.error.UnprocessableEntityException;
 import de.as.traquity.common.image.ImageService;
 import de.as.traquity.common.pagination.PageContainer;
+import de.as.traquity.configuration.ServerConfigurationService;
 import de.as.traquity.price.security.historical.HistoricalSecurityPrice;
 import de.as.traquity.price.security.historical.HistoricalSecurityPriceService;
 import de.as.traquity.security.api.model.PriceMetaInfoDto;
@@ -49,6 +50,7 @@ class SecurityServiceImpl implements SecurityService {
   private final SecurityRepository securityRepository;
   private final SecurityLogoRepository securityLogoRepository;
   private final HistoricalSecurityPriceService historicalSecurityPriceService;
+  private final ServerConfigurationService serverConfigurationService;
   private final ImageService imageService;
   private final MathContext mathContext;
 
@@ -100,7 +102,8 @@ class SecurityServiceImpl implements SecurityService {
 
   @Override
   public PageContainer<Security> getSecurities(int page, int pageSize, String search, SecurityOrderPropertyDto orderBy,
-                                               SortOrderDto order) {
+                                               SortOrderDto order, String currency) throws BadRequestException {
+    requireSupportedOrAbsent(currency);
     final PageRequest pageRequest;
     if (orderBy != null) {
       Sort.Direction direction = SortOrderDto.DESC.equals(order) ? Sort.Direction.DESC : Sort.Direction.ASC;
@@ -125,7 +128,7 @@ class SecurityServiceImpl implements SecurityService {
     result.setLastPage(Math.max(0, securities.getTotalPages() - 1));
     result.setPageSize(pageSize);
     result.setItems(securities.stream().map(securityMapper::fromEntity).toList());
-    result.getItems().forEach(security -> security.setPriceMetaInfo(getPriceMetaInfo(security.getId())));
+    result.getItems().forEach(security -> security.setPriceMetaInfo(computePriceMetaInfo(security.getId(), currency)));
     return result;
   }
 
@@ -140,11 +143,17 @@ class SecurityServiceImpl implements SecurityService {
   }
 
   @Override
-  public Security getSecurity(Long securityId) throws NotFoundException {
+  public Security getSecurity(Long securityId, String currency) throws BadRequestException, NotFoundException {
+    requireSupportedOrAbsent(currency);
     SecurityEntity fromDatabase = securityRepository.findById(securityId).orElseThrow(NotFoundException::new);
     Security security = securityMapper.fromEntity(fromDatabase);
-    security.setPriceMetaInfo(getPriceMetaInfo(securityId));
+    security.setPriceMetaInfo(computePriceMetaInfo(securityId, currency));
     return security;
+  }
+
+  @Override
+  public PriceMetaInfoDto getPriceMetaInfo(long securityId, String currency) {
+    return isSupportedOrAbsent(currency) ? computePriceMetaInfo(securityId, currency) : null;
   }
 
   @Override
@@ -272,32 +281,52 @@ class SecurityServiceImpl implements SecurityService {
     }
   }
 
-  private PriceMetaInfoDto getPriceMetaInfo(Long securityId) {
-    LocalDate oneYearAgo = LocalDate.now(clock).minusYears(1);
-    List<HistoricalSecurityPrice> prices;
-    HistoricalSecurityPrice oldestPrice;
-    try {
-      prices = historicalSecurityPriceService.getPrices(securityId, oneYearAgo);
-      oldestPrice = prices.isEmpty() ? null : historicalSecurityPriceService.getOldestPrice(securityId, prices.getLast().getCurrency());
-    } catch (RuntimeException e) {
-      return null;
+  private void requireSupportedOrAbsent(String currency) throws BadRequestException {
+    if (!isSupportedOrAbsent(currency)) {
+      throw new BadRequestException();
     }
-    if (prices.isEmpty()) {
+  }
+
+  private boolean isSupportedOrAbsent(String currency) {
+    return currency == null || serverConfigurationService.getSupportedCurrencies().contains(currency);
+  }
+
+  /**
+   * Computes the price meta information the way {@link SecurityService#getPriceMetaInfo} describes it, for a supported or absent
+   * {@code currency}.
+   *
+   * @param securityId the security to look up
+   * @param currency   the currency of the price meta information, {@code null} for the currency of the latest stored price
+   * @return the price meta information, {@code null} where no price counts
+   */
+  private PriceMetaInfoDto computePriceMetaInfo(long securityId, String currency) {
+    HistoricalSecurityPrice latestPrice;
+    HistoricalSecurityPrice oldestPrice;
+    List<HistoricalSecurityPrice> trailingTwelveMonths;
+    try {
+      latestPrice = currency == null
+          ? historicalSecurityPriceService.getLatestPrice(securityId)
+          : historicalSecurityPriceService.getLatestConvertiblePrice(securityId, currency);
+      String priceCurrency = latestPrice.getCurrency();
+      oldestPrice = historicalSecurityPriceService.getOldestPrice(securityId, priceCurrency);
+      trailingTwelveMonths = historicalSecurityPriceService.getPrices(securityId, LocalDate.now(clock).minusYears(1), priceCurrency);
+    } catch (RuntimeException e) {
       return null;
     }
 
     PriceMetaInfoDto priceMetaInfo = new PriceMetaInfoDto();
-    HistoricalSecurityPrice latestPrice = prices.getLast();
     priceMetaInfo.setCurrency(latestPrice.getCurrency());
     priceMetaInfo.setLatestPrice(latestPrice.getPrice());
     priceMetaInfo.setLatestPriceDate(latestPrice.getDate());
     priceMetaInfo.setOldestPrice(oldestPrice.getPrice());
     priceMetaInfo.setOldestPriceDate(oldestPrice.getDate());
 
-    List<BigDecimal> priceValues = new ArrayList<>(prices.stream().map(HistoricalSecurityPrice::getPrice).toList());
-    priceValues.sort(BigDecimal::compareTo);
-    priceMetaInfo.setLowTrailingTwelveMonths(priceValues.getFirst());
-    priceMetaInfo.setHighTrailingTwelveMonths(priceValues.getLast());
+    if (!trailingTwelveMonths.isEmpty()) {
+      List<BigDecimal> priceValues = new ArrayList<>(trailingTwelveMonths.stream().map(HistoricalSecurityPrice::getPrice).toList());
+      priceValues.sort(BigDecimal::compareTo);
+      priceMetaInfo.setLowTrailingTwelveMonths(priceValues.getFirst());
+      priceMetaInfo.setHighTrailingTwelveMonths(priceValues.getLast());
+    }
     return priceMetaInfo;
   }
 

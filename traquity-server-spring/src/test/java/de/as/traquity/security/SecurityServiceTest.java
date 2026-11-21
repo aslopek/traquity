@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import de.as.traquity.common.error.ConflictException;
 import de.as.traquity.common.image.ImageService;
+import de.as.traquity.configuration.ServerConfigurationService;
 import de.as.traquity.price.security.historical.HistoricalSecurityPriceService;
 import java.time.Clock;
 import java.util.Optional;
@@ -23,9 +24,8 @@ class SecurityServiceTest {
   @BeforeEach
   void beforeEach() {
     securityRepository = mock(SecurityRepository.class);
-    subject = new SecurityServiceImpl(mock(Clock.class), mock(SecurityMapper.class), securityRepository,
-        mock(SecurityLogoRepository.class), mock(HistoricalSecurityPriceService.class), mock(ImageService.class),
-        MATH_CONTEXT);
+    subject = new SecurityServiceImpl(mock(Clock.class), mock(SecurityMapper.class), securityRepository, mock(SecurityLogoRepository.class),
+        mock(HistoricalSecurityPriceService.class), mock(ServerConfigurationService.class), mock(ImageService.class), MATH_CONTEXT);
   }
 
   @Test
