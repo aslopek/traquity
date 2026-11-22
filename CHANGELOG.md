@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-11-22
+
 ### Added
 
 - **Security (Cashflow based)** benchmark on the *Depot / Performance* tab. It draws what the depot's own money would be worth if it had
