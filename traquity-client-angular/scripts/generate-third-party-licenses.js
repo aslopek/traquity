@@ -385,7 +385,7 @@ function sassCandidatePaths(resolvedPath) {
  * @returns {string | null}
  */
 function packageNameOf(specifier, baseDirectory) {
-  if (isLocalPathOrReference(specifier) || isUrlOrProtocol(specifier)) {
+  if (isLocalPathOrReference(specifier) || isUrlOrProtocol(specifier) || isSassVariable(specifier)) {
     return null;
   }
   if (sassCandidatePaths(path.resolve(baseDirectory, specifier)).some(candidate => fs.existsSync(candidate))) {
@@ -406,6 +406,11 @@ function isLocalPathOrReference(specifier) {
 function isUrlOrProtocol(specifier) {
   const urlProtocolRegex = /^[a-z][a-z0-9+.-]*:/i;
   return urlProtocolRegex.test(specifier);
+}
+
+// Checks for a Sass variable (e.g., url($icon)): its value is resolved by Sass and inlined, so it names no file or package
+function isSassVariable(specifier) {
+  return specifier.startsWith('$');
 }
 
 /** @typedef {{specifier: string, baseDirectory: string}} StylesheetReference */

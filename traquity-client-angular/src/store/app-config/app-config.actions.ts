@@ -10,6 +10,9 @@ export const AppConfigActions = createActionGroup({
   events: {
     'Set App Config': props<Omit<AppConfigState, 'devModeActive' | 'loaded'>>(),
 
+    'Set Christmas Theme': props<{ christmasTheme: boolean }>(),
+    'Set Christmas Theme Done': props<{ christmasTheme: boolean }>(),
+
     'Set Currency Locale': props<{ currencyLocale: string }>(),
     'Set Currency Locale Done': props<{ currencyLocale: string }>(),
 

@@ -7,6 +7,7 @@ import {ConfigApi} from '../../gen/api/configuration';
 import {clientId} from '../client-id';
 import {
   appConfigPrefix,
+  AppChristmasTheme,
   AppCurrencyLocale,
   AppDateFormat,
   AppDateLocale,
@@ -18,6 +19,7 @@ import {
 } from './app-config-keys';
 import {AppConfigActions} from './app-config.actions';
 import {AppActions} from '../app.actions';
+import {setChristmasTheme, SetChristmasThemeEffectArgs} from './effects/set-christmas-theme.effect';
 
 @Injectable()
 export class AppConfigEffects {
@@ -47,6 +49,11 @@ export class AppConfigEffects {
       concatMap(() =>
         this.configApi.getClientConfig(clientId, appConfigPrefix).pipe(
           map(config => {
+            let christmasTheme: boolean = AppChristmasTheme.default;
+            if (config[AppChristmasTheme.key] !== undefined) {
+              christmasTheme = config[AppChristmasTheme.key] === 'true';
+            }
+
             let hideAbsoluteValues: boolean = AppHideAbsoluteValues.default;
             if (config[AppHideAbsoluteValues.key] !== undefined) {
               hideAbsoluteValues = config[AppHideAbsoluteValues.key] === 'true';
@@ -89,6 +96,7 @@ export class AppConfigEffects {
             }
 
             return AppConfigActions.setAppConfig({
+              christmasTheme,
               hideAbsoluteValues,
               openPage,
               sideMenuOpen,
@@ -107,6 +115,11 @@ export class AppConfigEffects {
       )
     )
   );
+
+  readonly setChristmasTheme = createEffect(() => setChristmasTheme({
+    actions$: this.actions$,
+    configApi: this.configApi
+  } satisfies SetChristmasThemeEffectArgs));
 
   readonly setCurrencyLocale = createEffect(() =>
     this.actions$.pipe(

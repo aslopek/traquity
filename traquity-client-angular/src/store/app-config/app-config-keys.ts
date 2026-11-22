@@ -27,6 +27,11 @@ export const AppPercentLocale = {
   default: 'en-US'
 } as const;
 
+export const AppChristmasTheme = {
+  key: `${appConfigPrefix}.christmas-theme`,
+  default: true
+} as const;
+
 export const AppHideAbsoluteValues = {
   key: `${appConfigPrefix}.hide-absolute-values`,
   default: false

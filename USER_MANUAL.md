@@ -992,7 +992,9 @@ Upcoming dividend announcements, grouped by week. New announcements also appear 
 ### Settings
 
 - **Appearance** — date, currency and number formats. **Hide Absolute Values** masks currency amounts app-wide, which is useful when
-  sharing a screen. **Enable Dev Mode** unlocks direct database access, see
+  sharing a screen. **Christmas Theme**, on by default, hangs a garland with fairy lights under the header, lets snow fall over the app
+  and settle on the cards, and puts a decorated tree with presents, a snowman and a candle under the side menu. It's purely decorative
+  and offered from the first Sunday of Advent through January 6th, or at any time while dev mode is on. **Enable Dev Mode** unlocks direct database access, see
   [Dev mode and direct database access](#dev-mode-and-direct-database-access).
 - **Historical Security Prices** / **Dividend Announcements** — manage your data sources and their API keys.
 - **Security Groups** — organize securities into named groups.
