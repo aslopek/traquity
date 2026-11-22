@@ -1145,6 +1145,30 @@ Between the two purchases of a year, the unlucky line can be above the lucky one
 
 Prices, currency and the securities you can pick work as for the [Security Benchmark (Cashflow based)](#security-benchmark-cashflow-based).
 
+### Benchmark summary
+
+While a benchmark line is drawn, the header of the benchmark panel, next to **Stop benchmark**, shows how the line ended on the last shown
+day:
+
+| Figure              | Shows                                                                                        |
+|---------------------|----------------------------------------------------------------------------------------------|
+| name                | the line's name as the chart tooltip shows it, marked in the line's color                    |
+| **Valued on**       | the last shown day                                                                           |
+| **Depot lead abs.** | how far the depot value of that day is above or below the line                               |
+| **Depot lead rel.** | the same, relative to the line's value of that day                                           |
+| **Growth abs.**     | what the depot's **Growth abs.** tile would show, were the depot worth the line's last value |
+| **Growth rel.**     | what the depot's **Growth rel.** tile would show, were the depot worth the line's last value |
+
+Growth is measured the way the [KPI tiles](#growth-abs--rel) measure it, so the depot's **Growth abs.** minus the benchmark's equals
+**Depot lead abs.**. A data range showing a single day has no growth: both growth figures show `0`. Figures are signed and colored like
+the KPI tiles, so the depot being ahead shows positive. **Depot lead rel.** shows `∞` for a line ending at `0` and `–` for one ending
+below `0`.
+
+The [Security Benchmark (Lucky Investor)](#security-benchmark-lucky-investor) shows one outcome per line. Every other benchmark shows one.
+
+With **Hide Absolute Values** on, the outcome masks **Depot lead abs.** and **Growth abs.**, and the benchmark masks the amounts in
+**Initial Investment** and **Investment Amount**. Benchmarks stay fully usable: every one can be configured, started and stopped as before.
+
 ### Position-level returns
 
 The Positions view is the exception: the return shown per holding is deliberately **cash-exclusive**. It is the gain or loss on that

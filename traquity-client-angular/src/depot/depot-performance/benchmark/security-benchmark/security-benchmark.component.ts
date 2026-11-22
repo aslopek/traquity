@@ -31,6 +31,8 @@ import {
 import {SecurityBenchmark, SecurityBenchmarkMode} from '../../store/benchmark/benchmark.type';
 import {DepotPerformanceStore} from '../../store/depot-performance.store';
 import {RebasedDepotValue} from '../../store/computed/rebased-depot-value.type';
+import {Store} from '@ngrx/store';
+import {hideAbsoluteValues} from '../../../../store/app-config/app-config.selector';
 import {BenchmarkSecuritySelectComponent} from '../benchmark-security-select/benchmark-security-select.component';
 
 export type SecurityBenchmarkFormModel = {
@@ -60,6 +62,8 @@ export class SecurityBenchmarkComponent {
   /** Emits the benchmark the form describes, `null` while no security is picked or the form is invalid. */
   @Output()
   readonly benchmark: EventEmitter<SecurityBenchmark | null> = new EventEmitter<SecurityBenchmark | null>();
+
+  protected readonly hideAbsoluteValues: Signal<boolean> = inject(Store).selectSignal(hideAbsoluteValues);
 
   private readonly formModel: WritableSignal<SecurityBenchmarkFormModel> = signal<SecurityBenchmarkFormModel>({
     initialInvestment: null,

@@ -5,6 +5,7 @@
             <input matInput
                    type="number"
                    [formField]="form.initialInvestment"
+                   [class.tq-masked-input]="hideAbsoluteValues()"
                    (invalid)="$event.preventDefault()">
             @for (error of form.initialInvestment().errors(); track error) {
                 <mat-error>{{ error.message }}</mat-error>
@@ -32,6 +33,7 @@
                 <input matInput
                        type="number"
                        [formField]="form.investmentAmount"
+                       [class.tq-masked-input]="hideAbsoluteValues()"
                        (invalid)="$event.preventDefault()">
                 @for (error of form.investmentAmount().errors(); track error) {
                     <mat-error>{{ error.message }}</mat-error>

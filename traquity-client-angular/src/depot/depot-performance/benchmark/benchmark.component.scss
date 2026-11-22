@@ -6,6 +6,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--tq-space-4);
+  container-type: inline-size;
 }
 
 .benchmark__modes {
@@ -14,5 +15,35 @@
 
   mat-button-toggle {
     flex: 1 1 12rem;
+  }
+}
+
+.benchmark__head {
+  display: grid;
+  grid-template-areas: 'title outcomes actions';
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  column-gap: var(--tq-space-5);
+  row-gap: var(--tq-space-3);
+}
+
+.benchmark__title {
+  grid-area: title;
+}
+
+.benchmark__outcomes {
+  grid-area: outcomes;
+}
+
+.benchmark__actions {
+  grid-area: actions;
+  justify-self: end;
+}
+
+@container (width < 70rem) {
+  .benchmark__head:has(.benchmark__outcomes) {
+    grid-template-areas:
+      'title actions'
+      'outcomes outcomes';
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 }

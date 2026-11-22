@@ -192,6 +192,7 @@ card overrides — a `mat-card` added anyway would come out unthemed.
 - `.tq-notice` + `.tq-notice--info` / `--warn` / `--error` — an inline banner with an icon slot. Every warning or error
   message in a template uses this instead of a hand-rolled colored div.
 - `.tq-obfuscated` — blurs whatever content it wraps, for hiding a value. Inherits font-size/weight from the element it's on.
+- `.tq-masked-input` — shows an input's characters as discs and keeps it editable.
 
 ### Forms
 
@@ -317,6 +318,7 @@ as inline SVG (the position pie chart's group ring) takes a class and reads `var
 - Focus is always visible: `_base.scss` draws a `--tq-border-accent` ring on `:focus-visible`. Never `outline: none` without replacing it.
 - Text on a surface meets 4.5:1; `--tq-text-faint` is for decoration and disabled states only, never for information a user must read.
 - A blurred/obfuscated value (hidden absolute values) keeps `pointer-events: none` and `user-select: none` so it cannot be read back.
+- An input holding an amount takes `.tq-masked-input` while absolute values are hidden.
 
 ## 7. Writing a component's SCSS
 

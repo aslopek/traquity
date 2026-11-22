@@ -191,6 +191,10 @@
   font-size: var(--tq-font-size-base);
 }
 
+.tq-masked-input {
+  -webkit-text-security: disc;
+}
+
 .tq-obfuscated {
   display: inline-block;
   // blur and tracking scale with the hidden value's own font-size, so one class serves multiple UI elements
