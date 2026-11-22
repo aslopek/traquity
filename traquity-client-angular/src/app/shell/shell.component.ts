@@ -9,6 +9,7 @@ import {AppConfigActions} from '../../store/app-config/app-config.actions';
 import {getOpenPage, isSideMenuOpen,} from '../../store/app-config/app-config.selector';
 import {AppState} from '../../store/app.state';
 import {isDepotSliceInitialized} from '../../store/depot/depot.selector';
+import {ChristmasOverlayComponent} from '../christmas-overlay/christmas-overlay.component';
 import {HeaderComponent} from '../header/header.component';
 import {Page} from '../page.type';
 import {SnackbarComponent} from '../snackbar/snackbar.component';
@@ -24,6 +25,7 @@ import {SplashScreenComponent} from '../splash-screen/splash-screen.component';
     SplashScreenComponent,
     MatIconModule,
     RouterLink,
+    ChristmasOverlayComponent,
   ],
   providers: [securityPageStore],
   templateUrl: 'shell.component.html',

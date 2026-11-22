@@ -11,3 +11,16 @@
   gap: var(--tq-space-3);
   align-items: flex-start;
 }
+
+.appearance__toggle--with-info {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tq-space-1);
+}
+
+.appearance__info {
+  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
+  cursor: help;
+}

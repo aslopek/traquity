@@ -8,6 +8,7 @@ export type LocaleConfig = {
 }
 
 export type AppConfigState = {
+  christmasTheme: boolean
   dateFormat: string
   devModeActive: boolean
   hideAbsoluteValues: boolean

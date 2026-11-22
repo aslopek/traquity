@@ -37,6 +37,10 @@ export const getPercentLocale: MemoizedSelector<AppState, string>
   = createSelector(appConfigSelector,
   (state: AppConfigState) => state.locales.percent);
 
+export const isChristmasThemeOn: MemoizedSelector<AppState, boolean>
+  = createSelector(appConfigSelector,
+  (state: Pick<AppConfigState, 'christmasTheme'>): boolean => state.christmasTheme);
+
 export const hideAbsoluteValues: MemoizedSelector<AppState, boolean>
   = createSelector(appConfigSelector,
   (state: AppConfigState) => state.hideAbsoluteValues);

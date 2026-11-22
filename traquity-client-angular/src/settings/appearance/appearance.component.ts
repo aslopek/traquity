@@ -1,14 +1,24 @@
 import {AsyncPipe} from '@angular/common';
-import {Component, inject} from '@angular/core';
+import {Component, computed, inject, Signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
+import {MatIcon} from '@angular/material/icon';
 import {MatSlideToggle} from '@angular/material/slide-toggle';
+import {MatTooltip} from '@angular/material/tooltip';
 import {MatFormField, MatLabel} from '@angular/material/form-field';
 import {MatOption, MatSelect, MatSelectChange,} from '@angular/material/select';
 import {Store} from '@ngrx/store';
 import {Observable, take} from 'rxjs';
+import {isChristmasThemeOffered} from '../../common/functions/is-christmas-theme-offered';
 import {AppCurrencyLocale, AppDateFormat, AppDecimalLocale,} from '../../store/app-config/app-config-keys';
 import {AppConfigActions} from '../../store/app-config/app-config.actions';
-import {getCurrencyLocale, getDateFormat, getDecimalLocale, hideAbsoluteValues, isDevModeActive,} from '../../store/app-config/app-config.selector';
+import {
+  getCurrencyLocale,
+  getDateFormat,
+  getDecimalLocale,
+  hideAbsoluteValues,
+  isChristmasThemeOn,
+  isDevModeActive,
+} from '../../store/app-config/app-config.selector';
 import {AppState} from '../../store/app.state';
 
 @Component({
@@ -19,6 +29,8 @@ import {AppState} from '../../store/app.state';
     MatSelect,
     MatOption,
     MatSlideToggle,
+    MatIcon,
+    MatTooltip,
     FormsModule,
     AsyncPipe,
   ],
@@ -45,6 +57,15 @@ export class AppearanceComponent {
 
   protected readonly devModeActive$: Observable<boolean> =
     this.store.select(isDevModeActive);
+
+  private readonly devModeActive: Signal<boolean> = this.store.selectSignal(isDevModeActive);
+
+  protected readonly christmasThemeOffered: Signal<boolean> = computed(
+    (): boolean => isChristmasThemeOffered(new Date(), this.devModeActive()),
+  );
+
+  protected readonly christmasTheme$: Observable<boolean> =
+    this.store.select(isChristmasThemeOn);
 
   protected setDateFormat(change: MatSelectChange): void {
     this.store.dispatch(
@@ -73,6 +94,16 @@ export class AppearanceComponent {
       this.store.dispatch(
         AppConfigActions.setHideAbsoluteValues({
           hideAbsoluteValues: !hideAbsoluteValues,
+        }),
+      );
+    });
+  }
+
+  protected toggleChristmasTheme(): void {
+    this.christmasTheme$.pipe(take(1)).subscribe((christmasTheme: boolean): void => {
+      this.store.dispatch(
+        AppConfigActions.setChristmasTheme({
+          christmasTheme: !christmasTheme,
         }),
       );
     });

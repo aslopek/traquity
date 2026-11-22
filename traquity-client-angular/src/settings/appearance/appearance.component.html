@@ -40,5 +40,20 @@
                           (click)="toggleDevMode()">
             Enable Dev Mode
         </mat-slide-toggle>
+
+        @if (christmasThemeOffered()) {
+            <span class="appearance__toggle--with-info">
+                <mat-slide-toggle [ngModel]="christmasTheme$ | async"
+                                  (click)="toggleChristmasTheme()">
+                    Christmas Theme
+                </mat-slide-toggle>
+                <mat-icon class="appearance__info"
+                          fontIcon="info"
+                          aria-hidden="false"
+                          aria-label="Available from the first Sunday of Advent through January 6."
+                          matTooltip="Available from the first Sunday of Advent through January 6.">
+                </mat-icon>
+            </span>
+        }
     </div>
 </div>

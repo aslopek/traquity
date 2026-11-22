@@ -13,6 +13,7 @@ re-tokenized in `src/theme/_material.scss`.
 |-----------------------------|-------------------------------------------------------------------------------|
 | `src/theme/_palettes.scss`  | Generated M3 tonal palettes. Regenerate, never hand-edit.                     |
 | `src/theme/_tokens.scss`    | Every `--tq-*` custom property. The single source of design values.           |
+| `src/theme/_christmas.scss` | The `--tq-christmas-*` palette. Read by the Christmas overlay only.           |
 | `src/theme/_base.scss`      | Element defaults: `html`, `body`, headings, scrollbars, focus rings.          |
 | `src/theme/_material.scss`  | All Angular Material component overrides.                                     |
 | `src/theme/_utilities.scss` | Global `.tq-*` classes (cards, pages, values, forms, dialogs).                |
