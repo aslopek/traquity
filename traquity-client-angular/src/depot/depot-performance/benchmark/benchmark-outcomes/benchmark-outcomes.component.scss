@@ -1,0 +1,44 @@
+:host {
+  display: block;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.benchmark-outcomes {
+  display: grid;
+  grid-template-columns: minmax(6rem, 16rem) repeat(5, max-content);
+  align-items: center;
+  column-gap: var(--tq-space-5);
+  row-gap: var(--tq-space-1);
+}
+
+.benchmark-outcomes__name {
+  display: flex;
+  align-items: center;
+  gap: var(--tq-space-2);
+  overflow-wrap: anywhere;
+}
+
+.benchmark-outcomes__marker {
+  flex-shrink: 0;
+  width: 0.875rem;
+  height: 0.1875rem;
+  border-radius: var(--tq-radius-pill);
+  background-color: var(--tq-series-2);
+}
+
+.benchmark-outcomes__marker--second {
+  background-color: var(--tq-series-5);
+}
+
+.benchmark-outcomes__value {
+  font-size: var(--tq-font-size-md);
+}
+
+.benchmark-outcomes__value--positive {
+  color: var(--tq-positive-soft);
+}
+
+.benchmark-outcomes__value--negative {
+  color: var(--tq-negative-soft);
+}

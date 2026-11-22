@@ -5,6 +5,7 @@
             <input matInput
                    type="number"
                    [value]="formModel().initialInvestment"
+                   [class.tq-masked-input]="hideAbsoluteValues()"
                    (input)="updateFormValue('initialInvestment', $any($event.target).value ? parseFloat($any($event.target).value) : null)">
         </mat-form-field>
 
@@ -44,6 +45,7 @@
                     <input matInput
                            type="number"
                            [value]="formModel().investmentAmount"
+                           [class.tq-masked-input]="hideAbsoluteValues()"
                            (input)="updateFormValue('investmentAmount', $any($event.target).value ? parseFloat($any($event.target).value) : null)">
                 </mat-form-field>
             }
