@@ -27,8 +27,7 @@
                            [disabled]="true">
             Security (Regular Investments)
         </mat-button-toggle>
-        <mat-button-toggle value="security.luckyInvestor"
-                           [disabled]="true">
+        <mat-button-toggle value="security.luckyInvestor">
             Security (Lucky Investor)
         </mat-button-toggle>
         <mat-button-toggle value="fixedInterest.cashFlowBased">
@@ -40,11 +39,14 @@
     </mat-button-toggle-group>
 
     @let fixedInterest = fixedInterestMode();
-    @if (fixedInterest) {
+    @let security = securityMode();
+    @if (security) {
+        <app-security-benchmark [mode]="security"
+                                (benchmark)="onBenchmarkUpdate($event)">
+        </app-security-benchmark>
+    } @else if (fixedInterest) {
         <app-fixed-interest-benchmark [mode]="fixedInterest"
                                       (benchmark)="onBenchmarkUpdate($event)">
         </app-fixed-interest-benchmark>
-    } @else {
-        <app-security-cashflow-benchmark (benchmark)="onBenchmarkUpdate($event)"></app-security-cashflow-benchmark>
     }
 </section>

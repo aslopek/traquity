@@ -1,39 +1,55 @@
-import {Component, computed, effect, EventEmitter, inject, Output, Signal, signal, untracked, WritableSignal} from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  EventEmitter,
+  inject,
+  input,
+  InputSignal,
+  Output,
+  Signal,
+  signal,
+  untracked,
+  WritableSignal
+} from '@angular/core';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {FieldTree, form, FormField, min, SchemaPathTree} from '@angular/forms/signals';
-import {SecurityBenchmark, SecurityCashFlowBasedBenchmark} from '../../store/benchmark/benchmark.type';
+import {SecurityBenchmark, SecurityBenchmarkMode} from '../../store/benchmark/benchmark.type';
 import {DepotPerformanceStore} from '../../store/depot-performance.store';
 import {RebasedDepotValue} from '../../store/computed/rebased-depot-value.type';
 import {BenchmarkSecuritySelectComponent} from '../benchmark-security-select/benchmark-security-select.component';
 
-export type SecurityCashFlowBenchmarkFormModel = {
+export type SecurityBenchmarkFormModel = {
   initialInvestment: number | null
 };
 
 @Component({
-  selector: 'app-security-cashflow-benchmark',
+  selector: 'app-security-benchmark',
   imports: [
     BenchmarkSecuritySelectComponent,
     FormField,
     MatFormFieldModule,
     MatInputModule
   ],
-  templateUrl: './security-cashflow-benchmark.component.html',
-  styleUrl: './security-cashflow-benchmark.component.scss'
+  templateUrl: './security-benchmark.component.html',
+  styleUrl: './security-benchmark.component.scss'
 })
-export class SecurityCashflowBenchmarkComponent {
+export class SecurityBenchmarkComponent {
+
+  /** The mode of the benchmark the form describes. */
+  readonly mode: InputSignal<SecurityBenchmarkMode> = input.required<SecurityBenchmarkMode>();
 
   /** Emits the benchmark the form describes, `null` while no security is picked or the form is invalid. */
   @Output()
-  readonly benchmark: EventEmitter<SecurityCashFlowBasedBenchmark | null> = new EventEmitter<SecurityCashFlowBasedBenchmark | null>();
+  readonly benchmark: EventEmitter<SecurityBenchmark | null> = new EventEmitter<SecurityBenchmark | null>();
 
-  private readonly formModel: WritableSignal<SecurityCashFlowBenchmarkFormModel> = signal<SecurityCashFlowBenchmarkFormModel>({
+  private readonly formModel: WritableSignal<SecurityBenchmarkFormModel> = signal<SecurityBenchmarkFormModel>({
     initialInvestment: null
   });
 
-  protected readonly form: FieldTree<SecurityCashFlowBenchmarkFormModel> = form(this.formModel,
-    (schemaPath: SchemaPathTree<SecurityCashFlowBenchmarkFormModel>): void => {
+  protected readonly form: FieldTree<SecurityBenchmarkFormModel> = form(this.formModel,
+    (schemaPath: SchemaPathTree<SecurityBenchmarkFormModel>): void => {
       min(schemaPath.initialInvestment, 0, {message: 'Must not be negative'});
     }
   );
@@ -47,12 +63,25 @@ export class SecurityCashflowBenchmarkComponent {
     if (securityId === null || !this.form().valid()) {
       return null;
     }
-    return {
-      type: 'security',
-      mode: 'cashFlowBased',
-      securityId,
-      initialInvestment: this.formModel().initialInvestment ?? undefined
-    };
+
+    const initialInvestment: number | undefined = this.formModel().initialInvestment ?? undefined;
+
+    switch (this.mode()) {
+      case 'security.cashFlowBased':
+        return {
+          type: 'security',
+          mode: 'cashFlowBased',
+          securityId,
+          initialInvestment
+        };
+      case 'security.luckyInvestor':
+        return {
+          type: 'security',
+          mode: 'luckyInvestor',
+          securityId,
+          initialInvestment
+        };
+    }
   });
 
   private prefilled: boolean = false;

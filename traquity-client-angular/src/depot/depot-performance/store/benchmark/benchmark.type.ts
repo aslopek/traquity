@@ -26,7 +26,14 @@ export type SecurityCashFlowBasedBenchmark = CashFlowBasedBenchmark & {
   securityId: number
 };
 
-export type SecurityBenchmark = SecurityCashFlowBasedBenchmark;
+export type SecurityLuckyInvestorBenchmark = {
+  type: 'security'
+  mode: 'luckyInvestor'
+  securityId: number
+  initialInvestment?: number
+};
+
+export type SecurityBenchmark = SecurityCashFlowBasedBenchmark | SecurityLuckyInvestorBenchmark;
 
 export type Benchmark = FixedInterestBenchmark | SecurityBenchmark;
 
