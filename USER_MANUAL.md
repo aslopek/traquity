@@ -1090,13 +1090,35 @@ This answers: "what would the money I put into the depot be worth if I had inves
 
 The **Initial Investment** buys shares on the oldest shown day. It starts out as the depot value of that day and follows the data range you
 select. Leave it empty to start the line at `0`. Every later increase of the invested capital buys shares on the day it happens. Shares may
-be fractional, and no money waits as cash, except on a day priced `0`: its money buys on the next day priced above `0`. The line shows what
-the shares are worth at each shown day's price. A day without a price of its own is valued at the latest price before it.
+be fractional. The line shows what the shares are worth at each shown day's price. A day without a price of its own is valued at the latest
+price before it.
+
+A price of `0` followed by a higher price later on counts as a wrong price: that day is valued and buys at the latest price above `0` before
+it. Without one, its money waits as cash until the first price above `0`. A price of `0` that lasts until the newest shown day counts as a
+total loss: from then on the shares are worth `0`, and money put in afterwards stays cash, since nobody would buy a worthless security.
 
 The line is shown in the currency of the selected depots, converted as [Currency conversion](#currency-conversion) describes. It follows
 the price only: dividends of the security are not part of it. Only a security whose prices reach back to the oldest shown day can be
 picked. A price counts only where it can be converted into the currency of the selected depots. Any other security is listed greyed out,
 with the day its prices start beside it, or **No prices** if it has none.
+
+### Security Benchmark (Regular Investments)
+
+This answers: "what would a monthly savings plan in one security be worth?" Pick the **Security** from the list, and press **Start
+benchmark**.
+
+The savings plan invests on the same days and the same amounts as the Regular Investments variant of the
+[Fixed Interest Benchmark](#fixed-interest-benchmark). Set the **Deposit Day (1 - 28)**, then either keep **Automatically reinvest real
+cashflows** on to invest what the invested capital grew by in each month, or switch it off and enter a fixed **Investment Amount**. An
+increase of the invested capital buys nothing on its own day: the savings plan decides what goes in and when.
+
+The **Initial Investment** goes in on the oldest shown day, on top of any installment due that day. It starts out as the depot value of that
+day, follows the data range you select, and may be left empty.
+
+Each installment buys shares at the price of the day it is deposited. The line shows what the shares are worth at each shown day's price.
+
+Prices, prices of `0`, currency and the securities you can pick work as for the [Security Benchmark (Cashflow
+based)](#security-benchmark-cashflow-based).
 
 ### Security Benchmark (Lucky Investor)
 
@@ -1112,8 +1134,10 @@ Each line invests a year's money in one go:
 - The lucky line buys on the year's shown day with the lowest price. If several days share that price, it buys on the latest of them.
 - The unlucky line buys on the year's shown day with the highest price. If several days share that price, it buys on the earliest of them.
 
-A line reads `0` until it has bought for the first time. Neither line buys on a day priced `0`. A year whose invested capital did not grow,
-or that has no price above `0`, buys nothing.
+A line reads `0` until it has bought for the first time. Prices of `0` count as for the [Security Benchmark (Cashflow
+based)](#security-benchmark-cashflow-based): a wrong price of `0` takes the latest price above `0` before it, so a line can buy on that day.
+Neither line buys on any other day priced `0`. A year whose invested capital did not grow, or that has no price above `0`, buys nothing. If
+that year comes after a total loss, both lines keep its money as cash from the year's first shown day on.
 
 Both lines know the whole year in advance: money gained in December can buy at the January low. This is what makes the lucky line a best
 case. The calendar year limits how far ahead it can look. Only the shown days count, so another data range can move both purchases.
