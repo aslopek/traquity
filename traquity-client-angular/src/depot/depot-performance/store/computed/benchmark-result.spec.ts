@@ -6,37 +6,48 @@ import {SecurityNamePipe} from '../../../../common/pipe/security-name.pipe';
 import {AppState} from '../../../../store/app.state';
 import {rebasedDepotValueFactory} from '../../../../testing/rebased-depot-value.factory';
 import {historicalSecurityPriceFactory} from '../../../../testing/historical-security-price.factory';
-import {Benchmark, BenchmarkResult, FixedInterestBenchmark, SecurityBenchmark} from '../benchmark/benchmark.type';
+import {
+  Benchmark,
+  BenchmarkResult,
+  FixedInterestBenchmark,
+  SecurityCashFlowBasedBenchmark,
+  SecurityLuckyInvestorBenchmark
+} from '../benchmark/benchmark.type';
 import {fixedInterestBenchmark} from '../benchmark/fixed-interest-benchmark';
-import {securityBenchmark} from '../benchmark/security-cash-flow-based-benchmark';
+import {securityCashFlowBasedBenchmark} from '../benchmark/security-cash-flow-based-benchmark';
+import {securityLuckyInvestorBenchmark} from '../benchmark/security-lucky-investor-benchmark';
 import {RebasedDepotValue} from './rebased-depot-value.type';
 import {benchmarkResult} from './benchmark-result';
 
 jest.mock('../benchmark/fixed-interest-benchmark', (): unknown => ({fixedInterestBenchmark: jest.fn()}));
-jest.mock('../benchmark/security-cash-flow-based-benchmark', (): unknown => ({securityBenchmark: jest.fn()}));
+jest.mock('../benchmark/security-cash-flow-based-benchmark', (): unknown => ({securityCashFlowBasedBenchmark: jest.fn()}));
+jest.mock('../benchmark/security-lucky-investor-benchmark', (): unknown => ({securityLuckyInvestorBenchmark: jest.fn()}));
 jest.mock('../../../../common/pipe/security-name.pipe', (): unknown => ({SecurityNamePipe: jest.fn()}));
 
 type FixedInterestFunction = (benchmark: FixedInterestBenchmark, depotValues: RebasedDepotValue[]) => BenchmarkResult;
-type SecurityFunction = (benchmark: SecurityBenchmark, depotValues: RebasedDepotValue[], prices: HistoricalSecurityPrice[],
-                         securityNamePipe: SecurityNamePipe) => BenchmarkResult | null;
+type CashFlowBasedFunction = typeof securityCashFlowBasedBenchmark;
+type LuckyInvestorFunction = typeof securityLuckyInvestorBenchmark;
 
 describe('benchmarkResult', (): void => {
   const securityId: number = 7;
 
   let fixedInterestMock: jest.Mock<FixedInterestFunction>;
-  let securityMock: jest.Mock<SecurityFunction>;
+  let cashFlowBasedMock: jest.Mock<CashFlowBasedFunction>;
+  let luckyInvestorMock: jest.Mock<LuckyInvestorFunction>;
   let globalStore: Store<AppState>;
   let benchmark: WritableSignal<Benchmark | null>;
   let benchmarkPrices: WritableSignal<HistoricalSecurityPrice[]>;
   let depotValues: WritableSignal<RebasedDepotValue[]>;
-  let securityBenchmarkInput: SecurityBenchmark;
+  let securityBenchmarkInput: SecurityCashFlowBasedBenchmark;
   let result: Signal<BenchmarkResult | [BenchmarkResult, BenchmarkResult] | null>;
 
   beforeEach((): void => {
     fixedInterestMock = fixedInterestBenchmark as unknown as jest.Mock<FixedInterestFunction>;
     fixedInterestMock.mockReset();
-    securityMock = securityBenchmark as unknown as jest.Mock<SecurityFunction>;
-    securityMock.mockReset();
+    cashFlowBasedMock = securityCashFlowBasedBenchmark as unknown as jest.Mock<CashFlowBasedFunction>;
+    cashFlowBasedMock.mockReset();
+    luckyInvestorMock = securityLuckyInvestorBenchmark as unknown as jest.Mock<LuckyInvestorFunction>;
+    luckyInvestorMock.mockReset();
     (SecurityNamePipe as unknown as jest.Mock<(store: unknown) => void>).mockReset();
     globalStore = {} as Store<AppState>;
 
@@ -60,7 +71,8 @@ describe('benchmarkResult', (): void => {
     benchmark.set(null);
 
     expect(result()).toBeNull();
-    expect(securityMock).not.toHaveBeenCalled();
+    expect(cashFlowBasedMock).not.toHaveBeenCalled();
+    expect(luckyInvestorMock).not.toHaveBeenCalled();
     expect(fixedInterestMock).not.toHaveBeenCalled();
   });
 
@@ -74,17 +86,18 @@ describe('benchmarkResult', (): void => {
         name: 'Security',
         values: [1, 2]
       };
-      securityMock.mockReturnValue(securityResult);
+      cashFlowBasedMock.mockReturnValue(securityResult);
     });
 
-    it('hands the security benchmark, the depot values, its prices and the name pipe to the security benchmark', (): void => {
+    it('hands a cashflow based benchmark, the depot values, its prices and the name pipe to the cashflow based benchmark', (): void => {
       const prices: HistoricalSecurityPrice[] = benchmarkPrices();
 
       expect(result()).toBe(securityResult);
-      expect(securityMock).toHaveBeenCalledTimes(1);
-      expect(securityMock).toHaveBeenCalledWith(securityBenchmarkInput, depotValues(), prices,
+      expect(cashFlowBasedMock).toHaveBeenCalledTimes(1);
+      expect(cashFlowBasedMock).toHaveBeenCalledWith(securityBenchmarkInput, depotValues(), prices,
         pipeConstructor.mock.instances[0] as unknown as SecurityNamePipe);
       expect(pipeConstructor.mock.calls).toEqual([[globalStore]]);
+      expect(luckyInvestorMock).not.toHaveBeenCalled();
       expect(fixedInterestMock).not.toHaveBeenCalled();
     });
 
@@ -94,22 +107,60 @@ describe('benchmarkResult', (): void => {
 
       result();
 
-      expect(securityMock.mock.calls[0][2]).toEqual([own]);
+      expect(cashFlowBasedMock.mock.calls[0][2]).toEqual([own]);
     });
 
     it('is empty while the prices are not loaded', (): void => {
-      securityMock.mockReturnValue(null);
+      cashFlowBasedMock.mockReturnValue(null);
       benchmarkPrices.set([]);
 
       expect(result()).toBeNull();
-      expect(securityMock.mock.calls[0][2]).toEqual([]);
+      expect(cashFlowBasedMock.mock.calls[0][2]).toEqual([]);
     });
 
     it('is empty without depot values', (): void => {
       depotValues.set([]);
 
       expect(result()).toBeNull();
-      expect(securityMock).not.toHaveBeenCalled();
+      expect(cashFlowBasedMock).not.toHaveBeenCalled();
+    });
+
+    describe('in the lucky investor mode', (): void => {
+      let luckyInvestorBenchmarkInput: SecurityLuckyInvestorBenchmark;
+      let luckyInvestorResult: [BenchmarkResult, BenchmarkResult];
+
+      beforeEach((): void => {
+        luckyInvestorBenchmarkInput = {
+          type: 'security',
+          mode: 'luckyInvestor',
+          securityId,
+          initialInvestment: 100
+        };
+        luckyInvestorResult = [
+          {
+            name: 'Security (lucky)',
+            values: [1, 2]
+          },
+          {
+            name: 'Security (unlucky)',
+            values: [3, 4]
+          }
+        ];
+        luckyInvestorMock.mockReturnValue(luckyInvestorResult);
+        benchmark.set(luckyInvestorBenchmarkInput);
+      });
+
+      it('hands the benchmark, the depot values, its prices and the name pipe to the lucky investor benchmark', (): void => {
+        const prices: HistoricalSecurityPrice[] = benchmarkPrices();
+
+        expect(result()).toBe(luckyInvestorResult);
+        expect(luckyInvestorMock).toHaveBeenCalledTimes(1);
+        expect(luckyInvestorMock).toHaveBeenCalledWith(luckyInvestorBenchmarkInput, depotValues(), prices,
+          pipeConstructor.mock.instances[0] as unknown as SecurityNamePipe);
+        expect(pipeConstructor.mock.calls).toEqual([[globalStore]]);
+        expect(cashFlowBasedMock).not.toHaveBeenCalled();
+        expect(fixedInterestMock).not.toHaveBeenCalled();
+      });
     });
   });
 
@@ -136,7 +187,8 @@ describe('benchmarkResult', (): void => {
     it('hands the fixed interest benchmark and the depot values to the fixed interest benchmark', (): void => {
       expect(result()).toBe(fixedInterestResult);
       expect(fixedInterestMock.mock.calls).toEqual([[fixedInterestBenchmarkInput, depotValues()]]);
-      expect(securityMock).not.toHaveBeenCalled();
+      expect(cashFlowBasedMock).not.toHaveBeenCalled();
+      expect(luckyInvestorMock).not.toHaveBeenCalled();
     });
 
     it('is empty without depot values', (): void => {

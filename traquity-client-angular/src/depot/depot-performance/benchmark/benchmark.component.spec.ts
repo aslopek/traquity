@@ -112,6 +112,15 @@ describe('BenchmarkComponent', (): void => {
       expect(setBenchmark.mock.calls).toEqual([[null]]);
     });
 
+    it('keeps the running line when switching between security modes', (): void => {
+      storedBenchmark.set(security);
+
+      component['selectMode']('security.luckyInvestor');
+
+      expect(setBenchmark).not.toHaveBeenCalled();
+      expect(component['mode']()).toBe('security.luckyInvestor');
+    });
+
     describe('from a fixed interest mode', (): void => {
       beforeEach((): void => {
         component['mode'].set('fixedInterest.cashFlowBased');

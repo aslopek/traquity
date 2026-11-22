@@ -1088,15 +1088,38 @@ conventions.
 This answers: "what would the money I put into the depot be worth if I had invested all of it into one security instead?" Pick the
 **Security** from the list, and press **Start benchmark**.
 
-The **Initial Investment** buys shares on the oldest shown day. It starts out as the depot value of that day and follows the data range
-you select. Leave it empty to start the line at `0`. Every later increase of the invested capital buys shares on the day it happens.
-Shares may be fractional, and no money waits as cash. The line shows what the shares are worth at each shown day's price. A day without a
-price of its own is valued at the latest price before it.
+The **Initial Investment** buys shares on the oldest shown day. It starts out as the depot value of that day and follows the data range you
+select. Leave it empty to start the line at `0`. Every later increase of the invested capital buys shares on the day it happens. Shares may
+be fractional, and no money waits as cash, except on a day priced `0`: its money buys on the next day priced above `0`. The line shows what
+the shares are worth at each shown day's price. A day without a price of its own is valued at the latest price before it.
 
 The line is shown in the currency of the selected depots, converted as [Currency conversion](#currency-conversion) describes. It follows
 the price only: dividends of the security are not part of it. Only a security whose prices reach back to the oldest shown day can be
 picked. A price counts only where it can be converted into the currency of the selected depots. Any other security is listed greyed out,
 with the day its prices start beside it, or **No prices** if it has none.
+
+### Security Benchmark (Lucky Investor)
+
+This answers: "what is the best and the worst my money could have done in one security?" Pick the **Security** from the list, and press
+**Start benchmark**. The chart draws two lines, named after the security with **(lucky)** and **(unlucky)** added.
+
+The money is grouped by calendar year. A year's money is what the invested capital grew by during that year. The oldest shown year also
+gets the **Initial Investment**. It starts out as the depot value of the oldest shown day, follows the data range you select, and may be
+left empty.
+
+Each line invests a year's money in one go:
+
+- The lucky line buys on the year's shown day with the lowest price. If several days share that price, it buys on the latest of them.
+- The unlucky line buys on the year's shown day with the highest price. If several days share that price, it buys on the earliest of them.
+
+A line reads `0` until it has bought for the first time. Neither line buys on a day priced `0`. A year whose invested capital did not grow,
+or that has no price above `0`, buys nothing.
+
+Both lines know the whole year in advance: money gained in December can buy at the January low. This is what makes the lucky line a best
+case. The calendar year limits how far ahead it can look. Only the shown days count, so another data range can move both purchases.
+Between the two purchases of a year, the unlucky line can be above the lucky one. By the end of the year, the lucky line is back on top.
+
+Prices, currency and the securities you can pick work as for the [Security Benchmark (Cashflow based)](#security-benchmark-cashflow-based).
 
 ### Position-level returns
 

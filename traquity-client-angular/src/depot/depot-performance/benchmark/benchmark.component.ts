@@ -4,7 +4,7 @@ import {Benchmark, BenchmarkMode, FixedInterestBenchmarkMode, SecurityBenchmarkM
 import {DepotPerformanceStore, ReadableDepotPerformanceStore} from '../store/depot-performance.store';
 import {MatButton} from '@angular/material/button';
 import {MatButtonToggle, MatButtonToggleGroup} from '@angular/material/button-toggle';
-import {SecurityCashflowBenchmarkComponent} from './security-cashflow-benchmark/security-cashflow-benchmark.component';
+import {SecurityBenchmarkComponent} from './security-benchmark/security-benchmark.component';
 
 function isSecurityMode(mode: BenchmarkMode): mode is SecurityBenchmarkMode {
   return mode.startsWith('security.');
@@ -17,7 +17,7 @@ function isSecurityMode(mode: BenchmarkMode): mode is SecurityBenchmarkMode {
     MatButton,
     MatButtonToggle,
     MatButtonToggleGroup,
-    SecurityCashflowBenchmarkComponent
+    SecurityBenchmarkComponent
   ],
   templateUrl: './benchmark.component.html',
   styleUrl: './benchmark.component.scss',
@@ -38,6 +38,12 @@ export class BenchmarkComponent {
     (): FixedInterestBenchmarkMode | null => {
       const mode: BenchmarkMode = this.mode();
       return isSecurityMode(mode) ? null : mode;
+    });
+
+  protected readonly securityMode: Signal<SecurityBenchmarkMode | null> = computed<SecurityBenchmarkMode | null>(
+    (): SecurityBenchmarkMode | null => {
+      const mode: BenchmarkMode = this.mode();
+      return isSecurityMode(mode) ? mode : null;
     });
 
   private restartWithNextBenchmark: boolean = false;
