@@ -12,5 +12,37 @@
         </mat-form-field>
 
         <app-benchmark-security-select (securityId)="pickSecurity($event)"></app-benchmark-security-select>
+
+        @if (!form.depositDay().hidden()) {
+            <mat-form-field>
+                <mat-label>Deposit Day (1 - 28)</mat-label>
+                <input matInput
+                       type="number"
+                       [formField]="form.depositDay"
+                       (invalid)="$event.preventDefault()">
+                @for (error of form.depositDay().errors(); track error) {
+                    <mat-error>{{ error.message }}</mat-error>
+                }
+            </mat-form-field>
+        }
+
+        @if (!form.investmentAmount().hidden()) {
+            <mat-form-field>
+                <mat-label>Investment Amount</mat-label>
+                <input matInput
+                       type="number"
+                       [formField]="form.investmentAmount"
+                       (invalid)="$event.preventDefault()">
+                @for (error of form.investmentAmount().errors(); track error) {
+                    <mat-error>{{ error.message }}</mat-error>
+                }
+            </mat-form-field>
+        }
     </div>
+
+    @if (!form.isReinvestCashflow().hidden()) {
+        <mat-slide-toggle [formField]="form.isReinvestCashflow">
+            Automatically reinvest real cashflows
+        </mat-slide-toggle>
+    }
 </div>

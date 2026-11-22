@@ -8,9 +8,13 @@ import {rebasedDepotValueFactory} from '../../../../testing/rebased-depot-value.
 import {historicalSecurityPriceFactory} from '../../../../testing/historical-security-price.factory';
 import {pricesPerDay} from './prices-per-day';
 import {getCashFlows} from './get-cash-flows';
+import {buyAndHold} from './buy-and-hold';
+import {fillPriceGaps} from './fill-price-gaps';
 
 jest.mock('./prices-per-day', (): unknown => ({pricesPerDay: jest.fn()}));
 jest.mock('./get-cash-flows', (): unknown => ({getCashFlows: jest.fn()}));
+jest.mock('./buy-and-hold', (): unknown => ({buyAndHold: jest.fn()}));
+jest.mock('./fill-price-gaps', (): unknown => ({fillPriceGaps: jest.fn()}));
 
 describe('securityCashFlowBasedBenchmark', (): void => {
   const securityId: number = 7;
@@ -38,7 +42,10 @@ describe('securityCashFlowBasedBenchmark', (): void => {
     prices = [historicalSecurityPriceFactory({securityId})];
 
     jest.mocked(pricesPerDay).mockReset();
-    jest.mocked(pricesPerDay).mockReturnValue([10, 20, 25, 50]);
+    jest.mocked(pricesPerDay).mockReturnValue([10, 0, 25, 50]);
+
+    jest.mocked(fillPriceGaps).mockReset();
+    jest.mocked(fillPriceGaps).mockReturnValue([10, 10, 25, 50]);
 
     jest.mocked(getCashFlows).mockReset();
     jest.mocked(getCashFlows).mockReturnValue([
@@ -46,57 +53,37 @@ describe('securityCashFlowBasedBenchmark', (): void => {
       {date: '2026-01-03', cashFlow: 50}
     ]);
 
+    jest.mocked(buyAndHold).mockReset();
+    jest.mocked(buyAndHold).mockReturnValue([1, 2, 3, 4]);
+
     transform = jest.fn<(securityId: number) => string>((): string => 'Security Name');
     securityNamePipe = {transform} as unknown as SecurityNamePipe;
   });
 
-  it('values the shares bought with the initial investment and each capital increase at the day\'s price', (): void => {
+  it('buys with the initial investment on the first day and with each capital increase on its own day', (): void => {
     const result: BenchmarkResult | null = securityCashFlowBasedBenchmark(benchmark, depotValues, prices, securityNamePipe);
 
     expect(result).toEqual({
       name: 'Security Name',
-      // 100 / 10 = 10 shares from 2026-01-01, 50 / 25 = 2 more from 2026-01-03
-      values: [100, 200, 300, 600]
+      values: [1, 2, 3, 4]
     });
     expect(jest.mocked(pricesPerDay).mock.calls).toEqual([[depotValues, prices]]);
+    expect(jest.mocked(fillPriceGaps).mock.calls).toEqual([[[10, 0, 25, 50]]]);
     expect(jest.mocked(getCashFlows).mock.calls).toEqual([[depotValues]]);
+    expect(jest.mocked(buyAndHold).mock.calls).toEqual([[[100, 0, 50, 0], [10, 10, 25, 50]]]);
     expect(transform.mock.calls).toEqual([[securityId]]);
   });
 
-  it('values a day priced 0 at 0', (): void => {
-    jest.mocked(pricesPerDay).mockReturnValue([10, 0, 25, 50]);
+  it('counts an empty initial investment as zero', (): void => {
+    benchmark = {
+      type: 'security',
+      mode: 'cashFlowBased',
+      securityId
+    };
 
-    const result: BenchmarkResult | null = securityCashFlowBasedBenchmark(benchmark, depotValues, prices, securityNamePipe);
+    securityCashFlowBasedBenchmark(benchmark, depotValues, prices, securityNamePipe);
 
-    expect(result).toEqual({
-      name: 'Security Name',
-      // 100 / 10 = 10 shares from 2026-01-01, 50 / 25 = 2 more from 2026-01-03
-      values: [100, 0, 300, 600]
-    });
-  });
-
-  it('buys with money due on a day priced 0 on the next day priced above 0', (): void => {
-    jest.mocked(pricesPerDay).mockReturnValue([10, 20, 0, 50]);
-
-    const result: BenchmarkResult | null = securityCashFlowBasedBenchmark(benchmark, depotValues, prices, securityNamePipe);
-
-    expect(result).toEqual({
-      name: 'Security Name',
-      // 100 / 10 = 10 shares from 2026-01-01, 50 / 50 = 1 more from 2026-01-04
-      values: [100, 200, 0, 550]
-    });
-  });
-
-  it('buys with the initial investment on the next day priced above 0 if the first day is priced 0', (): void => {
-    jest.mocked(pricesPerDay).mockReturnValue([0, 20, 25, 50]);
-
-    const result: BenchmarkResult | null = securityCashFlowBasedBenchmark(benchmark, depotValues, prices, securityNamePipe);
-
-    expect(result).toEqual({
-      name: 'Security Name',
-      // 100 / 20 = 5 shares from 2026-01-02, 50 / 25 = 2 more from 2026-01-03
-      values: [0, 100, 175, 350]
-    });
+    expect(jest.mocked(buyAndHold).mock.calls).toEqual([[[0, 0, 50, 0], [10, 10, 25, 50]]]);
   });
 
   it('returns null without a price for the first day', (): void => {
@@ -106,39 +93,8 @@ describe('securityCashFlowBasedBenchmark', (): void => {
 
     expect(result).toBeNull();
     expect(getCashFlows).not.toHaveBeenCalled();
+    expect(fillPriceGaps).not.toHaveBeenCalled();
+    expect(buyAndHold).not.toHaveBeenCalled();
     expect(transform).not.toHaveBeenCalled();
-  });
-
-  describe('without an initial investment', (): void => {
-    beforeEach((): void => {
-      benchmark = {
-        type: 'security',
-        mode: 'cashFlowBased',
-        securityId
-      };
-    });
-
-    it('starts at zero and buys shares from later capital increases only', (): void => {
-      const result: BenchmarkResult | null = securityCashFlowBasedBenchmark(benchmark, depotValues, prices, securityNamePipe);
-
-      expect(result).toEqual({
-        name: 'Security Name',
-        // 50 / 25 = 2 shares from 2026-01-03
-        values: [0, 0, 50, 100]
-      });
-    });
-
-    it('stays at zero without capital increases', (): void => {
-      jest.mocked(getCashFlows).mockReturnValue([
-        {date: '2026-01-01', cashFlow: 0}
-      ]);
-
-      const result: BenchmarkResult | null = securityCashFlowBasedBenchmark(benchmark, depotValues, prices, securityNamePipe);
-
-      expect(result).toEqual({
-        name: 'Security Name',
-        values: [0, 0, 0, 0]
-      });
-    });
   });
 });
