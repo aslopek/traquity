@@ -5,6 +5,8 @@ import {HistoricalSecurityPrice} from '../../../../gen/api/historical-security-p
 import {SecurityNamePipe} from '../../../../common/pipe/security-name.pipe';
 import {getCashFlows} from './get-cash-flows';
 import {pricesPerDay} from './prices-per-day';
+import {buyAndHold} from './buy-and-hold';
+import {fillPriceGaps} from './fill-price-gaps';
 
 /**
  * Values the depot's own money as if each calendar year's money had been invested into one security in one go: by a lucky investor on the
@@ -12,8 +14,11 @@ import {pricesPerDay} from './prices-per-day';
  * that year. The first year's money also includes the initial investment.
  *
  * Of several days sharing the lowest price, the lucky investor buys on the latest. Of several days sharing the highest price, the unlucky
- * investor buys on the earliest. Neither buys on a day priced `0`, so a year without a price above `0` buys nothing. Each day is valued at
- * the latest price on or before it.
+ * investor buys on the earliest. Neither buys on a day priced `0`. Each day is valued at the latest price on or before it. A day priced `0`
+ * before the last day priced above `0` takes the price of the latest day before it priced above `0`, for buying and valuing alike.
+ *
+ * After the last day priced above `0`, the shares are worth `0`. A year that starts after it buys nothing: both series keep its money as
+ * money from the year's first day on. Any other year without a price above `0` buys nothing and its money is dropped.
  *
  * During years without an increase of the invested capital, the benchmark buys no additional shares.
  *
@@ -23,32 +28,38 @@ import {pricesPerDay} from './prices-per-day';
  * @param depotValues the days to value, ascending by date
  * @param prices the security's prices in the depot currency, ascending by date
  * @param securityNamePipe for determining the benchmarked security's name
- * @returns the lucky and the unlucky series, in that order, each with one value per depot value and `0` before its first purchase; `null`
- * if `prices` holds none on or before the first depot value's day
+ * @returns the lucky and the unlucky series, in that order, each with one value per depot value and `0` before its first purchase or kept
+ * money; `null` if `prices` holds none on or before the first depot value's day
  */
 export function securityLuckyInvestorBenchmark(benchmark: SecurityLuckyInvestorBenchmark,
                                                depotValues: RebasedDepotValue[],
                                                prices: HistoricalSecurityPrice[],
                                                securityNamePipe: SecurityNamePipe): [BenchmarkResult, BenchmarkResult] | null {
-  const dayPrices: number[] | null = pricesPerDay(depotValues, prices);
-  if (dayPrices === null) {
+  const rawDayPrices: number[] | null = pricesPerDay(depotValues, prices);
+  if (rawDayPrices === null) {
     return null;
   }
 
+  const dayPrices: number[] = fillPriceGaps(rawDayPrices);
   const daysByYear: Map<number, number[]> = daysPerYear(depotValues);
   const moneyByYear: Map<number, number> = moneyPerYear(depotValues, benchmark.initialInvestment ?? 0);
 
-  const luckyPurchases: Map<number, number> = new Map<number, number>();
-  const unluckyPurchases: Map<number, number> = new Map<number, number>();
+  const luckyMoneyPerDay: number[] = dayPrices.map((): number => 0);
+  const unluckyMoneyPerDay: number[] = dayPrices.map((): number => 0);
+  const lastBuyableDay: number = lastPricedDay(dayPrices);
   let buyableDays: number[];
   let money: number;
 
   for (const [year, days] of daysByYear) {
     buyableDays = days.filter((day: number): boolean => dayPrices[day] > 0);
+    money = moneyByYear.get(year) ?? 0;
     if (buyableDays.length > 0) {
-      money = moneyByYear.get(year) ?? 0;
-      luckyPurchases.set(cheapestDay(buyableDays, dayPrices), money);
-      unluckyPurchases.set(mostExpensiveDay(buyableDays, dayPrices), money);
+      luckyMoneyPerDay[cheapestDay(buyableDays, dayPrices)] = money;
+      unluckyMoneyPerDay[mostExpensiveDay(buyableDays, dayPrices)] = money;
+    } else if (days[0] > lastBuyableDay) {
+      // every later day is priced 0 too, so buyAndHold keeps this money uninvested for good
+      luckyMoneyPerDay[days[0]] = money;
+      unluckyMoneyPerDay[days[0]] = money;
     }
   }
 
@@ -57,13 +68,29 @@ export function securityLuckyInvestorBenchmark(benchmark: SecurityLuckyInvestorB
   return [
     {
       name: `${securityName} (lucky)`,
-      values: valuesOf(luckyPurchases, dayPrices)
+      values: buyAndHold(luckyMoneyPerDay, dayPrices)
     },
     {
       name: `${securityName} (unlucky)`,
-      values: valuesOf(unluckyPurchases, dayPrices)
+      values: buyAndHold(unluckyMoneyPerDay, dayPrices)
     }
   ];
+}
+
+/**
+ * Finds the last day priced above `0`.
+ *
+ * @param dayPrices the price per day
+ * @returns the index of the last price above `0`; `-1` if there is none
+ */
+function lastPricedDay(dayPrices: number[]): number {
+  let lastPriced: number = -1;
+  for (const [day, price] of dayPrices.entries()) {
+    if (price > 0) {
+      lastPriced = day;
+    }
+  }
+  return lastPriced;
 }
 
 function yearOf(date: string): number {
@@ -149,27 +176,4 @@ function mostExpensiveDay(days: number[], dayPrices: number[]): number {
   }
 
   return mostExpensive;
-}
-
-/**
- * Values the shares bought by the given purchases on each day.
- *
- * @param purchases the money invested per day, keyed by index into `dayPrices`; each such day priced above `0`
- * @param dayPrices the price per day
- * @returns per day, the value of all shares bought up to and including that day, at that day's price
- */
-function valuesOf(purchases: Map<number, number>, dayPrices: number[]): number[] {
-  const values: number[] = [];
-  let shares: number = 0;
-  let money: number | undefined;
-
-  for (const [day, price] of dayPrices.entries()) {
-    money = purchases.get(day);
-    if (money !== undefined) {
-      shares += money / price;
-    }
-    values.push(shares * price);
-  }
-
-  return values;
 }

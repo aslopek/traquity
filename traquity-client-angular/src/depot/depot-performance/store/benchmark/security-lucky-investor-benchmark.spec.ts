@@ -9,9 +9,13 @@ import {rebasedDepotValueFactory} from '../../../../testing/rebased-depot-value.
 import {historicalSecurityPriceFactory} from '../../../../testing/historical-security-price.factory';
 import {pricesPerDay} from './prices-per-day';
 import {getCashFlows} from './get-cash-flows';
+import {buyAndHold} from './buy-and-hold';
+import {fillPriceGaps} from './fill-price-gaps';
 
 jest.mock('./prices-per-day', (): unknown => ({pricesPerDay: jest.fn()}));
 jest.mock('./get-cash-flows', (): unknown => ({getCashFlows: jest.fn()}));
+jest.mock('./buy-and-hold', (): unknown => ({buyAndHold: jest.fn()}));
+jest.mock('./fill-price-gaps', (): unknown => ({fillPriceGaps: jest.fn()}));
 jest.mock('date-fns', (): unknown => ({getYear: jest.fn(), parseISO: jest.fn()}));
 
 type LuckyInvestorResult = [BenchmarkResult, BenchmarkResult] | null;
@@ -54,7 +58,10 @@ describe('securityLuckyInvestorBenchmark', (): void => {
     prices = [historicalSecurityPriceFactory({securityId})];
 
     jest.mocked(pricesPerDay).mockReset();
-    jest.mocked(pricesPerDay).mockReturnValue([20, 10, 40, 25]);
+    jest.mocked(pricesPerDay).mockReturnValue([20, 0, 40, 25]);
+
+    jest.mocked(fillPriceGaps).mockReset();
+    jest.mocked(fillPriceGaps).mockReturnValue([20, 10, 40, 25]);
 
     jest.mocked(getCashFlows).mockReset();
     jest.mocked(getCashFlows).mockReturnValue([
@@ -62,6 +69,11 @@ describe('securityLuckyInvestorBenchmark', (): void => {
       {date: '2026-01-06', cashFlow: 40},
       {date: '2026-01-07', cashFlow: 60}
     ]);
+
+    jest.mocked(buyAndHold).mockReset();
+    jest.mocked(buyAndHold)
+      .mockReturnValueOnce([1, 2, 3, 4])
+      .mockReturnValueOnce([5, 6, 7, 8]);
 
     transform = jest.fn<(securityId: number) => string>((): string => 'Security Name');
     securityNamePipe = {transform} as unknown as SecurityNamePipe;
@@ -73,16 +85,21 @@ describe('securityLuckyInvestorBenchmark', (): void => {
     expect(result).toEqual([
       {
         name: 'Security Name (lucky)',
-        // (100 + 40 + 60) / 10 = 20 shares from 2026-01-05
-        values: [0, 200, 800, 500]
+        values: [1, 2, 3, 4]
       },
       {
         name: 'Security Name (unlucky)',
-        // (100 + 40 + 60) / 40 = 5 shares from 2026-01-06
-        values: [0, 0, 200, 125]
+        values: [5, 6, 7, 8]
       }
     ]);
+    expect(jest.mocked(buyAndHold).mock.calls).toEqual([
+      // lucky: 100 + 40 + 60 on 2026-01-05
+      [[0, 200, 0, 0], [20, 10, 40, 25]],
+      // unlucky: 100 + 40 + 60 on 2026-01-06
+      [[0, 0, 200, 0], [20, 10, 40, 25]]
+    ]);
     expect(jest.mocked(pricesPerDay).mock.calls).toEqual([[depotValues, prices]]);
+    expect(jest.mocked(fillPriceGaps).mock.calls).toEqual([[[20, 0, 40, 25]]]);
     expect(jest.mocked(getCashFlows).mock.calls).toEqual([[depotValues]]);
     expect(transform.mock.calls).toEqual([[securityId]]);
 
@@ -108,95 +125,57 @@ describe('securityLuckyInvestorBenchmark', (): void => {
       securityId
     };
 
-    const result: LuckyInvestorResult = securityLuckyInvestorBenchmark(benchmark, depotValues, prices, securityNamePipe);
+    securityLuckyInvestorBenchmark(benchmark, depotValues, prices, securityNamePipe);
 
-    expect(result).toEqual([
-      {
-        name: 'Security Name (lucky)',
-        // (40 + 60) / 10 = 10 shares from 2026-01-05
-        values: [0, 100, 400, 250]
-      },
-      {
-        name: 'Security Name (unlucky)',
-        // (40 + 60) / 40 = 2.5 shares from 2026-01-06
-        values: [0, 0, 100, 62.5]
-      }
+    expect(jest.mocked(buyAndHold).mock.calls).toEqual([
+      // lucky: 40 + 60 on 2026-01-05
+      [[0, 100, 0, 0], [20, 10, 40, 25]],
+      // unlucky: 40 + 60 on 2026-01-06
+      [[0, 0, 100, 0], [20, 10, 40, 25]]
     ]);
   });
 
   it('buys lucky on the first day if it has the lowest price', (): void => {
-    jest.mocked(pricesPerDay).mockReturnValue([10, 20, 40, 25]);
+    jest.mocked(fillPriceGaps).mockReturnValue([10, 20, 40, 25]);
 
-    const result: LuckyInvestorResult = securityLuckyInvestorBenchmark(benchmark, depotValues, prices, securityNamePipe);
+    securityLuckyInvestorBenchmark(benchmark, depotValues, prices, securityNamePipe);
 
-    expect(result).toEqual([
-      {
-        name: 'Security Name (lucky)',
-        // (100 + 40 + 60) / 10 = 20 shares from 2026-01-02
-        values: [200, 400, 800, 500]
-      },
-      {
-        name: 'Security Name (unlucky)',
-        // (100 + 40 + 60) / 40 = 5 shares from 2026-01-06
-        values: [0, 0, 200, 125]
-      }
+    expect(jest.mocked(buyAndHold).mock.calls).toEqual([
+      [[200, 0, 0, 0], [10, 20, 40, 25]],
+      [[0, 0, 200, 0], [10, 20, 40, 25]]
     ]);
   });
 
   it('buys lucky on the latest of several days sharing the lowest price', (): void => {
-    jest.mocked(pricesPerDay).mockReturnValue([10, 20, 40, 10]);
+    jest.mocked(fillPriceGaps).mockReturnValue([10, 20, 40, 10]);
 
-    const result: LuckyInvestorResult = securityLuckyInvestorBenchmark(benchmark, depotValues, prices, securityNamePipe);
+    securityLuckyInvestorBenchmark(benchmark, depotValues, prices, securityNamePipe);
 
-    expect(result).toEqual([
-      {
-        name: 'Security Name (lucky)',
-        // (100 + 40 + 60) / 10 = 20 shares from 2026-01-07
-        values: [0, 0, 0, 200]
-      },
-      {
-        name: 'Security Name (unlucky)',
-        // (100 + 40 + 60) / 40 = 5 shares from 2026-01-06
-        values: [0, 0, 200, 50]
-      }
+    expect(jest.mocked(buyAndHold).mock.calls).toEqual([
+      [[0, 0, 0, 200], [10, 20, 40, 10]],
+      [[0, 0, 200, 0], [10, 20, 40, 10]]
     ]);
   });
 
   it('buys unlucky on the earliest of several days sharing the highest price', (): void => {
-    jest.mocked(pricesPerDay).mockReturnValue([20, 40, 10, 40]);
+    jest.mocked(fillPriceGaps).mockReturnValue([20, 40, 10, 40]);
 
-    const result: LuckyInvestorResult = securityLuckyInvestorBenchmark(benchmark, depotValues, prices, securityNamePipe);
+    securityLuckyInvestorBenchmark(benchmark, depotValues, prices, securityNamePipe);
 
-    expect(result).toEqual([
-      {
-        name: 'Security Name (lucky)',
-        // (100 + 40 + 60) / 10 = 20 shares from 2026-01-06
-        values: [0, 0, 200, 800]
-      },
-      {
-        name: 'Security Name (unlucky)',
-        // (100 + 40 + 60) / 40 = 5 shares from 2026-01-05
-        values: [0, 200, 50, 200]
-      }
+    expect(jest.mocked(buyAndHold).mock.calls).toEqual([
+      [[0, 0, 200, 0], [20, 40, 10, 40]],
+      [[0, 200, 0, 0], [20, 40, 10, 40]]
     ]);
   });
 
   it('buys lucky on the cheapest day priced above 0', (): void => {
-    jest.mocked(pricesPerDay).mockReturnValue([20, 0, 40, 25]);
+    jest.mocked(fillPriceGaps).mockReturnValue([20, 0, 40, 25]);
 
-    const result: LuckyInvestorResult = securityLuckyInvestorBenchmark(benchmark, depotValues, prices, securityNamePipe);
+    securityLuckyInvestorBenchmark(benchmark, depotValues, prices, securityNamePipe);
 
-    expect(result).toEqual([
-      {
-        name: 'Security Name (lucky)',
-        // (100 + 40 + 60) / 20 = 10 shares from 2026-01-02
-        values: [200, 0, 400, 250]
-      },
-      {
-        name: 'Security Name (unlucky)',
-        // (100 + 40 + 60) / 40 = 5 shares from 2026-01-06
-        values: [0, 0, 200, 125]
-      }
+    expect(jest.mocked(buyAndHold).mock.calls).toEqual([
+      [[200, 0, 0, 0], [20, 0, 40, 25]],
+      [[0, 0, 200, 0], [20, 0, 40, 25]]
     ]);
   });
 
@@ -207,6 +186,8 @@ describe('securityLuckyInvestorBenchmark', (): void => {
 
     expect(result).toBeNull();
     expect(getCashFlows).not.toHaveBeenCalled();
+    expect(fillPriceGaps).not.toHaveBeenCalled();
+    expect(buyAndHold).not.toHaveBeenCalled();
     expect(transform).not.toHaveBeenCalled();
     expect(parseISOMock).not.toHaveBeenCalled();
     expect(getYearMock).not.toHaveBeenCalled();
@@ -223,7 +204,7 @@ describe('securityLuckyInvestorBenchmark', (): void => {
         rebasedDepotValueFactory({date: '2026-01-06'})
       ];
 
-      jest.mocked(pricesPerDay).mockReturnValue([20, 10, 40, 50, 25, 100]);
+      jest.mocked(fillPriceGaps).mockReturnValue([20, 10, 40, 50, 25, 100]);
 
       jest.mocked(getCashFlows).mockReturnValue([
         {date: '2025-12-29', cashFlow: 0},
@@ -232,19 +213,13 @@ describe('securityLuckyInvestorBenchmark', (): void => {
     });
 
     it('invests each year\'s money on that year\'s own days', (): void => {
-      const result: LuckyInvestorResult = securityLuckyInvestorBenchmark(benchmark, depotValues, prices, securityNamePipe);
+      securityLuckyInvestorBenchmark(benchmark, depotValues, prices, securityNamePipe);
 
-      expect(result).toEqual([
-        {
-          name: 'Security Name (lucky)',
-          // 100 / 10 = 10 shares from 2025-12-30, 200 / 25 = 8 more from 2026-01-05
-          values: [0, 100, 400, 500, 450, 1800]
-        },
-        {
-          name: 'Security Name (unlucky)',
-          // 100 / 40 = 2.5 shares from 2025-12-31, 200 / 100 = 2 more from 2026-01-06
-          values: [0, 0, 100, 125, 62.5, 450]
-        }
+      expect(jest.mocked(buyAndHold).mock.calls).toEqual([
+        // lucky: 100 on 2025-12-30, 200 on 2026-01-05
+        [[0, 100, 0, 0, 200, 0], [20, 10, 40, 50, 25, 100]],
+        // unlucky: 100 on 2025-12-31, 200 on 2026-01-06
+        [[0, 0, 100, 0, 0, 200], [20, 10, 40, 50, 25, 100]]
       ]);
     });
 
@@ -253,38 +228,36 @@ describe('securityLuckyInvestorBenchmark', (): void => {
         {date: '2025-12-29', cashFlow: 0}
       ]);
 
-      const result: LuckyInvestorResult = securityLuckyInvestorBenchmark(benchmark, depotValues, prices, securityNamePipe);
+      securityLuckyInvestorBenchmark(benchmark, depotValues, prices, securityNamePipe);
 
-      expect(result).toEqual([
-        {
-          name: 'Security Name (lucky)',
-          // 100 / 10 = 10 shares from 2025-12-30
-          values: [0, 100, 400, 500, 250, 1000]
-        },
-        {
-          name: 'Security Name (unlucky)',
-          // 100 / 40 = 2.5 shares from 2025-12-31
-          values: [0, 0, 100, 125, 62.5, 250]
-        }
+      expect(jest.mocked(buyAndHold).mock.calls).toEqual([
+        [[0, 100, 0, 0, 0, 0], [20, 10, 40, 50, 25, 100]],
+        [[0, 0, 100, 0, 0, 0], [20, 10, 40, 50, 25, 100]]
       ]);
     });
 
-    it('buys nothing in a year without a price above 0', (): void => {
-      jest.mocked(pricesPerDay).mockReturnValue([0, 0, 0, 50, 25, 100]);
+    it('keeps the money of a year after the last price above 0 as money on its first day in both series', (): void => {
+      jest.mocked(fillPriceGaps).mockReturnValue([20, 10, 40, 0, 0, 0]);
 
-      const result: LuckyInvestorResult = securityLuckyInvestorBenchmark(benchmark, depotValues, prices, securityNamePipe);
+      securityLuckyInvestorBenchmark(benchmark, depotValues, prices, securityNamePipe);
 
-      expect(result).toEqual([
-        {
-          name: 'Security Name (lucky)',
-          // the 100 of 2025 buys nothing, 200 / 25 = 8 shares from 2026-01-05
-          values: [0, 0, 0, 0, 200, 800]
-        },
-        {
-          name: 'Security Name (unlucky)',
-          // the 100 of 2025 buys nothing, 200 / 100 = 2 shares from 2026-01-06
-          values: [0, 0, 0, 0, 0, 200]
-        }
+      expect(jest.mocked(buyAndHold).mock.calls).toEqual([
+        // lucky: 100 on 2025-12-30, 200 on 2026-01-02
+        [[0, 100, 0, 200, 0, 0], [20, 10, 40, 0, 0, 0]],
+        // unlucky: 100 on 2025-12-31, 200 on 2026-01-02
+        [[0, 0, 100, 200, 0, 0], [20, 10, 40, 0, 0, 0]]
+      ]);
+    });
+
+    it('buys nothing in a year before the first price above 0', (): void => {
+      jest.mocked(fillPriceGaps).mockReturnValue([0, 0, 0, 50, 25, 100]);
+
+      securityLuckyInvestorBenchmark(benchmark, depotValues, prices, securityNamePipe);
+
+      expect(jest.mocked(buyAndHold).mock.calls).toEqual([
+        // the 100 of 2025 buys nothing
+        [[0, 0, 0, 0, 200, 0], [0, 0, 0, 50, 25, 100]],
+        [[0, 0, 0, 0, 0, 200], [0, 0, 0, 50, 25, 100]]
       ]);
     });
   });

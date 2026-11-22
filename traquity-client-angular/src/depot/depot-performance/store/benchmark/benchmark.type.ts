@@ -5,7 +5,7 @@ type CashFlowBasedBenchmark = {
   initialInvestment?: number
 };
 
-type IntervalBasedBenchmark = {
+export type IntervalBasedBenchmark = {
   mode: 'intervalBased'
   initialInvestment?: number
   depositInterval: 'monthly'
@@ -26,6 +26,11 @@ export type SecurityCashFlowBasedBenchmark = CashFlowBasedBenchmark & {
   securityId: number
 };
 
+export type SecurityIntervalBasedBenchmark = IntervalBasedBenchmark & {
+  type: 'security'
+  securityId: number
+};
+
 export type SecurityLuckyInvestorBenchmark = {
   type: 'security'
   mode: 'luckyInvestor'
@@ -33,7 +38,7 @@ export type SecurityLuckyInvestorBenchmark = {
   initialInvestment?: number
 };
 
-export type SecurityBenchmark = SecurityCashFlowBasedBenchmark | SecurityLuckyInvestorBenchmark;
+export type SecurityBenchmark = SecurityCashFlowBasedBenchmark | SecurityIntervalBasedBenchmark | SecurityLuckyInvestorBenchmark;
 
 export type Benchmark = FixedInterestBenchmark | SecurityBenchmark;
 
