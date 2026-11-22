@@ -56,6 +56,16 @@ export class DividendAnnouncementConfigComponent {
           this.dividendAnnouncementConfigStore.loadDividendAnnouncementConfig(
             securityId,
           );
+        } else if (this.dataSources().length > 0) {
+          this.dividendAnnouncementConfigStore.setNewConfigValues({
+            dataSourceId: this.dataSources()[0].id,
+            externalSecurityId: '',
+            isActive: true
+          });
+          // A new security has no stored config to fall back on, so its preselected one counts as a change
+          if (this.dividendAnnouncementConfigStore.newConfigValuesValid()) {
+            this.configChanged.emit(this.configChangedEvent(this.dividendAnnouncementConfigStore.newConfigValues()));
+          }
         }
       });
 
@@ -72,13 +82,7 @@ export class DividendAnnouncementConfigComponent {
         takeUntilDestroyed(destroyRef),
       ).subscribe((newConfigValues: DividendAnnouncementConfigParams): void => {
         if (this.dividendAnnouncementConfigStore.newConfigValuesValid()) {
-          this.configChanged.emit({
-            ...newConfigValues,
-            externalSecurityId: this.dividendAnnouncementConfigStore.isinKeyed() ? undefined : newConfigValues.externalSecurityId,
-            version:
-              this.dividendAnnouncementConfigStore.existingConfig()?.version ??
-              null,
-          });
+          this.configChanged.emit(this.configChangedEvent(newConfigValues));
         } else {
           this.configChanged.emit(null);
         }
@@ -101,5 +105,13 @@ export class DividendAnnouncementConfigComponent {
     effect((): void => {
       this.dividendAnnouncementConfigStore.setNewConfigValues(this.formModel());
     });
+  }
+
+  private configChangedEvent(newConfigValues: DividendAnnouncementConfigParams): DividendAnnouncementConfigChangedEvent {
+    return {
+      ...newConfigValues,
+      externalSecurityId: this.dividendAnnouncementConfigStore.isinKeyed() ? undefined : newConfigValues.externalSecurityId,
+      version: this.dividendAnnouncementConfigStore.existingConfig()?.version ?? null,
+    };
   }
 }

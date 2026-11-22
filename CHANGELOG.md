@@ -27,6 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A security's price chart starts in the currency of the selected depots and always shows a currency: *No Currency Selected* is no longer
   offered.
 
+### Fixed
+
+- The *Add Security* wizard's **Dividend Announcements** step preselects the first data source. For a data source keyed by ISIN,
+  **External Security ID** is locked to the ISIN entered on the **Master Data** step.
+
 ## [1.5.2] - 2026-11-18
 
 ### Fixed
