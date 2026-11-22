@@ -1,7 +1,13 @@
 <section class="tq-card benchmark">
-    <header class="tq-card__head">
-        <h2 class="tq-card__title">Benchmark</h2>
-        <div class="tq-card__actions">
+    <header class="tq-card__head benchmark__head">
+        <h2 class="tq-card__title benchmark__title">Benchmark</h2>
+        @let outcomes = benchmarkOutcomes();
+        @if (outcomes.length > 0) {
+            <app-benchmark-outcomes class="benchmark__outcomes"
+                                    [outcomes]="outcomes">
+            </app-benchmark-outcomes>
+        }
+        <div class="tq-card__actions benchmark__actions">
             @if (isBenchmarkActive()) {
                 <button matButton="filled"
                         (click)="stopBenchmark()">

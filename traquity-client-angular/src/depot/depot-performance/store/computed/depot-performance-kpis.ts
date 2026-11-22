@@ -2,16 +2,14 @@ import {computed, Signal} from '@angular/core';
 import {RebasedDepotValue} from './rebased-depot-value.type';
 import {relativeTo} from './depot-values';
 import {RelativePerformance} from '../../../../common/types/relative-performance';
+import {DateRangeGrowth, dateRangeGrowth} from './date-range-growth';
 
 export type DepotPerformanceKpis = {
   investedCapital: number
   cashPosition: number
   cashPositionRelativeToAbsoluteValue: RelativePerformance
   absoluteValue: number
-  dateRange: {
-    growthAbsolute: number
-    growthRelative: RelativePerformance
-  }
+  dateRange: DateRangeGrowth
 };
 
 const emptyKpis: DepotPerformanceKpis = {
@@ -36,18 +34,13 @@ export function depotPerformanceKpis(depotValuesSignal: Signal<RebasedDepotValue
     const first: RebasedDepotValue = depotValues[0];
     const last: RebasedDepotValue = depotValues[depotValues.length - 1];
     const isRebased: boolean = isRebasedSignal();
-    // with a single data point in view there's no 'during the window' to measure growth over
-    const isSingleDataPoint: boolean = depotValues.length === 1;
 
     return {
       investedCapital: isRebased ? last.investedCapital - first.investedCapital : last.investedCapital,
       cashPosition: last.cashPosition,
       cashPositionRelativeToAbsoluteValue: relativeTo(last.cashPosition, last.absoluteValue),
       absoluteValue: last.absoluteValue,
-      dateRange: {
-        growthAbsolute: isSingleDataPoint ? 0 : last.performanceAbsolute,
-        growthRelative: isSingleDataPoint ? 0 : last.performanceRelative
-      }
+      dateRange: dateRangeGrowth(depotValues, isRebased, last.absoluteValue)
     };
   });
 }

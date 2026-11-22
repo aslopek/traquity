@@ -1,0 +1,67 @@
+<div class="benchmark-outcomes">
+    <span></span>
+    <span class="tq-section-label">Valued on</span>
+    <span class="tq-section-label">Depot lead abs.</span>
+    <span class="tq-section-label">Depot lead rel.</span>
+    <span class="tq-section-label">Growth abs.</span>
+    <span class="tq-section-label">Growth rel.</span>
+
+    @for (outcome of outcomes(); track $index) {
+        <span class="benchmark-outcomes__name">
+            <span class="benchmark-outcomes__marker"
+                  [class.benchmark-outcomes__marker--second]="$odd">
+            </span>
+            {{ outcome.name }}
+        </span>
+
+        <span class="benchmark-outcomes__value tq-numeric">{{ outcome.valuedOn | tqDate }}</span>
+
+        @let depotLeadAbsolute = outcome.depotLeadAbsolute;
+        @if (hideAbsoluteValues()) {
+            <app-obfuscated-value class="benchmark-outcomes__value tq-numeric"></app-obfuscated-value>
+        } @else {
+            <span class="benchmark-outcomes__value tq-numeric"
+                  [class.benchmark-outcomes__value--positive]="depotLeadAbsolute > 0"
+                  [class.benchmark-outcomes__value--negative]="depotLeadAbsolute < 0">
+                {{ depotLeadAbsolute > 0 ? '+' : '' }}{{ depotLeadAbsolute | tqCurrency:currency() }}
+            </span>
+        }
+
+        @let depotLeadRelative = outcome.depotLeadRelative;
+        <span class="benchmark-outcomes__value tq-numeric"
+              [class.benchmark-outcomes__value--positive]="depotLeadRelative === 'infinity' || (depotLeadRelative !== 'none' && depotLeadRelative >= 0)"
+              [class.benchmark-outcomes__value--negative]="depotLeadRelative !== 'infinity' && depotLeadRelative !== 'none' && depotLeadRelative < 0">
+            @if (depotLeadRelative === 'infinity') {
+                ∞
+            } @else if (depotLeadRelative === 'none') {
+                &ndash;
+            } @else {
+                {{ depotLeadRelative >= 0 ? '+' : '' }}{{ depotLeadRelative | tqPercent }}
+            }
+        </span>
+
+        @let growthAbsolute = outcome.growthAbsolute;
+        @if (hideAbsoluteValues()) {
+            <app-obfuscated-value class="benchmark-outcomes__value tq-numeric"></app-obfuscated-value>
+        } @else {
+            <span class="benchmark-outcomes__value tq-numeric"
+                  [class.benchmark-outcomes__value--positive]="growthAbsolute > 0"
+                  [class.benchmark-outcomes__value--negative]="growthAbsolute < 0">
+                {{ growthAbsolute > 0 ? '+' : '' }}{{ growthAbsolute | tqCurrency:currency() }}
+            </span>
+        }
+
+        @let growthRelative = outcome.growthRelative;
+        <span class="benchmark-outcomes__value tq-numeric"
+              [class.benchmark-outcomes__value--positive]="growthRelative === 'infinity' || (growthRelative !== 'none' && growthRelative >= 0)"
+              [class.benchmark-outcomes__value--negative]="growthRelative !== 'infinity' && growthRelative !== 'none' && growthRelative < 0">
+            @if (growthRelative === 'infinity') {
+                ∞
+            } @else if (growthRelative === 'none') {
+                &ndash;
+            } @else {
+                {{ growthRelative >= 0 ? '+' : '' }}{{ growthRelative | tqPercent }}
+            }
+        </span>
+    }
+</div>

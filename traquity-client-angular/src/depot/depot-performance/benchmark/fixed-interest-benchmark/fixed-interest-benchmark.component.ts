@@ -9,6 +9,8 @@ import {FixedInterestBenchmark, FixedInterestBenchmarkMode} from '../../store/be
 import {FieldTree, form, max, min, required, SchemaPathTree,} from '@angular/forms/signals';
 import {MatTooltip} from '@angular/material/tooltip';
 import {DepotPerformanceStore, ReadableDepotPerformanceStore} from '../../store/depot-performance.store';
+import {Store} from '@ngrx/store';
+import {hideAbsoluteValues} from '../../../../store/app-config/app-config.selector';
 import {RebasedDepotValue} from '../../store/computed/rebased-depot-value.type';
 
 type BenchmarkFormModel = {
@@ -42,6 +44,8 @@ export class FixedInterestBenchmarkComponent {
 
   @Output()
   readonly benchmark: EventEmitter<FixedInterestBenchmark | null> = new EventEmitter<FixedInterestBenchmark | null>();
+
+  protected readonly hideAbsoluteValues: Signal<boolean> = inject(Store).selectSignal(hideAbsoluteValues);
 
   protected readonly formModel: WritableSignal<BenchmarkFormModel> = signal<BenchmarkFormModel>({
     interestPerYear: 1,

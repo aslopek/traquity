@@ -5,6 +5,8 @@ import {DepotPerformanceStore, ReadableDepotPerformanceStore} from '../store/dep
 import {MatButton} from '@angular/material/button';
 import {MatButtonToggle, MatButtonToggleGroup} from '@angular/material/button-toggle';
 import {SecurityBenchmarkComponent} from './security-benchmark/security-benchmark.component';
+import {BenchmarkOutcomesComponent} from './benchmark-outcomes/benchmark-outcomes.component';
+import {BenchmarkOutcome} from '../store/computed/benchmark-outcomes';
 
 function isSecurityMode(mode: BenchmarkMode): mode is SecurityBenchmarkMode {
   return mode.startsWith('security.');
@@ -13,6 +15,7 @@ function isSecurityMode(mode: BenchmarkMode): mode is SecurityBenchmarkMode {
 @Component({
   selector: 'app-benchmark',
   imports: [
+    BenchmarkOutcomesComponent,
     FixedInterestBenchmarkComponent,
     MatButton,
     MatButtonToggle,
@@ -31,6 +34,8 @@ export class BenchmarkComponent {
   protected readonly isBenchmarkActive: Signal<boolean> = computed<boolean>((): boolean => {
     return this.depotPerformanceStore.benchmarkResult() !== null;
   });
+
+  protected readonly benchmarkOutcomes: Signal<BenchmarkOutcome[]> = this.depotPerformanceStore.benchmarkOutcomes;
 
   protected readonly mode: WritableSignal<BenchmarkMode> = signal<BenchmarkMode>('security.cashFlowBased');
 

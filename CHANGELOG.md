@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Security (Lucky Investor)** benchmark on the *Depot / Performance* tab. It groups the depot's money by calendar year and draws two
   lines: one investing each year's money on that year's cheapest shown day, one on its most expensive shown day. The oldest shown year
   also gets the **Initial Investment**.
-
+- **Benchmark summary** on the *Depot / Performance* tab. See the benchmark result and how it compares to your depot(s) at a glance.
 ### Changed
 
 - *Securities* shows prices in the currency of the selected depots, or in EUR while no depot is selected. *Price TTM* shows the outdated

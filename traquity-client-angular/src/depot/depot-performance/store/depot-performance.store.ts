@@ -23,8 +23,10 @@ import {Benchmark, BenchmarkResult} from './benchmark/benchmark.type';
 import {setBenchmark} from './methods/set-benchmark';
 import {benchmarkResult} from './computed/benchmark-result';
 import {benchmarkPricesArgs} from './computed/benchmark-prices-args';
+import {BenchmarkOutcome, benchmarkOutcomes} from './computed/benchmark-outcomes';
 
 export type DepotPerformanceComputed = {
+  benchmarkOutcomes: Signal<BenchmarkOutcome[]>
   benchmarkResult: Signal<BenchmarkResult | [BenchmarkResult, BenchmarkResult] | null>
   dataRanges: Signal<DataRanges>
   depotValues: Signal<RebasedDepotValue[]>
@@ -68,8 +70,11 @@ export const DepotPerformanceStore = signalStore(
     const depotValuesResult: Signal<DepotValuesResult> = depotValues(signalStore, globalStore);
     const depotValuesSignal: Signal<RebasedDepotValue[]> = computed((): RebasedDepotValue[] => depotValuesResult().values);
     const isRebasedSignal: Signal<boolean> = computed((): boolean => depotValuesResult().isRebased);
+    const benchmarkResultSignal: Signal<BenchmarkResult | [BenchmarkResult, BenchmarkResult] | null> =
+      benchmarkResult(signalStore, depotValuesSignal, globalStore);
     return {
-      benchmarkResult: benchmarkResult(signalStore, depotValuesSignal, globalStore),
+      benchmarkOutcomes: benchmarkOutcomes(benchmarkResultSignal, depotValuesSignal, isRebasedSignal),
+      benchmarkResult: benchmarkResultSignal,
       dataRanges: dataRanges(globalStore, depotValuesSignal),
       depotValues: depotValuesSignal,
       extendedInternalRateOfReturn: extendedInternalRateOfReturn(globalStore),
