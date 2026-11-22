@@ -1,5 +1,6 @@
 import { createReducer, on } from '@ngrx/store';
 import {
+  AppChristmasTheme,
   AppCurrencyLocale,
   AppDateFormat,
   AppDateLocale,
@@ -13,6 +14,7 @@ import { AppConfigActions } from './app-config.actions';
 import { AppConfigState } from './app-config.state';
 
 export const initialState: AppConfigState = {
+  christmasTheme: AppChristmasTheme.default,
   dateFormat: AppDateFormat.default,
   devModeActive: false,
   hideAbsoluteValues: AppHideAbsoluteValues.default,
@@ -35,6 +37,13 @@ export const appConfigReducer = createReducer(
       ...state,
       ...clientConfig,
       loaded: true
+    };
+  }),
+
+  on(AppConfigActions.setChristmasThemeDone, (state, { christmasTheme }) => {
+    return {
+      ...state,
+      christmasTheme
     };
   }),
 

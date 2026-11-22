@@ -1,0 +1,296 @@
+@use 'sass:math';
+
+// keep in sync with flakeCount in the component, which renders this many flakes
+$flake-count: 60;
+
+:host {
+  display: contents;
+}
+
+.christmas-overlay {
+  position: fixed;
+  top: var(--tq-header-height);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  // above the drawer container, below the snackbar (9), the header (10) and the CDK overlay container
+  z-index: 8;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+// a flake is visible only inside its keyframes: once reduced motion cuts the animation short, it falls back to opacity 0
+.christmas-overlay__flake {
+  position: absolute;
+  top: 0;
+  border-radius: 50%;
+  background-color: var(--tq-christmas-snow);
+  opacity: 0;
+  will-change: transform;
+}
+
+// a seeded Park-Miller generator scatters the flakes and keeps the build reproducible; linear steps line them up in visible rows
+$random-modulus: 2147483647;
+$random-seed: 20261224;
+
+@function next-random($seed) {
+  @return ($seed * 16807) % $random-modulus;
+}
+
+@for $i from 1 through $flake-count {
+  .christmas-overlay__flake:nth-child(#{$i}) {
+    $random-seed: next-random($random-seed) !global;
+    $x: math.div($random-seed, $random-modulus);
+    $random-seed: next-random($random-seed) !global;
+    $phase: math.div($random-seed, $random-modulus);
+    $random-seed: next-random($random-seed) !global;
+    $depth: math.div($random-seed, $random-modulus);
+    $size: 0.1875rem + 0.28125rem * $depth;
+    // nearer flakes are bigger, brighter and fall faster
+    $duration: 16s - 8s * $depth;
+    $sway: right;
+    @if $i % 2 == 0 {
+      $sway: left;
+    }
+
+    --christmas-overlay-flake-opacity: #{0.45 + 0.5 * $depth};
+    left: math.percentage($x);
+    width: $size;
+    height: $size;
+    animation: christmas-overlay-fall-#{$sway} $duration linear infinite;
+    animation-delay: -$duration * $phase;
+  }
+}
+
+@keyframes christmas-overlay-fall-right {
+  0% {
+    transform: translate3d(0, -1rem, 0);
+    opacity: 0;
+  }
+  10%, 90% {
+    opacity: var(--christmas-overlay-flake-opacity);
+  }
+  50% {
+    transform: translate3d(1.5rem, 50vh, 0);
+  }
+  100% {
+    transform: translate3d(0, 100vh, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes christmas-overlay-fall-left {
+  0% {
+    transform: translate3d(0, -1rem, 0);
+    opacity: 0;
+  }
+  10%, 90% {
+    opacity: var(--christmas-overlay-flake-opacity);
+  }
+  50% {
+    transform: translate3d(-1.5rem, 50vh, 0);
+  }
+  100% {
+    transform: translate3d(0, 100vh, 0);
+    opacity: 0;
+  }
+}
+
+.christmas-overlay__garland {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: 1rem;
+}
+
+.christmas-overlay__needles {
+  fill: none;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+
+.christmas-overlay__needles--dark {
+  stroke: var(--tq-christmas-green-dark);
+}
+
+.christmas-overlay__needles--light {
+  stroke: var(--tq-christmas-green);
+}
+
+.christmas-overlay__lights {
+  position: absolute;
+  top: 0.5rem;
+  right: 0;
+  left: 0;
+  display: flex;
+  justify-content: space-around;
+}
+
+// lit in its base style; the chase only dims it, so reduced motion leaves every light on
+.christmas-overlay__light {
+  position: relative;
+  width: 0.375rem;
+  height: 0.5625rem;
+  border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+  background-color: currentColor;
+  box-shadow: 0 0 0.5rem 0.0625rem currentColor;
+  animation: christmas-overlay-chase 3s ease-in-out infinite;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -0.125rem;
+    left: 0.0625rem;
+    width: 0.25rem;
+    height: 0.1875rem;
+    border-radius: 0.0625rem;
+    background-color: var(--tq-christmas-coal);
+  }
+
+  &:nth-child(3n + 1) {
+    color: var(--tq-christmas-red);
+  }
+
+  &:nth-child(3n + 2) {
+    color: var(--tq-christmas-gold);
+    animation-delay: -1s;
+  }
+
+  &:nth-child(3n) {
+    color: var(--tq-christmas-ice);
+    animation-delay: -2s;
+  }
+}
+
+@keyframes christmas-overlay-chase {
+  0%, 55%, 100% {
+    opacity: 1;
+  }
+  70%, 85% {
+    opacity: 0.3;
+  }
+}
+
+.christmas-overlay__ground {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  display: block;
+  width: 100%;
+  // the page's own bottom padding, so a page scrolled to its end shows its last row above the drift
+  height: var(--tq-space-5);
+}
+
+.christmas-overlay__scene {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  display: block;
+  width: var(--tq-side-menu-width);
+}
+
+// unlike the flakes, flame and glow show in their base style; the keyframes only vary them, so reduced motion leaves the candle lit
+.christmas-overlay__flame {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: christmas-overlay-flicker 1.7s ease-in-out infinite;
+}
+
+.christmas-overlay__glow {
+  animation: christmas-overlay-glow 2.3s ease-in-out infinite;
+}
+
+.christmas-overlay__star {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: christmas-overlay-sway 4s ease-in-out infinite;
+}
+
+.christmas-overlay__star-glow {
+  animation: christmas-overlay-glow 3.1s ease-in-out infinite;
+}
+
+@keyframes christmas-overlay-sway {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-8deg);
+  }
+  75% {
+    transform: rotate(8deg);
+  }
+}
+
+@keyframes christmas-overlay-flicker {
+  0%, 100% {
+    transform: scale(1, 1);
+  }
+  30% {
+    transform: scale(0.94, 1.08);
+  }
+  60% {
+    transform: scale(1.04, 0.92);
+  }
+}
+
+@keyframes christmas-overlay-glow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.christmas-overlay__tinsel {
+  fill: none;
+  stroke: var(--tq-christmas-gold);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+// like the header's fairy lights, lit in the base style and only dimmed by the chase
+.christmas-overlay__bulb {
+  animation: christmas-overlay-chase 3s ease-in-out infinite;
+}
+
+.christmas-overlay__bulb--late {
+  animation-delay: -1.5s;
+}
+
+// the shadow a present's lid casts on its box, so lid and box read apart in the same color
+.christmas-overlay__lid-edge {
+  fill: var(--tq-christmas-coal);
+  opacity: 0.25;
+}
+
+.christmas-overlay__highlight {
+  fill: var(--tq-christmas-snow);
+  opacity: 0.3;
+}
+
+.christmas-overlay__wick {
+  stroke: var(--tq-christmas-coal);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+}
+
+.christmas-overlay__arm {
+  stroke: var(--tq-christmas-brown);
+  stroke-linecap: round;
+}
+
+$colors: 'snow', 'snow-shade', 'green', 'green-dark', 'brown', 'red', 'gold', 'ice', 'orange', 'coal';
+
+@each $color in $colors {
+  .christmas-overlay__paint--#{$color} {
+    fill: var(--tq-christmas-#{$color});
+  }
+
+  .christmas-overlay__stop--#{$color} {
+    stop-color: var(--tq-christmas-#{$color});
+  }
+}

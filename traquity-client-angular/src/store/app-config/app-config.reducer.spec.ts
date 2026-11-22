@@ -13,6 +13,7 @@ describe('appConfigReducer', (): void => {
   describe('setAppConfig', (): void => {
     it('marks the config as loaded', (): void => {
       const result: AppConfigState = appConfigReducer(state, AppConfigActions.setAppConfig({
+        christmasTheme: false,
         dateFormat: 'dd.MM.yyyy',
         hideAbsoluteValues: false,
         openPage: 'depots',
@@ -26,6 +27,14 @@ describe('appConfigReducer', (): void => {
       }));
 
       expect(result.loaded).toBe(true);
+    });
+  });
+
+  describe('setChristmasThemeDone', (): void => {
+    it('stores the value', (): void => {
+      const result: AppConfigState = appConfigReducer(state, AppConfigActions.setChristmasThemeDone({christmasTheme: false}));
+
+      expect(result).toEqual({...initialState, christmasTheme: false});
     });
   });
 });
