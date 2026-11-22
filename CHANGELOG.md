@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   been invested solely into a chosen security: the **Initial Investment** buys shares on the oldest shown day, and every increase of the
   invested capital buys more shares on the day it happens, at that day's price in the currency of the selected depots. Only securities whose
   prices reach back to the oldest shown day can be picked.
+- **Security (Lucky Investor)** benchmark on the *Depot / Performance* tab. It groups the depot's money by calendar year and draws two
+  lines: one investing each year's money on that year's cheapest shown day, one on its most expensive shown day. The oldest shown year
+  also gets the **Initial Investment**.
 
 ### Changed
 

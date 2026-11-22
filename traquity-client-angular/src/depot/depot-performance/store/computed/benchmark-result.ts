@@ -6,7 +6,8 @@ import {Store} from '@ngrx/store';
 import {AppState} from '../../../../store/app.state';
 import {RebasedDepotValue} from './rebased-depot-value.type';
 import {fixedInterestBenchmark} from '../benchmark/fixed-interest-benchmark';
-import {securityBenchmark} from '../benchmark/security-cash-flow-based-benchmark';
+import {securityCashFlowBasedBenchmark} from '../benchmark/security-cash-flow-based-benchmark';
+import {securityLuckyInvestorBenchmark} from '../benchmark/security-lucky-investor-benchmark';
 import {SecurityNamePipe} from '../../../../common/pipe/security-name.pipe';
 import {HistoricalSecurityPrice} from '../../../../gen/api/historical-security-price';
 
@@ -29,6 +30,10 @@ export function benchmarkResult(signalStore: ReadableSignalStore<DepotPerformanc
 
     const prices: HistoricalSecurityPrice[] = signalStore.benchmarkPrices()
       .filter((price: HistoricalSecurityPrice): boolean => price.securityId === benchmarkArgs.securityId);
-    return securityBenchmark(benchmarkArgs, depotValues, prices, securityNamePipe);
+
+    if (benchmarkArgs.mode === 'luckyInvestor') {
+      return securityLuckyInvestorBenchmark(benchmarkArgs, depotValues, prices, securityNamePipe);
+    }
+    return securityCashFlowBasedBenchmark(benchmarkArgs, depotValues, prices, securityNamePipe);
   });
 }
