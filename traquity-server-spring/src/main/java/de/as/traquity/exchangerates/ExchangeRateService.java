@@ -37,7 +37,7 @@ public interface ExchangeRateService {
    * @param baseCurrency   one of the two currencies
    * @param targetCurrency the other currency
    * @return the first date {@link #convert} and {@link #convertBestEffort} can convert between the two currencies, in either direction
-   * @throws NotFoundException when there is no exchange rate between the two currencies
+   * @throws NotFoundException when no day has a rate between the two currencies
    */
   LocalDate getEarliestConversionDate(String baseCurrency, String targetCurrency) throws NotFoundException;
 }

@@ -309,6 +309,37 @@ class GetHistoricalSecurityPricesTest {
   @Sql(statements = """
       DELETE FROM HISTORICAL_SECURITY_PRICE WHERE DATE > '2023-12-08';
       """)
+  void getAllPrices_currencyUsdToGbp_ok() throws Exception {
+    MvcResult mvcResult = mockMvc.perform(get(String.format(ENDPOINT, PINS)).queryParam("currency", "GBP"))
+        .andExpect(status().isOk()).andReturn();
+    List<HistoricalSecurityPriceDto> prices =
+        objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {});
+
+    assertThat(prices).extracting(HistoricalSecurityPriceDto::getDate).containsExactly(
+        LocalDate.of(2023, DECEMBER, 1),
+        LocalDate.of(2023, DECEMBER, 4),
+        LocalDate.of(2023, DECEMBER, 5),
+        LocalDate.of(2023, DECEMBER, 6),
+        LocalDate.of(2023, DECEMBER, 7),
+        LocalDate.of(2023, DECEMBER, 8));
+    assertThat(prices).extracting(HistoricalSecurityPriceDto::getSecurityId).containsOnly(PINS);
+    assertThat(prices).extracting(HistoricalSecurityPriceDto::getCurrency).containsOnly("GBP");
+    List<Double> priceValues = prices.stream().map(HistoricalSecurityPriceDto::getPrice).map(BigDecimal::doubleValue).toList();
+    assertThat(priceValues).zipSatisfy(List.of(
+            27.52649,  // 2023-12-01: 34.79 USD / 1.0875 EUR/USD * 0.86045 EUR/GBP
+            27.23367,  // 2023-12-04: 34.5 USD / 1.0868 EUR/USD * 0.8579 EUR/GBP
+            27.03163,  // 2023-12-05: 34.11 USD / 1.0817 EUR/USD * 0.85723 EUR/GBP
+            26.62504,  // 2023-12-06: 33.52 USD / 1.0778 EUR/USD * 0.8561 EUR/GBP
+            27.08398,  // 2023-12-07: 34.02 USD / 1.0771 EUR/USD * 0.8575 EUR/GBP
+            27.75761), // 2023-12-08: 34.91 USD / 1.0777 EUR/USD * 0.8569 EUR/GBP
+        (actual, expected) -> assertThat(actual).isCloseTo(expected, ACCURACY_ONE_THOUSANDTH));
+  }
+
+  @Test
+  @SqlMergeMode(MERGE)
+  @Sql(statements = """
+      DELETE FROM HISTORICAL_SECURITY_PRICE WHERE DATE > '2023-12-08';
+      """)
   void getAllPrices_currencyUsdToEur_startDate_ok() throws Exception {
     MvcResult mvcResult = mockMvc.perform(get(String.format(ENDPOINT, PINS)).queryParam("currency", "EUR")
         .queryParam("startDate", "2023-12-08")).andExpect(status().isOk()).andReturn();

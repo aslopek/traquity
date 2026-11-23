@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Monetary values can now be converted between any currencies supported by TraQuity.
+
 ## [1.6.0] - 2026-11-22
 
 ### Added

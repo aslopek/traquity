@@ -1016,19 +1016,24 @@ the database button. A running
 
 ## Currency conversion
 
-TraQuity converts an amount from one currency into another with the ECB exchange rates it has stored. Converting from `A` into `B` can use
-either the exchange rate from `A` into `B` or the inverse exchange rate: the rate from `B` into `A`, inverted. Which day's rate applies
-depends on the amount.
+TraQuity converts an amount from one currency into another with the ECB exchange rates it has stored. A day has a rate for converting
+from `A` into `B` if it has one of these, taken in this order:
+
+1. The exchange rate from `A` into `B`.
+2. The inverse exchange rate: the rate from `B` into `A`, inverted.
+3. The rate through EUR: the rate from EUR into `B`, divided by the rate from EUR into `A`, both of that day.
+
+Which day's rate applies depends on the amount.
 
 An amount that belongs to a day, e.g. a historical price:
 
-1. The exchange rate or inverse exchange rate of that day.
-2. If that day has neither, the exchange rate or inverse exchange rate of the latest earlier day that has one.
+1. The rate of that day.
+2. If that day has none, the rate of the latest earlier day that has one.
 3. If no earlier day has one, the amount cannot be converted.
 
 An amount that belongs to no day, or to a day in the future, e.g. a dividend announcement:
 
-1. The exchange rate or inverse exchange rate of the latest day that has one.
+1. The rate of the latest day that has one.
 2. If no day has one, the amount cannot be converted.
 
 ## Understanding your depot performance numbers

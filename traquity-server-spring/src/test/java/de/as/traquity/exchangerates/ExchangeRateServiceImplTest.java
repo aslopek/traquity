@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import de.as.traquity.common.config.ArithmeticConfig;
@@ -216,6 +217,7 @@ class ExchangeRateServiceImplTest {
     // the whole point of batching: one query per direction, not one per item
     verify(exchangeRateRepositoryMock, times(1)).findAllByBaseCurrencyAndTargetCurrencyOrderByDateAsc("EUR", "USD");
     verify(exchangeRateRepositoryMock, times(1)).findAllByBaseCurrencyAndTargetCurrencyOrderByDateAsc("USD", "EUR");
+    verifyNoMoreInteractions(exchangeRateRepositoryMock);
   }
 
   @Test
@@ -257,6 +259,141 @@ class ExchangeRateServiceImplTest {
     assertThatExceptionOfType(NotFoundException.class).isThrownBy(() -> subject.convert(requests, "EUR", "USD"));
     verify(exchangeRateRepositoryMock, times(1)).findAllByBaseCurrencyAndTargetCurrencyOrderByDateAsc("EUR", "USD");
     verify(exchangeRateRepositoryMock, times(1)).findAllByBaseCurrencyAndTargetCurrencyOrderByDateAsc("USD", "EUR");
+  }
+
+  @Test
+  void convert_oneInput_pairIntoEur_loadsNoRatesThroughEur() {
+    LocalDate requestDate = LocalDate.of(2024, JANUARY, 10);
+    CurrencyConversionRequest request = mockRequest(TEN, requestDate);
+
+    ExchangeRateEntity reverseRate = mockRate("EUR", "USD", requestDate, "2");
+    when(exchangeRateRepositoryMock.findAllByBaseCurrencyAndTargetCurrencyOrderByDateAsc("EUR", "USD")).thenReturn(List.of(reverseRate));
+
+    List<BigDecimal> result = subject.convert(List.of(request), "USD", "EUR");
+
+    assertThat(result).hasSize(1);
+    assertThat(result.getFirst()).isEqualByComparingTo("5");
+    verify(exchangeRateRepositoryMock, times(1)).findAllByBaseCurrencyAndTargetCurrencyOrderByDateAsc("USD", "EUR");
+    verify(exchangeRateRepositoryMock, times(1)).findAllByBaseCurrencyAndTargetCurrencyOrderByDateAsc("EUR", "USD");
+    verifyNoMoreInteractions(exchangeRateRepositoryMock);
+  }
+
+  @Test
+  void convert_oneInput_throughEur_ratesOfItsDate_ok() {
+    LocalDate requestDate = LocalDate.of(2024, JANUARY, 10);
+    CurrencyConversionRequest request = mockRequest(TEN, requestDate);
+
+    mockRatesFromEur("GBP", mockRate("EUR", "GBP", requestDate, "0.8"));
+    mockRatesFromEur("USD", mockRate("EUR", "USD", requestDate, "1.2"));
+
+    List<BigDecimal> result = subject.convert(List.of(request), "GBP", "USD");
+
+    // 10 GBP = 12.5 EUR = 15 USD
+    assertThat(result).hasSize(1);
+    assertThat(result.getFirst()).isEqualByComparingTo("15");
+  }
+
+  @Test
+  void convert_oneInput_throughEur_oneRateMissingOnItsDate_ratesOfLatestEarlierDateWithBoth() {
+    LocalDate requestDate = LocalDate.of(2024, JANUARY, 10);
+    CurrencyConversionRequest request = mockRequest(TEN, requestDate);
+
+    // both currencies have rates after requestDate - 3, but never on the same day
+    mockRatesFromEur("GBP",
+        mockRate("EUR", "GBP", requestDate.minusDays(3), "0.8"),
+        mockRate("EUR", "GBP", requestDate.minusDays(1), "0.4"));
+    mockRatesFromEur("USD",
+        mockRate("EUR", "USD", requestDate.minusDays(3), "1.2"),
+        mockRate("EUR", "USD", requestDate.minusDays(2), "2.4"),
+        mockRate("EUR", "USD", requestDate, "3.6"));
+
+    List<BigDecimal> result = subject.convert(List.of(request), "GBP", "USD");
+
+    assertThat(result).hasSize(1);
+    assertThat(result.getFirst()).isEqualByComparingTo("15");
+  }
+
+  @Test
+  void convert_oneInput_throughEur_ratesOnlyOnDifferentDates_throwsNotFoundException() {
+    LocalDate requestDate = LocalDate.of(2024, JANUARY, 10);
+    CurrencyConversionRequest request = mockRequest(TEN, requestDate);
+
+    mockRatesFromEur("GBP", mockRate("EUR", "GBP", requestDate.minusDays(2), "0.8"));
+    mockRatesFromEur("USD", mockRate("EUR", "USD", requestDate.minusDays(1), "1.2"));
+
+    assertThatExceptionOfType(NotFoundException.class).isThrownBy(() -> subject.convert(List.of(request), "GBP", "USD"));
+  }
+
+  @Test
+  void convert_oneInput_throughEur_outdated_throwsOutdatedExchangeRateException() {
+    LocalDate rateDate = LocalDate.of(2024, JANUARY, 1);
+    LocalDate requestDate = LocalDate.of(2024, JANUARY, 20); // 19 days after the rates - older than MAX_AGE (7 days)
+    CurrencyConversionRequest request = mockRequest(TEN, requestDate);
+
+    mockRatesFromEur("GBP", mockRate("EUR", "GBP", rateDate, "0.8"));
+    mockRatesFromEur("USD", mockRate("EUR", "USD", rateDate, "1.2"));
+
+    boolean caughtException = false;
+    try {
+      subject.convert(List.of(request), "GBP", "USD");
+    } catch (OutdatedExchangeRateException e) {
+      caughtException = true;
+      assertThat(e.getDate()).isEqualTo(rateDate);
+      assertThat(e.getBaseCurrency()).isEqualTo("GBP");
+      assertThat(e.getTargetCurrency()).isEqualTo("USD");
+      assertThat(e.getExchangeRate()).isEqualByComparingTo("1.5");
+      assertThat(e.getConversionResult()).isEqualByComparingTo("15");
+    }
+    assertThat(caughtException).isTrue();
+  }
+
+  @Test
+  void convert_oneInput_directRateOfSameDay_winsOverRateThroughEur() {
+    LocalDate requestDate = LocalDate.of(2024, JANUARY, 10);
+    CurrencyConversionRequest request = mockRequest(TEN, requestDate);
+
+    ExchangeRateEntity directRate = mockRate("GBP", "USD", requestDate, "2");
+    when(exchangeRateRepositoryMock.findAllByBaseCurrencyAndTargetCurrencyOrderByDateAsc("GBP", "USD")).thenReturn(List.of(directRate));
+    mockRatesFromEur("GBP", mockRate("EUR", "GBP", requestDate, "0.8"));
+    mockRatesFromEur("USD", mockRate("EUR", "USD", requestDate, "1.2"));
+
+    List<BigDecimal> result = subject.convert(List.of(request), "GBP", "USD");
+
+    assertThat(result).hasSize(1);
+    assertThat(result.getFirst()).isEqualByComparingTo("20");
+  }
+
+  @Test
+  void convert_oneInput_indirectRateOfSameDay_winsOverRateThroughEur() {
+    LocalDate requestDate = LocalDate.of(2024, JANUARY, 10);
+    CurrencyConversionRequest request = mockRequest(TEN, requestDate);
+
+    ExchangeRateEntity reverseRate = mockRate("USD", "GBP", requestDate, "0.25");
+    when(exchangeRateRepositoryMock.findAllByBaseCurrencyAndTargetCurrencyOrderByDateAsc("USD", "GBP")).thenReturn(List.of(reverseRate));
+    mockRatesFromEur("GBP", mockRate("EUR", "GBP", requestDate, "0.8"));
+    mockRatesFromEur("USD", mockRate("EUR", "USD", requestDate, "1.2"));
+
+    List<BigDecimal> result = subject.convert(List.of(request), "GBP", "USD");
+
+    // 1 USD = 0.25 GBP, so 10 GBP = 40 USD
+    assertThat(result).hasSize(1);
+    assertThat(result.getFirst()).isEqualByComparingTo("40");
+  }
+
+  @Test
+  void convert_oneInput_rateThroughEurOfLaterDay_winsOverDirectRate() {
+    LocalDate requestDate = LocalDate.of(2024, JANUARY, 10);
+    CurrencyConversionRequest request = mockRequest(TEN, requestDate);
+
+    ExchangeRateEntity directRate = mockRate("GBP", "USD", requestDate.minusDays(3), "2");
+    when(exchangeRateRepositoryMock.findAllByBaseCurrencyAndTargetCurrencyOrderByDateAsc("GBP", "USD")).thenReturn(List.of(directRate));
+    mockRatesFromEur("GBP", mockRate("EUR", "GBP", requestDate, "0.8"));
+    mockRatesFromEur("USD", mockRate("EUR", "USD", requestDate, "1.2"));
+
+    List<BigDecimal> result = subject.convert(List.of(request), "GBP", "USD");
+
+    assertThat(result).hasSize(1);
+    assertThat(result.getFirst()).isEqualByComparingTo("15");
   }
 
   @Test
@@ -430,6 +567,33 @@ class ExchangeRateServiceImplTest {
   }
 
   @Test
+  void convertBestEffort_threeInputs_throughEur_ratesOfItsDate_ofLatestEarlierDateWithBoth_none() {
+    LocalDate rateDate = LocalDate.of(2024, JANUARY, 10);
+    CurrencyConversionRequest sameDayRequest = mockRequest(TEN, rateDate);
+    CurrencyConversionRequest laterDayRequest = mockRequest(new BigDecimal("20"), rateDate.plusDays(1));
+    CurrencyConversionRequest earlierDayRequest = mockRequest(TEN, rateDate.minusDays(1));
+
+    // on rateDate + 1 only GBP has a rate, so that day takes the rates of rateDate
+    mockRatesFromEur("GBP", mockRate("EUR", "GBP", rateDate, "0.8"), mockRate("EUR", "GBP", rateDate.plusDays(1), "0.4"));
+    mockRatesFromEur("USD", mockRate("EUR", "USD", rateDate, "1.2"));
+
+    List<BigDecimal> result =
+        subject.convertBestEffort(List.of(sameDayRequest, laterDayRequest, earlierDayRequest), "GBP", "USD");
+
+    assertThat(result).hasSize(3);
+    assertThat(result.get(0)).isEqualByComparingTo("15");
+    assertThat(result.get(1)).isEqualByComparingTo("30");
+    assertThat(result.get(2)).isNull();
+
+    // one query per currency pair, not one per item
+    verify(exchangeRateRepositoryMock, times(1)).findAllByBaseCurrencyAndTargetCurrencyOrderByDateAsc("GBP", "USD");
+    verify(exchangeRateRepositoryMock, times(1)).findAllByBaseCurrencyAndTargetCurrencyOrderByDateAsc("USD", "GBP");
+    verify(exchangeRateRepositoryMock, times(1)).findAllByBaseCurrencyAndTargetCurrencyOrderByDateAsc("EUR", "GBP");
+    verify(exchangeRateRepositoryMock, times(1)).findAllByBaseCurrencyAndTargetCurrencyOrderByDateAsc("EUR", "USD");
+    verifyNoMoreInteractions(exchangeRateRepositoryMock);
+  }
+
+  @Test
   void getEarliestConversionDate_onlyForwardRates_returnsDateOfEarliestForwardRate() {
     LocalDate earliest = LocalDate.of(2024, JANUARY, 5);
     mockEarliestRates(mockRate("EUR", "USD", earliest, "1.1"), null);
@@ -470,6 +634,32 @@ class ExchangeRateServiceImplTest {
     mockEarliestRates(null, null);
 
     assertThatExceptionOfType(NotFoundException.class).isThrownBy(() -> subject.getEarliestConversionDate("EUR", "USD"));
+  }
+
+  @Test
+  void getEarliestConversionDate_throughEur_returnsFirstDateWithBothRates() {
+    LocalDate firstCommonDate = LocalDate.of(2024, JANUARY, 7);
+    mockRatesFromEur("GBP",
+        mockRate("EUR", "GBP", firstCommonDate.minusDays(2), "0.8"),
+        mockRate("EUR", "GBP", firstCommonDate, "0.8"));
+    mockRatesFromEur("USD",
+        mockRate("EUR", "USD", firstCommonDate.minusDays(1), "1.2"),
+        mockRate("EUR", "USD", firstCommonDate, "1.2"));
+
+    assertThat(subject.getEarliestConversionDate("GBP", "USD")).isEqualTo(firstCommonDate);
+  }
+
+  @Test
+  void getEarliestConversionDate_throughEur_ratesOnlyOnDifferentDates_throwsNotFoundException() {
+    LocalDate date = LocalDate.of(2024, JANUARY, 7);
+    mockRatesFromEur("GBP", mockRate("EUR", "GBP", date, "0.8"));
+    mockRatesFromEur("USD", mockRate("EUR", "USD", date.plusDays(1), "1.2"));
+
+    assertThatExceptionOfType(NotFoundException.class).isThrownBy(() -> subject.getEarliestConversionDate("GBP", "USD"));
+  }
+
+  private void mockRatesFromEur(String currency, ExchangeRateEntity... rates) {
+    when(exchangeRateRepositoryMock.findAllByBaseCurrencyAndTargetCurrencyOrderByDateAsc("EUR", currency)).thenReturn(List.of(rates));
   }
 
   private void mockEarliestRates(ExchangeRateEntity forward, ExchangeRateEntity reverse) {

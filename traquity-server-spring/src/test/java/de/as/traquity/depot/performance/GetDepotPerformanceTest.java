@@ -1,22 +1,24 @@
 package de.as.traquity.depot.performance;
 
 import static integration.Accuracy.ACCURACY_ONE_THOUSANDTH;
+import static integration.Arithmetic.MATH_CONTEXT;
 import static integration.DepotIds.BUY_IN_ZERO;
 import static integration.DepotIds.EMPTY_DEPOT;
 import static integration.DepotIds.FIRST_DEPOT;
 import static integration.DepotIds.OTHER_DEPOT;
 import static integration.DepotIds.USD_DEPOT_1;
 import static integration.DepotIds.WEEKEND_FIRST_TRANSACTION_DEPOT;
-import static integration.SecurityIds.AAPL;
+import static integration.SecurityIds.AMD;
 import static integration.SecurityIds.ASML;
 import static integration.SecurityIds.CRM;
 import static integration.SecurityIds.DHR;
 import static integration.SecurityIds.HAG;
 import static integration.SecurityIds.MAIN;
 import static integration.SecurityIds.MSFT;
-import static integration.SecurityIds.NVDA;
 import static integration.SecurityIds.QCOM;
+import static integration.SecurityIds.TMO;
 import static integration.SecurityIds.VNGGF;
+import static java.math.BigDecimal.ONE;
 import static java.math.BigDecimal.ZERO;
 import static java.time.DayOfWeek.SATURDAY;
 import static java.time.DayOfWeek.SUNDAY;
@@ -46,11 +48,16 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
@@ -264,17 +271,22 @@ class GetDepotPerformanceTest {
     assertThat(responseBody.getValues()).isEmpty();
   }
 
-  @Test
+  @ParameterizedTest
+  @ValueSource(strings = {"EUR", "USD"})
   @SqlMergeMode(MERGE)
   @Sql(statements = "DELETE FROM EXCHANGE_RATE;")
-  void getDepotPerformance_tenYearsOfForeignCurrencyPrices_respondsWithinAcceptableTime() throws Exception {
-    List<Long> securityIds = List.of(MSFT, AAPL, HAG, VNGGF, ASML, NVDA, DHR, CRM, MAIN, QCOM);
-    // one distinct, non-EUR currency per security (see ServerConfigurationServiceImpl.SUPPORTED_CURRENCIES) - every
+  void getDepotPerformance_tenYearsOfForeignCurrencyPrices_respondsWithinAcceptableTime(String depotCurrency) throws Exception {
+    // securities without a stock split, so each position stays at the 10 shares bought
+    List<Long> securityIds = List.of(MSFT, TMO, HAG, VNGGF, ASML, AMD, DHR, CRM, MAIN, QCOM);
+    // one distinct currency per security, neither EUR nor USD (see ServerConfigurationServiceImpl.SUPPORTED_CURRENCIES) - every
     // single price row now needs its own currency pair's exchange rate, instead of all 10 sharing one
-    List<String> currencies = List.of("USD", "JPY", "GBP", "CHF", "SEK", "NOK", "DKK", "PLN", "AUD", "CAD");
+    List<String> currencies = List.of("HKD", "JPY", "GBP", "CHF", "SEK", "NOK", "DKK", "PLN", "AUD", "CAD");
+    List<String> rateCurrencies = Stream.concat(currencies.stream(), Stream.of("USD")).toList();
     LocalDate firstDate = LocalDate.of(2014, JANUARY, 1);
     LocalDate lastPriceDate = LocalDate.of(2023, DECEMBER, 29);
     Random random = new Random();
+    Map<String, BigDecimal> lastRates = new HashMap<>(Map.of("EUR", ONE));
+    Map<Long, BigDecimal> lastPrices = new HashMap<>();
 
     try (Connection connection = DriverManager.getConnection("jdbc:h2:mem:traquity", "test-user", "test-password")) {
       PreparedStatement priceStatement = connection.prepareStatement("""
@@ -292,23 +304,32 @@ class GetDepotPerformanceTest {
           continue;
         }
 
-        for (String currency : currencies) {
+        for (String currency : rateCurrencies) {
+          BigDecimal rate = BigDecimal.valueOf(1 + random.nextDouble());
           exchangeRateStatement.setDate(1, Date.valueOf(date));
           exchangeRateStatement.setString(2, currency);
-          exchangeRateStatement.setBigDecimal(3, BigDecimal.valueOf(1 + random.nextDouble()));
+          exchangeRateStatement.setBigDecimal(3, rate);
           exchangeRateStatement.addBatch();
+          lastRates.put(currency, rate);
         }
 
         for (int i = 0; i < securityIds.size(); i++) {
+          BigDecimal price = BigDecimal.valueOf(1 + random.nextDouble() * 500);
           priceStatement.setLong(1, securityIds.get(i));
-          priceStatement.setBigDecimal(2, BigDecimal.valueOf(1 + random.nextDouble() * 500));
+          priceStatement.setBigDecimal(2, price);
           priceStatement.setString(3, currencies.get(i));
           priceStatement.setDate(4, Date.valueOf(date));
           priceStatement.addBatch();
+          lastPrices.put(securityIds.get(i), price);
         }
       }
       exchangeRateStatement.executeBatch();
       priceStatement.executeBatch();
+
+      PreparedStatement depotStatement = connection.prepareStatement("UPDATE DEPOT SET CURRENCY = ? WHERE ID = ?");
+      depotStatement.setString(1, depotCurrency);
+      depotStatement.setLong(2, EMPTY_DEPOT);
+      depotStatement.executeUpdate();
 
       PreparedStatement transactionStatement = connection.prepareStatement("""
           INSERT INTO TRANSACTION (DATE, DEPOT_ID, SECURITY_ID, TRANSACTION_TYPE, SECURITY_COUNT_ORIGINAL, GROSS_VALUE, CREATED_AT, UPDATED_AT, VERSION)
@@ -323,9 +344,18 @@ class GetDepotPerformanceTest {
     }
 
     long start = System.currentTimeMillis();
-    getDepotPerformance(Set.of(EMPTY_DEPOT)).andExpect(status().isOk());
+    MvcResult mvcResult = getDepotPerformance(Set.of(EMPTY_DEPOT)).andExpect(status().isOk()).andReturn();
     long elapsed = System.currentTimeMillis() - start;
     assertThat(elapsed).isLessThan(3000);
+
+    // each last price converted into the depot's currency at the EUR rates of its day
+    BigDecimal expectedValue = ZERO;
+    for (int i = 0; i < securityIds.size(); i++) {
+      expectedValue = expectedValue.add(BigDecimal.TEN.multiply(lastPrices.get(securityIds.get(i)))
+          .multiply(lastRates.get(depotCurrency)).divide(lastRates.get(currencies.get(i)), MATH_CONTEXT));
+    }
+    DepotPerformanceDto responseBody = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DepotPerformanceDto.class);
+    assertThat(findByDate(responseBody.getValues(), lastPriceDate).getAbsoluteValue()).isCloseTo(expectedValue, ACCURACY_ONE_THOUSANDTH);
   }
 
   /**
