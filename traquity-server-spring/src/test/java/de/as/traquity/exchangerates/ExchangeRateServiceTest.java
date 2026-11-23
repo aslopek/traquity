@@ -1,6 +1,7 @@
 package de.as.traquity.exchangerates;
 
 import static integration.Accuracy.ACCURACY_ONE_THOUSANDTH;
+import static integration.Arithmetic.MATH_CONTEXT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
@@ -95,6 +96,46 @@ class ExchangeRateServiceTest {
       assertThat(e.getTargetCurrency()).isEqualTo("USD");
       assertThat(e.getExchangeRate()).isEqualByComparingTo(new BigDecimal("1.0777"));
       assertThat(e.getConversionResult()).isCloseTo(expectedEur, ACCURACY_ONE_THOUSANDTH);
+    }
+
+    assertThat(caughtException).isTrue();
+  }
+
+  @Test
+  void convertCurrency_throughEur_sameDay() {
+    BigDecimal gbp = new BigDecimal("1000");
+    BigDecimal expectedUsd = new BigDecimal("1256.09329"); // 1000 GBP / 0.8575 EUR/GBP * 1.0771 EUR/USD
+    BigDecimal usd = convert(gbp, "GBP", "USD", LocalDate.of(2023, Month.DECEMBER, 7));
+    assertThat(usd).isCloseTo(expectedUsd, ACCURACY_ONE_THOUSANDTH);
+  }
+
+  @Test
+  void convertCurrency_throughEur_daysBefore() {
+    BigDecimal gbp = new BigDecimal("1000");
+    BigDecimal expectedUsd = new BigDecimal("1257.67301"); // 1000 GBP / 0.8569 EUR/GBP * 1.0777 EUR/USD of 2023-12-08
+    BigDecimal usd;
+
+    for (int i = 9; i <= 15; i++) {
+      usd = convert(gbp, "GBP", "USD", LocalDate.of(2023, Month.DECEMBER, i));
+      assertThat(usd).isCloseTo(expectedUsd, ACCURACY_ONE_THOUSANDTH);
+    }
+  }
+
+  @Test
+  void convertCurrency_throughEur_outdated() {
+    BigDecimal gbp = new BigDecimal("1000");
+    BigDecimal expectedUsd = new BigDecimal("1257.67301");
+    boolean caughtException = false;
+
+    try {
+      convert(gbp, "GBP", "USD", LocalDate.of(2023, Month.DECEMBER, 16));
+    } catch (OutdatedExchangeRateException e) {
+      caughtException = true;
+      assertThat(e.getDate()).isEqualTo(LocalDate.of(2023, Month.DECEMBER, 8));
+      assertThat(e.getBaseCurrency()).isEqualTo("GBP");
+      assertThat(e.getTargetCurrency()).isEqualTo("USD");
+      assertThat(e.getExchangeRate()).isEqualByComparingTo(new BigDecimal("1.0777").divide(new BigDecimal("0.8569"), MATH_CONTEXT));
+      assertThat(e.getConversionResult()).isCloseTo(expectedUsd, ACCURACY_ONE_THOUSANDTH);
     }
 
     assertThat(caughtException).isTrue();

@@ -29,7 +29,7 @@ class EcbExchangeRateFetcher {
   private static final String EXCHANGE_RATE_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.zip";
   private static final String FILE_NAME = "eurofxref-hist.csv";
   private static final byte[] ZIP_MAGIC_BYTES = {0x50, 0x4B, 0x03, 0x04};
-  private static final String BASE_CURRENCY = "EUR";
+  static final String BASE_CURRENCY = "EUR";
 
   private final RestTemplate restTemplate;
   private final ServerConfigurationService serverConfigurationService;
